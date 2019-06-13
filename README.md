@@ -1,3 +1,4 @@
 # connect
 
-S&amp;C CONNECT OCPI 2.2 message broker
+The Share & Charge CONNECT message broker with OCPI 2.2 connection.
+
