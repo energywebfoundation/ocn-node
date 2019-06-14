@@ -40,4 +40,4 @@ You should see a 200 OK response.
 ### Generating new API documentation
 
 Documentation is generated automatically on build. The asciidoc template can be found in 
-`src/docs/asciidoc/documentation.adoc` and the output in `build/asciidoc/html5/documentation.html`.
+`src/docs/asciidoc/API_DOC.adoc` and the output in `build/asciidoc/html5/API_DOC.html`.
