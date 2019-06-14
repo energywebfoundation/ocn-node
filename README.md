@@ -4,7 +4,7 @@ The Share & Charge CONNECT message broker with OCPI 2.2 connection.
 
 ## API Documentation
 
-*#TODO*
+See [API_DOC.html](./API_DOC.html).
 
 ## Running a Broker Locally
 
@@ -35,3 +35,9 @@ curl localhost:8080/heartbeat
 ```
 
 You should see a 200 OK response.
+
+
+### Generating new API documentation
+
+Documentation is generated automatically on build. The asciidoc template can be found in 
+`src/docs/asciidoc/documentation.adoc` and the output in `build/asciidoc/html5/documentation.html`.

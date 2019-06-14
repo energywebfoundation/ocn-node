@@ -1,4 +1,6 @@
+import org.asciidoctor.gradle.AsciidoctorTask
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import org.springframework.boot.gradle.tasks.bundling.BootJar
 
 plugins {
 	kotlin("plugin.jpa") version "1.3.31"
@@ -8,11 +10,14 @@ plugins {
 	kotlin("plugin.spring") version "1.3.31"
 	kotlin("plugin.allopen") version "1.3.31"
 	kotlin("kapt") version "1.3.31"
+	id("org.asciidoctor.convert") version "1.5.9.2"
 }
 
 group = "snc.connect"
 version = "0.0.1-SNAPSHOT"
 java.sourceCompatibility = JavaVersion.VERSION_1_8
+
+val snippetsDir = "build/generated-snippets"
 
 val developmentOnly by configurations.creating
 configurations {
@@ -42,6 +47,8 @@ dependencies {
 	testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
 	testImplementation("com.ninja-squad:springmockk:1.1.2")
 	kapt("org.springframework.boot:spring-boot-configuration-processor")
+	asciidoctor("org.springframework.restdocs:spring-restdocs-asciidoctor:2.0.3.RELEASE")
+	testCompile("org.springframework.restdocs:spring-restdocs-mockmvc:2.0.3.RELEASE")
 }
 
 allOpen {
@@ -57,6 +64,22 @@ tasks.withType<KotlinCompile> {
 	}
 }
 
-tasks.withType<Test> {
+val test: Test by tasks
+test.apply {
 	useJUnitPlatform()
+	outputs.dir(snippetsDir)
+}
+
+val asciidoctor by tasks.getting(AsciidoctorTask::class) {
+	inputs.dir(snippetsDir)
+	dependsOn(test)
+}
+
+tasks {
+	"bootJar"(BootJar::class) {
+		dependsOn(asciidoctor)
+		from("${asciidoctor.get().outputDir}/html5") {
+			into("static/docs")
+		}
+	}
 }
