@@ -8,8 +8,9 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.content
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 
-@WebMvcTest
+@WebMvcTest(HealthController::class)
 class HealthControllerTest(@Autowired val mockMvc: MockMvc) {
+
     @Test
     fun `When GET health should return OK`() {
         mockMvc.perform(get("/health"))
