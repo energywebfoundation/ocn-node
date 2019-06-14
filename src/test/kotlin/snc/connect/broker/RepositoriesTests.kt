@@ -19,4 +19,12 @@ class RepositoriesTests @Autowired constructor(
         val found = partyRepository.findByCountryCodeAndPartyID("DE", "SNC")
         assertThat(found).isEqualTo(party)
     }
+
+    @Test
+    fun `When findByAuth then return Party`() {
+        val party = Party(countryCode = "NL", partyID = "XYZ")
+        entityManager.persistAndFlush(party)
+        val found = partyRepository.findByAuth_TokenA(party.auth.tokenA)
+        assertThat(found).isEqualTo(party)
+    }
 }

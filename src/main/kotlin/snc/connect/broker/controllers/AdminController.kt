@@ -7,7 +7,7 @@ import snc.connect.broker.PartyRepository
 import snc.connect.broker.models.entities.Party
 import snc.connect.broker.models.ocpi.BasicParty
 import snc.connect.broker.Properties
-import snc.connect.broker.models.entities.Tokens
+import snc.connect.broker.models.entities.Auth
 import snc.connect.broker.models.ocpi.RegistrationInformation
 import snc.connect.broker.tools.generateUUIDv4Token
 import snc.connect.broker.tools.urlJoin
@@ -39,12 +39,13 @@ class AdminController(private val repository: PartyRepository,
         }
 
         // store registration token for multiple parties under the same connection
+        //TODO: remove tokenA after given time? (party must re-register)
         val tokenA = generateUUIDv4Token()
         for (basicParty in body) {
             repository.save(Party(
                     countryCode = basicParty.country,
                     partyID = basicParty.id,
-                    tokens = Tokens(tokenA = tokenA)))
+                    auth = Auth(tokenA = tokenA)))
         }
 
         val responseBody = RegistrationInformation(tokenA, urlJoin(properties.host, "/ocpi/hub/versions"))
