@@ -1,10 +1,10 @@
-# connect
+# CONNECT
 
 The Share & Charge CONNECT message broker with OCPI 2.2 connection.
 
 ## API Documentation
 
-See [API_DOC.html](./API_DOC.html).
+See [Share&Charge CONNECT Documentation](https://shareandcharge.bitbucket.io).
 
 ## Running a Broker Locally
 
@@ -40,4 +40,4 @@ You should see a 200 OK response.
 ### Generating new API documentation
 
 Documentation is generated automatically on build. The asciidoc template can be found in 
-`src/docs/asciidoc/API_DOC.adoc` and the output in `build/asciidoc/html5/API_DOC.html`.
+`src/docs/asciidoc/index.adoc` and the output in `build/asciidoc/html5/index.html`.
