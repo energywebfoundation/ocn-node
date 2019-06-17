@@ -28,7 +28,7 @@ class VersionsControllerTest(@Autowired val mockMvc: MockMvc) {
     @Test
     fun `When GET versions then return version information`() {
         val party = Party(countryCode = "DE", partyID = "SNC")
-        every { repository.findByAuth_TokenA(party.auth.tokenA) } returns party
+        every { repository.findByAuth_TokenA(party.auth.tokenA) } returns arrayOf(party).asIterable()
         every { properties.host } returns "http://localhost:8070"
         mockMvc.perform(get("/ocpi/hub/versions")
                 .header("Authorization", "Token ${party.auth.tokenA}"))
@@ -45,7 +45,7 @@ class VersionsControllerTest(@Autowired val mockMvc: MockMvc) {
     @Test
     fun `When Get 2_2 then return version details`() {
         val party = Party(countryCode = "DE", partyID = "SNC")
-        every { repository.findByAuth_TokenA(party.auth.tokenA) } returns party
+        every { repository.findByAuth_TokenA(party.auth.tokenA) } returns arrayOf(party).asIterable()
         every { properties.host } returns "https://broker.provider.com"
         mockMvc.perform(get("/ocpi/hub/2.2")
                 .header("Authorization", "Token ${party.auth.tokenA}"))

@@ -21,10 +21,17 @@ class RepositoriesTests @Autowired constructor(
     }
 
     @Test
-    fun `When findByAuth then return Party`() {
+    fun `When findByAuth then return Party as iterable`() {
         val party = Party(countryCode = "NL", partyID = "XYZ")
         entityManager.persistAndFlush(party)
         val found = partyRepository.findByAuth_TokenA(party.auth.tokenA)
-        assertThat(found).isEqualTo(party)
+        assertThat(found).isEqualTo(listOf(party))
+    }
+
+    @Test
+    fun `When findByAuth then return empty iterable`() {
+        val party = Party(countryCode = "NL", partyID = "XYZ")
+        val result = partyRepository.findByAuth_TokenA(party.auth.tokenA)
+        assertThat(result).isEqualTo(listOf<Party>())
     }
 }
