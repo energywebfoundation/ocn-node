@@ -8,33 +8,34 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
-import snc.connect.broker.PartyRepository
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
+import snc.connect.broker.repositories.OrganizationRepository
 import snc.connect.broker.Properties
 import snc.connect.broker.enums.ModuleID
-import snc.connect.broker.enums.StatusCode
-import snc.connect.broker.models.entities.Party
+import snc.connect.broker.enums.Status
+import snc.connect.broker.models.entities.OrganizationEntity
 import snc.connect.broker.models.ocpi.Endpoint
 
 @WebMvcTest(VersionsController::class)
 class VersionsControllerTest(@Autowired val mockMvc: MockMvc) {
 
     @MockkBean
-    lateinit var repository: PartyRepository
+    lateinit var repository: OrganizationRepository
 
     @MockkBean
     lateinit var properties: Properties
 
     @Test
     fun `When GET versions then return version information`() {
-        val party = Party(countryCode = "DE", partyID = "SNC")
-        every { repository.findByAuth_TokenA(party.auth.tokenA) } returns arrayOf(party).asIterable()
+        val org = OrganizationEntity()
+        every { repository.existsByAuth_TokenA(org.auth.tokenA) } returns true
         every { properties.host } returns "http://localhost:8070"
         mockMvc.perform(get("/ocpi/hub/versions")
-                .header("Authorization", "Token ${party.auth.tokenA}"))
+                .header("Authorization", "Token ${org.auth.tokenA}"))
                 .andExpect(status().isOk)
-                .andExpect(jsonPath("\$.status_code").value(StatusCode.SUCCESS.code))
-                .andExpect(jsonPath("\$.status_message").isEmpty)
+                .andExpect(jsonPath("\$.status_code").value(Status.SUCCESS.code))
+                .andExpect(jsonPath("\$.status_message").doesNotExist())
                 .andExpect(jsonPath("\$.timestamp").isString)
                 .andExpect(jsonPath("\$.data.versions").isArray)
                 .andExpect(jsonPath("\$.data.versions[0]").isMap)
@@ -43,15 +44,15 @@ class VersionsControllerTest(@Autowired val mockMvc: MockMvc) {
     }
 
     @Test
-    fun `When Get 2_2 then return version details`() {
-        val party = Party(countryCode = "DE", partyID = "SNC")
-        every { repository.findByAuth_TokenA(party.auth.tokenA) } returns arrayOf(party).asIterable()
+    fun `When GET 2_2 then return version details`() {
+        val org = OrganizationEntity()
+        every { repository.existsByAuth_TokenA(org.auth.tokenA) } returns true
         every { properties.host } returns "https://broker.provider.com"
         mockMvc.perform(get("/ocpi/hub/2.2")
-                .header("Authorization", "Token ${party.auth.tokenA}"))
+                .header("Authorization", "Token ${org.auth.tokenA}"))
                 .andExpect(status().isOk)
-                .andExpect(jsonPath("\$.status_code").value(StatusCode.SUCCESS.code))
-                .andExpect(jsonPath("\$.status_message").isEmpty)
+                .andExpect(jsonPath("\$.status_code").value(Status.SUCCESS.code))
+                .andExpect(jsonPath("\$.status_message").doesNotExist())
                 .andExpect(jsonPath("\$.timestamp").isString)
                 .andExpect(jsonPath("\$.data.version").value("2.2"))
                 .andExpect(jsonPath("\$.data.endpoints", hasSize<Array<Endpoint>>(ModuleID.values().size * 2)))

@@ -1,6 +1,6 @@
 package snc.connect.broker.enums
 
-enum class StatusCode(val code: Int, val message: String? = null) {
+enum class Status(val code: Int, val message: String? = null) {
     SUCCESS(1000),
     CLIENT_ERROR(2000),
     CLIENT_INVALID_PARAMETERS(2001, "Invalid or missing parameters"),
@@ -13,13 +13,6 @@ enum class StatusCode(val code: Int, val message: String? = null) {
     HUB_UNKNOWN_RECEIVER(4001, "Unknown receiver"),
     HUB_REQUEST_TIMEOUT(4002, "Timeout on forwarded request"),
     HUB_CONNECTION_PROBLEM(4003, "Connection problem")
-}
-
-enum class RoleType {
-    CPO,
-    EMSP,
-    NSP,
-    OTHER
 }
 
 enum class ConnectionStatusType {
@@ -44,4 +37,23 @@ enum class ModuleID(val value: String) {
 enum class InterfaceRole {
     CPO,
     MSP
+}
+
+enum class Role {
+    CPO,
+    EMSP,
+    HUB,
+    NSP,
+    OTHER,
+    SCSP
+}
+
+enum class ImageCategory {
+    CHARGER,
+    ENTRANCE,
+    LOCATION,
+    NETWORK,
+    OPERATOR,
+    OTHER,
+    OWNER
 }

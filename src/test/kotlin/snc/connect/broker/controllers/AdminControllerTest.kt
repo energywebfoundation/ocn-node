@@ -1,5 +1,6 @@
 package snc.connect.broker.controllers
 
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.ninjasquad.springmockk.MockkBean
 import io.mockk.every
 import org.junit.jupiter.api.BeforeEach
@@ -17,9 +18,11 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
 import org.springframework.test.web.servlet.setup.DefaultMockMvcBuilder
 import org.springframework.test.web.servlet.setup.MockMvcBuilders
 import org.springframework.web.context.WebApplicationContext
-import snc.connect.broker.PartyRepository
-import snc.connect.broker.models.entities.Party
+import snc.connect.broker.repositories.CredentialRepository
+import snc.connect.broker.repositories.OrganizationRepository
 import snc.connect.broker.Properties
+import snc.connect.broker.models.entities.OrganizationEntity
+import snc.connect.broker.models.ocpi.BasicParty
 
 @WebMvcTest(AdminController::class)
 @ExtendWith(RestDocumentationExtension::class)
@@ -28,7 +31,10 @@ class AdminControllerTest {
     lateinit var mockMvc: MockMvc
 
     @MockkBean
-    lateinit var repository: PartyRepository
+    lateinit var orgRepo: OrganizationRepository
+
+    @MockkBean
+    lateinit var credentialRepo: CredentialRepository
 
     @MockkBean
     lateinit var properties: Properties
@@ -44,14 +50,16 @@ class AdminControllerTest {
 
     @Test
     fun `When POST generate-registration-token then return TOKEN_A and versions endpoint`() {
-        val party = Party(countryCode = "DE", partyID = "SNC")
+        val party = BasicParty(country = "DE", id = "SNC")
+        val org = OrganizationEntity()
         every { properties.apikey } returns "1234567890"
         every { properties.host } returns "http://localhost:8090"
-        every { repository.findByCountryCodeAndPartyID("DE", "SNC") } returns null
-        every { repository.save(any<Party>()) } returns party
+        every { credentialRepo.existsByCountryCodeAndPartyID(party.country, party.id) } returns false
+        every { orgRepo.save(any<OrganizationEntity>()) } returns org
         mockMvc.perform(post("/admin/generate-registration-token")
                 .header("Authorization", "Token 1234567890")
-                .contentType(MediaType.APPLICATION_JSON).content("[{\"party_id\":\"SNC\",\"country_code\":\"DE\"}]"))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jacksonObjectMapper().writeValueAsString(arrayOf(party))))
                 .andExpect(status().isOk)
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
                 .andExpect(jsonPath("\$.token").isString)

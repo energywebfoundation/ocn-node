@@ -42,6 +42,7 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-starter-test") {
         exclude(module = "junit")
         exclude(module = "mockito-core")
+        exclude(module = "android-json")
     }
     testImplementation("org.junit.jupiter:junit-jupiter-api")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
@@ -49,6 +50,7 @@ dependencies {
     kapt("org.springframework.boot:spring-boot-configuration-processor")
     asciidoctor("org.springframework.restdocs:spring-restdocs-asciidoctor:2.0.3.RELEASE")
     testCompile("org.springframework.restdocs:spring-restdocs-mockmvc:2.0.3.RELEASE")
+    compile("khttp:khttp:1.0.0")
 }
 
 allOpen {

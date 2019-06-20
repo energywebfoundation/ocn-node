@@ -1,5 +1,7 @@
 package snc.connect.broker.tools
 
+import java.time.Instant
+import java.time.format.DateTimeFormatter
 import java.util.UUID
 
 fun generateUUIDv4Token(): String {
@@ -25,4 +27,8 @@ fun urlJoin(base: String, vararg paths: String): String {
         uri = uri.plus(sanitizedPath)
     }
     return uri
+}
+
+fun getTimestamp(): String {
+    return DateTimeFormatter.ISO_INSTANT.format(Instant.now())
 }

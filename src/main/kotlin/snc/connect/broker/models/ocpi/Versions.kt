@@ -3,6 +3,15 @@ package snc.connect.broker.models.ocpi
 import com.fasterxml.jackson.annotation.JsonProperty
 import snc.connect.broker.enums.InterfaceRole
 
+data class Versions(@JsonProperty("versions") val versions: Array<Version>) {
+    override fun equals(other: Any?): Boolean {
+        return super.equals(other)
+    }
+    override fun hashCode(): Int {
+        return super.hashCode()
+    }
+}
+
 data class Version(@JsonProperty("version") val version: String,
                    @JsonProperty("url") val url: String)
 
