@@ -203,6 +203,8 @@ class LocationsController(private val routingService: RoutingService) {
                                @PathVariable partyID: String,
                                @PathVariable locationID: String): OcpiResponse<Location> {
 
+        //TODO: validate path variable role matches OCPI-from role
+
         val sender = BasicRole(fromPartyID, fromCountryCode)
         val receiver = BasicRole(toPartyID, toCountryCode)
 
@@ -245,6 +247,8 @@ class LocationsController(private val routingService: RoutingService) {
                            @PathVariable partyID: String,
                            @PathVariable locationID: String,
                            @PathVariable evseUID: String): OcpiResponse<Evse> {
+
+        //TODO: validate path variable role matches OCPI-from role
 
         val sender = BasicRole(fromPartyID, fromCountryCode)
         val receiver = BasicRole(toPartyID, toCountryCode)
@@ -290,6 +294,8 @@ class LocationsController(private val routingService: RoutingService) {
                                 @PathVariable evseUID: String,
                                 @PathVariable connectorID: String): OcpiResponse<Connector> {
 
+        //TODO: validate path variable role matches OCPI-from role
+
         val sender = BasicRole(fromPartyID, fromCountryCode)
         val receiver = BasicRole(toPartyID, toCountryCode)
 
@@ -331,7 +337,9 @@ class LocationsController(private val routingService: RoutingService) {
                                @PathVariable countryCode: String,
                                @PathVariable partyID: String,
                                @PathVariable locationID: String,
-                               @RequestBody body: Location): OcpiResponse<Any> {
+                               @RequestBody body: Location): OcpiResponse<Nothing> {
+
+        //TODO: validate path variable role matches OCPI-from role
 
         val sender = BasicRole(fromPartyID, fromCountryCode)
         val receiver = BasicRole(toPartyID, toCountryCode)
@@ -347,7 +355,7 @@ class LocationsController(private val routingService: RoutingService) {
                     url = urlJoin(endpoint.url, "/$countryCode/$partyID/$locationID"),
                     headers = headers,
                     body = body,
-                    expectedDataType = Any::class)
+                    expectedDataType = Nothing::class)
         } else {
             val url = routingService.findBrokerUrl(receiver)
             val headers = routingService.makeHeaders(correlationID, sender, receiver)
@@ -361,7 +369,7 @@ class LocationsController(private val routingService: RoutingService) {
                             role = InterfaceRole.MSP,
                             path = "/$countryCode/$partyID/$locationID",
                             body = body),
-                    expectedDataType = Any::class)
+                    expectedDataType = Nothing::class)
         }
     }
 
@@ -377,7 +385,9 @@ class LocationsController(private val routingService: RoutingService) {
                            @PathVariable partyID: String,
                            @PathVariable locationID: String,
                            @PathVariable evseUID: String,
-                           @RequestBody body: Evse): OcpiResponse<Any> {
+                           @RequestBody body: Evse): OcpiResponse<Nothing> {
+
+        //TODO: validate path variable role matches OCPI-from role
 
         val sender = BasicRole(fromPartyID, fromCountryCode)
         val receiver = BasicRole(toPartyID, toCountryCode)
@@ -393,7 +403,7 @@ class LocationsController(private val routingService: RoutingService) {
                     url = urlJoin(endpoint.url, "/$countryCode/$partyID/$locationID/$evseUID"),
                     headers = headers,
                     body = body,
-                    expectedDataType = Any::class)
+                    expectedDataType = Nothing::class)
         } else {
             val url = routingService.findBrokerUrl(receiver)
             val headers = routingService.makeHeaders(correlationID, sender, receiver)
@@ -407,7 +417,7 @@ class LocationsController(private val routingService: RoutingService) {
                             role = InterfaceRole.MSP,
                             path = "/$countryCode/$partyID/$locationID/$evseUID",
                             body = body),
-                    expectedDataType = Any::class)
+                    expectedDataType = Nothing::class)
         }
     }
 
@@ -424,7 +434,9 @@ class LocationsController(private val routingService: RoutingService) {
                                 @PathVariable locationID: String,
                                 @PathVariable evseUID: String,
                                 @PathVariable connectorID: String,
-                                @RequestBody body: Connector): OcpiResponse<Any> {
+                                @RequestBody body: Connector): OcpiResponse<Nothing> {
+
+        //TODO: validate path variable role matches OCPI-from role
 
         val sender = BasicRole(fromPartyID, fromCountryCode)
         val receiver = BasicRole(toPartyID, toCountryCode)
@@ -440,7 +452,7 @@ class LocationsController(private val routingService: RoutingService) {
                     url = urlJoin(endpoint.url, "/$countryCode/$partyID/$locationID/$evseUID/$connectorID"),
                     headers = headers,
                     body = body,
-                    expectedDataType = Any::class)
+                    expectedDataType = Nothing::class)
         } else {
             val url = routingService.findBrokerUrl(receiver)
             val headers = routingService.makeHeaders(correlationID, sender, receiver)
@@ -454,7 +466,7 @@ class LocationsController(private val routingService: RoutingService) {
                             role = InterfaceRole.MSP,
                             path = "/$countryCode/$partyID/$locationID/$evseUID/$connectorID",
                             body = body),
-                    expectedDataType = Any::class)
+                    expectedDataType = Nothing::class)
         }
     }
 
@@ -469,7 +481,9 @@ class LocationsController(private val routingService: RoutingService) {
                                  @PathVariable countryCode: String,
                                  @PathVariable partyID: String,
                                  @PathVariable locationID: String,
-                                 @RequestBody body: Map<String, Any>): OcpiResponse<Any> {
+                                 @RequestBody body: Map<String, Any>): OcpiResponse<Nothing> {
+
+        //TODO: validate path variable role matches OCPI-from role
 
         val sender = BasicRole(fromPartyID, fromCountryCode)
         val receiver = BasicRole(toPartyID, toCountryCode)
@@ -485,7 +499,7 @@ class LocationsController(private val routingService: RoutingService) {
                     url = urlJoin(endpoint.url, "/$countryCode/$partyID/$locationID"),
                     headers = headers,
                     body = body,
-                    expectedDataType = Any::class)
+                    expectedDataType = Nothing::class)
         } else {
             val url = routingService.findBrokerUrl(receiver)
             val headers = routingService.makeHeaders(correlationID, sender, receiver)
@@ -499,7 +513,7 @@ class LocationsController(private val routingService: RoutingService) {
                             role = InterfaceRole.MSP,
                             path = "/$countryCode/$partyID/$locationID",
                             body = body),
-                    expectedDataType = Any::class)
+                    expectedDataType = Nothing::class)
         }
     }
 
@@ -515,7 +529,9 @@ class LocationsController(private val routingService: RoutingService) {
                              @PathVariable partyID: String,
                              @PathVariable locationID: String,
                              @PathVariable evseUID: String,
-                             @RequestBody body: Map<String, Any>): OcpiResponse<Any> {
+                             @RequestBody body: Map<String, Any>): OcpiResponse<Nothing> {
+
+        //TODO: validate path variable role matches OCPI-from role
 
         val sender = BasicRole(fromPartyID, fromCountryCode)
         val receiver = BasicRole(toPartyID, toCountryCode)
@@ -531,7 +547,7 @@ class LocationsController(private val routingService: RoutingService) {
                     url = urlJoin(endpoint.url, "/$countryCode/$partyID/$locationID/$evseUID"),
                     headers = headers,
                     body = body,
-                    expectedDataType = Any::class)
+                    expectedDataType = Nothing::class)
         } else {
             val url = routingService.findBrokerUrl(receiver)
             val headers = routingService.makeHeaders(correlationID, sender, receiver)
@@ -545,7 +561,7 @@ class LocationsController(private val routingService: RoutingService) {
                             role = InterfaceRole.MSP,
                             path = "/$countryCode/$partyID/$locationID/$evseUID",
                             body = body),
-                    expectedDataType = Any::class)
+                    expectedDataType = Nothing::class)
         }
     }
 
@@ -562,7 +578,9 @@ class LocationsController(private val routingService: RoutingService) {
                                   @PathVariable locationID: String,
                                   @PathVariable evseUID: String,
                                   @PathVariable connectorID: String,
-                                  @RequestBody body: Map<String, Any>): OcpiResponse<Any> {
+                                  @RequestBody body: Map<String, Any>): OcpiResponse<Nothing> {
+
+        //TODO: validate path variable role matches OCPI-from role
 
         val sender = BasicRole(fromPartyID, fromCountryCode)
         val receiver = BasicRole(toPartyID, toCountryCode)
@@ -578,7 +596,7 @@ class LocationsController(private val routingService: RoutingService) {
                     url = urlJoin(endpoint.url, "/$countryCode/$partyID/$locationID/$evseUID/$connectorID"),
                     headers = headers,
                     body = body,
-                    expectedDataType = Any::class)
+                    expectedDataType = Nothing::class)
         } else {
             val url = routingService.findBrokerUrl(receiver)
             val headers = routingService.makeHeaders(correlationID, sender, receiver)
@@ -592,7 +610,7 @@ class LocationsController(private val routingService: RoutingService) {
                             role = InterfaceRole.MSP,
                             path = "/$countryCode/$partyID/$locationID/$evseUID/$connectorID",
                             body = body),
-                    expectedDataType = Any::class)
+                    expectedDataType = Nothing::class)
         }
     }
 

@@ -82,12 +82,12 @@ class CredentialsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every { platformRepo.findByAuth_TokenA(platform.auth.tokenA) } returns platform
         every { httpRequestService.getVersions(versionsUrl, tokenB) } returns Versions(
-                versions = arrayOf(Version(
+                versions = listOf(Version(
                         version = "2.2",
                         url = versionDetailUrl)))
         every { httpRequestService.getVersionDetail(versionDetailUrl, tokenB) } returns VersionDetail(
                 version = "2.2",
-                endpoints = arrayOf(
+                endpoints = listOf(
                         Endpoint("credentials", InterfaceRole.CPO, "https://org.charging.net/credentials"),
                         Endpoint("commands", InterfaceRole.MSP, "https://org.charging.net/commands")))
         every { properties.url } returns "http://my.broker.com"
@@ -103,7 +103,7 @@ class CredentialsControllerTest(@Autowired val mockMvc: MockMvc) {
                 .content(jacksonObjectMapper().writeValueAsString(Credentials(
                         token = tokenB,
                         url = versionsUrl,
-                        roles = arrayOf(role1, role2)))))
+                        roles = listOf(role1, role2)))))
                 .andExpect(status().isOk)
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
                 .andExpect(jsonPath("\$.status_code").value(OcpiStatus.SUCCESS.code))
@@ -136,12 +136,12 @@ class CredentialsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every { platformRepo.findByAuth_TokenC(platform.auth.tokenC) } returns platform
         every { httpRequestService.getVersions(versionsUrl, platform.auth.tokenB!!) } returns Versions(
-                versions = arrayOf(Version(
+                versions = listOf(Version(
                         version = "2.2",
                         url = versionDetailUrl)))
         every { httpRequestService.getVersionDetail(versionDetailUrl, platform.auth.tokenB!!) } returns VersionDetail(
                 version = "2.2",
-                endpoints = arrayOf(
+                endpoints = listOf(
                         Endpoint("credentials", InterfaceRole.CPO, "https://org.charging.net/credentials"),
                         Endpoint("commands", InterfaceRole.MSP, "https://org.charging.net/commands")))
         every { properties.url } returns "http://my.broker.com"
@@ -157,7 +157,7 @@ class CredentialsControllerTest(@Autowired val mockMvc: MockMvc) {
                 .content(jacksonObjectMapper().writeValueAsString(Credentials(
                         token = platform.auth.tokenB!!,
                         url = versionsUrl,
-                        roles = arrayOf(role1, role2)))))
+                        roles = listOf(role1, role2)))))
                 .andExpect(status().isOk)
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
                 .andExpect(jsonPath("\$.status_code").value(OcpiStatus.SUCCESS.code))

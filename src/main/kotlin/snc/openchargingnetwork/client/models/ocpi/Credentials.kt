@@ -4,15 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
 
 data class Credentials(@JsonProperty("token") val token: String,
                        @JsonProperty("url") val url: String,
-                       @JsonProperty("roles") val roles: Array<CredentialsRole>) {
-
-    override fun equals(other: Any?): Boolean {
-        return super.equals(other)
-    }
-    override fun hashCode(): Int {
-        return super.hashCode()
-    }
-}
+                       @JsonProperty("roles") val roles: List<CredentialsRole>)
 
 data class CredentialsRole(@JsonProperty("role") val role: Role,
                            @JsonProperty("business_details") val businessDetails: BusinessDetails,

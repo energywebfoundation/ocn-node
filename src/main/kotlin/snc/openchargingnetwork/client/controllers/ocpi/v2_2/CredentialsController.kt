@@ -36,7 +36,7 @@ class CredentialsController(private val platformRepo: PlatformRepository,
                     data = Credentials(
                             token = it.auth.tokenC!!,
                             url = urlJoin(properties.url, "/ocpi/hub/versions"),
-                            roles = arrayOf(CredentialsRole(
+                            roles = listOf(CredentialsRole(
                                     role = Role.HUB,
                                     businessDetails = BusinessDetails(name = "Share&Charge Message Broker"),
                                     partyID = "SNC",
@@ -109,7 +109,7 @@ class CredentialsController(private val platformRepo: PlatformRepository,
                 data = Credentials(
                         token = tokenC,
                         url = urlJoin(properties.url, "/ocpi/hub/versions"),
-                        roles = arrayOf(CredentialsRole(
+                        roles = listOf(CredentialsRole(
                                 role = Role.HUB,
                                 businessDetails = BusinessDetails(name = "Share&Charge Message Broker"),
                                 partyID = "SNC",
@@ -174,7 +174,7 @@ class CredentialsController(private val platformRepo: PlatformRepository,
                 data = Credentials(
                         token = tokenC,
                         url = urlJoin(properties.url, "/ocpi/hub/versions"),
-                        roles = arrayOf(CredentialsRole(
+                        roles = listOf(CredentialsRole(
                                 role = Role.HUB,
                                 businessDetails = BusinessDetails(name = "Share&Charge Message Broker"),
                                 partyID = "SNC",

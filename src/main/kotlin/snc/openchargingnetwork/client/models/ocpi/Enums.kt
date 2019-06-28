@@ -178,3 +178,54 @@ enum class PowerType {
     AC_3_PHASE,
     DC
 }
+
+enum class TokenType {
+    AD_HOC_USER,
+    APP_USER,
+    OTHER,
+    RFID
+}
+
+enum class AuthMethod {
+    AUTH_REQUEST,
+    COMMAND,
+    WHITELIST
+}
+
+enum class CdrDimensionType {
+    CURRENT,
+    ENERGY,
+    ENERGY_EXPORT,
+    ENERGY_IMPORT,
+    MAX_CURRENT,
+    MIN_CURRENT,
+    MAX_POWER,
+    MIN_POWER,
+    PARKING_TIME,
+    POWER,
+    RESERVATION_TIME,
+    STATE_OF_CHARGE,
+    TIME
+}
+
+enum class SessionStatus {
+    ACTIVE,
+    COMPLETED,
+    INVALID,
+    PENDING
+}
+
+enum class ProfileType {
+    CHEAP,
+    FAST,
+    GREEN,
+    REGULAR
+}
+
+enum class ChargingPreferencesResponse {
+    ACCEPTED,
+    DEPARTURE_REQUIRED,
+    ENERGY_NEED_REQUIRED,
+    NOT_POSSIBLE,
+    PROFILE_TYPE_NOT_SUPPORTED
+}
