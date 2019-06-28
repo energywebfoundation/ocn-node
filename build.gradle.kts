@@ -86,3 +86,11 @@ tasks {
         }
     }
 }
+
+(tasks.getByName("processResources") as ProcessResources).apply {
+    val profile: String by project
+    include("**/application.$profile.properties")
+    rename {
+        "application.properties"
+    }
+}

@@ -22,5 +22,4 @@ pipelines:
             - gradle
           script:
             - bash ./gradlew build
-            - scp -r ./build/* $BROKER_HOST:$BROKER_DIR
-            - ssh $BROKER_HOST 'bash -c "sudo service connect restart"'
+            - ssh $BROKER_HOST 'bash -s' < ./infra/setup-test.sh
