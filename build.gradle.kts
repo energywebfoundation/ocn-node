@@ -3,17 +3,17 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import org.springframework.boot.gradle.tasks.bundling.BootJar
 
 plugins {
-    kotlin("plugin.jpa") version "1.3.31"
+    kotlin("plugin.jpa") version "1.3.40"
     id("org.springframework.boot") version "2.1.5.RELEASE"
     id("io.spring.dependency-management") version "1.0.7.RELEASE"
-    kotlin("jvm") version "1.3.31"
-    kotlin("plugin.spring") version "1.3.31"
-    kotlin("plugin.allopen") version "1.3.31"
-    kotlin("kapt") version "1.3.31"
+    kotlin("jvm") version "1.3.40"
+    kotlin("plugin.spring") version "1.3.40"
+    kotlin("plugin.allopen") version "1.3.40"
+    kotlin("kapt") version "1.3.40"
     id("org.asciidoctor.convert") version "1.5.9.2"
 }
 
-group = "snc.connect"
+group = "snc.openchargingnetwork.client"
 version = "0.0.1-SNAPSHOT"
 java.sourceCompatibility = JavaVersion.VERSION_1_8
 
@@ -32,7 +32,7 @@ repositories {
 
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
-    implementation("org.springframework.boot:spring-boot-starter-mustache")
+//    implementation("org.springframework.boot:spring-boot-starter-mustache")
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
@@ -51,6 +51,7 @@ dependencies {
     asciidoctor("org.springframework.restdocs:spring-restdocs-asciidoctor:2.0.3.RELEASE")
     testCompile("org.springframework.restdocs:spring-restdocs-mockmvc:2.0.3.RELEASE")
     compile("khttp:khttp:1.0.0")
+    compile("org.web3j:core:4.3.0")
 }
 
 allOpen {
