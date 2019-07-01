@@ -123,12 +123,11 @@ class SessionsController(private val routingService: RoutingService) {
                               @PathVariable partyID: String,
                               @PathVariable sessionID: String): OcpiResponse<Session> {
 
-        //TODO: validate path variable role matches OCPI-from role
-
         val sender = BasicRole(fromPartyID, fromCountryCode)
         val receiver = BasicRole(toPartyID, toCountryCode)
+        val objectOwner = BasicRole(partyID, countryCode)
 
-        routingService.validateSender(authorization, sender)
+        routingService.validateSender(authorization, sender, objectOwner)
 
         return if (routingService.isRoleKnown(receiver)) {
             val platformID = routingService.getPlatformID(receiver)
@@ -168,12 +167,11 @@ class SessionsController(private val routingService: RoutingService) {
                               @PathVariable sessionID: String,
                               @RequestBody body: Session): OcpiResponse<Nothing> {
 
-        //TODO: validate path variable role matches OCPI-from role
-
         val sender = BasicRole(fromPartyID, fromCountryCode)
         val receiver = BasicRole(toPartyID, toCountryCode)
+        val objectOwner = BasicRole(partyID, countryCode)
 
-        routingService.validateSender(authorization, sender)
+        routingService.validateSender(authorization, sender, objectOwner)
 
         return if (routingService.isRoleKnown(receiver)) {
             val platformID = routingService.getPlatformID(receiver)
@@ -215,12 +213,11 @@ class SessionsController(private val routingService: RoutingService) {
                                 @PathVariable sessionID: String,
                                 @RequestBody body: Map<String, Any>): OcpiResponse<Nothing> {
 
-        //TODO: validate path variable role matches OCPI-from role
-
         val sender = BasicRole(fromPartyID, fromCountryCode)
         val receiver = BasicRole(toPartyID, toCountryCode)
+        val objectOwner = BasicRole(partyID, countryCode)
 
-        routingService.validateSender(authorization, sender)
+        routingService.validateSender(authorization, sender, objectOwner)
 
         return if (routingService.isRoleKnown(receiver)) {
             val platformID = routingService.getPlatformID(receiver)

@@ -14,6 +14,7 @@ import snc.openchargingnetwork.client.models.ocpi.RegistrationInfo
 import snc.openchargingnetwork.client.tools.generateUUIDv4Token
 import snc.openchargingnetwork.client.tools.urlJoin
 
+// TODO: do not apply OCPI exception handler to admin controller
 @RestController
 @RequestMapping("/admin")
 class AdminController(private val platformRepo: PlatformRepository,

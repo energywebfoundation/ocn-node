@@ -84,10 +84,10 @@ data class EnergyMix(@JsonProperty("is_green_energy") val isGreenEnergy: Boolean
                      @JsonProperty("energy_product_name") val energyProductName: String? = null)
 
 data class EnergySource(@JsonProperty("source") val source: EnergySourceCategory,
-                        @JsonProperty("percentage") val percentage: Int)
+                        @JsonProperty("percentage") val percentage: Float)
 
 data class EnvironmentalImpact(@JsonProperty("category") val category: EnvironmentalImpactCategory,
-                               @JsonProperty("amount") val amount: Int)
+                               @JsonProperty("amount") val amount: Float)
 
 
 

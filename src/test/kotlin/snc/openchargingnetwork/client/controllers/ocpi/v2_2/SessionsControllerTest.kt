@@ -34,7 +34,7 @@ class SessionsControllerTest(@Autowired val mockMvc: MockMvc) {
         val receiverRole = BasicRole("ABC", "DE")
         val receiverEndpoint = EndpointEntity(4L, "sessions", InterfaceRole.MSP, "http://localhost:3000/sessions")
 
-        every { routingService.validateSender("Token ${senderPlatform.auth.tokenC}", senderRole) } returns mockk()
+        every { routingService.validateSender("Token ${senderPlatform.auth.tokenC}", senderRole, senderRole) } returns mockk()
         every { routingService.isRoleKnown(receiverRole) } returns true
         every { routingService.getPlatformID(receiverRole) } returns 4L
         every { routingService.getPlatformEndpoint(4L, "sessions", InterfaceRole.MSP) } returns receiverEndpoint

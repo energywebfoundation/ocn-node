@@ -7,8 +7,15 @@ import java.time.format.DateTimeFormatter
 import javax.persistence.Embeddable
 import javax.persistence.Embedded
 
-data class BasicRole(@JsonProperty("party_id") val id: String,
-                     @JsonProperty("country_code") val country: String)
+data class BasicRole(@JsonProperty("party_id") var id: String,
+                     @JsonProperty("country_code") var country: String) {
+
+    fun toLowerCase(): BasicRole {
+        this.id = id.toLowerCase()
+        this.country = country.toLowerCase()
+        return this
+    }
+}
 
 data class RegistrationInfo(@JsonProperty("token") val token: String,
                             @JsonProperty("versions") val versions: String)

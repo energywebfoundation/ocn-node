@@ -45,12 +45,22 @@ class RoutingServiceTest {
     }
 
     @Test
-    fun validateSender() {
+    fun `validateSender 1`() {
         val role = BasicRole("YUT", "BE")
         val platform = PlatformEntity(id = 3L)
         every { platformRepo.findByAuth_TokenC("0102030405") } returns platform
         every { roleRepo.existsByPlatformIDAndCountryCodeAndPartyIDAllIgnoreCase(3L, role.country, role.id) } returns true
         routingService.validateSender("Token 0102030405", role)
+    }
+
+    @Test
+    fun `validateSender 2`() {
+        val role = BasicRole("YUT", "BE")
+        val objectOwner = BasicRole("yut", "be")
+        val platform = PlatformEntity(id = 3L)
+        every { platformRepo.findByAuth_TokenC("0102030405") } returns platform
+        every { roleRepo.existsByPlatformIDAndCountryCodeAndPartyIDAllIgnoreCase(3L, role.country, role.id) } returns true
+        routingService.validateSender("Token 0102030405", role, objectOwner)
     }
 
     @Test

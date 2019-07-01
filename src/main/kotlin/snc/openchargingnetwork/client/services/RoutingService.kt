@@ -30,6 +30,7 @@ class RoutingService(private val platformRepo: PlatformRepository,
             = endpointRepo.findByPlatformIDAndIdentifierAndRole(platformID, identifier, interfaceRole)
             ?: throw OcpiClientInvalidParametersException("Receiver does not support the requested module")
 
+    // check sender is authorized to send requests via this message broker
     fun validateSender(authorization: String, sender: BasicRole) {
 
         // sender platform exists by auth token
@@ -39,6 +40,19 @@ class RoutingService(private val platformRepo: PlatformRepository,
         // role exists on registered platform
         if (!roleRepo.existsByPlatformIDAndCountryCodeAndPartyIDAllIgnoreCase(senderPlatform.id, sender.country, sender.id)) {
             throw OcpiClientInvalidParametersException("Could not find role on sending platform using OCPI-from-* headers")
+        }
+
+    }
+
+    // check sender is authorized on this message broker AND that sender is original client-owned object owner
+    fun validateSender(authorization: String, sender: BasicRole, clientOwnedObjectOwner: BasicRole) {
+
+        // as above
+        this.validateSender(authorization, sender)
+
+        // check sender and client-owned object owner are the same
+        if (sender.toLowerCase() != clientOwnedObjectOwner.toLowerCase()) {
+            throw OcpiClientInvalidParametersException("Client-owned object does not belong to this sender")
         }
 
     }

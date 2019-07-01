@@ -203,12 +203,11 @@ class LocationsController(private val routingService: RoutingService) {
                                @PathVariable partyID: String,
                                @PathVariable locationID: String): OcpiResponse<Location> {
 
-        //TODO: validate path variable role matches OCPI-from role
-
         val sender = BasicRole(fromPartyID, fromCountryCode)
         val receiver = BasicRole(toPartyID, toCountryCode)
+        val objectOwner = BasicRole(partyID, countryCode)
 
-        routingService.validateSender(authorization, sender)
+        routingService.validateSender(authorization, sender, objectOwner)
 
         return if (routingService.isRoleKnown(receiver)) {
             val platformID = routingService.getPlatformID(receiver)
@@ -248,12 +247,11 @@ class LocationsController(private val routingService: RoutingService) {
                            @PathVariable locationID: String,
                            @PathVariable evseUID: String): OcpiResponse<Evse> {
 
-        //TODO: validate path variable role matches OCPI-from role
-
         val sender = BasicRole(fromPartyID, fromCountryCode)
         val receiver = BasicRole(toPartyID, toCountryCode)
+        val objectOwner = BasicRole(partyID, countryCode)
 
-        routingService.validateSender(authorization, sender)
+        routingService.validateSender(authorization, sender, objectOwner)
 
         return if (routingService.isRoleKnown(receiver)) {
             val platformID = routingService.getPlatformID(receiver)
@@ -294,12 +292,11 @@ class LocationsController(private val routingService: RoutingService) {
                                 @PathVariable evseUID: String,
                                 @PathVariable connectorID: String): OcpiResponse<Connector> {
 
-        //TODO: validate path variable role matches OCPI-from role
-
         val sender = BasicRole(fromPartyID, fromCountryCode)
         val receiver = BasicRole(toPartyID, toCountryCode)
+        val objectOwner = BasicRole(partyID, countryCode)
 
-        routingService.validateSender(authorization, sender)
+        routingService.validateSender(authorization, sender, objectOwner)
 
         return if (routingService.isRoleKnown(receiver)) {
             val platformID = routingService.getPlatformID(receiver)
@@ -339,12 +336,11 @@ class LocationsController(private val routingService: RoutingService) {
                                @PathVariable locationID: String,
                                @RequestBody body: Location): OcpiResponse<Nothing> {
 
-        //TODO: validate path variable role matches OCPI-from role
-
         val sender = BasicRole(fromPartyID, fromCountryCode)
         val receiver = BasicRole(toPartyID, toCountryCode)
+        val objectOwner = BasicRole(partyID, countryCode)
 
-        routingService.validateSender(authorization, sender)
+        routingService.validateSender(authorization, sender, objectOwner)
 
         return if (routingService.isRoleKnown(receiver)) {
             val platformID = routingService.getPlatformID(receiver)
@@ -387,12 +383,11 @@ class LocationsController(private val routingService: RoutingService) {
                            @PathVariable evseUID: String,
                            @RequestBody body: Evse): OcpiResponse<Nothing> {
 
-        //TODO: validate path variable role matches OCPI-from role
-
         val sender = BasicRole(fromPartyID, fromCountryCode)
         val receiver = BasicRole(toPartyID, toCountryCode)
+        val objectOwner = BasicRole(partyID, countryCode)
 
-        routingService.validateSender(authorization, sender)
+        routingService.validateSender(authorization, sender, objectOwner)
 
         return if (routingService.isRoleKnown(receiver)) {
             val platformID = routingService.getPlatformID(receiver)
@@ -436,12 +431,11 @@ class LocationsController(private val routingService: RoutingService) {
                                 @PathVariable connectorID: String,
                                 @RequestBody body: Connector): OcpiResponse<Nothing> {
 
-        //TODO: validate path variable role matches OCPI-from role
-
         val sender = BasicRole(fromPartyID, fromCountryCode)
         val receiver = BasicRole(toPartyID, toCountryCode)
+        val objectOwner = BasicRole(partyID, countryCode)
 
-        routingService.validateSender(authorization, sender)
+        routingService.validateSender(authorization, sender, objectOwner)
 
         return if (routingService.isRoleKnown(receiver)) {
             val platformID = routingService.getPlatformID(receiver)
@@ -483,12 +477,11 @@ class LocationsController(private val routingService: RoutingService) {
                                  @PathVariable locationID: String,
                                  @RequestBody body: Map<String, Any>): OcpiResponse<Nothing> {
 
-        //TODO: validate path variable role matches OCPI-from role
-
         val sender = BasicRole(fromPartyID, fromCountryCode)
         val receiver = BasicRole(toPartyID, toCountryCode)
+        val objectOwner = BasicRole(partyID, countryCode)
 
-        routingService.validateSender(authorization, sender)
+        routingService.validateSender(authorization, sender, objectOwner)
 
         return if (routingService.isRoleKnown(receiver)) {
             val platformID = routingService.getPlatformID(receiver)
@@ -531,12 +524,11 @@ class LocationsController(private val routingService: RoutingService) {
                              @PathVariable evseUID: String,
                              @RequestBody body: Map<String, Any>): OcpiResponse<Nothing> {
 
-        //TODO: validate path variable role matches OCPI-from role
-
         val sender = BasicRole(fromPartyID, fromCountryCode)
         val receiver = BasicRole(toPartyID, toCountryCode)
+        val objectOwner = BasicRole(partyID, countryCode)
 
-        routingService.validateSender(authorization, sender)
+        routingService.validateSender(authorization, sender, objectOwner)
 
         return if (routingService.isRoleKnown(receiver)) {
             val platformID = routingService.getPlatformID(receiver)
@@ -580,12 +572,11 @@ class LocationsController(private val routingService: RoutingService) {
                                   @PathVariable connectorID: String,
                                   @RequestBody body: Map<String, Any>): OcpiResponse<Nothing> {
 
-        //TODO: validate path variable role matches OCPI-from role
-
         val sender = BasicRole(fromPartyID, fromCountryCode)
         val receiver = BasicRole(toPartyID, toCountryCode)
+        val objectOwner = BasicRole(partyID, countryCode)
 
-        routingService.validateSender(authorization, sender)
+        routingService.validateSender(authorization, sender, objectOwner)
 
         return if (routingService.isRoleKnown(receiver)) {
             val platformID = routingService.getPlatformID(receiver)
