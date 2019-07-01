@@ -54,8 +54,8 @@ val exampleLocation2 = Location(
         lastUpdated = getTimestamp())
 
 val exampleSession = Session(
-        countryCode = "XYZ",
-        partyID = "DE",
+        countryCode = "DE",
+        partyID = "XYZ",
         id = "1234",
         startDateTime = getTimestamp(),
         kwh = 4.2F,

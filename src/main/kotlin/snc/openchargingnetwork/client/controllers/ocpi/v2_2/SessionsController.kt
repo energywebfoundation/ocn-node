@@ -185,8 +185,9 @@ class SessionsController(private val routingService: RoutingService) {
         val sender = BasicRole(fromPartyID, fromCountryCode)
         val receiver = BasicRole(toPartyID, toCountryCode)
         val objectOwner = BasicRole(partyID, countryCode)
+        val objectData = BasicRole(body.partyID, body.countryCode)
 
-        routingService.validateSender(authorization, sender, objectOwner)
+        routingService.validateSender(authorization, sender, objectOwner, objectData)
 
         val response = if (routingService.isRoleKnown(receiver)) {
             val platformID = routingService.getPlatformID(receiver)

@@ -45,17 +45,28 @@ class RoutingService(private val platformRepo: PlatformRepository,
 
     }
 
-    // check sender is authorized on this message broker AND that sender is original client-owned object owner
-    fun validateSender(authorization: String, sender: BasicRole, clientOwnedObjectOwner: BasicRole) {
+    // check sender is authorized on this message broker AND that sender is original client-owned object creator
+    fun validateSender(authorization: String, sender: BasicRole, objectCreator: BasicRole) {
 
         // as above
         this.validateSender(authorization, sender)
 
         // check sender and client-owned object owner are the same
-        if (sender.toLowerCase() != clientOwnedObjectOwner.toLowerCase()) {
+        if (sender.toLowerCase() != objectCreator.toLowerCase()) {
             throw OcpiClientInvalidParametersException("Client-owned object does not belong to this sender")
         }
 
+    }
+
+    // check sender is authorized on msg broker, sender is creator of object AND object contains the same sender role
+    fun validateSender(authorization: String, sender: BasicRole, objectCreator: BasicRole, objectData: BasicRole) {
+
+        // as above
+        this.validateSender(authorization, sender, objectCreator)
+
+        if (objectCreator.toLowerCase() != objectData.toLowerCase()) {
+            throw OcpiClientInvalidParametersException("Object country_code and party_id do not match request parameters")
+        }
     }
 
     fun makeHeaders(receiverPlatformID: Long?, correlationID: String, sender: BasicRole, receiver: BasicRole): Map<String, String> {
