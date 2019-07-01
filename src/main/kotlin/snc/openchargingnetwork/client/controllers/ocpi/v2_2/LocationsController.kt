@@ -1,10 +1,12 @@
 package snc.openchargingnetwork.client.controllers.ocpi.v2_2
 
+import org.springframework.http.HttpHeaders
+import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import snc.openchargingnetwork.client.models.HubRequest
+import snc.openchargingnetwork.client.models.HubRequestResponseType
 import snc.openchargingnetwork.client.models.ocpi.*
 import snc.openchargingnetwork.client.services.RoutingService
-import snc.openchargingnetwork.client.tools.asUrlEncodedParameters
 import snc.openchargingnetwork.client.tools.urlJoin
 
 @RestController
@@ -25,20 +27,16 @@ class LocationsController(private val routingService: RoutingService) {
                                      @RequestParam("date_from", required = false) dateFrom: String?,
                                      @RequestParam("date_to", required = false) dateTo: String?,
                                      @RequestParam("offset", required = false) offset: Int?,
-                                     @RequestParam("limit", required = false) limit: Int?): OcpiResponse<Array<Location>> {
-
-        val params = mutableMapOf<String, Any?>(
-                "date_from" to dateFrom,
-                "date_to" to dateTo,
-                "offset" to offset,
-                "limit" to limit).asUrlEncodedParameters()
+                                     @RequestParam("limit", required = false) limit: Int?): ResponseEntity<OcpiResponse<Array<Location>>> {
 
         val sender = BasicRole(fromPartyID, fromCountryCode)
         val receiver = BasicRole(toPartyID, toCountryCode)
 
         routingService.validateSender(authorization, sender)
 
-        return if (routingService.isRoleKnown(receiver)) {
+        val params = PaginatedRequest(dateFrom, dateTo, offset, limit).encode()
+
+        val response = if (routingService.isRoleKnown(receiver)) {
             val platformID = routingService.getPlatformID(receiver)
             val endpoint = routingService.getPlatformEndpoint(platformID, "locations", InterfaceRole.CPO)
             val headers = routingService.makeHeaders(platformID, correlationID, sender, receiver)
@@ -59,9 +57,21 @@ class LocationsController(private val routingService: RoutingService) {
                             method = "GET",
                             module = "locations",
                             role = InterfaceRole.CPO,
-                            params = params),
+                            params = params,
+                            type = HubRequestResponseType.LOCATION_ARRAY),
                     expectedDataType = Array<Location>::class)
         }
+
+        val headers = HttpHeaders()
+        response.headers["Link"]?.let { headers.add("Link", "<RESPONSE_URL>; rel=\"next\"")}
+        response.headers["X-Total-Count"]?.let { headers.add("X-Total-Count", it) }
+        response.headers["X-Limit"]?.let { headers.add("X-Limit", it) }
+
+
+        return ResponseEntity
+                .status(response.statusCode)
+                .headers(headers)
+                .body(response.body)
     }
 
     @GetMapping("/ocpi/cpo/2.2/locations/{locationID}")
@@ -72,14 +82,14 @@ class LocationsController(private val routingService: RoutingService) {
                                        @RequestHeader("OCPI-from-party-id") fromPartyID: String,
                                        @RequestHeader("OCPI-to-country-code") toCountryCode: String,
                                        @RequestHeader("OCPI-to-party-id") toPartyID: String,
-                                       @PathVariable locationID: String): OcpiResponse<Location> {
+                                       @PathVariable locationID: String): ResponseEntity<OcpiResponse<Location>> {
 
         val sender = BasicRole(fromPartyID, fromCountryCode)
         val receiver = BasicRole(toPartyID, toCountryCode)
 
         routingService.validateSender(authorization, sender)
 
-        return if (routingService.isRoleKnown(receiver)) {
+        val response = if (routingService.isRoleKnown(receiver)) {
             val platformID = routingService.getPlatformID(receiver)
             val endpoint = routingService.getPlatformEndpoint(platformID, "locations", InterfaceRole.CPO)
             val headers = routingService.makeHeaders(platformID, correlationID, sender, receiver)
@@ -99,9 +109,12 @@ class LocationsController(private val routingService: RoutingService) {
                             method = "GET",
                             module = "locations",
                             role = InterfaceRole.CPO,
-                            path = "/$locationID"),
+                            path = "/$locationID",
+                            type = HubRequestResponseType.LOCATION),
                     expectedDataType = Location::class)
         }
+
+        return ResponseEntity.status(response.statusCode).body(response.body)
     }
 
     @GetMapping("/ocpi/cpo/2.2/locations/{locationID}/{evseUID}")
@@ -113,14 +126,14 @@ class LocationsController(private val routingService: RoutingService) {
                                    @RequestHeader("OCPI-to-country-code") toCountryCode: String,
                                    @RequestHeader("OCPI-to-party-id") toPartyID: String,
                                    @PathVariable locationID: String,
-                                   @PathVariable evseUID: String): OcpiResponse<Evse> {
+                                   @PathVariable evseUID: String): ResponseEntity<OcpiResponse<Evse>> {
 
         val sender = BasicRole(fromPartyID, fromCountryCode)
         val receiver = BasicRole(toPartyID, toCountryCode)
 
         routingService.validateSender(authorization, sender)
 
-        return if (routingService.isRoleKnown(receiver)) {
+        val response = if (routingService.isRoleKnown(receiver)) {
             val platformID = routingService.getPlatformID(receiver)
             val endpoint = routingService.getPlatformEndpoint(platformID, "locations", InterfaceRole.CPO)
             val headers = routingService.makeHeaders(platformID, correlationID, sender, receiver)
@@ -140,9 +153,12 @@ class LocationsController(private val routingService: RoutingService) {
                             method = "GET",
                             module = "locations",
                             role = InterfaceRole.CPO,
-                            path = "/$locationID/$evseUID"),
+                            path = "/$locationID/$evseUID",
+                            type = HubRequestResponseType.EVSE),
                     expectedDataType = Evse::class)
         }
+
+        return ResponseEntity.status(response.statusCode).body(response.body)
     }
 
     @GetMapping("/ocpi/cpo/2.2/locations/{locationID}/{evseUID}/{connectorID}")
@@ -155,14 +171,14 @@ class LocationsController(private val routingService: RoutingService) {
                                         @RequestHeader("OCPI-to-party-id") toPartyID: String,
                                         @PathVariable locationID: String,
                                         @PathVariable evseUID: String,
-                                        @PathVariable connectorID: String): OcpiResponse<Connector> {
+                                        @PathVariable connectorID: String): ResponseEntity<OcpiResponse<Connector>> {
 
         val sender = BasicRole(fromPartyID, fromCountryCode)
         val receiver = BasicRole(toPartyID, toCountryCode)
 
         routingService.validateSender(authorization, sender)
 
-        return if (routingService.isRoleKnown(receiver)) {
+        val response = if (routingService.isRoleKnown(receiver)) {
             val platformID = routingService.getPlatformID(receiver)
             val endpoint = routingService.getPlatformEndpoint(platformID, "locations", InterfaceRole.CPO)
             val headers = routingService.makeHeaders(platformID, correlationID, sender, receiver)
@@ -182,9 +198,12 @@ class LocationsController(private val routingService: RoutingService) {
                             method = "GET",
                             module = "locations",
                             role = InterfaceRole.CPO,
-                            path = "/$locationID/$evseUID/$connectorID"),
+                            path = "/$locationID/$evseUID/$connectorID",
+                            type = HubRequestResponseType.CONNECTOR),
                     expectedDataType = Connector::class)
         }
+
+        return ResponseEntity.status(response.statusCode).body(response.body)
     }
 
     /**
@@ -201,7 +220,7 @@ class LocationsController(private val routingService: RoutingService) {
                                @RequestHeader("OCPI-to-party-id") toPartyID: String,
                                @PathVariable countryCode: String,
                                @PathVariable partyID: String,
-                               @PathVariable locationID: String): OcpiResponse<Location> {
+                               @PathVariable locationID: String): ResponseEntity<OcpiResponse<Location>> {
 
         val sender = BasicRole(fromPartyID, fromCountryCode)
         val receiver = BasicRole(toPartyID, toCountryCode)
@@ -209,7 +228,7 @@ class LocationsController(private val routingService: RoutingService) {
 
         routingService.validateSender(authorization, sender, objectOwner)
 
-        return if (routingService.isRoleKnown(receiver)) {
+        val response = if (routingService.isRoleKnown(receiver)) {
             val platformID = routingService.getPlatformID(receiver)
             val endpoint = routingService.getPlatformEndpoint(platformID, "locations", InterfaceRole.MSP)
             val headers = routingService.makeHeaders(platformID, correlationID, sender, receiver)
@@ -229,9 +248,12 @@ class LocationsController(private val routingService: RoutingService) {
                             method = "GET",
                             module = "locations",
                             role = InterfaceRole.MSP,
-                            path = "/$countryCode/$partyID/$locationID"),
+                            path = "/$countryCode/$partyID/$locationID",
+                            type = HubRequestResponseType.LOCATION),
                     expectedDataType = Location::class)
         }
+
+        return ResponseEntity.status(response.statusCode).body(response.body)
     }
 
     @GetMapping("/ocpi/emsp/2.2/locations/{countryCode}/{partyID}/{locationID}/{evseUID}")
@@ -245,7 +267,7 @@ class LocationsController(private val routingService: RoutingService) {
                            @PathVariable countryCode: String,
                            @PathVariable partyID: String,
                            @PathVariable locationID: String,
-                           @PathVariable evseUID: String): OcpiResponse<Evse> {
+                           @PathVariable evseUID: String): ResponseEntity<OcpiResponse<Evse>> {
 
         val sender = BasicRole(fromPartyID, fromCountryCode)
         val receiver = BasicRole(toPartyID, toCountryCode)
@@ -253,7 +275,7 @@ class LocationsController(private val routingService: RoutingService) {
 
         routingService.validateSender(authorization, sender, objectOwner)
 
-        return if (routingService.isRoleKnown(receiver)) {
+        val response = if (routingService.isRoleKnown(receiver)) {
             val platformID = routingService.getPlatformID(receiver)
             val endpoint = routingService.getPlatformEndpoint(platformID, "locations", InterfaceRole.MSP)
             val headers = routingService.makeHeaders(platformID, correlationID, sender, receiver)
@@ -273,9 +295,12 @@ class LocationsController(private val routingService: RoutingService) {
                             method = "GET",
                             module = "locations",
                             role = InterfaceRole.MSP,
-                            path = "/$countryCode/$partyID/$locationID/$evseUID"),
+                            path = "/$countryCode/$partyID/$locationID/$evseUID",
+                            type = HubRequestResponseType.EVSE),
                     expectedDataType = Evse::class)
         }
+
+        return ResponseEntity.status(response.statusCode).body(response.body)
     }
 
     @GetMapping("/ocpi/emsp/2.2/locations/{countryCode}/{partyID}/{locationID}/{evseUID}/{connectorID}")
@@ -290,7 +315,7 @@ class LocationsController(private val routingService: RoutingService) {
                                 @PathVariable partyID: String,
                                 @PathVariable locationID: String,
                                 @PathVariable evseUID: String,
-                                @PathVariable connectorID: String): OcpiResponse<Connector> {
+                                @PathVariable connectorID: String): ResponseEntity<OcpiResponse<Connector>> {
 
         val sender = BasicRole(fromPartyID, fromCountryCode)
         val receiver = BasicRole(toPartyID, toCountryCode)
@@ -298,7 +323,7 @@ class LocationsController(private val routingService: RoutingService) {
 
         routingService.validateSender(authorization, sender, objectOwner)
 
-        return if (routingService.isRoleKnown(receiver)) {
+        val response = if (routingService.isRoleKnown(receiver)) {
             val platformID = routingService.getPlatformID(receiver)
             val endpoint = routingService.getPlatformEndpoint(platformID, "locations", InterfaceRole.MSP)
             val headers = routingService.makeHeaders(platformID, correlationID, sender, receiver)
@@ -318,9 +343,12 @@ class LocationsController(private val routingService: RoutingService) {
                             method = "GET",
                             module = "locations",
                             role = InterfaceRole.MSP,
-                            path = "/$countryCode/$partyID/$locationID/$evseUID/$connectorID"),
+                            path = "/$countryCode/$partyID/$locationID/$evseUID/$connectorID",
+                            type = HubRequestResponseType.CONNECTOR),
                     expectedDataType = Connector::class)
         }
+
+        return ResponseEntity.status(response.statusCode).body(response.body)
     }
 
     @PutMapping("/ocpi/emsp/2.2/locations/{countryCode}/{partyID}/{locationID}")
@@ -334,7 +362,7 @@ class LocationsController(private val routingService: RoutingService) {
                                @PathVariable countryCode: String,
                                @PathVariable partyID: String,
                                @PathVariable locationID: String,
-                               @RequestBody body: Location): OcpiResponse<Nothing> {
+                               @RequestBody body: Location): ResponseEntity<OcpiResponse<Nothing>> {
 
         val sender = BasicRole(fromPartyID, fromCountryCode)
         val receiver = BasicRole(toPartyID, toCountryCode)
@@ -342,7 +370,7 @@ class LocationsController(private val routingService: RoutingService) {
 
         routingService.validateSender(authorization, sender, objectOwner)
 
-        return if (routingService.isRoleKnown(receiver)) {
+        val response = if (routingService.isRoleKnown(receiver)) {
             val platformID = routingService.getPlatformID(receiver)
             val endpoint = routingService.getPlatformEndpoint(platformID, "locations", InterfaceRole.MSP)
             val headers = routingService.makeHeaders(platformID, correlationID, sender, receiver)
@@ -367,6 +395,8 @@ class LocationsController(private val routingService: RoutingService) {
                             body = body),
                     expectedDataType = Nothing::class)
         }
+
+        return ResponseEntity.status(response.statusCode).body(response.body)
     }
 
     @PutMapping("/ocpi/emsp/2.2/locations/{countryCode}/{partyID}/{locationID}/{evseUID}")
@@ -381,7 +411,7 @@ class LocationsController(private val routingService: RoutingService) {
                            @PathVariable partyID: String,
                            @PathVariable locationID: String,
                            @PathVariable evseUID: String,
-                           @RequestBody body: Evse): OcpiResponse<Nothing> {
+                           @RequestBody body: Evse): ResponseEntity<OcpiResponse<Nothing>> {
 
         val sender = BasicRole(fromPartyID, fromCountryCode)
         val receiver = BasicRole(toPartyID, toCountryCode)
@@ -389,7 +419,7 @@ class LocationsController(private val routingService: RoutingService) {
 
         routingService.validateSender(authorization, sender, objectOwner)
 
-        return if (routingService.isRoleKnown(receiver)) {
+        val response = if (routingService.isRoleKnown(receiver)) {
             val platformID = routingService.getPlatformID(receiver)
             val endpoint = routingService.getPlatformEndpoint(platformID, "locations", InterfaceRole.MSP)
             val headers = routingService.makeHeaders(platformID, correlationID, sender, receiver)
@@ -414,6 +444,8 @@ class LocationsController(private val routingService: RoutingService) {
                             body = body),
                     expectedDataType = Nothing::class)
         }
+
+        return ResponseEntity.status(response.statusCode).body(response.body)
     }
 
     @PutMapping("/ocpi/emsp/2.2/locations/{countryCode}/{partyID}/{locationID}/{evseUID}/{connectorID}")
@@ -429,7 +461,7 @@ class LocationsController(private val routingService: RoutingService) {
                                 @PathVariable locationID: String,
                                 @PathVariable evseUID: String,
                                 @PathVariable connectorID: String,
-                                @RequestBody body: Connector): OcpiResponse<Nothing> {
+                                @RequestBody body: Connector): ResponseEntity<OcpiResponse<Nothing>> {
 
         val sender = BasicRole(fromPartyID, fromCountryCode)
         val receiver = BasicRole(toPartyID, toCountryCode)
@@ -437,7 +469,7 @@ class LocationsController(private val routingService: RoutingService) {
 
         routingService.validateSender(authorization, sender, objectOwner)
 
-        return if (routingService.isRoleKnown(receiver)) {
+        val response = if (routingService.isRoleKnown(receiver)) {
             val platformID = routingService.getPlatformID(receiver)
             val endpoint = routingService.getPlatformEndpoint(platformID, "locations", InterfaceRole.MSP)
             val headers = routingService.makeHeaders(platformID, correlationID, sender, receiver)
@@ -462,6 +494,8 @@ class LocationsController(private val routingService: RoutingService) {
                             body = body),
                     expectedDataType = Nothing::class)
         }
+
+        return ResponseEntity.status(response.statusCode).body(response.body)
     }
 
     @PatchMapping("/ocpi/emsp/2.2/locations/{countryCode}/{partyID}/{locationID}")
@@ -475,7 +509,7 @@ class LocationsController(private val routingService: RoutingService) {
                                  @PathVariable countryCode: String,
                                  @PathVariable partyID: String,
                                  @PathVariable locationID: String,
-                                 @RequestBody body: Map<String, Any>): OcpiResponse<Nothing> {
+                                 @RequestBody body: Map<String, Any>): ResponseEntity<OcpiResponse<Nothing>> {
 
         val sender = BasicRole(fromPartyID, fromCountryCode)
         val receiver = BasicRole(toPartyID, toCountryCode)
@@ -483,7 +517,7 @@ class LocationsController(private val routingService: RoutingService) {
 
         routingService.validateSender(authorization, sender, objectOwner)
 
-        return if (routingService.isRoleKnown(receiver)) {
+        val response = if (routingService.isRoleKnown(receiver)) {
             val platformID = routingService.getPlatformID(receiver)
             val endpoint = routingService.getPlatformEndpoint(platformID, "locations", InterfaceRole.MSP)
             val headers = routingService.makeHeaders(platformID, correlationID, sender, receiver)
@@ -508,6 +542,8 @@ class LocationsController(private val routingService: RoutingService) {
                             body = body),
                     expectedDataType = Nothing::class)
         }
+
+        return ResponseEntity.status(response.statusCode).body(response.body)
     }
 
     @PatchMapping("/ocpi/emsp/2.2/locations/{countryCode}/{partyID}/{locationID}/{evseUID}")
@@ -522,7 +558,7 @@ class LocationsController(private val routingService: RoutingService) {
                              @PathVariable partyID: String,
                              @PathVariable locationID: String,
                              @PathVariable evseUID: String,
-                             @RequestBody body: Map<String, Any>): OcpiResponse<Nothing> {
+                             @RequestBody body: Map<String, Any>): ResponseEntity<OcpiResponse<Nothing>> {
 
         val sender = BasicRole(fromPartyID, fromCountryCode)
         val receiver = BasicRole(toPartyID, toCountryCode)
@@ -530,7 +566,7 @@ class LocationsController(private val routingService: RoutingService) {
 
         routingService.validateSender(authorization, sender, objectOwner)
 
-        return if (routingService.isRoleKnown(receiver)) {
+        val response = if (routingService.isRoleKnown(receiver)) {
             val platformID = routingService.getPlatformID(receiver)
             val endpoint = routingService.getPlatformEndpoint(platformID, "locations", InterfaceRole.MSP)
             val headers = routingService.makeHeaders(platformID, correlationID, sender, receiver)
@@ -555,6 +591,8 @@ class LocationsController(private val routingService: RoutingService) {
                             body = body),
                     expectedDataType = Nothing::class)
         }
+
+        return ResponseEntity.status(response.statusCode).body(response.body)
     }
 
     @PatchMapping("/ocpi/emsp/2.2/locations/{countryCode}/{partyID}/{locationID}/{evseUID}/{connectorID}")
@@ -570,7 +608,7 @@ class LocationsController(private val routingService: RoutingService) {
                                   @PathVariable locationID: String,
                                   @PathVariable evseUID: String,
                                   @PathVariable connectorID: String,
-                                  @RequestBody body: Map<String, Any>): OcpiResponse<Nothing> {
+                                  @RequestBody body: Map<String, Any>): ResponseEntity<OcpiResponse<Nothing>> {
 
         val sender = BasicRole(fromPartyID, fromCountryCode)
         val receiver = BasicRole(toPartyID, toCountryCode)
@@ -578,7 +616,7 @@ class LocationsController(private val routingService: RoutingService) {
 
         routingService.validateSender(authorization, sender, objectOwner)
 
-        return if (routingService.isRoleKnown(receiver)) {
+        val response = if (routingService.isRoleKnown(receiver)) {
             val platformID = routingService.getPlatformID(receiver)
             val endpoint = routingService.getPlatformEndpoint(platformID, "locations", InterfaceRole.MSP)
             val headers = routingService.makeHeaders(platformID, correlationID, sender, receiver)
@@ -603,6 +641,8 @@ class LocationsController(private val routingService: RoutingService) {
                             body = body),
                     expectedDataType = Nothing::class)
         }
+
+        return ResponseEntity.status(response.statusCode).body(response.body)
     }
 
 }

@@ -43,3 +43,41 @@ data class ChargingPreferences(@JsonProperty("profile_type") val profileType: Pr
                                @JsonProperty("departure_time") val departureTime: String? = null,
                                @JsonProperty("energy_need") val energyNeed: Float? = null,
                                @JsonProperty("discharge_allowed") val dischargeAllowed: Boolean? = null)
+
+enum class CdrDimensionType {
+    CURRENT,
+    ENERGY,
+    ENERGY_EXPORT,
+    ENERGY_IMPORT,
+    MAX_CURRENT,
+    MIN_CURRENT,
+    MAX_POWER,
+    MIN_POWER,
+    PARKING_TIME,
+    POWER,
+    RESERVATION_TIME,
+    STATE_OF_CHARGE,
+    TIME
+}
+
+enum class SessionStatus {
+    ACTIVE,
+    COMPLETED,
+    INVALID,
+    PENDING
+}
+
+enum class ProfileType {
+    CHEAP,
+    FAST,
+    GREEN,
+    REGULAR
+}
+
+enum class ChargingPreferencesResponse {
+    ACCEPTED,
+    DEPARTURE_REQUIRED,
+    ENERGY_NEED_REQUIRED,
+    NOT_POSSIBLE,
+    PROFILE_TYPE_NOT_SUPPORTED
+}

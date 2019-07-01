@@ -1,6 +1,7 @@
 package snc.openchargingnetwork.client.services
 
 import org.springframework.stereotype.Service
+import snc.openchargingnetwork.client.models.HttpResponse
 import snc.openchargingnetwork.client.models.exceptions.OcpiClientInvalidParametersException
 import snc.openchargingnetwork.client.models.exceptions.OcpiHubConnectionProblemException
 import snc.openchargingnetwork.client.models.exceptions.OcpiHubUnknownReceiverException
@@ -79,26 +80,14 @@ class RoutingService(private val platformRepo: PlatformRepository,
                 "OCPI-to-party-id" to receiver.id)
     }
 
-    fun <T: Any> forwardRequest(
-            method: String,
-            url: String,
-            headers: Map<String, String>,
-            params: Map<String, String>? = null,
-            body: Any? = null,
-            expectedDataType: KClass<T>): OcpiResponse<T> {
+    fun <T: Any> forwardRequest(method: String,
+                                url: String,
+                                headers: Map<String, String>,
+                                params: Map<String, String>? = null,
+                                body: Any? = null,
+                                expectedDataType: KClass<T>): HttpResponse<T> {
 
-        return try {
-            when (method) {
-                "GET" -> httpService.makeGetRequest(url, headers, params, expectedDataType)
-                "POST" -> httpService.makePostRequest(url, headers, body, expectedDataType)
-                "PUT" -> httpService.makePutRequest(url, headers, body, expectedDataType)
-                "PATCH" -> httpService.makePatchRequest(url, headers, body, expectedDataType)
-                "DELETE" -> httpService.makeDeleteRequest(url, headers, body, expectedDataType)
-                else -> throw IllegalStateException("HTTP method not recognized: $method")
-            }
-        } catch (e: Exception) {
-            throw OcpiHubConnectionProblemException(e.message ?: "Could not forward request")
-        }
+        return httpService.makeRequest(method, url, headers, params, body, expectedDataType)
     }
 
     fun findBrokerUrl(receiver: BasicRole): String {

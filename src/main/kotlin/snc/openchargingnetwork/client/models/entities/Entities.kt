@@ -1,9 +1,6 @@
 package snc.openchargingnetwork.client.models.entities
 
-import snc.openchargingnetwork.client.models.ocpi.ConnectionStatusType
-import snc.openchargingnetwork.client.models.ocpi.InterfaceRole
-import snc.openchargingnetwork.client.models.ocpi.Role
-import snc.openchargingnetwork.client.models.ocpi.BusinessDetails
+import snc.openchargingnetwork.client.models.ocpi.*
 import snc.openchargingnetwork.client.tools.generateUUIDv4Token
 import snc.openchargingnetwork.client.tools.getTimestamp
 import javax.persistence.*
@@ -47,5 +44,17 @@ class EndpointEntity(
         var identifier: String,
         @Enumerated(EnumType.STRING) var role: InterfaceRole,
         var url: String,
+        @Id @GeneratedValue var id: Long? = null
+)
+
+@Entity
+@Table(name = "cdrs")
+class CdrEntity(
+        val cdrID: String,
+        val ownerID: String,
+        val ownerCountry: String,
+        val creatorID: String,
+        val creatorCountry: String,
+        val location: String,
         @Id @GeneratedValue var id: Long? = null
 )

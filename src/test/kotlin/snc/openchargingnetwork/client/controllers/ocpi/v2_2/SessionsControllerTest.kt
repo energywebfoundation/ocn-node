@@ -12,6 +12,7 @@ import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
 import snc.openchargingnetwork.client.data.exampleSession
+import snc.openchargingnetwork.client.models.HttpResponse
 import snc.openchargingnetwork.client.models.entities.Auth
 import snc.openchargingnetwork.client.models.entities.EndpointEntity
 import snc.openchargingnetwork.client.models.entities.PlatformEntity
@@ -45,7 +46,10 @@ class SessionsControllerTest(@Autowired val mockMvc: MockMvc) {
                 headers = any(),
                 body = exampleSession,
                 expectedDataType = Nothing::class)
-        } returns OcpiResponse(1000, data = null)
+        } returns HttpResponse(
+                statusCode = 200,
+                headers = mapOf(),
+                body = OcpiResponse(1000, data = null))
 
         mockMvc.perform(put("/ocpi/emsp/2.2/sessions/DE/XYZ/1234")
                 .header("Authorization", "Token ${senderPlatform.auth.tokenC}")

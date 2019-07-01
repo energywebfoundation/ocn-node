@@ -70,3 +70,48 @@ val exampleSession = Session(
         currency = "EUR",
         status = SessionStatus.ACTIVE,
         lastUpdated = getTimestamp())
+
+val exampleCDR = CDR(
+        countryCode = "ZUG",
+        partyID = "CH",
+        id = "abcdef-98765",
+        startDateTime = getTimestamp(),
+        endDateTime = getTimestamp(),
+        sessionID = "87694729743",
+        cdrToken = CdrToken(
+                uid = "abc223",
+                tokenType = TokenType.APP_USER,
+                contractID = "de-12342-x"),
+        authMethod = AuthMethod.COMMAND,
+        cdrLocation = CdrLocation(
+                id = "LOC65",
+                address = "quite far away 42",
+                city = "Zug",
+                postalCode = "12345",
+                countryCode = "CHE",
+                coordinates = GeoLocation(
+                        latitude = "50.876",
+                        longitude = "1.283"
+                ),
+                evseUID = "1234",
+                evseID = "su-987239",
+                connectorID = "2",
+                connectorStandard = ConnectorType.CHADEMO,
+                connectorFormat = ConnectorFormat.CABLE,
+                connectorPowerType = PowerType.DC),
+        currency = "CHF",
+        chargingPeriods = listOf(ChargingPeriod(
+                startDateTime = getTimestamp(),
+                dimensions = listOf(CdrDimension(
+                        type = CdrDimensionType.PARKING_TIME,
+                        volume = 23.2F
+                ))
+        )),
+        totalCost = Price(
+                excludingVat = 16.5F,
+                includingVat = 19.2F
+        ),
+        totalEnergy = 0F,
+        totalTime = 23.2F,
+        lastUpdated = getTimestamp()
+)

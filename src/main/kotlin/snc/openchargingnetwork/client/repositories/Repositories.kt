@@ -1,6 +1,7 @@
 package snc.openchargingnetwork.client.repositories
 
 import org.springframework.data.repository.CrudRepository
+import snc.openchargingnetwork.client.models.entities.CdrEntity
 import snc.openchargingnetwork.client.models.ocpi.InterfaceRole
 import snc.openchargingnetwork.client.models.entities.RoleEntity
 import snc.openchargingnetwork.client.models.entities.EndpointEntity
@@ -26,4 +27,12 @@ interface EndpointRepository: CrudRepository<EndpointEntity, Long> {
     fun findByPlatformID(platformID: Long?): Iterable<EndpointEntity>
     fun findByPlatformIDAndIdentifierAndRole(platformID: Long?, identifier: String, Role: InterfaceRole): EndpointEntity?
     fun deleteByPlatformID(platformID: Long?)
+}
+
+interface CdrRepository: CrudRepository<CdrEntity, Long> {
+    fun findByCdrIDAndOwnerIDAndOwnerCountryAndCreatorIDAndCreatorCountryAllIgnoreCase(cdrID: String,
+                                                                                       ownerID: String,
+                                                                                       ownerCountry: String,
+                                                                                       creatorID: String,
+                                                                                       creatorCountry: String): CdrEntity?
 }

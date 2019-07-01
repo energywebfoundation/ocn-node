@@ -12,6 +12,7 @@ import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
 import snc.openchargingnetwork.client.data.exampleLocation1
+import snc.openchargingnetwork.client.models.HttpResponse
 import snc.openchargingnetwork.client.models.entities.Auth
 import snc.openchargingnetwork.client.models.entities.EndpointEntity
 import snc.openchargingnetwork.client.models.entities.PlatformEntity
@@ -38,13 +39,20 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
         every { routingService.getPlatformID(receiverRole) } returns 4L
         every { routingService.getPlatformEndpoint(4L, "locations", InterfaceRole.CPO) } returns receiverEndpoint
         every { routingService.makeHeaders(4L, "abc-123", senderRole, receiverRole) } returns mockk()
+
         every { routingService.forwardRequest(
                 method = "GET",
                 url = receiverEndpoint.url,
                 headers = any(),
                 params = any(),
                 expectedDataType = Array<Location>::class)
-        } returns OcpiResponse(1000, data = arrayOf(exampleLocation1))
+        } returns HttpResponse(
+                statusCode = 200,
+                headers = mapOf(
+                        "Link" to "<https://example.com/ocpi/2.2/page/2",
+                        "X-Total-Count" to "150",
+                        "X-Limit" to "300"),
+                body = OcpiResponse(1000, data = arrayOf(exampleLocation1)))
 
         mockMvc.perform(get("/ocpi/cpo/2.2/locations")
                 .header("Authorization", "Token ${senderPlatform.auth.tokenC}")

@@ -1,10 +1,12 @@
 package snc.openchargingnetwork.client.controllers.ocpi.v2_2
 
+import org.springframework.http.HttpHeaders
+import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import snc.openchargingnetwork.client.models.HubRequest
+import snc.openchargingnetwork.client.models.HubRequestResponseType
 import snc.openchargingnetwork.client.models.ocpi.*
 import snc.openchargingnetwork.client.services.RoutingService
-import snc.openchargingnetwork.client.tools.asUrlEncodedParameters
 import snc.openchargingnetwork.client.tools.urlJoin
 
 @RestController
@@ -25,20 +27,16 @@ class SessionsController(private val routingService: RoutingService) {
                                  @RequestParam("date_from", required = false) dateFrom: String?,
                                  @RequestParam("date_to", required = false) dateTo: String?,
                                  @RequestParam("offset", required = false) offset: Int?,
-                                 @RequestParam("limit", required = false) limit: Int?): OcpiResponse<Array<Session>> {
-
-        val params = mutableMapOf<String, Any?>(
-                "date_from" to dateFrom,
-                "date_to" to dateTo,
-                "offset" to offset,
-                "limit" to limit).asUrlEncodedParameters()
+                                 @RequestParam("limit", required = false) limit: Int?): ResponseEntity<OcpiResponse<Array<Session>>> {
 
         val sender = BasicRole(fromPartyID, fromCountryCode)
         val receiver = BasicRole(toPartyID, toCountryCode)
 
         routingService.validateSender(authorization, sender)
 
-        return if (routingService.isRoleKnown(receiver)) {
+        val params = PaginatedRequest(dateFrom, dateTo, offset, limit).encode()
+
+        val response = if (routingService.isRoleKnown(receiver)) {
             val platformID = routingService.getPlatformID(receiver)
             val endpoint = routingService.getPlatformEndpoint(platformID, "sessions", InterfaceRole.CPO)
             val headers = routingService.makeHeaders(platformID, correlationID, sender, receiver)
@@ -59,9 +57,20 @@ class SessionsController(private val routingService: RoutingService) {
                             method = "GET",
                             module = "sessions",
                             role = InterfaceRole.CPO,
-                            params = params),
+                            params = params,
+                            type = HubRequestResponseType.SESSION_ARRAY),
                     expectedDataType = Array<Session>::class)
         }
+
+        val headers = HttpHeaders()
+        response.headers["Link"]?.let { headers.add("Link", "<RESPONSE_URL>; rel=\"next\"")}
+        response.headers["X-Total-Count"]?.let { headers.add("X-Total-Count", it) }
+        response.headers["X-Limit"]?.let { headers.add("X-Limit", it) }
+
+        return ResponseEntity
+                .status(response.statusCode)
+                .headers(headers)
+                .body(response.body)
     }
 
     @PutMapping("/ocpi/cpo/2.2/sessions/{sessionID}/charging_preferences")
@@ -73,14 +82,14 @@ class SessionsController(private val routingService: RoutingService) {
                                @RequestHeader("OCPI-to-country-code") toCountryCode: String,
                                @RequestHeader("OCPI-to-party-id") toPartyID: String,
                                @PathVariable sessionID: String,
-                               @RequestBody body: ChargingPreferences): OcpiResponse<ChargingPreferencesResponse> {
+                               @RequestBody body: ChargingPreferences): ResponseEntity<OcpiResponse<ChargingPreferencesResponse>> {
 
         val sender = BasicRole(fromPartyID, fromCountryCode)
         val receiver = BasicRole(toPartyID, toCountryCode)
 
         routingService.validateSender(authorization, sender)
 
-        return if (routingService.isRoleKnown(receiver)) {
+        val response = if (routingService.isRoleKnown(receiver)) {
             val platformID = routingService.getPlatformID(receiver)
             val endpoint = routingService.getPlatformEndpoint(platformID, "sessions", InterfaceRole.CPO)
             val headers = routingService.makeHeaders(platformID, correlationID, sender, receiver)
@@ -102,9 +111,12 @@ class SessionsController(private val routingService: RoutingService) {
                             module = "sessions",
                             path = "/$sessionID/charging_preferences",
                             role = InterfaceRole.CPO,
-                            body = body),
+                            body = body,
+                            type = HubRequestResponseType.CHARGING_PREFERENCE_RESPONSE),
                     expectedDataType = ChargingPreferencesResponse::class)
         }
+
+        return ResponseEntity.status(response.statusCode).body(response.body)
     }
 
     /**
@@ -121,7 +133,7 @@ class SessionsController(private val routingService: RoutingService) {
                               @RequestHeader("OCPI-to-party-id") toPartyID: String,
                               @PathVariable countryCode: String,
                               @PathVariable partyID: String,
-                              @PathVariable sessionID: String): OcpiResponse<Session> {
+                              @PathVariable sessionID: String): ResponseEntity<OcpiResponse<Session>> {
 
         val sender = BasicRole(fromPartyID, fromCountryCode)
         val receiver = BasicRole(toPartyID, toCountryCode)
@@ -129,7 +141,7 @@ class SessionsController(private val routingService: RoutingService) {
 
         routingService.validateSender(authorization, sender, objectOwner)
 
-        return if (routingService.isRoleKnown(receiver)) {
+        val response = if (routingService.isRoleKnown(receiver)) {
             val platformID = routingService.getPlatformID(receiver)
             val endpoint = routingService.getPlatformEndpoint(platformID, "sessions", InterfaceRole.MSP)
             val headers = routingService.makeHeaders(platformID, correlationID, sender, receiver)
@@ -149,9 +161,12 @@ class SessionsController(private val routingService: RoutingService) {
                             method = "GET",
                             module = "sessions",
                             path = urlJoin(url, "/$countryCode/$partyID/$sessionID"),
-                            role = InterfaceRole.MSP),
+                            role = InterfaceRole.MSP,
+                            type = HubRequestResponseType.SESSION),
                     expectedDataType = Session::class)
         }
+
+        return ResponseEntity.status(response.statusCode).body(response.body)
     }
 
     @PutMapping("/ocpi/emsp/2.2/sessions/{countryCode}/{partyID}/{sessionID}")
@@ -165,7 +180,7 @@ class SessionsController(private val routingService: RoutingService) {
                               @PathVariable countryCode: String,
                               @PathVariable partyID: String,
                               @PathVariable sessionID: String,
-                              @RequestBody body: Session): OcpiResponse<Nothing> {
+                              @RequestBody body: Session): ResponseEntity<OcpiResponse<Nothing>> {
 
         val sender = BasicRole(fromPartyID, fromCountryCode)
         val receiver = BasicRole(toPartyID, toCountryCode)
@@ -173,7 +188,7 @@ class SessionsController(private val routingService: RoutingService) {
 
         routingService.validateSender(authorization, sender, objectOwner)
 
-        return if (routingService.isRoleKnown(receiver)) {
+        val response = if (routingService.isRoleKnown(receiver)) {
             val platformID = routingService.getPlatformID(receiver)
             val endpoint = routingService.getPlatformEndpoint(platformID, "sessions", InterfaceRole.MSP)
             val headers = routingService.makeHeaders(platformID, correlationID, sender, receiver)
@@ -198,6 +213,8 @@ class SessionsController(private val routingService: RoutingService) {
                             body = body),
                     expectedDataType = Nothing::class)
         }
+
+        return ResponseEntity.status(response.statusCode).body(response.body)
     }
 
     @PatchMapping("/ocpi/emsp/2.2/sessions/{countryCode}/{partyID}/{sessionID}")
@@ -211,7 +228,7 @@ class SessionsController(private val routingService: RoutingService) {
                                 @PathVariable countryCode: String,
                                 @PathVariable partyID: String,
                                 @PathVariable sessionID: String,
-                                @RequestBody body: Map<String, Any>): OcpiResponse<Nothing> {
+                                @RequestBody body: Map<String, Any>): ResponseEntity<OcpiResponse<Nothing>> {
 
         val sender = BasicRole(fromPartyID, fromCountryCode)
         val receiver = BasicRole(toPartyID, toCountryCode)
@@ -219,7 +236,7 @@ class SessionsController(private val routingService: RoutingService) {
 
         routingService.validateSender(authorization, sender, objectOwner)
 
-        return if (routingService.isRoleKnown(receiver)) {
+        val response = if (routingService.isRoleKnown(receiver)) {
             val platformID = routingService.getPlatformID(receiver)
             val endpoint = routingService.getPlatformEndpoint(platformID, "sessions", InterfaceRole.MSP)
             val headers = routingService.makeHeaders(platformID, correlationID, sender, receiver)
@@ -244,6 +261,8 @@ class SessionsController(private val routingService: RoutingService) {
                             body = body),
                     expectedDataType = Nothing::class)
         }
+
+        return ResponseEntity.status(response.statusCode).body(response.body)
     }
 
 }

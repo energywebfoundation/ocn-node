@@ -12,7 +12,9 @@ import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers
 import snc.openchargingnetwork.client.data.exampleLocation2
+import snc.openchargingnetwork.client.models.HttpResponse
 import snc.openchargingnetwork.client.models.HubRequest
+import snc.openchargingnetwork.client.models.HubRequestResponseType
 import snc.openchargingnetwork.client.models.entities.EndpointEntity
 import snc.openchargingnetwork.client.models.ocpi.*
 import snc.openchargingnetwork.client.services.RoutingService
@@ -42,8 +44,11 @@ class MessageControllerTest(@Autowired val mockMvc: MockMvc) {
                 headers = any(),
                 params = null,
                 body = null,
-                expectedDataType = Any::class)
-        } returns OcpiResponse(1000, data = exampleLocation2)
+                expectedDataType = Location::class)
+        } returns HttpResponse(
+                statusCode = 200,
+                headers = mapOf(),
+                body = OcpiResponse(1000, data = exampleLocation2))
 
         mockMvc.perform(post("/ocn/message")
                 .header("X-Request-ID", "123")
@@ -57,7 +62,8 @@ class MessageControllerTest(@Autowired val mockMvc: MockMvc) {
                         method = "GET",
                         module = "locations",
                         role = InterfaceRole.CPO,
-                        path = "/LOC2"))))
+                        path = "/LOC2",
+                        type = HubRequestResponseType.LOCATION))))
                 .andExpect(MockMvcResultMatchers.status().isOk)
                 .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_UTF8))
                 .andExpect(MockMvcResultMatchers.jsonPath("\$.status_code").value(OcpiStatus.SUCCESS.code))

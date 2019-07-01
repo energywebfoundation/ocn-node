@@ -6,6 +6,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import snc.openchargingnetwork.client.data.exampleLocation1
 import snc.openchargingnetwork.client.data.exampleLocation2
+import snc.openchargingnetwork.client.models.HttpResponse
 import snc.openchargingnetwork.client.models.entities.Auth
 import snc.openchargingnetwork.client.models.entities.PlatformEntity
 import snc.openchargingnetwork.client.models.entities.RoleEntity
@@ -91,13 +92,17 @@ class RoutingServiceTest {
                 "OCPI-to-country-code" to "DE",
                 "OCPI-to-party-id" to "AAA")
         val params = mapOf("limit" to "100")
-        every { httpRequestService.makeGetRequest(url, headers, params, expectedDataType = Array<Location>::class) } returns OcpiResponse(
-                statusCode = 1000,
-                data = arrayOf(exampleLocation1, exampleLocation2))
+        every { httpRequestService.makeRequest("GET", url, headers, params, body = null, expectedDataType = Array<Location>::class) } returns HttpResponse(
+                statusCode = 200,
+                headers = mapOf(),
+                body = OcpiResponse(
+                    statusCode = 1000,
+                    data = arrayOf(exampleLocation1, exampleLocation2)))
         val response = routingService.forwardRequest("GET", url, headers, params, null, Array<Location>::class)
-        assertThat(response.statusCode).isEqualTo(1000)
-        assertThat(response.statusMessage).isNull()
-        assertThat(response.data?.size).isEqualTo(2)
+        assertThat(response.statusCode).isEqualTo(200)
+        assertThat(response.body.statusCode).isEqualTo(1000)
+        assertThat(response.body.statusMessage).isNull()
+        assertThat(response.body.data?.size).isEqualTo(2)
     }
 
     @Test
@@ -111,12 +116,16 @@ class RoutingServiceTest {
                 "OCPI-from-party-id" to "XXX",
                 "OCPI-to-country-code" to "DE",
                 "OCPI-to-party-id" to "AAA")
-        every { httpRequestService.makePostRequest(url, headers, body = exampleLocation1, expectedDataType = Nothing::class) } returns OcpiResponse(
-                statusCode = 1000,
-                data = null)
+        every { httpRequestService.makeRequest("POST", url, headers, body = exampleLocation1, expectedDataType = Nothing::class) } returns HttpResponse(
+                statusCode = 200,
+                headers = mapOf(),
+                body = OcpiResponse(
+                    statusCode = 1000,
+                    data = null))
         val response = routingService.forwardRequest("POST", url, headers, null, exampleLocation1, Nothing::class)
-        assertThat(response.statusCode).isEqualTo(1000)
-        assertThat(response.statusMessage).isNull()
+        assertThat(response.statusCode).isEqualTo(200)
+        assertThat(response.body.statusCode).isEqualTo(1000)
+        assertThat(response.body.statusMessage).isNull()
     }
 
 }
