@@ -25,7 +25,7 @@ class HttpRequestService {
 
         val response = when (method) {
             "GET" -> get(url = url, headers = headers, params = params ?: mapOf())
-            "POST" -> post(url = url, headers = headers, json = body)
+            "POST" -> post(url = url, headers = headers, json = body, params = params ?: mapOf())
             "PUT" -> put(url = url, headers = headers, json = body)
             "PATCH" -> patch(url = url, headers = headers, json = body)
             "DELETE" -> delete(url = url, headers = headers, json = body)

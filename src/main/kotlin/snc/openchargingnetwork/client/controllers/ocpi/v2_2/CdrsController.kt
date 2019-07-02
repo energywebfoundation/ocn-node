@@ -57,7 +57,7 @@ class CdrsController(val routingService: RoutingService,
             val headers = routingService.makeHeaders(correlationID, sender, receiver)
             routingService.forwardRequest(
                     method = "POST",
-                    url = urlJoin(url, "/ocn/messages"),
+                    url = urlJoin(url, "/ocn/message"),
                     headers = headers,
                     body = HubRequest(
                             method = "GET",
@@ -114,7 +114,7 @@ class CdrsController(val routingService: RoutingService,
             val headers = routingService.makeHeaders(correlationID, sender, receiver)
             routingService.forwardRequest(
                     method = "POST",
-                    url = urlJoin(url, "/ocn/messages"),
+                    url = urlJoin(url, "/ocn/message"),
                     headers = headers,
                     body = HubRequest(
                             method = "GET",
@@ -159,7 +159,7 @@ class CdrsController(val routingService: RoutingService,
             val headers = routingService.makeHeaders(correlationID, sender, receiver)
             routingService.forwardRequest(
                     method = "POST",
-                    url = urlJoin(url, "/ocn/messages"),
+                    url = urlJoin(url, "/ocn/message"),
                     headers = headers,
                     body = HubRequest(
                             method = "PUT",

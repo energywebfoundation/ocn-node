@@ -27,5 +27,6 @@ enum class HubRequestResponseType {
     TARIFF_ARRAY,
     TOKEN,
     TOKEN_ARRAY,
+    AUTHORIZATION_INFO,
     NOTHING
 }

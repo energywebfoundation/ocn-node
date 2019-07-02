@@ -51,7 +51,7 @@ class TariffsController(val routingService: RoutingService) {
             val headers = routingService.makeHeaders(correlationID, sender, receiver)
             routingService.forwardRequest(
                     method = "POST",
-                    url = urlJoin(url, "/ocn/messages"),
+                    url = urlJoin(url, "/ocn/message"),
                     headers = headers,
                     body = HubRequest(
                             method = "GET",
@@ -109,7 +109,7 @@ class TariffsController(val routingService: RoutingService) {
             val headers = routingService.makeHeaders(correlationID, sender, receiver)
             routingService.forwardRequest(
                     method = "POST",
-                    url = urlJoin(url, "/ocn/messages"),
+                    url = urlJoin(url, "/ocn/message"),
                     headers = headers,
                     body = HubRequest(
                             method = "GET",
@@ -158,7 +158,7 @@ class TariffsController(val routingService: RoutingService) {
             val headers = routingService.makeHeaders(correlationID, sender, receiver)
             routingService.forwardRequest(
                     method = "POST",
-                    url = urlJoin(url, "/ocn/messages"),
+                    url = urlJoin(url, "/ocn/message"),
                     headers = headers,
                     body = HubRequest(
                             method = "PUT",
@@ -204,7 +204,7 @@ class TariffsController(val routingService: RoutingService) {
             val headers = routingService.makeHeaders(correlationID, sender, receiver)
             routingService.forwardRequest(
                     method = "POST",
-                    url = urlJoin(url, "/ocn/messages"),
+                    url = urlJoin(url, "/ocn/message"),
                     headers = headers,
                     body = HubRequest(
                             method = "DELETE",

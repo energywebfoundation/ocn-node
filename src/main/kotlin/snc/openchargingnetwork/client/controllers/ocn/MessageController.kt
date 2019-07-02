@@ -56,9 +56,10 @@ class MessageController(val routingService: RoutingService) {
                             HubRequestResponseType.CDR_ARRAY -> Array<CDR>::class
                             HubRequestResponseType.TARIFF -> Tariff::class
                             HubRequestResponseType.TARIFF_ARRAY -> Array<Tariff>::class
-//                            HubRequestResponseType.TOKEN -> Token::class
+                            HubRequestResponseType.TOKEN -> Token::class
+                            HubRequestResponseType.TOKEN_ARRAY -> Array<Token>::class
+                            HubRequestResponseType.AUTHORIZATION_INFO -> AuthorizationInfo::class
                             HubRequestResponseType.NOTHING -> Nothing::class
-                            else -> throw IllegalStateException("Value of field 'type' unknown: ${body.type}")
                         })
 
             } else {

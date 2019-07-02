@@ -125,13 +125,6 @@ enum class ImageCategory {
     OWNER
 }
 
-enum class TokenType {
-    AD_HOC_USER,
-    APP_USER,
-    OTHER,
-    RFID
-}
-
 enum class AuthMethod {
     AUTH_REQUEST,
     COMMAND,

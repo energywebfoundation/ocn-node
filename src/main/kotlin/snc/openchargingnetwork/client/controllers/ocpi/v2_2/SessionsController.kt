@@ -104,7 +104,7 @@ class SessionsController(private val routingService: RoutingService) {
             val headers = routingService.makeHeaders(correlationID, sender, receiver)
             routingService.forwardRequest(
                     method = "POST",
-                    url = urlJoin(url, "/$sessionID/charging_preferences"),
+                    url = urlJoin(url, "/ocn/message"),
                     headers = headers,
                     body = HubRequest(
                             method = "PUT",
@@ -155,7 +155,7 @@ class SessionsController(private val routingService: RoutingService) {
             val headers = routingService.makeHeaders(correlationID, sender, receiver)
             routingService.forwardRequest(
                     method = "POST",
-                    url = urlJoin(url, "/ocn/messages"),
+                    url = urlJoin(url, "/ocn/message"),
                     headers = headers,
                     body = HubRequest(
                             method = "GET",
@@ -204,7 +204,7 @@ class SessionsController(private val routingService: RoutingService) {
             val headers = routingService.makeHeaders(correlationID, sender, receiver)
             routingService.forwardRequest(
                     method = "POST",
-                    url = urlJoin(url, "/ocn/messages"),
+                    url = urlJoin(url, "/ocn/message"),
                     headers = headers,
                     body = HubRequest(
                             method = "PUT",
@@ -252,10 +252,10 @@ class SessionsController(private val routingService: RoutingService) {
             val headers = routingService.makeHeaders(correlationID, sender, receiver)
             routingService.forwardRequest(
                     method = "POST",
-                    url = urlJoin(url, "/ocn/messages"),
+                    url = urlJoin(url, "/ocn/message"),
                     headers = headers,
                     body = HubRequest(
-                            method = "PATH",
+                            method = "PATCH",
                             module = "sessions",
                             path = urlJoin(url, "/$countryCode/$partyID/$sessionID"),
                             role = InterfaceRole.MSP,
