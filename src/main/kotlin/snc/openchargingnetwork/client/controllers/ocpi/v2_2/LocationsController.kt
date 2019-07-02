@@ -3,7 +3,7 @@ package snc.openchargingnetwork.client.controllers.ocpi.v2_2
 import org.springframework.http.HttpHeaders
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
-import snc.openchargingnetwork.client.models.HubRequest
+import snc.openchargingnetwork.client.models.HubGenericRequest
 import snc.openchargingnetwork.client.models.HubRequestResponseType
 import snc.openchargingnetwork.client.models.ocpi.*
 import snc.openchargingnetwork.client.services.RoutingService
@@ -53,12 +53,12 @@ class LocationsController(private val routingService: RoutingService) {
                     method = "POST",
                     url = urlJoin(url, "/ocn/messages"),
                     headers = headers,
-                    body = HubRequest(
+                    body = HubGenericRequest(
                             method = "GET",
                             module = "locations",
                             role = InterfaceRole.CPO,
                             params = params,
-                            type = HubRequestResponseType.LOCATION_ARRAY),
+                            expectedResponseType = HubRequestResponseType.LOCATION_ARRAY),
                     expectedDataType = Array<Location>::class)
         }
 
@@ -105,12 +105,12 @@ class LocationsController(private val routingService: RoutingService) {
                     method = "POST",
                     url = urlJoin(url, "/ocn/messages"),
                     headers = headers,
-                    body = HubRequest(
+                    body = HubGenericRequest(
                             method = "GET",
                             module = "locations",
                             role = InterfaceRole.CPO,
                             path = "/$locationID",
-                            type = HubRequestResponseType.LOCATION),
+                            expectedResponseType = HubRequestResponseType.LOCATION),
                     expectedDataType = Location::class)
         }
 
@@ -149,12 +149,12 @@ class LocationsController(private val routingService: RoutingService) {
                     method = "POST",
                     url = urlJoin(url, "/ocn/messages"),
                     headers = headers,
-                    body = HubRequest(
+                    body = HubGenericRequest(
                             method = "GET",
                             module = "locations",
                             role = InterfaceRole.CPO,
                             path = "/$locationID/$evseUID",
-                            type = HubRequestResponseType.EVSE),
+                            expectedResponseType = HubRequestResponseType.EVSE),
                     expectedDataType = Evse::class)
         }
 
@@ -194,12 +194,12 @@ class LocationsController(private val routingService: RoutingService) {
                     method = "POST",
                     url = urlJoin(url, "/ocn/messages"),
                     headers = headers,
-                    body = HubRequest(
+                    body = HubGenericRequest(
                             method = "GET",
                             module = "locations",
                             role = InterfaceRole.CPO,
                             path = "/$locationID/$evseUID/$connectorID",
-                            type = HubRequestResponseType.CONNECTOR),
+                            expectedResponseType = HubRequestResponseType.CONNECTOR),
                     expectedDataType = Connector::class)
         }
 
@@ -244,12 +244,12 @@ class LocationsController(private val routingService: RoutingService) {
                     method = "POST",
                     url = urlJoin(url, "/ocn/messages"),
                     headers = headers,
-                    body = HubRequest(
+                    body = HubGenericRequest(
                             method = "GET",
                             module = "locations",
                             role = InterfaceRole.MSP,
                             path = "/$countryCode/$partyID/$locationID",
-                            type = HubRequestResponseType.LOCATION),
+                            expectedResponseType = HubRequestResponseType.LOCATION),
                     expectedDataType = Location::class)
         }
 
@@ -291,12 +291,12 @@ class LocationsController(private val routingService: RoutingService) {
                     method = "POST",
                     url = urlJoin(url, "/ocn/messages"),
                     headers = headers,
-                    body = HubRequest(
+                    body = HubGenericRequest(
                             method = "GET",
                             module = "locations",
                             role = InterfaceRole.MSP,
                             path = "/$countryCode/$partyID/$locationID/$evseUID",
-                            type = HubRequestResponseType.EVSE),
+                            expectedResponseType = HubRequestResponseType.EVSE),
                     expectedDataType = Evse::class)
         }
 
@@ -339,12 +339,12 @@ class LocationsController(private val routingService: RoutingService) {
                     method = "POST",
                     url = urlJoin(url, "/ocn/messages"),
                     headers = headers,
-                    body = HubRequest(
+                    body = HubGenericRequest(
                             method = "GET",
                             module = "locations",
                             role = InterfaceRole.MSP,
                             path = "/$countryCode/$partyID/$locationID/$evseUID/$connectorID",
-                            type = HubRequestResponseType.CONNECTOR),
+                            expectedResponseType = HubRequestResponseType.CONNECTOR),
                     expectedDataType = Connector::class)
         }
 
@@ -388,7 +388,7 @@ class LocationsController(private val routingService: RoutingService) {
                     method = "POST",
                     url = urlJoin(url, "/ocn/message"),
                     headers = headers,
-                    body = HubRequest(
+                    body = HubGenericRequest(
                             method = "PUT",
                             module = "locations",
                             role = InterfaceRole.MSP,
@@ -437,7 +437,7 @@ class LocationsController(private val routingService: RoutingService) {
                     method = "POST",
                     url = urlJoin(url, "/ocn/message"),
                     headers = headers,
-                    body = HubRequest(
+                    body = HubGenericRequest(
                             method = "PUT",
                             module = "locations",
                             role = InterfaceRole.MSP,
@@ -487,7 +487,7 @@ class LocationsController(private val routingService: RoutingService) {
                     method = "POST",
                     url = urlJoin(url, "/ocn/message"),
                     headers = headers,
-                    body = HubRequest(
+                    body = HubGenericRequest(
                             method = "PUT",
                             module = "locations",
                             role = InterfaceRole.MSP,
@@ -535,7 +535,7 @@ class LocationsController(private val routingService: RoutingService) {
                     method = "POST",
                     url = urlJoin(url, "/ocn/message"),
                     headers = headers,
-                    body = HubRequest(
+                    body = HubGenericRequest(
                             method = "PATCH",
                             module = "locations",
                             role = InterfaceRole.MSP,
@@ -584,7 +584,7 @@ class LocationsController(private val routingService: RoutingService) {
                     method = "POST",
                     url = urlJoin(url, "/ocn/message"),
                     headers = headers,
-                    body = HubRequest(
+                    body = HubGenericRequest(
                             method = "PATCH",
                             module = "locations",
                             role = InterfaceRole.MSP,
@@ -634,7 +634,7 @@ class LocationsController(private val routingService: RoutingService) {
                     method = "POST",
                     url = urlJoin(url, "/ocn/message"),
                     headers = headers,
-                    body = HubRequest(
+                    body = HubGenericRequest(
                             method = "PATCH",
                             module = "locations",
                             role = InterfaceRole.MSP,

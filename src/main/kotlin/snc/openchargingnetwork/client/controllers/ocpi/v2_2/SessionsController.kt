@@ -3,7 +3,7 @@ package snc.openchargingnetwork.client.controllers.ocpi.v2_2
 import org.springframework.http.HttpHeaders
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
-import snc.openchargingnetwork.client.models.HubRequest
+import snc.openchargingnetwork.client.models.HubGenericRequest
 import snc.openchargingnetwork.client.models.HubRequestResponseType
 import snc.openchargingnetwork.client.models.ocpi.*
 import snc.openchargingnetwork.client.services.RoutingService
@@ -53,12 +53,12 @@ class SessionsController(private val routingService: RoutingService) {
                     method = "POST",
                     url = urlJoin(url, "/ocn/messages"),
                     headers = headers,
-                    body = HubRequest(
+                    body = HubGenericRequest(
                             method = "GET",
                             module = "sessions",
                             role = InterfaceRole.CPO,
                             params = params,
-                            type = HubRequestResponseType.SESSION_ARRAY),
+                            expectedResponseType = HubRequestResponseType.SESSION_ARRAY),
                     expectedDataType = Array<Session>::class)
         }
 
@@ -106,13 +106,13 @@ class SessionsController(private val routingService: RoutingService) {
                     method = "POST",
                     url = urlJoin(url, "/ocn/message"),
                     headers = headers,
-                    body = HubRequest(
+                    body = HubGenericRequest(
                             method = "PUT",
                             module = "sessions",
                             path = "/$sessionID/charging_preferences",
                             role = InterfaceRole.CPO,
                             body = body,
-                            type = HubRequestResponseType.CHARGING_PREFERENCE_RESPONSE),
+                            expectedResponseType = HubRequestResponseType.CHARGING_PREFERENCE_RESPONSE),
                     expectedDataType = ChargingPreferencesResponse::class)
         }
 
@@ -157,12 +157,12 @@ class SessionsController(private val routingService: RoutingService) {
                     method = "POST",
                     url = urlJoin(url, "/ocn/message"),
                     headers = headers,
-                    body = HubRequest(
+                    body = HubGenericRequest(
                             method = "GET",
                             module = "sessions",
                             path = urlJoin(url, "/$countryCode/$partyID/$sessionID"),
                             role = InterfaceRole.MSP,
-                            type = HubRequestResponseType.SESSION),
+                            expectedResponseType = HubRequestResponseType.SESSION),
                     expectedDataType = Session::class)
         }
 
@@ -206,7 +206,7 @@ class SessionsController(private val routingService: RoutingService) {
                     method = "POST",
                     url = urlJoin(url, "/ocn/message"),
                     headers = headers,
-                    body = HubRequest(
+                    body = HubGenericRequest(
                             method = "PUT",
                             module = "sessions",
                             path = urlJoin(url, "/$countryCode/$partyID/$sessionID"),
@@ -254,7 +254,7 @@ class SessionsController(private val routingService: RoutingService) {
                     method = "POST",
                     url = urlJoin(url, "/ocn/message"),
                     headers = headers,
-                    body = HubRequest(
+                    body = HubGenericRequest(
                             method = "PATCH",
                             module = "sessions",
                             path = urlJoin(url, "/$countryCode/$partyID/$sessionID"),

@@ -2,15 +2,14 @@ package snc.openchargingnetwork.client.services
 
 import org.springframework.stereotype.Service
 import snc.openchargingnetwork.client.models.HttpResponse
+import snc.openchargingnetwork.client.models.entities.CdrEntity
+import snc.openchargingnetwork.client.models.entities.CommandResponseUrlEntity
 import snc.openchargingnetwork.client.models.exceptions.OcpiClientInvalidParametersException
-import snc.openchargingnetwork.client.models.exceptions.OcpiHubConnectionProblemException
 import snc.openchargingnetwork.client.models.exceptions.OcpiHubUnknownReceiverException
 import snc.openchargingnetwork.client.models.ocpi.BasicRole
+import snc.openchargingnetwork.client.models.ocpi.CommandType
 import snc.openchargingnetwork.client.models.ocpi.InterfaceRole
-import snc.openchargingnetwork.client.models.ocpi.OcpiResponse
-import snc.openchargingnetwork.client.repositories.EndpointRepository
-import snc.openchargingnetwork.client.repositories.PlatformRepository
-import snc.openchargingnetwork.client.repositories.RoleRepository
+import snc.openchargingnetwork.client.repositories.*
 import snc.openchargingnetwork.client.tools.extractToken
 import snc.openchargingnetwork.client.tools.generateUUIDv4Token
 import snc.openchargingnetwork.contracts.RegistryFacade
@@ -20,6 +19,8 @@ import kotlin.reflect.KClass
 class RoutingService(private val platformRepo: PlatformRepository,
                      private val roleRepo: RoleRepository,
                      private val endpointRepo: EndpointRepository,
+                     private val cdrRepo: CdrRepository,
+                     private val commandResponseUrlRepo: CommandResponseUrlRepository,
                      private val httpService: HttpRequestService,
                      private val registry: RegistryFacade) {
 
@@ -114,6 +115,58 @@ class RoutingService(private val platformRepo: PlatformRepository,
         val address = registry.addressOf(role.country.toByteArray(), role.id.toByteArray()).sendAsync().get()
         val broker = registry.brokerOf(address).sendAsync().get()
         return broker != ""
+    }
+
+    fun stringify(body: Any): String {
+        return httpService.mapper.writeValueAsString(body)
+    }
+
+    fun saveCDR(id: String, location: String, sender: BasicRole, receiver: BasicRole) {
+        cdrRepo.save(CdrEntity(
+                cdrID = id,
+                ownerID = receiver.id,
+                ownerCountry = receiver.country,
+                creatorID = sender.id,
+                creatorCountry = sender.country,
+                location = location
+        ))
+    }
+
+    fun findCDR(id: String, sender: BasicRole, receiver: BasicRole): String {
+        val result = cdrRepo.findByCdrIDAndOwnerIDAndOwnerCountryAndCreatorIDAndCreatorCountryAllIgnoreCase(
+                cdrID = id,
+                ownerCountry = receiver.country,
+                ownerID = receiver.id,
+                creatorCountry = sender.country,
+                creatorID = sender.id) ?: throw OcpiClientInvalidParametersException("cdr_id not found")
+        return result.location
+
+    }
+
+    fun saveResponseURL(url: String, type: CommandType, sender: BasicRole, receiver: BasicRole): String {
+        val uid = generateUUIDv4Token()
+
+        commandResponseUrlRepo.save(CommandResponseUrlEntity(
+                url = url,
+                type = type,
+                uid = uid,
+                senderCountry = sender.country,
+                senderID = sender.id,
+                receiverCountry = receiver.country,
+                receiverID = receiver.id))
+
+        return uid
+    }
+
+    fun findResponseURL(type: CommandType, uid: String, sender: BasicRole, receiver: BasicRole): String {
+        val result = commandResponseUrlRepo.findByUidAndTypeAndSenderIDAndSenderCountryAndReceiverIDAndReceiverCountryAllIgnoreCase(
+                uid = uid,
+                type = type,
+                senderCountry = receiver.country,
+                senderID = receiver.id,
+                receiverCountry = sender.country,
+                receiverID = sender.id) ?: throw OcpiClientInvalidParametersException("Async response for given uid not permitted")
+        return result.url
     }
 
 }

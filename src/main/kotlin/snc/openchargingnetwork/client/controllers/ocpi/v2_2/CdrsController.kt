@@ -2,21 +2,18 @@ package snc.openchargingnetwork.client.controllers.ocpi.v2_2
 
 import org.springframework.http.HttpHeaders
 import org.springframework.http.ResponseEntity
+import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.bind.annotation.*
 import snc.openchargingnetwork.client.config.Properties
-import snc.openchargingnetwork.client.models.HubRequest
+import snc.openchargingnetwork.client.models.HubGenericRequest
 import snc.openchargingnetwork.client.models.HubRequestResponseType
-import snc.openchargingnetwork.client.models.entities.CdrEntity
-import snc.openchargingnetwork.client.models.exceptions.OcpiClientUnknownLocationException
 import snc.openchargingnetwork.client.models.ocpi.*
-import snc.openchargingnetwork.client.repositories.CdrRepository
 import snc.openchargingnetwork.client.services.RoutingService
 import snc.openchargingnetwork.client.tools.urlJoin
 
 @RestController
 class CdrsController(val routingService: RoutingService,
-                     val properties: Properties,
-                     val cdrRepository: CdrRepository) {
+                     val properties: Properties) {
 
     /**
      * SENDER INTERFACE
@@ -59,12 +56,12 @@ class CdrsController(val routingService: RoutingService,
                     method = "POST",
                     url = urlJoin(url, "/ocn/message"),
                     headers = headers,
-                    body = HubRequest(
+                    body = HubGenericRequest(
                             method = "GET",
                             module = "cdrs",
                             role = InterfaceRole.CPO,
                             params = params,
-                            type = HubRequestResponseType.CDR_ARRAY),
+                            expectedResponseType = HubRequestResponseType.CDR_ARRAY),
                     expectedDataType = Array<CDR>::class)
         }
 
@@ -98,36 +95,35 @@ class CdrsController(val routingService: RoutingService,
 
         routingService.validateSender(authorization, sender)
 
-        val cdr = cdrRepository.findByCdrIDAndOwnerIDAndOwnerCountryAndCreatorIDAndCreatorCountryAllIgnoreCase(cdrID, receiver.id, receiver.country, sender.id, sender.country)
-                ?: throw OcpiClientUnknownLocationException("CDR with id '$cdrID' does not exist")
-
         val response = if (routingService.isRoleKnown(receiver)) {
             val platformID = routingService.getPlatformID(receiver)
             val headers = routingService.makeHeaders(platformID, correlationID, sender, receiver)
+            val url = routingService.findCDR(cdrID, sender, receiver)
             routingService.forwardRequest(
                     method = "GET",
-                    url = cdr.location,
+                    url = url,
                     headers = headers,
                     expectedDataType = CDR::class)
         } else {
             val url = routingService.findBrokerUrl(receiver)
             val headers = routingService.makeHeaders(correlationID, sender, receiver)
+            //TODO: save URL on remote broker
             routingService.forwardRequest(
                     method = "POST",
                     url = urlJoin(url, "/ocn/message"),
                     headers = headers,
-                    body = HubRequest(
+                    body = HubGenericRequest(
                             method = "GET",
                             module = "cdrs",
-                            path = cdr.location,
                             role = InterfaceRole.MSP,
-                            type = HubRequestResponseType.CDR),
+                            expectedResponseType = HubRequestResponseType.CDR),
                     expectedDataType = CDR::class)
         }
 
         return ResponseEntity.status(response.statusCode).body(response.body)
     }
 
+    @Transactional
     @PostMapping("/ocpi/emsp/2.2/cdrs")
     fun postCdr(@RequestHeader("authorization") authorization: String,
                 @RequestHeader("X-Request-ID") requestID: String,
@@ -140,9 +136,9 @@ class CdrsController(val routingService: RoutingService,
 
         val sender = BasicRole(fromPartyID, fromCountryCode)
         val receiver = BasicRole(toPartyID, toCountryCode)
+        val objectData = BasicRole(body.partyID, body.countryCode)
 
-        // TODO: could also validate that sender matches party_id and country_code in body
-        routingService.validateSender(authorization, sender)
+        routingService.validateSender(authorization, sender, objectData)
 
         val response = if (routingService.isRoleKnown(receiver)) {
             val platformID = routingService.getPlatformID(receiver)
@@ -161,7 +157,7 @@ class CdrsController(val routingService: RoutingService,
                     method = "POST",
                     url = urlJoin(url, "/ocn/message"),
                     headers = headers,
-                    body = HubRequest(
+                    body = HubGenericRequest(
                             method = "PUT",
                             module = "cdrs",
                             path = url,
@@ -173,16 +169,7 @@ class CdrsController(val routingService: RoutingService,
         val headers = HttpHeaders()
 
         response.headers["Location"]?.let {
-
-            cdrRepository.save(CdrEntity(
-                    cdrID = body.id,
-                    ownerID = receiver.id,
-                    ownerCountry = receiver.country,
-                    creatorID = sender.id,
-                    creatorCountry = sender.country,
-                    location = it
-            ))
-
+            routingService.saveCDR(body.id, it, sender, receiver)
             val cdr = urlJoin(properties.url, "/ocpi/emsp/2.2/cdrs/${body.id}")
             headers.add("Location", cdr)
         }

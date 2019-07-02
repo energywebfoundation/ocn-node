@@ -1,11 +1,9 @@
 package snc.openchargingnetwork.client.repositories
 
 import org.springframework.data.repository.CrudRepository
-import snc.openchargingnetwork.client.models.entities.CdrEntity
+import snc.openchargingnetwork.client.models.entities.*
+import snc.openchargingnetwork.client.models.ocpi.CommandType
 import snc.openchargingnetwork.client.models.ocpi.InterfaceRole
-import snc.openchargingnetwork.client.models.entities.RoleEntity
-import snc.openchargingnetwork.client.models.entities.EndpointEntity
-import snc.openchargingnetwork.client.models.entities.PlatformEntity
 
 interface PlatformRepository: CrudRepository<PlatformEntity, Long> {
     fun existsByAuth_TokenA(tokenA: String?): Boolean
@@ -35,4 +33,13 @@ interface CdrRepository: CrudRepository<CdrEntity, Long> {
                                                                                        ownerCountry: String,
                                                                                        creatorID: String,
                                                                                        creatorCountry: String): CdrEntity?
+}
+
+interface CommandResponseUrlRepository: CrudRepository<CommandResponseUrlEntity, Long> {
+    fun findByUidAndTypeAndSenderIDAndSenderCountryAndReceiverIDAndReceiverCountryAllIgnoreCase(uid: String,
+                                                                                                type: CommandType,
+                                                                                                senderID: String,
+                                                                                                senderCountry: String,
+                                                                                                receiverID: String,
+                                                                                                receiverCountry: String): CommandResponseUrlEntity?
 }

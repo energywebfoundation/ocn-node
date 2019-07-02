@@ -58,3 +58,16 @@ class CdrEntity(
         val location: String,
         @Id @GeneratedValue var id: Long? = null
 )
+
+@Entity
+@Table(name = "command_response_urls")
+class CommandResponseUrlEntity(
+        val url: String,
+        @Enumerated(EnumType.STRING) var type: CommandType,
+        val uid: String,
+        val senderID: String,
+        val senderCountry: String,
+        val receiverID: String,
+        val receiverCountry: String,
+        @Id @GeneratedValue var id: Long? = null
+)

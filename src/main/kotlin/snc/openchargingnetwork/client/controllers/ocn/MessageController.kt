@@ -1,11 +1,15 @@
 package snc.openchargingnetwork.client.controllers.ocn
 
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import org.springframework.http.HttpHeaders
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
-import snc.openchargingnetwork.client.models.HubRequest
+import snc.openchargingnetwork.client.config.Properties
+import snc.openchargingnetwork.client.models.HubCommandsRequest
+import snc.openchargingnetwork.client.models.HubGenericRequest
 import snc.openchargingnetwork.client.models.HubRequestResponseType
-import snc.openchargingnetwork.client.models.exceptions.OcpiHubConnectionProblemException
+import snc.openchargingnetwork.client.models.exceptions.OcpiClientInvalidParametersException
 import snc.openchargingnetwork.client.models.exceptions.OcpiHubUnknownReceiverException
 import snc.openchargingnetwork.client.models.ocpi.*
 import snc.openchargingnetwork.client.services.RoutingService
@@ -13,7 +17,8 @@ import snc.openchargingnetwork.client.tools.urlJoin
 
 @RestController
 @RequestMapping("/ocn/message")
-class MessageController(val routingService: RoutingService) {
+class MessageController(val routingService: RoutingService,
+                        val properties: Properties) {
 
     @PostMapping
     fun postMessage(@RequestHeader("X-Request-ID") requestID: String,
@@ -22,7 +27,7 @@ class MessageController(val routingService: RoutingService) {
                     @RequestHeader("OCPI-from-party-id") fromPartyID: String,
                     @RequestHeader("OCPI-to-country-code") toCountryCode: String,
                     @RequestHeader("OCPI-to-party-id") toPartyID: String,
-                    @RequestBody body: HubRequest): ResponseEntity<OcpiResponse<out Any>> {
+                    @RequestBody body: HubGenericRequest): ResponseEntity<OcpiResponse<out Any>> {
 
         val sender = BasicRole(fromPartyID, fromCountryCode)
         val receiver = BasicRole(toPartyID, toCountryCode)
@@ -44,7 +49,7 @@ class MessageController(val routingService: RoutingService) {
                         headers = headers,
                         params = body.params,
                         body = body.body,
-                        expectedDataType = when (body.type) {
+                        expectedDataType = when (body.expectedResponseType) {
                             HubRequestResponseType.LOCATION -> Location::class
                             HubRequestResponseType.LOCATION_ARRAY -> Array<Location>::class
                             HubRequestResponseType.EVSE -> Evse::class
@@ -60,6 +65,7 @@ class MessageController(val routingService: RoutingService) {
                             HubRequestResponseType.TOKEN_ARRAY -> Array<Token>::class
                             HubRequestResponseType.AUTHORIZATION_INFO -> AuthorizationInfo::class
                             HubRequestResponseType.NOTHING -> Nothing::class
+                            HubRequestResponseType.COMMAND_RESPONSE -> CommandResponse::class
                         })
 
             } else {
@@ -67,7 +73,7 @@ class MessageController(val routingService: RoutingService) {
             }
 
         } else {
-            throw OcpiHubConnectionProblemException("Sending party not registered on Open Charging Network")
+            throw OcpiHubUnknownReceiverException("Sending party not registered on Open Charging Network")
         }
 
         val headers = HttpHeaders()
@@ -79,5 +85,50 @@ class MessageController(val routingService: RoutingService) {
         return ResponseEntity.status(response.statusCode).headers(headers).body(response.body)
     }
 
+    @PostMapping("/command")
+    fun postCommand(@RequestHeader("X-Request-ID") requestID: String,
+                    @RequestHeader("X-Correlation-ID") correlationID: String,
+                    @RequestHeader("OCPI-from-country-code") fromCountryCode: String,
+                    @RequestHeader("OCPI-from-party-id") fromPartyID: String,
+                    @RequestHeader("OCPI-to-country-code") toCountryCode: String,
+                    @RequestHeader("OCPI-to-party-id") toPartyID: String,
+                    @RequestBody requestBody: HubCommandsRequest): ResponseEntity<OcpiResponse<CommandResponse>> {
+
+        val sender = BasicRole(fromPartyID, fromCountryCode)
+        val receiver = BasicRole(toPartyID, toCountryCode)
+
+        // check sender has been registered on network
+        val response = if (routingService.isRoleKnownOnNetwork(sender)) {
+
+            // check receiver known to client
+            if (routingService.isRoleKnown(receiver)) {
+
+                // forward message
+                val platformID = routingService.getPlatformID(receiver)
+                val endpoint = routingService.getPlatformEndpoint(platformID, "commands", InterfaceRole.CPO)
+                val headers = routingService.makeHeaders(platformID, correlationID, sender, receiver)
+
+                val commandBody: MutableMap<String, Any> = jacksonObjectMapper().readValue(requestBody.body)
+                val originalResponseURL = commandBody["response_url"] ?: throw OcpiClientInvalidParametersException("No response_url found")
+                val uid = routingService.saveResponseURL(originalResponseURL.toString(), requestBody.type, sender, receiver)
+                commandBody["response_url"] = urlJoin(properties.url, "/ocpi/emsp/2.2/commands/${requestBody.type}/$uid")
+
+                routingService.forwardRequest(
+                        method = "POST",
+                        url = urlJoin(endpoint.url, "/${requestBody.type}"),
+                        headers = headers,
+                        body = commandBody,
+                        expectedDataType = CommandResponse::class)
+
+            } else {
+                throw OcpiHubUnknownReceiverException()
+            }
+
+        } else {
+            throw OcpiHubUnknownReceiverException("Sending party not registered on Open Charging Network")
+        }
+
+        return ResponseEntity.status(response.statusCode).body(response.body)
+    }
 
 }

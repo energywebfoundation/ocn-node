@@ -17,7 +17,6 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import snc.openchargingnetwork.client.config.Properties
 import snc.openchargingnetwork.client.data.exampleCDR
 import snc.openchargingnetwork.client.models.HttpResponse
-import snc.openchargingnetwork.client.models.entities.CdrEntity
 import snc.openchargingnetwork.client.models.entities.EndpointEntity
 import snc.openchargingnetwork.client.models.ocpi.BasicRole
 import snc.openchargingnetwork.client.models.ocpi.InterfaceRole
@@ -34,9 +33,6 @@ class CdrsControllerTest(@Autowired val mockMvc: MockMvc) {
     @MockkBean
     lateinit var properties: Properties
 
-    @MockkBean
-    lateinit var cdrRepository: CdrRepository
-
     @Test
     fun `when POST cdrs should return header link`() {
         val sender = BasicRole("ZUG", "CH")
@@ -50,7 +46,7 @@ class CdrsControllerTest(@Autowired val mockMvc: MockMvc) {
                 "OCPI-from-party-id" to sender.id,
                 "OCPI-to-country-code" to receiver.country,
                 "OCPI-to-party-id" to receiver.id)
-        every { routingService.validateSender("Token 5195923", sender) } returns mockk()
+        every { routingService.validateSender("Token 5195923", sender, BasicRole(exampleCDR.partyID, exampleCDR.countryCode)) } returns mockk()
         every { routingService.isRoleKnown(receiver) } returns true
         every { routingService.getPlatformID(receiver) } returns 9L
         every { routingService.getPlatformEndpoint(9L, "cdrs", InterfaceRole.MSP) } returns receiverEndpoint
@@ -60,7 +56,7 @@ class CdrsControllerTest(@Autowired val mockMvc: MockMvc) {
                 headers = mapOf("Location" to "http://platform.com/cdrs/42"),
                 body = OcpiResponse(statusCode = 1000)
         )
-        every { cdrRepository.save(any<CdrEntity>()) } returns mockk()
+        every { routingService.saveCDR(exampleCDR.id, "http://platform.com/cdrs/42", sender, receiver) } returns mockk()
         every { properties.url } returns "http://hub.net/"
 
         mockMvc.perform(post("/ocpi/emsp/2.2/cdrs")

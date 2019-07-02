@@ -72,8 +72,8 @@ val exampleSession = Session(
         lastUpdated = getTimestamp())
 
 val exampleCDR = CDR(
-        countryCode = "ZUG",
-        partyID = "CH",
+        countryCode = "CH",
+        partyID = "ZUG",
         id = "abcdef-98765",
         startDateTime = getTimestamp(),
         endDateTime = getTimestamp(),

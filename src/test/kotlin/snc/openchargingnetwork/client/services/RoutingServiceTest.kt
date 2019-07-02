@@ -11,9 +11,7 @@ import snc.openchargingnetwork.client.models.entities.Auth
 import snc.openchargingnetwork.client.models.entities.PlatformEntity
 import snc.openchargingnetwork.client.models.entities.RoleEntity
 import snc.openchargingnetwork.client.models.ocpi.*
-import snc.openchargingnetwork.client.repositories.EndpointRepository
-import snc.openchargingnetwork.client.repositories.PlatformRepository
-import snc.openchargingnetwork.client.repositories.RoleRepository
+import snc.openchargingnetwork.client.repositories.*
 import snc.openchargingnetwork.client.tools.generateUUIDv4Token
 import snc.openchargingnetwork.contracts.RegistryFacade
 
@@ -22,13 +20,22 @@ class RoutingServiceTest {
     private val platformRepo: PlatformRepository = mockk()
     private val roleRepo: RoleRepository = mockk()
     private val endpointRepo: EndpointRepository = mockk()
+    private val cdrRepo: CdrRepository = mockk()
+    private val responseUrlRepo: CommandResponseUrlRepository = mockk()
     private val httpRequestService: HttpRequestService = mockk()
     private val registry: RegistryFacade = mockk()
 
     private val routingService: RoutingService
 
     init {
-        routingService = RoutingService(platformRepo, roleRepo, endpointRepo, httpRequestService, registry)
+        routingService = RoutingService(
+                platformRepo,
+                roleRepo,
+                endpointRepo,
+                cdrRepo,
+                responseUrlRepo,
+                httpRequestService,
+                registry)
     }
 
     @Test

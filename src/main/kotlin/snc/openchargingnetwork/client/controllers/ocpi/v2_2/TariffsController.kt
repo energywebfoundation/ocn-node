@@ -3,7 +3,7 @@ package snc.openchargingnetwork.client.controllers.ocpi.v2_2
 import org.springframework.http.HttpHeaders
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
-import snc.openchargingnetwork.client.models.HubRequest
+import snc.openchargingnetwork.client.models.HubGenericRequest
 import snc.openchargingnetwork.client.models.HubRequestResponseType
 import snc.openchargingnetwork.client.models.ocpi.*
 import snc.openchargingnetwork.client.services.RoutingService
@@ -53,12 +53,12 @@ class TariffsController(val routingService: RoutingService) {
                     method = "POST",
                     url = urlJoin(url, "/ocn/message"),
                     headers = headers,
-                    body = HubRequest(
+                    body = HubGenericRequest(
                             method = "GET",
                             module = "tariffs",
                             role = InterfaceRole.CPO,
                             params = params,
-                            type = HubRequestResponseType.TARIFF_ARRAY),
+                            expectedResponseType = HubRequestResponseType.TARIFF_ARRAY),
                     expectedDataType = Array<Tariff>::class)
         }
 
@@ -111,12 +111,12 @@ class TariffsController(val routingService: RoutingService) {
                     method = "POST",
                     url = urlJoin(url, "/ocn/message"),
                     headers = headers,
-                    body = HubRequest(
+                    body = HubGenericRequest(
                             method = "GET",
                             module = "tariffs",
                             path = urlJoin(url, "/$countryCode/$partyID/$tariffID"),
                             role = InterfaceRole.MSP,
-                            type = HubRequestResponseType.TARIFF),
+                            expectedResponseType = HubRequestResponseType.TARIFF),
                     expectedDataType = Tariff::class)
         }
 
@@ -160,7 +160,7 @@ class TariffsController(val routingService: RoutingService) {
                     method = "POST",
                     url = urlJoin(url, "/ocn/message"),
                     headers = headers,
-                    body = HubRequest(
+                    body = HubGenericRequest(
                             method = "PUT",
                             module = "tariffs",
                             path = urlJoin(url, "/$countryCode/$partyID/$tariffID"),
@@ -206,7 +206,7 @@ class TariffsController(val routingService: RoutingService) {
                     method = "POST",
                     url = urlJoin(url, "/ocn/message"),
                     headers = headers,
-                    body = HubRequest(
+                    body = HubGenericRequest(
                             method = "DELETE",
                             module = "tariffs",
                             path = urlJoin(url, "/$countryCode/$partyID/$tariffID"),

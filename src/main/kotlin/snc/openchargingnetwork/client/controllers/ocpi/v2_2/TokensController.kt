@@ -3,7 +3,7 @@ package snc.openchargingnetwork.client.controllers.ocpi.v2_2
 import org.springframework.http.HttpHeaders
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
-import snc.openchargingnetwork.client.models.HubRequest
+import snc.openchargingnetwork.client.models.HubGenericRequest
 import snc.openchargingnetwork.client.models.HubRequestResponseType
 import snc.openchargingnetwork.client.models.ocpi.*
 import snc.openchargingnetwork.client.services.RoutingService
@@ -53,12 +53,12 @@ class TokensController(private val routingService: RoutingService) {
                     method = "POST",
                     url = urlJoin(url, "/ocn/message"),
                     headers = headers,
-                    body = HubRequest(
+                    body = HubGenericRequest(
                             method = "GET",
                             module = "cdrs",
                             role = InterfaceRole.CPO,
                             params = params,
-                            type = HubRequestResponseType.TOKEN_ARRAY),
+                            expectedResponseType = HubRequestResponseType.TOKEN_ARRAY),
                     expectedDataType = Array<Token>::class)
         }
 
@@ -108,14 +108,14 @@ class TokensController(private val routingService: RoutingService) {
                     method = "POST",
                     url = urlJoin(url, "/ocn/message"),
                     headers = headers,
-                    body = HubRequest(
+                    body = HubGenericRequest(
                             method = "POST",
                             module = "tokens",
                             role = InterfaceRole.MSP,
                             path = "/$tokenUID/authorization",
                             params = mapOf("type" to type.toString()),
                             body = body,
-                            type = HubRequestResponseType.AUTHORIZATION_INFO),
+                            expectedResponseType = HubRequestResponseType.AUTHORIZATION_INFO),
                     expectedDataType = AuthorizationInfo::class)
         }
 
@@ -162,13 +162,13 @@ class TokensController(private val routingService: RoutingService) {
                     method = "POST",
                     url = urlJoin(url, "/ocn/message"),
                     headers = headers,
-                    body = HubRequest(
+                    body = HubGenericRequest(
                             method = "GET",
                             module = "tokens",
                             path = urlJoin(url, "/$countryCode/$partyID/$tokenUID"),
                             role = InterfaceRole.CPO,
                             params = mapOf("type" to type.toString()),
-                            type = HubRequestResponseType.TOKEN),
+                            expectedResponseType = HubRequestResponseType.TOKEN),
                     expectedDataType = Token::class)
         }
 
@@ -214,7 +214,7 @@ class TokensController(private val routingService: RoutingService) {
                     method = "POST",
                     url = urlJoin(url, "/ocn/message"),
                     headers = headers,
-                    body = HubRequest(
+                    body = HubGenericRequest(
                             method = "PUT",
                             module = "tokens",
                             path = urlJoin(url, "/$countryCode/$partyID/$tokenUID"),
@@ -265,7 +265,7 @@ class TokensController(private val routingService: RoutingService) {
                     method = "POST",
                     url = urlJoin(url, "/ocn/message"),
                     headers = headers,
-                    body = HubRequest(
+                    body = HubGenericRequest(
                             method = "PATCH",
                             module = "tokens",
                             path = urlJoin(url, "/$countryCode/$partyID/$tokenUID"),
