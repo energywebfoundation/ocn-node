@@ -73,7 +73,7 @@ class TokensController(private val routingService: RoutingService) {
                 .body(response.body)
     }
 
-    @PutMapping("/ocpi/cpo/2.2/sessions/{tokenUID}/authorize")
+    @PutMapping("/ocpi/emsp/2.2/sessions/{tokenUID}/authorize")
     fun postRealTimeTokenAuthorization(@RequestHeader("authorization") authorization: String,
                                        @RequestHeader("X-Request-ID") requestID: String,
                                        @RequestHeader("X-Correlation-ID") correlationID: String,
@@ -126,7 +126,7 @@ class TokensController(private val routingService: RoutingService) {
      * RECEIVER INTERFACE
      */
 
-    @GetMapping("/ocpi/emsp/2.2/tokens/{countryCode}/{partyID}/{tokenUID}")
+    @GetMapping("/ocpi/cpo/2.2/tokens/{countryCode}/{partyID}/{tokenUID}")
     fun getClientOwnedToken(@RequestHeader("authorization") authorization: String,
                             @RequestHeader("X-Request-ID") requestID: String,
                             @RequestHeader("X-Correlation-ID") correlationID: String,
@@ -175,7 +175,7 @@ class TokensController(private val routingService: RoutingService) {
         return ResponseEntity.status(response.statusCode).body(response.body)
     }
 
-    @PutMapping("/ocpi/emsp/2.2/tokens/{countryCode}/{partyID}/{tokenUID}")
+    @PutMapping("/ocpi/cpo/2.2/tokens/{countryCode}/{partyID}/{tokenUID}")
     fun putClientOwnedToken(@RequestHeader("authorization") authorization: String,
                             @RequestHeader("X-Request-ID") requestID: String,
                             @RequestHeader("X-Correlation-ID") correlationID: String,
@@ -227,7 +227,7 @@ class TokensController(private val routingService: RoutingService) {
         return ResponseEntity.status(response.statusCode).body(response.body)
     }
 
-    @PatchMapping("/ocpi/emsp/2.2/tokens/{countryCode}/{partyID}/{tokenUID}")
+    @PatchMapping("/ocpi/cpo/2.2/tokens/{countryCode}/{partyID}/{tokenUID}")
     fun patchClientOwnedToken(@RequestHeader("authorization") authorization: String,
                                @RequestHeader("X-Request-ID") requestID: String,
                                @RequestHeader("X-Correlation-ID") correlationID: String,
