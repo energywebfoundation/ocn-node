@@ -22,4 +22,4 @@ pipelines:
             - gradle
           script:
             - bash ./gradlew build
-            - ssh $BROKER_HOST 'bash -s' < ./infra/setup-test.sh
+            - ssh $BROKER_HOST 'bash ./ocn-client/infra/setup-test.sh'
