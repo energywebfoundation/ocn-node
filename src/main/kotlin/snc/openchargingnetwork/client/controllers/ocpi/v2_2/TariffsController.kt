@@ -77,7 +77,7 @@ class TariffsController(val routingService: RoutingService) {
      * TARIFF INTERFACE
      */
 
-    @GetMapping("/ocpi/emsp/2.2/sessions/{countryCode}/{partyID}/{tariffID}")
+    @GetMapping("/ocpi/emsp/2.2/tariffs/{countryCode}/{partyID}/{tariffID}")
     fun getClientOwnedTariff(@RequestHeader("authorization") authorization: String,
                              @RequestHeader("X-Request-ID") requestID: String,
                              @RequestHeader("X-Correlation-ID") correlationID: String,
@@ -123,7 +123,7 @@ class TariffsController(val routingService: RoutingService) {
         return ResponseEntity.status(response.statusCode).body(response.body)
     }
 
-    @PutMapping("/ocpi/emsp/2.2/sessions/{countryCode}/{partyID}/{tariffID}")
+    @PutMapping("/ocpi/emsp/2.2/tariffs/{countryCode}/{partyID}/{tariffID}")
     fun putClientOwnedTariff(@RequestHeader("authorization") authorization: String,
                              @RequestHeader("X-Request-ID") requestID: String,
                              @RequestHeader("X-Correlation-ID") correlationID: String,
@@ -172,7 +172,7 @@ class TariffsController(val routingService: RoutingService) {
         return ResponseEntity.status(response.statusCode).body(response.body)
     }
 
-    @DeleteMapping("/ocpi/emsp/2.2/sessions/{countryCode}/{partyID}/{tariffID}")
+    @DeleteMapping("/ocpi/emsp/2.2/tariffs/{countryCode}/{partyID}/{tariffID}")
     fun deleteClientOwnedTariff(@RequestHeader("authorization") authorization: String,
                                 @RequestHeader("X-Request-ID") requestID: String,
                                 @RequestHeader("X-Correlation-ID") correlationID: String,
