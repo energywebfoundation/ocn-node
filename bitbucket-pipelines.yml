@@ -15,7 +15,7 @@ pipelines:
             # You must commit the Gradle wrapper to your repository
             # https://docs.gradle.org/current/userguide/gradle_wrapper.html
             - bash ./gradlew build
-    develop:
+    open-testing:
       - step:
           deployment: test
           caches:
