@@ -4,7 +4,7 @@ import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.bind.annotation.*
 import snc.openchargingnetwork.client.repositories.*
 import snc.openchargingnetwork.client.config.Properties
-import snc.openchargingnetwork.client.models.ocpi.ConnectionStatusType
+import snc.openchargingnetwork.client.models.ocpi.ConnectionStatus
 import snc.openchargingnetwork.client.models.ocpi.Role
 import snc.openchargingnetwork.client.models.ocpi.OcpiStatus
 import snc.openchargingnetwork.client.models.entities.Auth
@@ -78,7 +78,7 @@ class CredentialsController(private val platformRepo: PlatformRepository,
         // set platform connection details
         platform.auth = Auth(tokenA = null, tokenB = body.token, tokenC = tokenC)
         platform.versionsUrl = body.url
-        platform.status = ConnectionStatusType.CONNECTED
+        platform.status = ConnectionStatus.CONNECTED
         platform.lastUpdated = getTimestamp()
         platformRepo.save(platform)
 
@@ -141,7 +141,7 @@ class CredentialsController(private val platformRepo: PlatformRepository,
         // set platform connection information
         platform.auth = Auth(tokenA = null, tokenB = body.token, tokenC = tokenC)
         platform.versionsUrl = body.url
-        platform.status = ConnectionStatusType.CONNECTED
+        platform.status = ConnectionStatus.CONNECTED
         platform.lastUpdated = getTimestamp()
         platformRepo.save(platform)
 

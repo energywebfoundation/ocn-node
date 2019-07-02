@@ -82,7 +82,7 @@ enum class OcpiStatus(val code: Int, val message: String? = null) {
     HUB_CONNECTION_PROBLEM(4003, "Connection problem")
 }
 
-enum class ConnectionStatusType {
+enum class ConnectionStatus {
     CONNECTED,
     OFFLINE,
     PLANNED,

@@ -7,6 +7,7 @@ import snc.openchargingnetwork.client.models.entities.CommandResponseUrlEntity
 import snc.openchargingnetwork.client.models.exceptions.OcpiClientInvalidParametersException
 import snc.openchargingnetwork.client.models.exceptions.OcpiHubUnknownReceiverException
 import snc.openchargingnetwork.client.models.ocpi.BasicRole
+import snc.openchargingnetwork.client.models.ocpi.ClientInfo
 import snc.openchargingnetwork.client.models.ocpi.CommandType
 import snc.openchargingnetwork.client.models.ocpi.InterfaceRole
 import snc.openchargingnetwork.client.repositories.*
@@ -31,6 +32,11 @@ class RoutingService(private val platformRepo: PlatformRepository,
     fun getPlatformEndpoint(platformID: Long?, identifier: String, interfaceRole: InterfaceRole)
             = endpointRepo.findByPlatformIDAndIdentifierAndRole(platformID, identifier, interfaceRole)
             ?: throw OcpiClientInvalidParametersException("Receiver does not support the requested module")
+
+    fun validateSender(authorization: String) {
+        platformRepo.findByAuth_TokenC(authorization.extractToken())
+                ?: throw OcpiClientInvalidParametersException("Invalid CREDENTIALS_TOKEN_C")
+    }
 
     // check sender is authorized to send requests via this message broker
     fun validateSender(authorization: String, sender: BasicRole) {
@@ -167,6 +173,21 @@ class RoutingService(private val platformRepo: PlatformRepository,
                 receiverCountry = sender.country,
                 receiverID = sender.id) ?: throw OcpiClientInvalidParametersException("Async response for given uid not permitted")
         return result.url
+    }
+
+    fun findClientInfo(): Array<ClientInfo> {
+        var allClientInfo = arrayOf<ClientInfo>()
+        for (platform in platformRepo.findAll()) {
+            for (role in roleRepo.findAllByPlatformID(platform.id)) {
+                allClientInfo = allClientInfo.plus(ClientInfo(
+                        partyID = role.partyID,
+                        countryCode = role.countryCode,
+                        role = role.role,
+                        status = platform.status,
+                        lastUpdated = platform.lastUpdated))
+            }
+        }
+        return allClientInfo
     }
 
 }

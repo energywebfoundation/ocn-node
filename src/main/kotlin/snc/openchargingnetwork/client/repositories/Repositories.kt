@@ -18,6 +18,7 @@ interface RoleRepository: CrudRepository<RoleEntity, Long> {
     fun existsByPlatformIDAndCountryCodeAndPartyIDAllIgnoreCase(platformID: Long?, countryCode: String, partyID: String): Boolean
     // used in routing to find roles registered with broker (hub)
     fun findByCountryCodeAndPartyIDAllIgnoreCase(countryCode: String, partyID: String): RoleEntity?
+    fun findAllByPlatformID(platformID: Long?): Iterable<RoleEntity>
     fun deleteByPlatformID(platformID: Long?)
 }
 

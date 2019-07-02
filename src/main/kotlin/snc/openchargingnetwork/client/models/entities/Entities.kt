@@ -8,7 +8,7 @@ import javax.persistence.*
 @Entity
 @Table(name = "platforms")
 class PlatformEntity(
-        var status: ConnectionStatusType = ConnectionStatusType.PLANNED,
+        var status: ConnectionStatus = ConnectionStatus.PLANNED,
         var lastUpdated: String = getTimestamp(),
         var versionsUrl: String? = null,
         @Embedded var auth: Auth = Auth(),
