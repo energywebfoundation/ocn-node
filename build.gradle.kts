@@ -52,6 +52,7 @@ dependencies {
     testCompile("org.springframework.restdocs:spring-restdocs-mockmvc:2.0.3.RELEASE")
     compile("khttp:khttp:1.0.0")
     compile("org.web3j:core:4.3.0")
+    implementation("org.postgresql:postgresql:42.2.6.jre7")
 }
 
 allOpen {
