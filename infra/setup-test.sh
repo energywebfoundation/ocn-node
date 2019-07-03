@@ -2,5 +2,5 @@
 
 cd ocn-client
 git pull
-./gradlew -Pprofile=test build
+./gradlew -Pprofile=test -x test build
 sudo service ocn-client restart
