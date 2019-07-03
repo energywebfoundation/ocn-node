@@ -1,19 +1,28 @@
 package snc.openchargingnetwork.client.services
 
 import org.springframework.stereotype.Service
+import org.web3j.crypto.Credentials
+import org.web3j.crypto.RawTransaction
+import org.web3j.crypto.Sign
+import org.web3j.crypto.TransactionEncoder
+import org.web3j.protocol.Web3j
+import org.web3j.protocol.core.DefaultBlockParameter
+import org.web3j.protocol.core.DefaultBlockParameterName
+import snc.openchargingnetwork.client.config.Configuration
+import snc.openchargingnetwork.client.config.Properties
 import snc.openchargingnetwork.client.models.HttpResponse
 import snc.openchargingnetwork.client.models.entities.CdrEntity
 import snc.openchargingnetwork.client.models.entities.CommandResponseUrlEntity
+import snc.openchargingnetwork.client.models.entities.RoleEntity
+import snc.openchargingnetwork.client.models.exceptions.OcpiClientGenericException
 import snc.openchargingnetwork.client.models.exceptions.OcpiClientInvalidParametersException
 import snc.openchargingnetwork.client.models.exceptions.OcpiHubUnknownReceiverException
-import snc.openchargingnetwork.client.models.ocpi.BasicRole
-import snc.openchargingnetwork.client.models.ocpi.ClientInfo
-import snc.openchargingnetwork.client.models.ocpi.CommandType
-import snc.openchargingnetwork.client.models.ocpi.InterfaceRole
+import snc.openchargingnetwork.client.models.ocpi.*
 import snc.openchargingnetwork.client.repositories.*
 import snc.openchargingnetwork.client.tools.extractToken
 import snc.openchargingnetwork.client.tools.generateUUIDv4Token
 import snc.openchargingnetwork.contracts.RegistryFacade
+import java.math.BigInteger
 import kotlin.reflect.KClass
 
 @Service
@@ -23,7 +32,9 @@ class RoutingService(private val platformRepo: PlatformRepository,
                      private val cdrRepo: CdrRepository,
                      private val commandResponseUrlRepo: CommandResponseUrlRepository,
                      private val httpService: HttpRequestService,
-                     private val registry: RegistryFacade) {
+                     private val registry: RegistryFacade,
+                     private val config: Configuration,
+                     private val properties: Properties) {
 
     fun isRoleKnown(role: BasicRole) = roleRepo.existsByCountryCodeAndPartyIDAllIgnoreCase(role.country, role.id)
 
@@ -188,6 +199,57 @@ class RoutingService(private val platformRepo: PlatformRepository,
             }
         }
         return allClientInfo
+    }
+
+    fun writeToRegistry(roles: List<RoleEntity>) {
+        for (role in roles) {
+            val address = registry.addressOf(role.countryCode.toByteArray(), role.partyID.toByteArray()).sendAsync().get()
+            if (address != "0x0000000000000000000000000000000000000000") {
+                val broker = registry.brokerOf(address).sendAsync().get()
+                if (broker != properties.url) {
+                    throw OcpiClientGenericException("Party with party_id=${role.partyID} and country_code=${role.countryCode} already registered on Open Charging Network.")
+                } else {
+                    return
+                }
+            }
+        }
+        for (role in roles) {
+            val credentials = Credentials.create(role.privateKey)
+            val prefix = "\\x19Ethereum Signed Message:\n32"
+            val message = prefix.toByteArray()
+                    .plus(role.countryCode.toByteArray())
+                    .plus(role.partyID.toByteArray())
+                    .plus(properties.url.toByteArray())
+            val signedMessage = Sign.signMessage(message, credentials.ecKeyPair)
+            println("signedMessage: $signedMessage")
+            val tx = registry.register(
+                    role.countryCode.toByteArray(),
+                    role.partyID.toByteArray(),
+                    properties.url,
+                    BigInteger(signedMessage.v),
+                    signedMessage.r,
+                    signedMessage.s).sendAsync().get()
+            println(tx)
+        }
+    }
+
+    fun deleteFromRegistry(roles: List<RoleEntity>) {
+        for (role in roles) {
+            val credentials = Credentials.create(role.privateKey)
+            val prefix = "\\x19Ethereum Signed Message:\n32"
+            val message = prefix.toByteArray()
+                    .plus(role.countryCode.toByteArray())
+                    .plus(role.partyID.toByteArray())
+            val signedMessage = Sign.signMessage(message, credentials.ecKeyPair)
+            println("signedMessage: $signedMessage")
+            val tx = registry.deregister(
+                    role.countryCode.toByteArray(),
+                    role.partyID.toByteArray(),
+                    BigInteger(signedMessage.v),
+                    signedMessage.r,
+                    signedMessage.s).sendAsync().get()
+            println(tx)
+        }
     }
 
 }

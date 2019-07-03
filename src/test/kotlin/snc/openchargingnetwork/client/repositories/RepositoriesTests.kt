@@ -9,6 +9,7 @@ import snc.openchargingnetwork.client.models.ocpi.InterfaceRole
 import snc.openchargingnetwork.client.models.ocpi.Role
 import snc.openchargingnetwork.client.models.entities.*
 import snc.openchargingnetwork.client.models.ocpi.BusinessDetails
+import snc.openchargingnetwork.client.tools.generatePrivateKey
 
 @DataJpaTest
 class RepositoriesTests @Autowired constructor(
@@ -60,7 +61,7 @@ class RepositoriesTests @Autowired constructor(
 
     @Test
     fun `When existsByCountryCodeAndPartyIDAllIgnoreCase then return true`() {
-        val role = RoleEntity(1L, Role.CPO, BusinessDetails("S&C"), "SNC", "DE")
+        val role = RoleEntity(1L, Role.CPO, BusinessDetails("S&C"), "SNC", "DE", generatePrivateKey())
         entityManager.persistAndFlush(role)
         // find by exact case as entered (uppercase)
         val exists = roleRepository.existsByPlatformIDAndCountryCodeAndPartyIDAllIgnoreCase(1L, role.countryCode, role.partyID)
@@ -74,7 +75,7 @@ class RepositoriesTests @Autowired constructor(
 
     @Test
     fun `When findByCountryCodeAndPartyIDAllIgnoreCase then return platform`() {
-        val role = RoleEntity(1L, Role.CPO, BusinessDetails("S&C"), "SNC", "DE")
+        val role = RoleEntity(1L, Role.CPO, BusinessDetails("S&C"), "SNC", "DE", generatePrivateKey())
         entityManager.persistAndFlush(role)
         // find by exact case as entered (uppercase)
         val exists = roleRepository.findByCountryCodeAndPartyIDAllIgnoreCase(role.countryCode, role.partyID)
@@ -86,9 +87,9 @@ class RepositoriesTests @Autowired constructor(
 
     @Test
     fun platformRepository_deleteByOrgID() {
-        val role1 = RoleEntity(1L, Role.CPO, BusinessDetails("S&C"), "SNC", "DE")
-        val role2 = RoleEntity(1L, Role.EMSP, BusinessDetails("eMobilify"), "EMO", "DE")
-        val role3 = RoleEntity(5L, Role.NSP, BusinessDetails("NSP"), "NSP", "DE")
+        val role1 = RoleEntity(1L, Role.CPO, BusinessDetails("S&C"), "SNC", "DE", generatePrivateKey())
+        val role2 = RoleEntity(1L, Role.EMSP, BusinessDetails("eMobilify"), "EMO", "DE", generatePrivateKey())
+        val role3 = RoleEntity(5L, Role.NSP, BusinessDetails("NSP"), "NSP", "DE", generatePrivateKey())
         entityManager.persist(role1)
         entityManager.persist(role2)
         entityManager.persist(role3)

@@ -1,5 +1,6 @@
 package snc.openchargingnetwork.client.tools
 
+import org.web3j.crypto.Keys
 import java.time.Instant
 import java.time.format.DateTimeFormatter
 import java.util.UUID
@@ -31,4 +32,9 @@ fun urlJoin(base: String, vararg paths: String): String {
 
 fun getTimestamp(): String {
     return DateTimeFormatter.ISO_INSTANT.format(Instant.now())
+}
+
+fun generatePrivateKey(): String {
+    val keys = Keys.createEcKeyPair()
+    return keys.privateKey.toString(16)
 }
