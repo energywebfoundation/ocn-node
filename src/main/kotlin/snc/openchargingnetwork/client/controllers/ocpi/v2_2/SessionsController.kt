@@ -16,7 +16,7 @@ class SessionsController(private val routingService: RoutingService) {
      * SENDER INTERFACE
      */
 
-    @GetMapping("/ocpi/cpo/2.2/sessions")
+    @GetMapping("/ocpi/sender/2.2/sessions")
     fun getSessionsFromDataOwner(@RequestHeader("authorization") authorization: String,
                                  @RequestHeader("X-Request-ID") requestID: String,
                                  @RequestHeader("X-Correlation-ID") correlationID: String,
@@ -38,7 +38,7 @@ class SessionsController(private val routingService: RoutingService) {
 
         val response = if (routingService.isRoleKnown(receiver)) {
             val platformID = routingService.getPlatformID(receiver)
-            val endpoint = routingService.getPlatformEndpoint(platformID, "sessions", InterfaceRole.CPO)
+            val endpoint = routingService.getPlatformEndpoint(platformID, "sessions", InterfaceRole.SENDER)
             val headers = routingService.makeHeaders(platformID, correlationID, sender, receiver)
             routingService.forwardRequest(
                     method = "GET",
@@ -56,7 +56,7 @@ class SessionsController(private val routingService: RoutingService) {
                     body = HubGenericRequest(
                             method = "GET",
                             module = "sessions",
-                            role = InterfaceRole.CPO,
+                            role = InterfaceRole.SENDER,
                             params = params,
                             expectedResponseType = HubRequestResponseType.SESSION_ARRAY),
                     expectedDataType = Array<Session>::class)
@@ -73,7 +73,7 @@ class SessionsController(private val routingService: RoutingService) {
                 .body(response.body)
     }
 
-    @PutMapping("/ocpi/cpo/2.2/sessions/{sessionID}/charging_preferences")
+    @PutMapping("/ocpi/sender/2.2/sessions/{sessionID}/charging_preferences")
     fun putChargingPreferences(@RequestHeader("authorization") authorization: String,
                                @RequestHeader("X-Request-ID") requestID: String,
                                @RequestHeader("X-Correlation-ID") correlationID: String,
@@ -91,7 +91,7 @@ class SessionsController(private val routingService: RoutingService) {
 
         val response = if (routingService.isRoleKnown(receiver)) {
             val platformID = routingService.getPlatformID(receiver)
-            val endpoint = routingService.getPlatformEndpoint(platformID, "sessions", InterfaceRole.CPO)
+            val endpoint = routingService.getPlatformEndpoint(platformID, "sessions", InterfaceRole.SENDER)
             val headers = routingService.makeHeaders(platformID, correlationID, sender, receiver)
             routingService.forwardRequest(
                     method = "PUT",
@@ -110,7 +110,7 @@ class SessionsController(private val routingService: RoutingService) {
                             method = "PUT",
                             module = "sessions",
                             path = "/$sessionID/charging_preferences",
-                            role = InterfaceRole.CPO,
+                            role = InterfaceRole.SENDER,
                             body = body,
                             expectedResponseType = HubRequestResponseType.CHARGING_PREFERENCE_RESPONSE),
                     expectedDataType = ChargingPreferencesResponse::class)
@@ -123,7 +123,7 @@ class SessionsController(private val routingService: RoutingService) {
      * RECEIVER INTERFACE
      */
 
-    @GetMapping("/ocpi/emsp/2.2/sessions/{countryCode}/{partyID}/{sessionID}")
+    @GetMapping("/ocpi/receiver/2.2/sessions/{countryCode}/{partyID}/{sessionID}")
     fun getClientOwnedSession(@RequestHeader("authorization") authorization: String,
                               @RequestHeader("X-Request-ID") requestID: String,
                               @RequestHeader("X-Correlation-ID") correlationID: String,
@@ -143,7 +143,7 @@ class SessionsController(private val routingService: RoutingService) {
 
         val response = if (routingService.isRoleKnown(receiver)) {
             val platformID = routingService.getPlatformID(receiver)
-            val endpoint = routingService.getPlatformEndpoint(platformID, "sessions", InterfaceRole.MSP)
+            val endpoint = routingService.getPlatformEndpoint(platformID, "sessions", InterfaceRole.RECEIVER)
             val headers = routingService.makeHeaders(platformID, correlationID, sender, receiver)
             routingService.forwardRequest(
                     method = "GET",
@@ -161,7 +161,7 @@ class SessionsController(private val routingService: RoutingService) {
                             method = "GET",
                             module = "sessions",
                             path = urlJoin(url, "/$countryCode/$partyID/$sessionID"),
-                            role = InterfaceRole.MSP,
+                            role = InterfaceRole.RECEIVER,
                             expectedResponseType = HubRequestResponseType.SESSION),
                     expectedDataType = Session::class)
         }
@@ -169,7 +169,7 @@ class SessionsController(private val routingService: RoutingService) {
         return ResponseEntity.status(response.statusCode).body(response.body)
     }
 
-    @PutMapping("/ocpi/emsp/2.2/sessions/{countryCode}/{partyID}/{sessionID}")
+    @PutMapping("/ocpi/receiver/2.2/sessions/{countryCode}/{partyID}/{sessionID}")
     fun putClientOwnedSession(@RequestHeader("authorization") authorization: String,
                               @RequestHeader("X-Request-ID") requestID: String,
                               @RequestHeader("X-Correlation-ID") correlationID: String,
@@ -191,7 +191,7 @@ class SessionsController(private val routingService: RoutingService) {
 
         val response = if (routingService.isRoleKnown(receiver)) {
             val platformID = routingService.getPlatformID(receiver)
-            val endpoint = routingService.getPlatformEndpoint(platformID, "sessions", InterfaceRole.MSP)
+            val endpoint = routingService.getPlatformEndpoint(platformID, "sessions", InterfaceRole.RECEIVER)
             val headers = routingService.makeHeaders(platformID, correlationID, sender, receiver)
             routingService.forwardRequest(
                     method = "PUT",
@@ -210,7 +210,7 @@ class SessionsController(private val routingService: RoutingService) {
                             method = "PUT",
                             module = "sessions",
                             path = urlJoin(url, "/$countryCode/$partyID/$sessionID"),
-                            role = InterfaceRole.MSP,
+                            role = InterfaceRole.RECEIVER,
                             body = body),
                     expectedDataType = Nothing::class)
         }
@@ -218,7 +218,7 @@ class SessionsController(private val routingService: RoutingService) {
         return ResponseEntity.status(response.statusCode).body(response.body)
     }
 
-    @PatchMapping("/ocpi/emsp/2.2/sessions/{countryCode}/{partyID}/{sessionID}")
+    @PatchMapping("/ocpi/receiver/2.2/sessions/{countryCode}/{partyID}/{sessionID}")
     fun patchClientOwnedSession(@RequestHeader("authorization") authorization: String,
                                 @RequestHeader("X-Request-ID") requestID: String,
                                 @RequestHeader("X-Correlation-ID") correlationID: String,
@@ -239,7 +239,7 @@ class SessionsController(private val routingService: RoutingService) {
 
         val response = if (routingService.isRoleKnown(receiver)) {
             val platformID = routingService.getPlatformID(receiver)
-            val endpoint = routingService.getPlatformEndpoint(platformID, "sessions", InterfaceRole.MSP)
+            val endpoint = routingService.getPlatformEndpoint(platformID, "sessions", InterfaceRole.RECEIVER)
             val headers = routingService.makeHeaders(platformID, correlationID, sender, receiver)
             routingService.forwardRequest(
                     method = "PATCH",
@@ -258,7 +258,7 @@ class SessionsController(private val routingService: RoutingService) {
                             method = "PATCH",
                             module = "sessions",
                             path = urlJoin(url, "/$countryCode/$partyID/$sessionID"),
-                            role = InterfaceRole.MSP,
+                            role = InterfaceRole.RECEIVER,
                             body = body),
                     expectedDataType = Nothing::class)
         }

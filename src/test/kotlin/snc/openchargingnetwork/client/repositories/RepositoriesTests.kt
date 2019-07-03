@@ -104,11 +104,11 @@ class RepositoriesTests @Autowired constructor(
 
     @Test
     fun `When findByOrgID then return endpoints`() {
-        val endpoint1 = EndpointEntity(2L, "commands", InterfaceRole.CPO, "http://localhost:3000/commands")
-        val endpoint2 = EndpointEntity(2L, "cdrs", InterfaceRole.CPO, "http://localhost:3000/cdrs")
-        val endpoint3 = EndpointEntity(2L, "locations", InterfaceRole.CPO, "http://localhost:3000/locations")
-        val endpoint4 = EndpointEntity(2L, "tokens", InterfaceRole.MSP, "http://localhost:3000/tokens")
-        val endpoint5 = EndpointEntity(3L, "tokens", InterfaceRole.CPO, "http://localhost:8000/tokens")
+        val endpoint1 = EndpointEntity(2L, "commands", InterfaceRole.SENDER, "http://localhost:3000/commands")
+        val endpoint2 = EndpointEntity(2L, "cdrs", InterfaceRole.SENDER, "http://localhost:3000/cdrs")
+        val endpoint3 = EndpointEntity(2L, "locations", InterfaceRole.SENDER, "http://localhost:3000/locations")
+        val endpoint4 = EndpointEntity(2L, "tokens", InterfaceRole.RECEIVER, "http://localhost:3000/tokens")
+        val endpoint5 = EndpointEntity(3L, "tokens", InterfaceRole.SENDER, "http://localhost:8000/tokens")
         entityManager.persist(endpoint1)
         entityManager.persist(endpoint2)
         entityManager.persist(endpoint3)
@@ -121,20 +121,20 @@ class RepositoriesTests @Autowired constructor(
 
     @Test
     fun `When findByOrgIDAndIdentifierAndRole return endpoint`() {
-        val endpoint1 = EndpointEntity(2L, "commands", InterfaceRole.CPO, "http://localhost:3000/commands")
-        val endpoint2 = EndpointEntity(2L, "cdrs", InterfaceRole.CPO, "http://localhost:3000/cdrs")
+        val endpoint1 = EndpointEntity(2L, "commands", InterfaceRole.SENDER, "http://localhost:3000/commands")
+        val endpoint2 = EndpointEntity(2L, "cdrs", InterfaceRole.SENDER, "http://localhost:3000/cdrs")
         entityManager.persist(endpoint1)
         entityManager.persist(endpoint2)
         entityManager.flush()
-        val endpoint = endpointRepository.findByPlatformIDAndIdentifierAndRole(2L, "cdrs", InterfaceRole.CPO)
+        val endpoint = endpointRepository.findByPlatformIDAndIdentifierAndRole(2L, "cdrs", InterfaceRole.SENDER)
         assertThat(endpoint).isEqualTo(endpoint2)
     }
 
     @Test
     fun endpointRepository_deleteByOrganization() {
-        val endpoints1 = EndpointEntity(2L, "commands", InterfaceRole.CPO, "http://localhost:3000/commands")
-        val endpoints2 = EndpointEntity(2L, "cdrs", InterfaceRole.CPO, "http://localhost:3000/cdrs")
-        val endpoints3 = EndpointEntity(2L, "commands", InterfaceRole.MSP, "http://localhost:3000/commands")
+        val endpoints1 = EndpointEntity(2L, "commands", InterfaceRole.SENDER, "http://localhost:3000/commands")
+        val endpoints2 = EndpointEntity(2L, "cdrs", InterfaceRole.SENDER, "http://localhost:3000/cdrs")
+        val endpoints3 = EndpointEntity(2L, "commands", InterfaceRole.RECEIVER, "http://localhost:3000/commands")
         entityManager.persist(endpoints1)
         entityManager.persist(endpoints2)
         entityManager.persist(endpoints3)

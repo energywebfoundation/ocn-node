@@ -17,7 +17,7 @@ import snc.openchargingnetwork.client.services.HttpRequestService
 import snc.openchargingnetwork.client.tools.*
 
 @RestController
-@RequestMapping("/ocpi/hub/2.2/credentials")
+@RequestMapping("/ocpi/2.2/credentials")
 class CredentialsController(private val platformRepo: PlatformRepository,
                             private val roleRepo: RoleRepository,
                             private val endpointRepo: EndpointRepository,
@@ -35,7 +35,7 @@ class CredentialsController(private val platformRepo: PlatformRepository,
                     statusCode = OcpiStatus.SUCCESS.code,
                     data = Credentials(
                             token = it.auth.tokenC!!,
-                            url = urlJoin(properties.url, "/ocpi/hub/versions"),
+                            url = urlJoin(properties.url, "/ocpi/versions"),
                             roles = listOf(CredentialsRole(
                                     role = Role.HUB,
                                     businessDetails = BusinessDetails(name = "Share&Charge Message Broker"),
@@ -108,7 +108,7 @@ class CredentialsController(private val platformRepo: PlatformRepository,
                 statusCode = OcpiStatus.SUCCESS.code,
                 data = Credentials(
                         token = tokenC,
-                        url = urlJoin(properties.url, "/ocpi/hub/versions"),
+                        url = urlJoin(properties.url, "/ocpi/versions"),
                         roles = listOf(CredentialsRole(
                                 role = Role.HUB,
                                 businessDetails = BusinessDetails(name = "Share&Charge Message Broker"),
@@ -173,7 +173,7 @@ class CredentialsController(private val platformRepo: PlatformRepository,
                 statusCode = OcpiStatus.SUCCESS.code,
                 data = Credentials(
                         token = tokenC,
-                        url = urlJoin(properties.url, "/ocpi/hub/versions"),
+                        url = urlJoin(properties.url, "/ocpi/versions"),
                         roles = listOf(CredentialsRole(
                                 role = Role.HUB,
                                 businessDetails = BusinessDetails(name = "Share&Charge Message Broker"),

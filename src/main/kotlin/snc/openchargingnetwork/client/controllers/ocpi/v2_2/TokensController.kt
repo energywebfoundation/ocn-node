@@ -16,18 +16,18 @@ class TokensController(private val routingService: RoutingService) {
      * SENDER INTERFACE
      */
 
-    @GetMapping("/ocpi/emsp/2.2/tokens")
+    @GetMapping("/ocpi/sender/2.2/tokens")
     fun getTokensFromDataOwner(@RequestHeader("authorization") authorization: String,
-                             @RequestHeader("X-Request-ID") requestID: String,
-                             @RequestHeader("X-Correlation-ID") correlationID: String,
-                             @RequestHeader("OCPI-from-country-code") fromCountryCode: String,
-                             @RequestHeader("OCPI-from-party-id") fromPartyID: String,
-                             @RequestHeader("OCPI-to-country-code") toCountryCode: String,
-                             @RequestHeader("OCPI-to-party-id") toPartyID: String,
-                             @RequestParam("date_from", required = false) dateFrom: String?,
-                             @RequestParam("date_to", required = false) dateTo: String?,
-                             @RequestParam("offset", required = false) offset: Int?,
-                             @RequestParam("limit", required = false) limit: Int?): ResponseEntity<OcpiResponse<Array<Token>>> {
+                               @RequestHeader("X-Request-ID") requestID: String,
+                               @RequestHeader("X-Correlation-ID") correlationID: String,
+                               @RequestHeader("OCPI-from-country-code") fromCountryCode: String,
+                               @RequestHeader("OCPI-from-party-id") fromPartyID: String,
+                               @RequestHeader("OCPI-to-country-code") toCountryCode: String,
+                               @RequestHeader("OCPI-to-party-id") toPartyID: String,
+                               @RequestParam("date_from", required = false) dateFrom: String?,
+                               @RequestParam("date_to", required = false) dateTo: String?,
+                               @RequestParam("offset", required = false) offset: Int?,
+                               @RequestParam("limit", required = false) limit: Int?): ResponseEntity<OcpiResponse<Array<Token>>> {
 
         val sender = BasicRole(fromPartyID, fromCountryCode)
         val receiver = BasicRole(toPartyID, toCountryCode)
@@ -38,7 +38,7 @@ class TokensController(private val routingService: RoutingService) {
 
         val response = if (routingService.isRoleKnown(receiver)) {
             val platformID = routingService.getPlatformID(receiver)
-            val endpoint = routingService.getPlatformEndpoint(platformID, "tokens", InterfaceRole.MSP)
+            val endpoint = routingService.getPlatformEndpoint(platformID, "tokens", InterfaceRole.SENDER)
             val headers = routingService.makeHeaders(platformID, correlationID, sender, receiver)
             routingService.forwardRequest(
                     method = "GET",
@@ -55,8 +55,8 @@ class TokensController(private val routingService: RoutingService) {
                     headers = headers,
                     body = HubGenericRequest(
                             method = "GET",
-                            module = "cdrs",
-                            role = InterfaceRole.CPO,
+                            module = "tokens",
+                            role = InterfaceRole.SENDER,
                             params = params,
                             expectedResponseType = HubRequestResponseType.TOKEN_ARRAY),
                     expectedDataType = Array<Token>::class)
@@ -73,7 +73,7 @@ class TokensController(private val routingService: RoutingService) {
                 .body(response.body)
     }
 
-    @PutMapping("/ocpi/emsp/2.2/sessions/{tokenUID}/authorize")
+    @PutMapping("/ocpi/sender/2.2/sessions/{tokenUID}/authorize")
     fun postRealTimeTokenAuthorization(@RequestHeader("authorization") authorization: String,
                                        @RequestHeader("X-Request-ID") requestID: String,
                                        @RequestHeader("X-Correlation-ID") correlationID: String,
@@ -92,7 +92,7 @@ class TokensController(private val routingService: RoutingService) {
 
         val response = if (routingService.isRoleKnown(receiver)) {
             val platformID = routingService.getPlatformID(receiver)
-            val endpoint = routingService.getPlatformEndpoint(platformID, "tokens", InterfaceRole.MSP)
+            val endpoint = routingService.getPlatformEndpoint(platformID, "tokens", InterfaceRole.SENDER)
             val headers = routingService.makeHeaders(platformID, correlationID, sender, receiver)
             routingService.forwardRequest(
                     method = "POST",
@@ -111,7 +111,7 @@ class TokensController(private val routingService: RoutingService) {
                     body = HubGenericRequest(
                             method = "POST",
                             module = "tokens",
-                            role = InterfaceRole.MSP,
+                            role = InterfaceRole.SENDER,
                             path = "/$tokenUID/authorization",
                             params = mapOf("type" to type.toString()),
                             body = body,
@@ -126,7 +126,7 @@ class TokensController(private val routingService: RoutingService) {
      * RECEIVER INTERFACE
      */
 
-    @GetMapping("/ocpi/cpo/2.2/tokens/{countryCode}/{partyID}/{tokenUID}")
+    @GetMapping("/ocpi/receiver/2.2/tokens/{countryCode}/{partyID}/{tokenUID}")
     fun getClientOwnedToken(@RequestHeader("authorization") authorization: String,
                             @RequestHeader("X-Request-ID") requestID: String,
                             @RequestHeader("X-Correlation-ID") correlationID: String,
@@ -147,7 +147,7 @@ class TokensController(private val routingService: RoutingService) {
 
         val response = if (routingService.isRoleKnown(receiver)) {
             val platformID = routingService.getPlatformID(receiver)
-            val endpoint = routingService.getPlatformEndpoint(platformID, "tokens", InterfaceRole.CPO)
+            val endpoint = routingService.getPlatformEndpoint(platformID, "tokens", InterfaceRole.RECEIVER)
             val headers = routingService.makeHeaders(platformID, correlationID, sender, receiver)
             routingService.forwardRequest(
                     method = "GET",
@@ -166,7 +166,7 @@ class TokensController(private val routingService: RoutingService) {
                             method = "GET",
                             module = "tokens",
                             path = urlJoin(url, "/$countryCode/$partyID/$tokenUID"),
-                            role = InterfaceRole.CPO,
+                            role = InterfaceRole.RECEIVER,
                             params = mapOf("type" to type.toString()),
                             expectedResponseType = HubRequestResponseType.TOKEN),
                     expectedDataType = Token::class)
@@ -175,7 +175,7 @@ class TokensController(private val routingService: RoutingService) {
         return ResponseEntity.status(response.statusCode).body(response.body)
     }
 
-    @PutMapping("/ocpi/cpo/2.2/tokens/{countryCode}/{partyID}/{tokenUID}")
+    @PutMapping("/ocpi/receiver/2.2/tokens/{countryCode}/{partyID}/{tokenUID}")
     fun putClientOwnedToken(@RequestHeader("authorization") authorization: String,
                             @RequestHeader("X-Request-ID") requestID: String,
                             @RequestHeader("X-Correlation-ID") correlationID: String,
@@ -198,7 +198,7 @@ class TokensController(private val routingService: RoutingService) {
 
         val response = if (routingService.isRoleKnown(receiver)) {
             val platformID = routingService.getPlatformID(receiver)
-            val endpoint = routingService.getPlatformEndpoint(platformID, "tokens", InterfaceRole.CPO)
+            val endpoint = routingService.getPlatformEndpoint(platformID, "tokens", InterfaceRole.RECEIVER)
             val headers = routingService.makeHeaders(platformID, correlationID, sender, receiver)
             routingService.forwardRequest(
                     method = "PUT",
@@ -219,7 +219,7 @@ class TokensController(private val routingService: RoutingService) {
                             module = "tokens",
                             path = urlJoin(url, "/$countryCode/$partyID/$tokenUID"),
                             params = mapOf("type" to type.toString()),
-                            role = InterfaceRole.CPO,
+                            role = InterfaceRole.RECEIVER,
                             body = body),
                     expectedDataType = Nothing::class)
         }
@@ -227,7 +227,7 @@ class TokensController(private val routingService: RoutingService) {
         return ResponseEntity.status(response.statusCode).body(response.body)
     }
 
-    @PatchMapping("/ocpi/cpo/2.2/tokens/{countryCode}/{partyID}/{tokenUID}")
+    @PatchMapping("/ocpi/receiver/2.2/tokens/{countryCode}/{partyID}/{tokenUID}")
     fun patchClientOwnedToken(@RequestHeader("authorization") authorization: String,
                                @RequestHeader("X-Request-ID") requestID: String,
                                @RequestHeader("X-Correlation-ID") correlationID: String,
@@ -249,7 +249,7 @@ class TokensController(private val routingService: RoutingService) {
 
         val response = if (routingService.isRoleKnown(receiver)) {
             val platformID = routingService.getPlatformID(receiver)
-            val endpoint = routingService.getPlatformEndpoint(platformID, "tokens", InterfaceRole.CPO)
+            val endpoint = routingService.getPlatformEndpoint(platformID, "tokens", InterfaceRole.RECEIVER)
             val headers = routingService.makeHeaders(platformID, correlationID, sender, receiver)
             routingService.forwardRequest(
                     method = "PATCH",
@@ -270,7 +270,7 @@ class TokensController(private val routingService: RoutingService) {
                             module = "tokens",
                             path = urlJoin(url, "/$countryCode/$partyID/$tokenUID"),
                             params = mapOf("type" to type.toString()),
-                            role = InterfaceRole.CPO,
+                            role = InterfaceRole.RECEIVER,
                             body = body),
                     expectedDataType = Nothing::class)
         }

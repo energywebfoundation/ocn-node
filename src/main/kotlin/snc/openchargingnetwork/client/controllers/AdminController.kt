@@ -49,7 +49,7 @@ class AdminController(private val platformRepo: PlatformRepository,
         val platform = PlatformEntity(auth = Auth(tokenA = tokenA))
         platformRepo.save(platform)
 
-        val responseBody = RegistrationInfo(tokenA, urlJoin(properties.url, "/ocpi/hub/versions"))
+        val responseBody = RegistrationInfo(tokenA, urlJoin(properties.url, "/ocpi/versions"))
         return ResponseEntity.ok().body(responseBody)
     }
 

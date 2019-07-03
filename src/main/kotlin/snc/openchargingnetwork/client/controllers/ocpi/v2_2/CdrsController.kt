@@ -19,7 +19,7 @@ class CdrsController(val routingService: RoutingService,
      * SENDER INTERFACE
      */
 
-    @GetMapping("/ocpi/cpo/2.2/cdrs")
+    @GetMapping("/ocpi/sender/2.2/cdrs")
     fun getCdrsFromDataOwner(@RequestHeader("authorization") authorization: String,
                              @RequestHeader("X-Request-ID") requestID: String,
                              @RequestHeader("X-Correlation-ID") correlationID: String,
@@ -41,7 +41,7 @@ class CdrsController(val routingService: RoutingService,
 
         val response = if (routingService.isRoleKnown(receiver)) {
             val platformID = routingService.getPlatformID(receiver)
-            val endpoint = routingService.getPlatformEndpoint(platformID, "cdrs", InterfaceRole.CPO)
+            val endpoint = routingService.getPlatformEndpoint(platformID, "cdrs", InterfaceRole.SENDER)
             val headers = routingService.makeHeaders(platformID, correlationID, sender, receiver)
             routingService.forwardRequest(
                     method = "GET",
@@ -59,13 +59,14 @@ class CdrsController(val routingService: RoutingService,
                     body = HubGenericRequest(
                             method = "GET",
                             module = "cdrs",
-                            role = InterfaceRole.CPO,
+                            role = InterfaceRole.SENDER,
                             params = params,
                             expectedResponseType = HubRequestResponseType.CDR_ARRAY),
                     expectedDataType = Array<CDR>::class)
         }
 
         val headers = HttpHeaders()
+        //TODO: implement brokered pagination (somehow)
         response.headers["Link"]?.let { headers.add("Link", "<RESPONSE_URL>; rel=\"next\"")}
         response.headers["X-Total-Count"]?.let { headers.add("X-Total-Count", it) }
         response.headers["X-Limit"]?.let { headers.add("X-Limit", it) }
@@ -80,7 +81,7 @@ class CdrsController(val routingService: RoutingService,
      * RECEIVER INTERFACE
      */
 
-    @GetMapping("/ocpi/emsp/2.2/cdrs/{cdrID}")
+    @GetMapping("/ocpi/receiver/2.2/cdrs/{cdrID}")
     fun getCdr(@RequestHeader("authorization") authorization: String,
                               @RequestHeader("X-Request-ID") requestID: String,
                               @RequestHeader("X-Correlation-ID") correlationID: String,
@@ -115,7 +116,7 @@ class CdrsController(val routingService: RoutingService,
                     body = HubGenericRequest(
                             method = "GET",
                             module = "cdrs",
-                            role = InterfaceRole.MSP,
+                            role = InterfaceRole.RECEIVER,
                             expectedResponseType = HubRequestResponseType.CDR),
                     expectedDataType = CDR::class)
         }
@@ -124,7 +125,7 @@ class CdrsController(val routingService: RoutingService,
     }
 
     @Transactional
-    @PostMapping("/ocpi/emsp/2.2/cdrs")
+    @PostMapping("/ocpi/receiver/2.2/cdrs")
     fun postCdr(@RequestHeader("authorization") authorization: String,
                 @RequestHeader("X-Request-ID") requestID: String,
                 @RequestHeader("X-Correlation-ID") correlationID: String,
@@ -142,7 +143,7 @@ class CdrsController(val routingService: RoutingService,
 
         val response = if (routingService.isRoleKnown(receiver)) {
             val platformID = routingService.getPlatformID(receiver)
-            val endpoint = routingService.getPlatformEndpoint(platformID, "cdrs", InterfaceRole.MSP)
+            val endpoint = routingService.getPlatformEndpoint(platformID, "cdrs", InterfaceRole.RECEIVER)
             val headers = routingService.makeHeaders(platformID, correlationID, sender, receiver)
             routingService.forwardRequest(
                     method = "PUT",
@@ -161,7 +162,7 @@ class CdrsController(val routingService: RoutingService,
                             method = "PUT",
                             module = "cdrs",
                             path = url,
-                            role = InterfaceRole.MSP,
+                            role = InterfaceRole.RECEIVER,
                             body = body),
                     expectedDataType = Nothing::class)
         }
@@ -170,7 +171,7 @@ class CdrsController(val routingService: RoutingService,
 
         response.headers["Location"]?.let {
             routingService.saveCDR(body.id, it, sender, receiver)
-            val cdr = urlJoin(properties.url, "/ocpi/emsp/2.2/cdrs/${body.id}")
+            val cdr = urlJoin(properties.url, "/ocpi/receiver/2.2/cdrs/${body.id}")
             headers.add("Location", cdr)
         }
 

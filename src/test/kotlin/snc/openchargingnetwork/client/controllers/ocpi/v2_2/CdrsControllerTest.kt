@@ -21,7 +21,6 @@ import snc.openchargingnetwork.client.models.entities.EndpointEntity
 import snc.openchargingnetwork.client.models.ocpi.BasicRole
 import snc.openchargingnetwork.client.models.ocpi.InterfaceRole
 import snc.openchargingnetwork.client.models.ocpi.OcpiResponse
-import snc.openchargingnetwork.client.repositories.CdrRepository
 import snc.openchargingnetwork.client.services.RoutingService
 
 @WebMvcTest(CdrsController::class)
@@ -34,10 +33,10 @@ class CdrsControllerTest(@Autowired val mockMvc: MockMvc) {
     lateinit var properties: Properties
 
     @Test
-    fun `when POST cdrs should return header link`() {
+    fun `when POST receiver cdrs should return header link`() {
         val sender = BasicRole("ZUG", "CH")
         val receiver = BasicRole("TRE", "DE")
-        val receiverEndpoint = EndpointEntity(9L, "cdrs", InterfaceRole.MSP, "http://platform.com/cdrs")
+        val receiverEndpoint = EndpointEntity(9L, "cdrs", InterfaceRole.RECEIVER, "http://platform.com/cdrs")
         val headers = mapOf(
                 "Authorization" to "Token 9342",
                 "X-Request-ID" to "53245324",
@@ -49,7 +48,7 @@ class CdrsControllerTest(@Autowired val mockMvc: MockMvc) {
         every { routingService.validateSender("Token 5195923", sender, BasicRole(exampleCDR.partyID, exampleCDR.countryCode)) } returns mockk()
         every { routingService.isRoleKnown(receiver) } returns true
         every { routingService.getPlatformID(receiver) } returns 9L
-        every { routingService.getPlatformEndpoint(9L, "cdrs", InterfaceRole.MSP) } returns receiverEndpoint
+        every { routingService.getPlatformEndpoint(9L, "cdrs", InterfaceRole.RECEIVER) } returns receiverEndpoint
         every { routingService.makeHeaders(9L, "4567878", sender, receiver) } returns headers
         every { routingService.forwardRequest("PUT", receiverEndpoint.url, headers, null, exampleCDR, Nothing::class) } returns HttpResponse(
                 statusCode = 200,
@@ -59,7 +58,7 @@ class CdrsControllerTest(@Autowired val mockMvc: MockMvc) {
         every { routingService.saveCDR(exampleCDR.id, "http://platform.com/cdrs/42", sender, receiver) } returns mockk()
         every { properties.url } returns "http://hub.net/"
 
-        mockMvc.perform(post("/ocpi/emsp/2.2/cdrs")
+        mockMvc.perform(post("/ocpi/receiver/2.2/cdrs")
                 .header("Authorization", "Token 5195923")
                 .header("X-Request-ID", "12345")
                 .header("X-Correlation-ID", "4567878")
@@ -74,7 +73,7 @@ class CdrsControllerTest(@Autowired val mockMvc: MockMvc) {
                 .andExpect(jsonPath("\$.status_code").value(1000))
                 .andExpect(jsonPath("\$.status_message").doesNotExist())
                 .andExpect(jsonPath("\$.data").doesNotExist())
-                .andExpect(header().string("Location", "http://hub.net/ocpi/emsp/2.2/cdrs/${exampleCDR.id}"))
+                .andExpect(header().string("Location", "http://hub.net/ocpi/receiver/2.2/cdrs/${exampleCDR.id}"))
     }
 
 

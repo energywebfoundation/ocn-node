@@ -23,11 +23,11 @@ class TariffsControllerTest(@Autowired val mockMvc: MockMvc) {
     lateinit var routingService: RoutingService
 
     @Test
-    fun `when GET tariffs returns unauthorized`() {
+    fun `when GET sender tariffs returns unauthorized`() {
         val sender = BasicRole("DIY", "YO")
         val receiver = BasicRole("ADA", "MM")
         every { routingService.validateSender("Token 12345", sender) } throws OcpiClientInvalidParametersException("Invalid CREDENTIALS_TOKEN_C")
-        mockMvc.perform(get("/ocpi/cpo/2.2/tariffs")
+        mockMvc.perform(get("/ocpi/sender/2.2/tariffs")
                 .header("Authorization", "Token 12345")
                 .header("X-Request-ID", "12345")
                 .header("X-Correlation-ID", "4567878")

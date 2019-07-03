@@ -18,7 +18,7 @@ class CommandsController(private val routingService: RoutingService,
      * SENDER INTERFACE
      */
 
-    @PostMapping("/ocpi/emsp/2.2/commands/{command}/{uid}")
+    @PostMapping("/ocpi/sender/2.2/commands/{command}/{uid}")
     fun postAsyncResponse(@RequestHeader("authorization") authorization: String,
                           @RequestHeader("X-Request-ID") requestID: String,
                           @RequestHeader("X-Correlation-ID") correlationID: String,
@@ -56,7 +56,7 @@ class CommandsController(private val routingService: RoutingService,
                             method = "POST",
                             module = "commands",
                             path = "/$command",
-                            role = InterfaceRole.MSP),
+                            role = InterfaceRole.RECEIVER),
                     expectedDataType = Nothing::class)
         }
 
@@ -69,7 +69,7 @@ class CommandsController(private val routingService: RoutingService,
      */
 
     @Transactional
-    @PostMapping("/ocpi/cpo/2.2/commands/CANCEL_RESERVATION")
+    @PostMapping("/ocpi/receiver/2.2/commands/CANCEL_RESERVATION")
     fun postCancelReservation(@RequestHeader("authorization") authorization: String,
                               @RequestHeader("X-Request-ID") requestID: String,
                               @RequestHeader("X-Correlation-ID") correlationID: String,
@@ -86,12 +86,12 @@ class CommandsController(private val routingService: RoutingService,
 
         val response = if (routingService.isRoleKnown(receiver)) {
             val platformID = routingService.getPlatformID(receiver)
-            val endpoint = routingService.getPlatformEndpoint(platformID, "commands", InterfaceRole.CPO)
+            val endpoint = routingService.getPlatformEndpoint(platformID, "commands", InterfaceRole.SENDER)
             val headers = routingService.makeHeaders(platformID, correlationID, sender, receiver)
 
             // intercept response_url and replace with broker-readable URL (async post mapping above)
             val uid = routingService.saveResponseURL(body.responseURL, CommandType.CANCEL_RESERVATION, sender, receiver)
-            body.responseURL = urlJoin(properties.url, "/ocpi/emsp/2.2/commands/CANCEL_RESERVATION/$uid")
+            body.responseURL = urlJoin(properties.url, "/ocpi/sender/2.2/commands/CANCEL_RESERVATION/$uid")
 
             routingService.forwardRequest(
                     method = "POST",
@@ -116,7 +116,7 @@ class CommandsController(private val routingService: RoutingService,
 
     }
 
-    @PostMapping("/ocpi/cpo/2.2/comamnds/RESERVE_NOW")
+    @PostMapping("/ocpi/receiver/2.2/comamnds/RESERVE_NOW")
     fun postReserveNow(@RequestHeader("authorization") authorization: String,
                        @RequestHeader("X-Request-ID") requestID: String,
                        @RequestHeader("X-Correlation-ID") correlationID: String,
@@ -133,12 +133,12 @@ class CommandsController(private val routingService: RoutingService,
 
         val response = if (routingService.isRoleKnown(receiver)) {
             val platformID = routingService.getPlatformID(receiver)
-            val endpoint = routingService.getPlatformEndpoint(platformID, "commands", InterfaceRole.CPO)
+            val endpoint = routingService.getPlatformEndpoint(platformID, "commands", InterfaceRole.SENDER)
             val headers = routingService.makeHeaders(platformID, correlationID, sender, receiver)
 
             // intercept response_url and replace with broker-readable URL (async post mapping above)
             val uid = routingService.saveResponseURL(body.responseURL, CommandType.RESERVE_NOW, sender, receiver)
-            body.responseURL = urlJoin(properties.url, "/ocpi/emsp/2.2/commands/RESERVE_NOW/$uid")
+            body.responseURL = urlJoin(properties.url, "/ocpi/sender/2.2/commands/RESERVE_NOW/$uid")
 
             routingService.forwardRequest(
                     method = "POST",
@@ -164,7 +164,7 @@ class CommandsController(private val routingService: RoutingService,
 
     }
 
-    @PostMapping("/ocpi/cpo/2.2/commands/START_SESSION")
+    @PostMapping("/ocpi/receiver2.2/commands/START_SESSION")
     fun postStartSession(@RequestHeader("authorization") authorization: String,
                          @RequestHeader("X-Request-ID") requestID: String,
                          @RequestHeader("X-Correlation-ID") correlationID: String,
@@ -181,12 +181,12 @@ class CommandsController(private val routingService: RoutingService,
 
         val response = if (routingService.isRoleKnown(receiver)) {
             val platformID = routingService.getPlatformID(receiver)
-            val endpoint = routingService.getPlatformEndpoint(platformID, "commands", InterfaceRole.CPO)
+            val endpoint = routingService.getPlatformEndpoint(platformID, "commands", InterfaceRole.SENDER)
             val headers = routingService.makeHeaders(platformID, correlationID, sender, receiver)
 
             // intercept response_url and replace with broker-readable URL (async post mapping above)
             val uid = routingService.saveResponseURL(body.responseURL, CommandType.START_SESSION, sender, receiver)
-            body.responseURL = urlJoin(properties.url, "/ocpi/emsp/2.2/commands/START_SESSION/$uid")
+            body.responseURL = urlJoin(properties.url, "/ocpi/sender/2.2/commands/START_SESSION/$uid")
 
             routingService.forwardRequest(
                     method = "POST",
@@ -212,7 +212,7 @@ class CommandsController(private val routingService: RoutingService,
 
     }
 
-    @PostMapping("/ocpi/cpo/2.2/commands/STOP_SESSION")
+    @PostMapping("/ocpi/receiver/2.2/commands/STOP_SESSION")
     fun postStopSession(@RequestHeader("authorization") authorization: String,
                         @RequestHeader("X-Request-ID") requestID: String,
                         @RequestHeader("X-Correlation-ID") correlationID: String,
@@ -229,12 +229,12 @@ class CommandsController(private val routingService: RoutingService,
 
         val response = if (routingService.isRoleKnown(receiver)) {
             val platformID = routingService.getPlatformID(receiver)
-            val endpoint = routingService.getPlatformEndpoint(platformID, "commands", InterfaceRole.CPO)
+            val endpoint = routingService.getPlatformEndpoint(platformID, "commands", InterfaceRole.SENDER)
             val headers = routingService.makeHeaders(platformID, correlationID, sender, receiver)
 
             // intercept response_url and replace with broker-readable URL (async post mapping above)
             val uid = routingService.saveResponseURL(body.responseURL, CommandType.STOP_SESSION, sender, receiver)
-            body.responseURL = urlJoin(properties.url, "/ocpi/emsp/2.2/commands/STOP_SESSION/$uid")
+            body.responseURL = urlJoin(properties.url, "/ocpi/sender/2.2/commands/STOP_SESSION/$uid")
 
             routingService.forwardRequest(
                     method = "POST",
@@ -260,7 +260,7 @@ class CommandsController(private val routingService: RoutingService,
 
     }
 
-    @PostMapping("/ocpi/cpo/2.2/commands/UNLOCK_CONNECTOR")
+    @PostMapping("/ocpi/receiver/2.2/commands/UNLOCK_CONNECTOR")
     fun postUnlockConnector(@RequestHeader("authorization") authorization: String,
                             @RequestHeader("X-Request-ID") requestID: String,
                             @RequestHeader("X-Correlation-ID") correlationID: String,
@@ -277,12 +277,12 @@ class CommandsController(private val routingService: RoutingService,
 
         val response = if (routingService.isRoleKnown(receiver)) {
             val platformID = routingService.getPlatformID(receiver)
-            val endpoint = routingService.getPlatformEndpoint(platformID, "commands", InterfaceRole.CPO)
+            val endpoint = routingService.getPlatformEndpoint(platformID, "commands", InterfaceRole.SENDER)
             val headers = routingService.makeHeaders(platformID, correlationID, sender, receiver)
 
             // intercept response_url and replace with broker-readable URL (async post mapping above)
             val uid = routingService.saveResponseURL(body.responseURL, CommandType.UNLOCK_CONNECTOR, sender, receiver)
-            body.responseURL = urlJoin(properties.url, "/ocpi/emsp/2.2/commands/UNLOCK_CONNECTOR/$uid")
+            body.responseURL = urlJoin(properties.url, "/ocpi/sender/2.2/commands/UNLOCK_CONNECTOR/$uid")
 
             routingService.forwardRequest(
                     method = "POST",

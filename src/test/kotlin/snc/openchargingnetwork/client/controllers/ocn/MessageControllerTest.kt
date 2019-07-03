@@ -31,12 +31,12 @@ class MessageControllerTest(@Autowired val mockMvc: MockMvc) {
         val senderRole = BasicRole("ABC", "DE")
         val receiverRole = BasicRole("XYZ", "NL")
 
-        val receiverEndpoint = EndpointEntity(8L, "locations", InterfaceRole.CPO, "http://client.net/locations")
+        val receiverEndpoint = EndpointEntity(8L, "locations", InterfaceRole.SENDER, "http://client.net/locations")
 
         every { routingService.isRoleKnownOnNetwork(senderRole) } returns true
         every { routingService.isRoleKnown(receiverRole) } returns true
         every { routingService.getPlatformID(receiverRole) } returns 8L
-        every { routingService.getPlatformEndpoint(8L, "locations", InterfaceRole.CPO) } returns receiverEndpoint
+        every { routingService.getPlatformEndpoint(8L, "locations", InterfaceRole.SENDER) } returns receiverEndpoint
         every { routingService.makeHeaders(8L, "abc-123", any(), any()) } returns mockk()
         every { routingService.forwardRequest(
                 method = "GET",
@@ -61,7 +61,7 @@ class MessageControllerTest(@Autowired val mockMvc: MockMvc) {
                 .content(jacksonObjectMapper().writeValueAsString(HubGenericRequest(
                         method = "GET",
                         module = "locations",
-                        role = InterfaceRole.CPO,
+                        role = InterfaceRole.SENDER,
                         path = "/LOC2",
                         expectedResponseType = HubRequestResponseType.LOCATION))))
                 .andExpect(MockMvcResultMatchers.status().isOk)

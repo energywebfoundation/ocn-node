@@ -105,7 +105,7 @@ class MessageController(val routingService: RoutingService,
 
                 // forward message
                 val platformID = routingService.getPlatformID(receiver)
-                val endpoint = routingService.getPlatformEndpoint(platformID, "commands", InterfaceRole.CPO)
+                val endpoint = routingService.getPlatformEndpoint(platformID, "commands", InterfaceRole.SENDER)
                 val headers = routingService.makeHeaders(platformID, correlationID, sender, receiver)
 
                 val commandBody: MutableMap<String, Any> = jacksonObjectMapper().readValue(requestBody.body)

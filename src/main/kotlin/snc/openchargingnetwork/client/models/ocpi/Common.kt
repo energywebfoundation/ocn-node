@@ -102,8 +102,8 @@ enum class ModuleID(val value: String) {
 }
 
 enum class InterfaceRole {
-    CPO,
-    MSP
+    SENDER,
+    RECEIVER
 }
 
 enum class Role {

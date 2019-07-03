@@ -63,7 +63,7 @@ class AdminControllerTest {
                 .andExpect(status().isOk)
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
                 .andExpect(jsonPath("\$.token").isString)
-                .andExpect(jsonPath("\$.versions").value("http://localhost:8090/ocpi/hub/versions"))
+                .andExpect(jsonPath("\$.versions").value("http://localhost:8090/ocpi/versions"))
                 .andDo(document("admin"))
     }
 

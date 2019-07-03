@@ -15,7 +15,7 @@ import snc.openchargingnetwork.client.tools.extractToken
 import snc.openchargingnetwork.client.tools.urlJoin
 
 @RestController
-@RequestMapping("/ocpi/hub")
+@RequestMapping("/ocpi")
 class VersionsController(private val repository: PlatformRepository,
                          private val properties: Properties) {
 
@@ -26,7 +26,7 @@ class VersionsController(private val repository: PlatformRepository,
         return if (repository.existsByAuth_TokenA(authorization.extractToken())) {
 
             // prepare OCPI version information body
-            val endpoint = urlJoin(properties.url, "/ocpi/hub/2.2")
+            val endpoint = urlJoin(properties.url, "/ocpi/2.2")
             val versions = Versions(versions = listOf(Version("2.2", endpoint)))
             OcpiResponse(
                     OcpiStatus.SUCCESS.code,
@@ -45,35 +45,34 @@ class VersionsController(private val repository: PlatformRepository,
 
             var endpoints = listOf<Endpoint>()
 
-            // prepare EMSP and CPO interfaces for each module
+            // prepare EMSP and SENDER interfaces for each module
             for (id in ModuleID.values()) {
 
-                // these modules have no specific EMSP/CPO endpoint
+                // these modules have only SENDER endpoint (the broker/hub)
                 if (id.value == "credentials" || id.value == "hubclientinfo") {
 
-                    val mspEndpoint = Endpoint(
-                            id.value,
-                            InterfaceRole.MSP,
-                            urlJoin(properties.url, "/ocpi/hub/2.2/${id.value}"))
-                    val cpoEndpoint = Endpoint(
-                            id.value,
-                            InterfaceRole.CPO,
-                            urlJoin(properties.url, "/ocpi/hub/2.2/${id.value}"))
+                    endpoints = endpoints.plus(Endpoint(
+                            identifier = id.value,
+                            role = InterfaceRole.SENDER,
+                            url = urlJoin(properties.url, "/ocpi/2.2/${id.value}")))
 
-                    endpoints = endpoints.plus(listOf(mspEndpoint, cpoEndpoint))
+                // not yet implemented
+                } else if (id.value == "chargingprofiles") {
 
+                    continue
+
+                // remaining modules all have both interfaces implemented
                 } else {
 
-                    val mspEndpoint = Endpoint(
-                            id.value,
-                            InterfaceRole.MSP,
-                            urlJoin(properties.url, "/ocpi/emsp/2.2/${id.value}"))
-                    val cpoEndpoint = Endpoint(
-                            id.value,
-                            InterfaceRole.CPO,
-                            urlJoin(properties.url, "/ocpi/cpo/2.2/${id.value}"))
-
-                    endpoints = endpoints.plus(listOf(mspEndpoint, cpoEndpoint))
+                    endpoints = endpoints.plus(listOf(
+                            Endpoint(
+                                    identifier = id.value,
+                                    role = InterfaceRole.SENDER,
+                                    url = urlJoin(properties.url, "/ocpi/sender/2.2/${id.value}")),
+                            Endpoint(
+                                    identifier = id.value,
+                                    role = InterfaceRole.RECEIVER,
+                                    url = urlJoin(properties.url, "/ocpi/receiver/2.2/${id.value}"))))
                 }
 
             }

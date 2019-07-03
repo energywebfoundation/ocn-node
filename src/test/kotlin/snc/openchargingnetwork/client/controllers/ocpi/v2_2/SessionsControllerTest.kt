@@ -27,18 +27,18 @@ class SessionsControllerTest(@Autowired val mockMvc: MockMvc) {
     lateinit var routingService: RoutingService
 
     @Test
-    fun `When PUT EMSP Session returns success`() {
+    fun `When PUT receiver Session returns success`() {
         // sender
         val senderPlatform = PlatformEntity(id = 1L, auth = Auth(tokenC = "010203040506070809"))
         val senderRole = BasicRole("XYZ", "DE")
         // receiver
         val receiverRole = BasicRole("ABC", "DE")
-        val receiverEndpoint = EndpointEntity(4L, "sessions", InterfaceRole.MSP, "http://localhost:3000/sessions")
+        val receiverEndpoint = EndpointEntity(4L, "sessions", InterfaceRole.RECEIVER, "http://localhost:3000/sessions")
 
         every { routingService.validateSender("Token ${senderPlatform.auth.tokenC}", senderRole, senderRole, senderRole) } returns mockk()
         every { routingService.isRoleKnown(receiverRole) } returns true
         every { routingService.getPlatformID(receiverRole) } returns 4L
-        every { routingService.getPlatformEndpoint(4L, "sessions", InterfaceRole.MSP) } returns receiverEndpoint
+        every { routingService.getPlatformEndpoint(4L, "sessions", InterfaceRole.RECEIVER) } returns receiverEndpoint
         every { routingService.makeHeaders(4L, "abc-123", senderRole, receiverRole) } returns mockk()
         every { routingService.forwardRequest(
                 method = "PUT",
@@ -51,7 +51,7 @@ class SessionsControllerTest(@Autowired val mockMvc: MockMvc) {
                 headers = mapOf(),
                 body = OcpiResponse(1000, data = null))
 
-        mockMvc.perform(put("/ocpi/emsp/2.2/sessions/DE/XYZ/1234")
+        mockMvc.perform(put("/ocpi/receiver/2.2/sessions/DE/XYZ/1234")
                 .header("Authorization", "Token ${senderPlatform.auth.tokenC}")
                 .header("X-Request-ID", "123")
                 .header("X-Correlation-ID", "abc-123")

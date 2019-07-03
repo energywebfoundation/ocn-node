@@ -16,7 +16,7 @@ class TariffsController(val routingService: RoutingService) {
      * SENDER INTERFACE
      */
 
-    @GetMapping("/ocpi/cpo/2.2/tariffs")
+    @GetMapping("/ocpi/sender/2.2/tariffs")
     fun getTariffsFromDataOwner(@RequestHeader("authorization") authorization: String,
                                 @RequestHeader("X-Request-ID") requestID: String,
                                 @RequestHeader("X-Correlation-ID") correlationID: String,
@@ -38,7 +38,7 @@ class TariffsController(val routingService: RoutingService) {
 
         val response = if (routingService.isRoleKnown(receiver)) {
             val platformID = routingService.getPlatformID(receiver)
-            val endpoint = routingService.getPlatformEndpoint(platformID, "tariffs", InterfaceRole.CPO)
+            val endpoint = routingService.getPlatformEndpoint(platformID, "tariffs", InterfaceRole.SENDER)
             val headers = routingService.makeHeaders(platformID, correlationID, sender, receiver)
             routingService.forwardRequest(
                     method = "GET",
@@ -56,7 +56,7 @@ class TariffsController(val routingService: RoutingService) {
                     body = HubGenericRequest(
                             method = "GET",
                             module = "tariffs",
-                            role = InterfaceRole.CPO,
+                            role = InterfaceRole.SENDER,
                             params = params,
                             expectedResponseType = HubRequestResponseType.TARIFF_ARRAY),
                     expectedDataType = Array<Tariff>::class)
@@ -74,10 +74,10 @@ class TariffsController(val routingService: RoutingService) {
     }
 
     /**
-     * TARIFF INTERFACE
+     * RECEIVER INTERFACE
      */
 
-    @GetMapping("/ocpi/emsp/2.2/tariffs/{countryCode}/{partyID}/{tariffID}")
+    @GetMapping("/ocpi/receiver/2.2/tariffs/{countryCode}/{partyID}/{tariffID}")
     fun getClientOwnedTariff(@RequestHeader("authorization") authorization: String,
                              @RequestHeader("X-Request-ID") requestID: String,
                              @RequestHeader("X-Correlation-ID") correlationID: String,
@@ -97,7 +97,7 @@ class TariffsController(val routingService: RoutingService) {
 
         val response = if (routingService.isRoleKnown(receiver)) {
             val platformID = routingService.getPlatformID(receiver)
-            val endpoint = routingService.getPlatformEndpoint(platformID, "tariffs", InterfaceRole.MSP)
+            val endpoint = routingService.getPlatformEndpoint(platformID, "tariffs", InterfaceRole.RECEIVER)
             val headers = routingService.makeHeaders(platformID, correlationID, sender, receiver)
             routingService.forwardRequest(
                     method = "GET",
@@ -115,7 +115,7 @@ class TariffsController(val routingService: RoutingService) {
                             method = "GET",
                             module = "tariffs",
                             path = urlJoin(url, "/$countryCode/$partyID/$tariffID"),
-                            role = InterfaceRole.MSP,
+                            role = InterfaceRole.RECEIVER,
                             expectedResponseType = HubRequestResponseType.TARIFF),
                     expectedDataType = Tariff::class)
         }
@@ -123,7 +123,7 @@ class TariffsController(val routingService: RoutingService) {
         return ResponseEntity.status(response.statusCode).body(response.body)
     }
 
-    @PutMapping("/ocpi/emsp/2.2/tariffs/{countryCode}/{partyID}/{tariffID}")
+    @PutMapping("/ocpi/receiver/2.2/tariffs/{countryCode}/{partyID}/{tariffID}")
     fun putClientOwnedTariff(@RequestHeader("authorization") authorization: String,
                              @RequestHeader("X-Request-ID") requestID: String,
                              @RequestHeader("X-Correlation-ID") correlationID: String,
@@ -145,7 +145,7 @@ class TariffsController(val routingService: RoutingService) {
 
         val response = if (routingService.isRoleKnown(receiver)) {
             val platformID = routingService.getPlatformID(receiver)
-            val endpoint = routingService.getPlatformEndpoint(platformID, "tariffs", InterfaceRole.MSP)
+            val endpoint = routingService.getPlatformEndpoint(platformID, "tariffs", InterfaceRole.RECEIVER)
             val headers = routingService.makeHeaders(platformID, correlationID, sender, receiver)
             routingService.forwardRequest(
                     method = "PUT",
@@ -164,7 +164,7 @@ class TariffsController(val routingService: RoutingService) {
                             method = "PUT",
                             module = "tariffs",
                             path = urlJoin(url, "/$countryCode/$partyID/$tariffID"),
-                            role = InterfaceRole.MSP,
+                            role = InterfaceRole.RECEIVER,
                             body = body),
                     expectedDataType = Nothing::class)
         }
@@ -172,7 +172,7 @@ class TariffsController(val routingService: RoutingService) {
         return ResponseEntity.status(response.statusCode).body(response.body)
     }
 
-    @DeleteMapping("/ocpi/emsp/2.2/tariffs/{countryCode}/{partyID}/{tariffID}")
+    @DeleteMapping("/ocpi/receiver/2.2/tariffs/{countryCode}/{partyID}/{tariffID}")
     fun deleteClientOwnedTariff(@RequestHeader("authorization") authorization: String,
                                 @RequestHeader("X-Request-ID") requestID: String,
                                 @RequestHeader("X-Correlation-ID") correlationID: String,
@@ -192,7 +192,7 @@ class TariffsController(val routingService: RoutingService) {
 
         val response = if (routingService.isRoleKnown(receiver)) {
             val platformID = routingService.getPlatformID(receiver)
-            val endpoint = routingService.getPlatformEndpoint(platformID, "tariffs", InterfaceRole.MSP)
+            val endpoint = routingService.getPlatformEndpoint(platformID, "tariffs", InterfaceRole.RECEIVER)
             val headers = routingService.makeHeaders(platformID, correlationID, sender, receiver)
             routingService.forwardRequest(
                     method = "DELETE",
@@ -210,7 +210,7 @@ class TariffsController(val routingService: RoutingService) {
                             method = "DELETE",
                             module = "tariffs",
                             path = urlJoin(url, "/$countryCode/$partyID/$tariffID"),
-                            role = InterfaceRole.MSP),
+                            role = InterfaceRole.RECEIVER),
                     expectedDataType = Nothing::class)
         }
 

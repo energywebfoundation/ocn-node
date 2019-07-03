@@ -16,7 +16,7 @@ class LocationsController(private val routingService: RoutingService) {
      * SENDER INTERFACES
      */
 
-    @GetMapping("/ocpi/cpo/2.2/locations")
+    @GetMapping("/ocpi/sender/2.2/locations")
     fun getLocationListFromDataOwner(@RequestHeader("authorization") authorization: String,
                                      @RequestHeader("X-Request-ID") requestID: String,
                                      @RequestHeader("X-Correlation-ID") correlationID: String,
@@ -38,7 +38,7 @@ class LocationsController(private val routingService: RoutingService) {
 
         val response = if (routingService.isRoleKnown(receiver)) {
             val platformID = routingService.getPlatformID(receiver)
-            val endpoint = routingService.getPlatformEndpoint(platformID, "locations", InterfaceRole.CPO)
+            val endpoint = routingService.getPlatformEndpoint(platformID, "locations", InterfaceRole.SENDER)
             val headers = routingService.makeHeaders(platformID, correlationID, sender, receiver)
             routingService.forwardRequest(
                     method = "GET",
@@ -56,7 +56,7 @@ class LocationsController(private val routingService: RoutingService) {
                     body = HubGenericRequest(
                             method = "GET",
                             module = "locations",
-                            role = InterfaceRole.CPO,
+                            role = InterfaceRole.SENDER,
                             params = params,
                             expectedResponseType = HubRequestResponseType.LOCATION_ARRAY),
                     expectedDataType = Array<Location>::class)
@@ -74,7 +74,7 @@ class LocationsController(private val routingService: RoutingService) {
                 .body(response.body)
     }
 
-    @GetMapping("/ocpi/cpo/2.2/locations/{locationID}")
+    @GetMapping("/ocpi/sender/2.2/locations/{locationID}")
     fun getLocationObjectFromDataOwner(@RequestHeader("authorization") authorization: String,
                                        @RequestHeader("X-Request-ID") requestID: String,
                                        @RequestHeader("X-Correlation-ID") correlationID: String,
@@ -91,7 +91,7 @@ class LocationsController(private val routingService: RoutingService) {
 
         val response = if (routingService.isRoleKnown(receiver)) {
             val platformID = routingService.getPlatformID(receiver)
-            val endpoint = routingService.getPlatformEndpoint(platformID, "locations", InterfaceRole.CPO)
+            val endpoint = routingService.getPlatformEndpoint(platformID, "locations", InterfaceRole.SENDER)
             val headers = routingService.makeHeaders(platformID, correlationID, sender, receiver)
             routingService.forwardRequest(
                     method = "GET",
@@ -108,7 +108,7 @@ class LocationsController(private val routingService: RoutingService) {
                     body = HubGenericRequest(
                             method = "GET",
                             module = "locations",
-                            role = InterfaceRole.CPO,
+                            role = InterfaceRole.SENDER,
                             path = "/$locationID",
                             expectedResponseType = HubRequestResponseType.LOCATION),
                     expectedDataType = Location::class)
@@ -117,7 +117,7 @@ class LocationsController(private val routingService: RoutingService) {
         return ResponseEntity.status(response.statusCode).body(response.body)
     }
 
-    @GetMapping("/ocpi/cpo/2.2/locations/{locationID}/{evseUID}")
+    @GetMapping("/ocpi/sender/2.2/locations/{locationID}/{evseUID}")
     fun getEvseObjectFromDataOwner(@RequestHeader("authorization") authorization: String,
                                    @RequestHeader("X-Request-ID") requestID: String,
                                    @RequestHeader("X-Correlation-ID") correlationID: String,
@@ -135,7 +135,7 @@ class LocationsController(private val routingService: RoutingService) {
 
         val response = if (routingService.isRoleKnown(receiver)) {
             val platformID = routingService.getPlatformID(receiver)
-            val endpoint = routingService.getPlatformEndpoint(platformID, "locations", InterfaceRole.CPO)
+            val endpoint = routingService.getPlatformEndpoint(platformID, "locations", InterfaceRole.SENDER)
             val headers = routingService.makeHeaders(platformID, correlationID, sender, receiver)
             routingService.forwardRequest(
                     method = "GET",
@@ -152,7 +152,7 @@ class LocationsController(private val routingService: RoutingService) {
                     body = HubGenericRequest(
                             method = "GET",
                             module = "locations",
-                            role = InterfaceRole.CPO,
+                            role = InterfaceRole.SENDER,
                             path = "/$locationID/$evseUID",
                             expectedResponseType = HubRequestResponseType.EVSE),
                     expectedDataType = Evse::class)
@@ -161,7 +161,7 @@ class LocationsController(private val routingService: RoutingService) {
         return ResponseEntity.status(response.statusCode).body(response.body)
     }
 
-    @GetMapping("/ocpi/cpo/2.2/locations/{locationID}/{evseUID}/{connectorID}")
+    @GetMapping("/ocpi/sender/2.2/locations/{locationID}/{evseUID}/{connectorID}")
     fun getConnectorObjectFromDataOwner(@RequestHeader("authorization") authorization: String,
                                         @RequestHeader("X-Request-ID") requestID: String,
                                         @RequestHeader("X-Correlation-ID") correlationID: String,
@@ -180,7 +180,7 @@ class LocationsController(private val routingService: RoutingService) {
 
         val response = if (routingService.isRoleKnown(receiver)) {
             val platformID = routingService.getPlatformID(receiver)
-            val endpoint = routingService.getPlatformEndpoint(platformID, "locations", InterfaceRole.CPO)
+            val endpoint = routingService.getPlatformEndpoint(platformID, "locations", InterfaceRole.SENDER)
             val headers = routingService.makeHeaders(platformID, correlationID, sender, receiver)
             routingService.forwardRequest(
                     method = "GET",
@@ -197,7 +197,7 @@ class LocationsController(private val routingService: RoutingService) {
                     body = HubGenericRequest(
                             method = "GET",
                             module = "locations",
-                            role = InterfaceRole.CPO,
+                            role = InterfaceRole.SENDER,
                             path = "/$locationID/$evseUID/$connectorID",
                             expectedResponseType = HubRequestResponseType.CONNECTOR),
                     expectedDataType = Connector::class)
@@ -210,7 +210,7 @@ class LocationsController(private val routingService: RoutingService) {
      * RECEIVER INTERFACES
      */
 
-    @GetMapping("/ocpi/emsp/2.2/locations/{countryCode}/{partyID}/{locationID}")
+    @GetMapping("/ocpi/receiver/2.2/locations/{countryCode}/{partyID}/{locationID}")
     fun getClientOwnedLocation(@RequestHeader("authorization") authorization: String,
                                @RequestHeader("X-Request-ID") requestID: String,
                                @RequestHeader("X-Correlation-ID") correlationID: String,
@@ -230,7 +230,7 @@ class LocationsController(private val routingService: RoutingService) {
 
         val response = if (routingService.isRoleKnown(receiver)) {
             val platformID = routingService.getPlatformID(receiver)
-            val endpoint = routingService.getPlatformEndpoint(platformID, "locations", InterfaceRole.MSP)
+            val endpoint = routingService.getPlatformEndpoint(platformID, "locations", InterfaceRole.RECEIVER)
             val headers = routingService.makeHeaders(platformID, correlationID, sender, receiver)
             routingService.forwardRequest(
                     method = "GET",
@@ -247,7 +247,7 @@ class LocationsController(private val routingService: RoutingService) {
                     body = HubGenericRequest(
                             method = "GET",
                             module = "locations",
-                            role = InterfaceRole.MSP,
+                            role = InterfaceRole.RECEIVER,
                             path = "/$countryCode/$partyID/$locationID",
                             expectedResponseType = HubRequestResponseType.LOCATION),
                     expectedDataType = Location::class)
@@ -256,7 +256,7 @@ class LocationsController(private val routingService: RoutingService) {
         return ResponseEntity.status(response.statusCode).body(response.body)
     }
 
-    @GetMapping("/ocpi/emsp/2.2/locations/{countryCode}/{partyID}/{locationID}/{evseUID}")
+    @GetMapping("/ocpi/receiver/2.2/locations/{countryCode}/{partyID}/{locationID}/{evseUID}")
     fun getClientOwnedEvse(@RequestHeader("authorization") authorization: String,
                            @RequestHeader("X-Request-ID") requestID: String,
                            @RequestHeader("X-Correlation-ID") correlationID: String,
@@ -277,7 +277,7 @@ class LocationsController(private val routingService: RoutingService) {
 
         val response = if (routingService.isRoleKnown(receiver)) {
             val platformID = routingService.getPlatformID(receiver)
-            val endpoint = routingService.getPlatformEndpoint(platformID, "locations", InterfaceRole.MSP)
+            val endpoint = routingService.getPlatformEndpoint(platformID, "locations", InterfaceRole.RECEIVER)
             val headers = routingService.makeHeaders(platformID, correlationID, sender, receiver)
             routingService.forwardRequest(
                     method = "GET",
@@ -294,7 +294,7 @@ class LocationsController(private val routingService: RoutingService) {
                     body = HubGenericRequest(
                             method = "GET",
                             module = "locations",
-                            role = InterfaceRole.MSP,
+                            role = InterfaceRole.RECEIVER,
                             path = "/$countryCode/$partyID/$locationID/$evseUID",
                             expectedResponseType = HubRequestResponseType.EVSE),
                     expectedDataType = Evse::class)
@@ -303,7 +303,7 @@ class LocationsController(private val routingService: RoutingService) {
         return ResponseEntity.status(response.statusCode).body(response.body)
     }
 
-    @GetMapping("/ocpi/emsp/2.2/locations/{countryCode}/{partyID}/{locationID}/{evseUID}/{connectorID}")
+    @GetMapping("/ocpi/receiver/2.2/locations/{countryCode}/{partyID}/{locationID}/{evseUID}/{connectorID}")
     fun getClientOwnedConnector(@RequestHeader("authorization") authorization: String,
                                 @RequestHeader("X-Request-ID") requestID: String,
                                 @RequestHeader("X-Correlation-ID") correlationID: String,
@@ -325,7 +325,7 @@ class LocationsController(private val routingService: RoutingService) {
 
         val response = if (routingService.isRoleKnown(receiver)) {
             val platformID = routingService.getPlatformID(receiver)
-            val endpoint = routingService.getPlatformEndpoint(platformID, "locations", InterfaceRole.MSP)
+            val endpoint = routingService.getPlatformEndpoint(platformID, "locations", InterfaceRole.RECEIVER)
             val headers = routingService.makeHeaders(platformID, correlationID, sender, receiver)
             routingService.forwardRequest(
                     method = "GET",
@@ -342,7 +342,7 @@ class LocationsController(private val routingService: RoutingService) {
                     body = HubGenericRequest(
                             method = "GET",
                             module = "locations",
-                            role = InterfaceRole.MSP,
+                            role = InterfaceRole.RECEIVER,
                             path = "/$countryCode/$partyID/$locationID/$evseUID/$connectorID",
                             expectedResponseType = HubRequestResponseType.CONNECTOR),
                     expectedDataType = Connector::class)
@@ -351,7 +351,7 @@ class LocationsController(private val routingService: RoutingService) {
         return ResponseEntity.status(response.statusCode).body(response.body)
     }
 
-    @PutMapping("/ocpi/emsp/2.2/locations/{countryCode}/{partyID}/{locationID}")
+    @PutMapping("/ocpi/receiver/2.2/locations/{countryCode}/{partyID}/{locationID}")
     fun putClientOwnedLocation(@RequestHeader("authorization") authorization: String,
                                @RequestHeader("X-Request-ID") requestID: String,
                                @RequestHeader("X-Correlation-ID") correlationID: String,
@@ -373,7 +373,7 @@ class LocationsController(private val routingService: RoutingService) {
 
         val response = if (routingService.isRoleKnown(receiver)) {
             val platformID = routingService.getPlatformID(receiver)
-            val endpoint = routingService.getPlatformEndpoint(platformID, "locations", InterfaceRole.MSP)
+            val endpoint = routingService.getPlatformEndpoint(platformID, "locations", InterfaceRole.RECEIVER)
             val headers = routingService.makeHeaders(platformID, correlationID, sender, receiver)
             routingService.forwardRequest(
                     method = "PUT",
@@ -391,7 +391,7 @@ class LocationsController(private val routingService: RoutingService) {
                     body = HubGenericRequest(
                             method = "PUT",
                             module = "locations",
-                            role = InterfaceRole.MSP,
+                            role = InterfaceRole.RECEIVER,
                             path = "/$countryCode/$partyID/$locationID",
                             body = body),
                     expectedDataType = Nothing::class)
@@ -400,7 +400,7 @@ class LocationsController(private val routingService: RoutingService) {
         return ResponseEntity.status(response.statusCode).body(response.body)
     }
 
-    @PutMapping("/ocpi/emsp/2.2/locations/{countryCode}/{partyID}/{locationID}/{evseUID}")
+    @PutMapping("/ocpi/receiver/2.2/locations/{countryCode}/{partyID}/{locationID}/{evseUID}")
     fun putClientOwnedEvse(@RequestHeader("authorization") authorization: String,
                            @RequestHeader("X-Request-ID") requestID: String,
                            @RequestHeader("X-Correlation-ID") correlationID: String,
@@ -422,7 +422,7 @@ class LocationsController(private val routingService: RoutingService) {
 
         val response = if (routingService.isRoleKnown(receiver)) {
             val platformID = routingService.getPlatformID(receiver)
-            val endpoint = routingService.getPlatformEndpoint(platformID, "locations", InterfaceRole.MSP)
+            val endpoint = routingService.getPlatformEndpoint(platformID, "locations", InterfaceRole.RECEIVER)
             val headers = routingService.makeHeaders(platformID, correlationID, sender, receiver)
             routingService.forwardRequest(
                     method = "PUT",
@@ -440,7 +440,7 @@ class LocationsController(private val routingService: RoutingService) {
                     body = HubGenericRequest(
                             method = "PUT",
                             module = "locations",
-                            role = InterfaceRole.MSP,
+                            role = InterfaceRole.RECEIVER,
                             path = "/$countryCode/$partyID/$locationID/$evseUID",
                             body = body),
                     expectedDataType = Nothing::class)
@@ -449,7 +449,7 @@ class LocationsController(private val routingService: RoutingService) {
         return ResponseEntity.status(response.statusCode).body(response.body)
     }
 
-    @PutMapping("/ocpi/emsp/2.2/locations/{countryCode}/{partyID}/{locationID}/{evseUID}/{connectorID}")
+    @PutMapping("/ocpi/receiver/2.2/locations/{countryCode}/{partyID}/{locationID}/{evseUID}/{connectorID}")
     fun putClientOwnedConnector(@RequestHeader("authorization") authorization: String,
                                 @RequestHeader("X-Request-ID") requestID: String,
                                 @RequestHeader("X-Correlation-ID") correlationID: String,
@@ -472,7 +472,7 @@ class LocationsController(private val routingService: RoutingService) {
 
         val response = if (routingService.isRoleKnown(receiver)) {
             val platformID = routingService.getPlatformID(receiver)
-            val endpoint = routingService.getPlatformEndpoint(platformID, "locations", InterfaceRole.MSP)
+            val endpoint = routingService.getPlatformEndpoint(platformID, "locations", InterfaceRole.RECEIVER)
             val headers = routingService.makeHeaders(platformID, correlationID, sender, receiver)
             routingService.forwardRequest(
                     method = "PUT",
@@ -490,7 +490,7 @@ class LocationsController(private val routingService: RoutingService) {
                     body = HubGenericRequest(
                             method = "PUT",
                             module = "locations",
-                            role = InterfaceRole.MSP,
+                            role = InterfaceRole.RECEIVER,
                             path = "/$countryCode/$partyID/$locationID/$evseUID/$connectorID",
                             body = body),
                     expectedDataType = Nothing::class)
@@ -499,7 +499,7 @@ class LocationsController(private val routingService: RoutingService) {
         return ResponseEntity.status(response.statusCode).body(response.body)
     }
 
-    @PatchMapping("/ocpi/emsp/2.2/locations/{countryCode}/{partyID}/{locationID}")
+    @PatchMapping("/ocpi/receiver/2.2/locations/{countryCode}/{partyID}/{locationID}")
     fun patchClientOwnedLocation(@RequestHeader("authorization") authorization: String,
                                  @RequestHeader("X-Request-ID") requestID: String,
                                  @RequestHeader("X-Correlation-ID") correlationID: String,
@@ -520,7 +520,7 @@ class LocationsController(private val routingService: RoutingService) {
 
         val response = if (routingService.isRoleKnown(receiver)) {
             val platformID = routingService.getPlatformID(receiver)
-            val endpoint = routingService.getPlatformEndpoint(platformID, "locations", InterfaceRole.MSP)
+            val endpoint = routingService.getPlatformEndpoint(platformID, "locations", InterfaceRole.RECEIVER)
             val headers = routingService.makeHeaders(platformID, correlationID, sender, receiver)
             routingService.forwardRequest(
                     method = "PATCH",
@@ -538,7 +538,7 @@ class LocationsController(private val routingService: RoutingService) {
                     body = HubGenericRequest(
                             method = "PATCH",
                             module = "locations",
-                            role = InterfaceRole.MSP,
+                            role = InterfaceRole.RECEIVER,
                             path = "/$countryCode/$partyID/$locationID",
                             body = body),
                     expectedDataType = Nothing::class)
@@ -547,7 +547,7 @@ class LocationsController(private val routingService: RoutingService) {
         return ResponseEntity.status(response.statusCode).body(response.body)
     }
 
-    @PatchMapping("/ocpi/emsp/2.2/locations/{countryCode}/{partyID}/{locationID}/{evseUID}")
+    @PatchMapping("/ocpi/receiver/2.2/locations/{countryCode}/{partyID}/{locationID}/{evseUID}")
     fun patchClientOwnedEvse(@RequestHeader("authorization") authorization: String,
                              @RequestHeader("X-Request-ID") requestID: String,
                              @RequestHeader("X-Correlation-ID") correlationID: String,
@@ -569,7 +569,7 @@ class LocationsController(private val routingService: RoutingService) {
 
         val response = if (routingService.isRoleKnown(receiver)) {
             val platformID = routingService.getPlatformID(receiver)
-            val endpoint = routingService.getPlatformEndpoint(platformID, "locations", InterfaceRole.MSP)
+            val endpoint = routingService.getPlatformEndpoint(platformID, "locations", InterfaceRole.RECEIVER)
             val headers = routingService.makeHeaders(platformID, correlationID, sender, receiver)
             routingService.forwardRequest(
                     method = "PATCH",
@@ -587,7 +587,7 @@ class LocationsController(private val routingService: RoutingService) {
                     body = HubGenericRequest(
                             method = "PATCH",
                             module = "locations",
-                            role = InterfaceRole.MSP,
+                            role = InterfaceRole.RECEIVER,
                             path = "/$countryCode/$partyID/$locationID/$evseUID",
                             body = body),
                     expectedDataType = Nothing::class)
@@ -596,7 +596,7 @@ class LocationsController(private val routingService: RoutingService) {
         return ResponseEntity.status(response.statusCode).body(response.body)
     }
 
-    @PatchMapping("/ocpi/emsp/2.2/locations/{countryCode}/{partyID}/{locationID}/{evseUID}/{connectorID}")
+    @PatchMapping("/ocpi/receiver/2.2/locations/{countryCode}/{partyID}/{locationID}/{evseUID}/{connectorID}")
     fun patchClientOwnedConnector(@RequestHeader("authorization") authorization: String,
                                   @RequestHeader("X-Request-ID") requestID: String,
                                   @RequestHeader("X-Correlation-ID") correlationID: String,
@@ -619,7 +619,7 @@ class LocationsController(private val routingService: RoutingService) {
 
         val response = if (routingService.isRoleKnown(receiver)) {
             val platformID = routingService.getPlatformID(receiver)
-            val endpoint = routingService.getPlatformEndpoint(platformID, "locations", InterfaceRole.MSP)
+            val endpoint = routingService.getPlatformEndpoint(platformID, "locations", InterfaceRole.RECEIVER)
             val headers = routingService.makeHeaders(platformID, correlationID, sender, receiver)
             routingService.forwardRequest(
                     method = "PATCH",
@@ -637,7 +637,7 @@ class LocationsController(private val routingService: RoutingService) {
                     body = HubGenericRequest(
                             method = "PATCH",
                             module = "locations",
-                            role = InterfaceRole.MSP,
+                            role = InterfaceRole.RECEIVER,
                             path = "/$countryCode/$partyID/$locationID/$evseUID/$connectorID",
                             body = body),
                     expectedDataType = Nothing::class)

@@ -5,12 +5,8 @@ import snc.openchargingnetwork.client.models.ocpi.*
 import snc.openchargingnetwork.client.services.RoutingService
 
 @RestController
-@RequestMapping("/ocpi/hub/2.2/hubclientinfo")
+@RequestMapping("/ocpi/2.2/hubclientinfo")
 class HubClientInfoController(private val routingService: RoutingService) {
-
-    /**
-     * SENDER INTERFACE
-     */
 
     @GetMapping
     fun getHubClientInfo(@RequestHeader("authorization") authorization: String,

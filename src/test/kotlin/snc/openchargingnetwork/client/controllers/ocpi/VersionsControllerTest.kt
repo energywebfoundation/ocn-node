@@ -31,7 +31,7 @@ class VersionsControllerTest(@Autowired val mockMvc: MockMvc) {
         val platform = PlatformEntity()
         every { repository.existsByAuth_TokenA(platform.auth.tokenA) } returns true
         every { properties.url } returns "http://localhost:8070"
-        mockMvc.perform(get("/ocpi/hub/versions")
+        mockMvc.perform(get("/ocpi/versions")
                 .header("Authorization", "Token ${platform.auth.tokenA}"))
                 .andExpect(status().isOk)
                 .andExpect(jsonPath("\$.status_code").value(OcpiStatus.SUCCESS.code))
@@ -40,7 +40,7 @@ class VersionsControllerTest(@Autowired val mockMvc: MockMvc) {
                 .andExpect(jsonPath("\$.data.versions").isArray)
                 .andExpect(jsonPath("\$.data.versions[0]").isMap)
                 .andExpect(jsonPath("\$.data.versions[0].version").value("2.2"))
-                .andExpect(jsonPath("\$.data.versions[0].url").value("http://localhost:8070/ocpi/hub/2.2"))
+                .andExpect(jsonPath("\$.data.versions[0].url").value("http://localhost:8070/ocpi/2.2"))
     }
 
     @Test
@@ -48,20 +48,20 @@ class VersionsControllerTest(@Autowired val mockMvc: MockMvc) {
         val platform = PlatformEntity()
         every { repository.existsByAuth_TokenA(platform.auth.tokenA) } returns true
         every { properties.url } returns "https://broker.provider.com"
-        mockMvc.perform(get("/ocpi/hub/2.2")
+        mockMvc.perform(get("/ocpi/2.2")
                 .header("Authorization", "Token ${platform.auth.tokenA}"))
                 .andExpect(status().isOk)
                 .andExpect(jsonPath("\$.status_code").value(OcpiStatus.SUCCESS.code))
                 .andExpect(jsonPath("\$.status_message").doesNotExist())
                 .andExpect(jsonPath("\$.timestamp").isString)
                 .andExpect(jsonPath("\$.data.version").value("2.2"))
-                .andExpect(jsonPath("\$.data.endpoints", hasSize<Array<Endpoint>>(ModuleID.values().size * 2)))
+                .andExpect(jsonPath("\$.data.endpoints", hasSize<Array<Endpoint>>(14)))
                 .andExpect(jsonPath("\$.data.endpoints[0].identifier").value("cdrs"))
-                .andExpect(jsonPath("\$.data.endpoints[0].role").value("MSP"))
-                .andExpect(jsonPath("\$.data.endpoints[0].url").value("https://broker.provider.com/ocpi/emsp/2.2/cdrs"))
+                .andExpect(jsonPath("\$.data.endpoints[0].role").value("SENDER"))
+                .andExpect(jsonPath("\$.data.endpoints[0].url").value("https://broker.provider.com/ocpi/sender/2.2/cdrs"))
                 .andExpect(jsonPath("\$.data.endpoints[1].identifier").value("cdrs"))
-                .andExpect(jsonPath("\$.data.endpoints[1].role").value("CPO"))
-                .andExpect(jsonPath("\$.data.endpoints[1].url").value("https://broker.provider.com/ocpi/cpo/2.2/cdrs"))
+                .andExpect(jsonPath("\$.data.endpoints[1].role").value("RECEIVER"))
+                .andExpect(jsonPath("\$.data.endpoints[1].url").value("https://broker.provider.com/ocpi/receiver/2.2/cdrs"))
     }
 
 }

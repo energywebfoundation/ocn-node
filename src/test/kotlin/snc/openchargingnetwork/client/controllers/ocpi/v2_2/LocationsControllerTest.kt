@@ -26,18 +26,18 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
     lateinit var routingService: RoutingService
 
     @Test
-    fun `When GET CPO Locations returns location list`() {
+    fun `When GET sender Locations returns location list`() {
         // sender
         val senderPlatform = PlatformEntity(id = 1L, auth = Auth(tokenC = "010203040506070809"))
         val senderRole = BasicRole("XYZ", "DE")
         // receiver
         val receiverRole = BasicRole("ABC", "DE")
-        val receiverEndpoint = EndpointEntity(4L, "locations", InterfaceRole.CPO, "http://localhost:3000/locations")
+        val receiverEndpoint = EndpointEntity(4L, "locations", InterfaceRole.SENDER, "http://localhost:3000/locations")
 
         every { routingService.validateSender("Token ${senderPlatform.auth.tokenC}", senderRole) } returns mockk()
         every { routingService.isRoleKnown(receiverRole) } returns true
         every { routingService.getPlatformID(receiverRole) } returns 4L
-        every { routingService.getPlatformEndpoint(4L, "locations", InterfaceRole.CPO) } returns receiverEndpoint
+        every { routingService.getPlatformEndpoint(4L, "locations", InterfaceRole.SENDER) } returns receiverEndpoint
         every { routingService.makeHeaders(4L, "abc-123", senderRole, receiverRole) } returns mockk()
 
         every { routingService.forwardRequest(
@@ -54,7 +54,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
                         "X-Limit" to "300"),
                 body = OcpiResponse(1000, data = arrayOf(exampleLocation1)))
 
-        mockMvc.perform(get("/ocpi/cpo/2.2/locations")
+        mockMvc.perform(get("/ocpi/sender/2.2/locations")
                 .header("Authorization", "Token ${senderPlatform.auth.tokenC}")
                 .header("X-Request-ID", "123")
                 .header("X-Correlation-ID", "abc-123")
