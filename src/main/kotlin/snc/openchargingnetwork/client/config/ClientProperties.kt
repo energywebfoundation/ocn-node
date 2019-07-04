@@ -27,9 +27,4 @@ class Properties(val apikey: String = generateUUIDv4Token()) {
             lateinit var registry: String
         }
     }
-
-    init {
-        //TODO: use proper logger
-        println("admin.apikey = $apikey")
-    }
 }
