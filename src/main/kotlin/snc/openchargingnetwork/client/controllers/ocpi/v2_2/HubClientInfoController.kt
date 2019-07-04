@@ -10,12 +10,10 @@ class HubClientInfoController(private val routingService: RoutingService) {
 
     @GetMapping
     fun getHubClientInfo(@RequestHeader("authorization") authorization: String,
-                         @RequestHeader("X-Request-ID") requestID: String,
-                         @RequestHeader("X-Correlation-ID") correlationID: String,
                          @RequestParam("date_from", required = false) dateFrom: String?,
                          @RequestParam("date_to", required = false) dateTo: String?,
                          @RequestParam("offset", required = false) offset: Int?,
-                         @RequestParam("limit", required = false) limit: Int?): OcpiResponse<Array<ClientInfo>> {
+                         @RequestParam("limit", required = false) limit: Int?): OcpiResponse<List<ClientInfo>> {
 
         // TODO: add pagination
 

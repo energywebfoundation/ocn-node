@@ -27,7 +27,6 @@ class RoutingServiceTest {
     private val responseUrlRepo: CommandResponseUrlRepository = mockk()
     private val httpRequestService: HttpRequestService = mockk()
     private val registry: RegistryFacade = mockk()
-    private val config: Configuration = mockk()
     private val properties: Properties = mockk()
 
     private val routingService: RoutingService
@@ -41,7 +40,6 @@ class RoutingServiceTest {
                 responseUrlRepo,
                 httpRequestService,
                 registry,
-                config,
                 properties)
     }
 

@@ -54,7 +54,7 @@ class CredentialsController(private val platformRepo: PlatformRepository,
 
         // check platform previously registered by admin
         val platform = platformRepo.findByAuth_TokenA(authorization.extractToken())
-                ?: throw OcpiClientInvalidParametersException("Invalid CREDENTIALS_TOKEN_C")
+                ?: throw OcpiClientInvalidParametersException("Invalid CREDENTIALS_TOKEN_A")
 
         // GET versions information endpoint with TOKEN_B (both provided in request body)
         val versionsInfo = httpRequestService.getVersions(body.url, body.token)
@@ -82,7 +82,25 @@ class CredentialsController(private val platformRepo: PlatformRepository,
         platform.versionsUrl = body.url
         platform.status = ConnectionStatus.CONNECTED
         platform.lastUpdated = getTimestamp()
+
+        // set platform's roles' credentials
+        val roles = mutableListOf<RoleEntity>()
+
+        for (role in body.roles) {
+            val privateKey = generatePrivateKey()
+            roles.add(RoleEntity(
+                    platformID = platform.id!!,
+                    role = role.role,
+                    businessDetails = role.businessDetails,
+                    partyID = role.partyID,
+                    countryCode = role.countryCode,
+                    privateKey = privateKey))
+        }
+
+        routingService.writeToRegistry(roles)
+
         platformRepo.save(platform)
+        roleRepo.saveAll(roles)
 
         // set platform's endpoints
         for (endpoint in versionDetail.endpoints) {
@@ -93,23 +111,6 @@ class CredentialsController(private val platformRepo: PlatformRepository,
                     url = endpoint.url
             ))
         }
-
-
-        // set platform's roles' credentials
-        var roles = listOf<RoleEntity>()
-
-        for (role in body.roles) {
-            roles = roles + RoleEntity(
-                    platformID = platform.id!!,
-                    role = role.role,
-                    businessDetails = role.businessDetails,
-                    partyID = role.partyID,
-                    countryCode = role.countryCode,
-                    privateKey = generatePrivateKey())
-        }
-
-        routingService.writeToRegistry(roles)
-        roleRepo.saveAll(roles)
 
         // return Broker's platform connection information and role credentials
         return OcpiResponse(
@@ -151,12 +152,29 @@ class CredentialsController(private val platformRepo: PlatformRepository,
         platform.versionsUrl = body.url
         platform.status = ConnectionStatus.CONNECTED
         platform.lastUpdated = getTimestamp()
-        platformRepo.save(platform)
 
         endpointRepo.deleteByPlatformID(platform.id)
 
         val oldRoles = roleRepo.findAllByPlatformID(platform.id)
         roleRepo.deleteByPlatformID(platform.id)
+
+        // set platform's roles' credentials
+        val roles = mutableListOf<RoleEntity>()
+
+        for (role in body.roles) {
+            val oldRole = oldRoles.filter { (it.partyID == role.partyID) && (it.countryCode == role.countryCode) }
+            roles.add(RoleEntity(
+                    platformID = platform.id!!,
+                    role = role.role,
+                    businessDetails = role.businessDetails,
+                    partyID = role.partyID,
+                    countryCode = role.countryCode,
+                    privateKey = oldRole.firstOrNull()?.privateKey ?: generatePrivateKey()))
+        }
+
+        routingService.writeToRegistry(roles)
+        platformRepo.save(platform)
+        roleRepo.saveAll(roles)
 
         // set platform's endpoints
         for (endpoint in versionDetail.endpoints) {
@@ -166,23 +184,6 @@ class CredentialsController(private val platformRepo: PlatformRepository,
                     role = endpoint.role,
                     url = endpoint.url))
         }
-
-        // set platform's roles' credentials
-        var roles = listOf<RoleEntity>()
-
-        for (role in body.roles) {
-            val oldRole = oldRoles.filter { (it.partyID == role.partyID) && (it.countryCode == role.countryCode) }
-            roles = roles + RoleEntity(
-                    platformID = platform.id!!,
-                    role = role.role,
-                    businessDetails = role.businessDetails,
-                    partyID = role.partyID,
-                    countryCode = role.countryCode,
-                    privateKey = oldRole.firstOrNull()?.privateKey ?: generatePrivateKey())
-        }
-
-        routingService.writeToRegistry(roles)
-        roleRepo.saveAll(roles)
 
         // return Broker's platform connection information and role credentials
         // TODO: set roles information (name, party_id, country_code) in application.properties
@@ -205,11 +206,10 @@ class CredentialsController(private val platformRepo: PlatformRepository,
         val platform = platformRepo.findByAuth_TokenC(authorization.extractToken())
                 ?: throw OcpiClientInvalidParametersException("Invalid CREDENTIALS_TOKEN_C")
 
-        platformRepo.deleteById(platform.id!!)
-
         val roles = roleRepo.findAllByPlatformID(platform.id)
         routingService.deleteFromRegistry(roles.asSequence().toList())
 
+        platformRepo.deleteById(platform.id!!)
         roleRepo.deleteByPlatformID(platform.id)
         endpointRepo.deleteByPlatformID(platform.id)
 

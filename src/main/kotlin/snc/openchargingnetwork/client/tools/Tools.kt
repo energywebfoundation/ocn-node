@@ -25,7 +25,7 @@ fun urlJoin(base: String, vararg paths: String): String {
         } else {
             "/$path"
         }
-        url = url.plus(sanitizedPath)
+        url += (sanitizedPath)
     }
     return url
 }

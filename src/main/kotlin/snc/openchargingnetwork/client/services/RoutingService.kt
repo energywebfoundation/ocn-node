@@ -1,14 +1,8 @@
 package snc.openchargingnetwork.client.services
 
 import org.springframework.stereotype.Service
+import org.web3j.crypto.*
 import org.web3j.crypto.Credentials
-import org.web3j.crypto.RawTransaction
-import org.web3j.crypto.Sign
-import org.web3j.crypto.TransactionEncoder
-import org.web3j.protocol.Web3j
-import org.web3j.protocol.core.DefaultBlockParameter
-import org.web3j.protocol.core.DefaultBlockParameterName
-import snc.openchargingnetwork.client.config.Configuration
 import snc.openchargingnetwork.client.config.Properties
 import snc.openchargingnetwork.client.models.HttpResponse
 import snc.openchargingnetwork.client.models.entities.CdrEntity
@@ -23,6 +17,7 @@ import snc.openchargingnetwork.client.tools.extractToken
 import snc.openchargingnetwork.client.tools.generateUUIDv4Token
 import snc.openchargingnetwork.contracts.RegistryFacade
 import java.math.BigInteger
+import java.nio.charset.StandardCharsets
 import kotlin.reflect.KClass
 
 @Service
@@ -33,7 +28,6 @@ class RoutingService(private val platformRepo: PlatformRepository,
                      private val commandResponseUrlRepo: CommandResponseUrlRepository,
                      private val httpService: HttpRequestService,
                      private val registry: RegistryFacade,
-                     private val config: Configuration,
                      private val properties: Properties) {
 
     fun isRoleKnown(role: BasicRole) = roleRepo.existsByCountryCodeAndPartyIDAllIgnoreCase(role.country, role.id)
@@ -186,11 +180,11 @@ class RoutingService(private val platformRepo: PlatformRepository,
         return result.url
     }
 
-    fun findClientInfo(): Array<ClientInfo> {
-        var allClientInfo = arrayOf<ClientInfo>()
+    fun findClientInfo(): List<ClientInfo> {
+        val allClientInfo = mutableListOf<ClientInfo>()
         for (platform in platformRepo.findAll()) {
             for (role in roleRepo.findAllByPlatformID(platform.id)) {
-                allClientInfo = allClientInfo.plus(ClientInfo(
+                allClientInfo.add(ClientInfo(
                         partyID = role.partyID,
                         countryCode = role.countryCode,
                         role = role.role,
@@ -202,53 +196,48 @@ class RoutingService(private val platformRepo: PlatformRepository,
     }
 
     fun writeToRegistry(roles: List<RoleEntity>) {
+        val rolesToRegister = mutableListOf<RoleEntity>()
         for (role in roles) {
             val address = registry.addressOf(role.countryCode.toByteArray(), role.partyID.toByteArray()).sendAsync().get()
             if (address != "0x0000000000000000000000000000000000000000") {
                 val broker = registry.brokerOf(address).sendAsync().get()
                 if (broker != properties.url) {
                     throw OcpiClientGenericException("Party with party_id=${role.partyID} and country_code=${role.countryCode} already registered on Open Charging Network.")
-                } else {
-                    return
                 }
+            } else {
+                rolesToRegister.add(role)
             }
         }
-        for (role in roles) {
+        for (role in rolesToRegister) {
             val credentials = Credentials.create(role.privateKey)
-            val prefix = "\\x19Ethereum Signed Message:\n32"
-            val message = prefix.toByteArray()
-                    .plus(role.countryCode.toByteArray())
-                    .plus(role.partyID.toByteArray())
-                    .plus(properties.url.toByteArray())
-            val signedMessage = Sign.signMessage(message, credentials.ecKeyPair)
-            println("signedMessage: $signedMessage")
+            println("${role.countryCode} ${role.partyID}: ${role.privateKey.length}")
+            val message = role.countryCode + role.partyID + properties.url
+            val hash = Hash.sha3(message.toByteArray(StandardCharsets.UTF_8))
+            val signature = Sign.signPrefixedMessage(hash, credentials.ecKeyPair)
             val tx = registry.register(
                     role.countryCode.toByteArray(),
                     role.partyID.toByteArray(),
                     properties.url,
-                    BigInteger(signedMessage.v),
-                    signedMessage.r,
-                    signedMessage.s).sendAsync().get()
-            println(tx)
+                    BigInteger(signature.v),
+                    signature.r,
+                    signature.s).sendAsync().get()
+            println("Registered ${role.countryCode} ${role.partyID}: $tx")
         }
     }
 
     fun deleteFromRegistry(roles: List<RoleEntity>) {
         for (role in roles) {
             val credentials = Credentials.create(role.privateKey)
-            val prefix = "\\x19Ethereum Signed Message:\n32"
-            val message = prefix.toByteArray()
-                    .plus(role.countryCode.toByteArray())
-                    .plus(role.partyID.toByteArray())
-            val signedMessage = Sign.signMessage(message, credentials.ecKeyPair)
-            println("signedMessage: $signedMessage")
+            val message = role.countryCode + role.partyID
+            val hash = Hash.sha3(message.toByteArray(StandardCharsets.UTF_8))
+            val signature = Sign.signPrefixedMessage(hash, credentials.ecKeyPair)
             val tx = registry.deregister(
                     role.countryCode.toByteArray(),
                     role.partyID.toByteArray(),
-                    BigInteger(signedMessage.v),
-                    signedMessage.r,
-                    signedMessage.s).sendAsync().get()
-            println(tx)
+                    BigInteger(signature.v),
+                    signature.r,
+                    signature.s).sendAsync().get()
+            println("Deregistered ${role.countryCode} ${role.partyID}: $tx")
         }
     }
 
