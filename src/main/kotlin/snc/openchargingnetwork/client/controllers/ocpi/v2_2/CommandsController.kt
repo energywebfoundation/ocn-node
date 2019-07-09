@@ -56,7 +56,8 @@ class CommandsController(private val routingService: RoutingService,
                             method = "POST",
                             module = "commands",
                             path = "/$command",
-                            role = InterfaceRole.RECEIVER),
+                            body = body,
+                            role = InterfaceRole.SENDER),
                     expectedDataType = Nothing::class)
         }
 
@@ -86,7 +87,7 @@ class CommandsController(private val routingService: RoutingService,
 
         val response = if (routingService.isRoleKnown(receiver)) {
             val platformID = routingService.getPlatformID(receiver)
-            val endpoint = routingService.getPlatformEndpoint(platformID, "commands", InterfaceRole.SENDER)
+            val endpoint = routingService.getPlatformEndpoint(platformID, "commands", InterfaceRole.RECEIVER)
             val headers = routingService.makeHeaders(platformID, correlationID, sender, receiver)
 
             // intercept response_url and replace with broker-readable URL (async post mapping above)
@@ -133,7 +134,7 @@ class CommandsController(private val routingService: RoutingService,
 
         val response = if (routingService.isRoleKnown(receiver)) {
             val platformID = routingService.getPlatformID(receiver)
-            val endpoint = routingService.getPlatformEndpoint(platformID, "commands", InterfaceRole.SENDER)
+            val endpoint = routingService.getPlatformEndpoint(platformID, "commands", InterfaceRole.RECEIVER)
             val headers = routingService.makeHeaders(platformID, correlationID, sender, receiver)
 
             // intercept response_url and replace with broker-readable URL (async post mapping above)
@@ -164,7 +165,7 @@ class CommandsController(private val routingService: RoutingService,
 
     }
 
-    @PostMapping("/ocpi/receiver2.2/commands/START_SESSION")
+    @PostMapping("/ocpi/receiver/2.2/commands/START_SESSION")
     fun postStartSession(@RequestHeader("authorization") authorization: String,
                          @RequestHeader("X-Request-ID") requestID: String,
                          @RequestHeader("X-Correlation-ID") correlationID: String,
@@ -181,7 +182,7 @@ class CommandsController(private val routingService: RoutingService,
 
         val response = if (routingService.isRoleKnown(receiver)) {
             val platformID = routingService.getPlatformID(receiver)
-            val endpoint = routingService.getPlatformEndpoint(platformID, "commands", InterfaceRole.SENDER)
+            val endpoint = routingService.getPlatformEndpoint(platformID, "commands", InterfaceRole.RECEIVER)
             val headers = routingService.makeHeaders(platformID, correlationID, sender, receiver)
 
             // intercept response_url and replace with broker-readable URL (async post mapping above)
@@ -229,7 +230,7 @@ class CommandsController(private val routingService: RoutingService,
 
         val response = if (routingService.isRoleKnown(receiver)) {
             val platformID = routingService.getPlatformID(receiver)
-            val endpoint = routingService.getPlatformEndpoint(platformID, "commands", InterfaceRole.SENDER)
+            val endpoint = routingService.getPlatformEndpoint(platformID, "commands", InterfaceRole.RECEIVER)
             val headers = routingService.makeHeaders(platformID, correlationID, sender, receiver)
 
             // intercept response_url and replace with broker-readable URL (async post mapping above)
@@ -277,7 +278,7 @@ class CommandsController(private val routingService: RoutingService,
 
         val response = if (routingService.isRoleKnown(receiver)) {
             val platformID = routingService.getPlatformID(receiver)
-            val endpoint = routingService.getPlatformEndpoint(platformID, "commands", InterfaceRole.SENDER)
+            val endpoint = routingService.getPlatformEndpoint(platformID, "commands", InterfaceRole.RECEIVER)
             val headers = routingService.makeHeaders(platformID, correlationID, sender, receiver)
 
             // intercept response_url and replace with broker-readable URL (async post mapping above)

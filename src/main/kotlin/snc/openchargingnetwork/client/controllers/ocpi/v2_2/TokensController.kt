@@ -58,6 +58,7 @@ class TokensController(private val routingService: RoutingService) {
                             module = "tokens",
                             role = InterfaceRole.SENDER,
                             params = params,
+                            body = null,
                             expectedResponseType = HubRequestResponseType.TOKEN_ARRAY),
                     expectedDataType = Array<Token>::class)
         }
@@ -166,8 +167,9 @@ class TokensController(private val routingService: RoutingService) {
                             method = "GET",
                             module = "tokens",
                             path = urlJoin(url, "/$countryCode/$partyID/$tokenUID"),
-                            role = InterfaceRole.RECEIVER,
                             params = mapOf("type" to type.toString()),
+                            body = null,
+                            role = InterfaceRole.RECEIVER,
                             expectedResponseType = HubRequestResponseType.TOKEN),
                     expectedDataType = Token::class)
         }

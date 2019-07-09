@@ -1,10 +1,11 @@
 package snc.openchargingnetwork.client.services
 
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import io.mockk.every
 import io.mockk.mockk
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import snc.openchargingnetwork.client.config.Configuration
 import snc.openchargingnetwork.client.config.Properties
 import snc.openchargingnetwork.client.data.exampleLocation1
 import snc.openchargingnetwork.client.data.exampleLocation2
@@ -128,7 +129,10 @@ class RoutingServiceTest {
                 "OCPI-from-party-id" to "XXX",
                 "OCPI-to-country-code" to "DE",
                 "OCPI-to-party-id" to "AAA")
-        every { httpRequestService.makeRequest("POST", url, headers, body = exampleLocation1, expectedDataType = Nothing::class) } returns HttpResponse(
+        val mapper = jacksonObjectMapper()
+        val body: Map<String, Any>? = mapper.readValue(mapper.writeValueAsString(exampleLocation1))
+        every { httpRequestService.mapper } returns mapper
+        every { httpRequestService.makeRequest("POST", url, headers, body = body, expectedDataType = Nothing::class) } returns HttpResponse(
                 statusCode = 200,
                 headers = mapOf(),
                 body = OcpiResponse(

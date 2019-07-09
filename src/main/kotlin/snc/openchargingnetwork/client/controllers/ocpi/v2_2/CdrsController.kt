@@ -61,6 +61,7 @@ class CdrsController(val routingService: RoutingService,
                             module = "cdrs",
                             role = InterfaceRole.SENDER,
                             params = params,
+                            body = null,
                             expectedResponseType = HubRequestResponseType.CDR_ARRAY),
                     expectedDataType = Array<CDR>::class)
         }
@@ -117,6 +118,7 @@ class CdrsController(val routingService: RoutingService,
                             method = "GET",
                             module = "cdrs",
                             role = InterfaceRole.RECEIVER,
+                            body = null,
                             expectedResponseType = HubRequestResponseType.CDR),
                     expectedDataType = CDR::class)
         }
@@ -146,7 +148,7 @@ class CdrsController(val routingService: RoutingService,
             val endpoint = routingService.getPlatformEndpoint(platformID, "cdrs", InterfaceRole.RECEIVER)
             val headers = routingService.makeHeaders(platformID, correlationID, sender, receiver)
             routingService.forwardRequest(
-                    method = "PUT",
+                    method = "POST",
                     url = endpoint.url,
                     headers = headers,
                     body = body,
@@ -159,7 +161,7 @@ class CdrsController(val routingService: RoutingService,
                     url = urlJoin(url, "/ocn/message"),
                     headers = headers,
                     body = HubGenericRequest(
-                            method = "PUT",
+                            method = "POST",
                             module = "cdrs",
                             path = url,
                             role = InterfaceRole.RECEIVER,

@@ -63,6 +63,7 @@ class MessageControllerTest(@Autowired val mockMvc: MockMvc) {
                         module = "locations",
                         role = InterfaceRole.SENDER,
                         path = "/LOC2",
+                        body = null,
                         expectedResponseType = HubRequestResponseType.LOCATION))))
                 .andExpect(MockMvcResultMatchers.status().isOk)
                 .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_UTF8))

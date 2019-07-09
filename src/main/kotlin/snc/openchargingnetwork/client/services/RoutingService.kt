@@ -1,5 +1,6 @@
 package snc.openchargingnetwork.client.services
 
+import com.fasterxml.jackson.module.kotlin.readValue
 import org.springframework.stereotype.Service
 import org.web3j.crypto.*
 import org.web3j.crypto.Credentials
@@ -109,8 +110,13 @@ class RoutingService(private val platformRepo: PlatformRepository,
                                 params: Map<String, String>? = null,
                                 body: Any? = null,
                                 expectedDataType: KClass<T>): HttpResponse<T> {
-
-        return httpService.makeRequest(method, url, headers, params, body, expectedDataType)
+        var jsonBody: Map<String,Any>? = null
+        if (body != null) {
+            val jsonString = httpService.mapper.writeValueAsString(body)
+            println(jsonString)
+            jsonBody = httpService.mapper.readValue(jsonString)
+        }
+        return httpService.makeRequest(method, url, headers, params, jsonBody, expectedDataType)
     }
 
     fun findBrokerUrl(receiver: BasicRole): String {

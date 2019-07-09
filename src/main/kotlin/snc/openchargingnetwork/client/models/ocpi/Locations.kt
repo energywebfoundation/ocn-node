@@ -31,7 +31,7 @@ data class Location(@JsonProperty("country_code") val countryCode: String,
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 data class Evse(@JsonProperty("uid") val uid: String,
-                @JsonProperty("evseId") val evseId: String? = null,
+                @JsonProperty("evse_id") val evseId: String? = null,
                 @JsonProperty("status") val status: EvseStatus,
                 @JsonProperty("status_schedule") val statusSchedule: List<StatusSchedule>? = null,
                 @JsonProperty("capabilities") val capabilities: List<Capability>? = null,

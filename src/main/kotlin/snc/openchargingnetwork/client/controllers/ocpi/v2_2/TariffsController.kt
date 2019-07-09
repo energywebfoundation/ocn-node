@@ -58,6 +58,7 @@ class TariffsController(val routingService: RoutingService) {
                             module = "tariffs",
                             role = InterfaceRole.SENDER,
                             params = params,
+                            body = null,
                             expectedResponseType = HubRequestResponseType.TARIFF_ARRAY),
                     expectedDataType = Array<Tariff>::class)
         }
@@ -115,6 +116,7 @@ class TariffsController(val routingService: RoutingService) {
                             method = "GET",
                             module = "tariffs",
                             path = urlJoin(url, "/$countryCode/$partyID/$tariffID"),
+                            body = null,
                             role = InterfaceRole.RECEIVER,
                             expectedResponseType = HubRequestResponseType.TARIFF),
                     expectedDataType = Tariff::class)
@@ -210,6 +212,7 @@ class TariffsController(val routingService: RoutingService) {
                             method = "DELETE",
                             module = "tariffs",
                             path = urlJoin(url, "/$countryCode/$partyID/$tariffID"),
+                            body = null,
                             role = InterfaceRole.RECEIVER),
                     expectedDataType = Nothing::class)
         }

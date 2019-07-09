@@ -51,13 +51,14 @@ class SessionsController(private val routingService: RoutingService) {
             val headers = routingService.makeHeaders(correlationID, sender, receiver)
             routingService.forwardRequest(
                     method = "POST",
-                    url = urlJoin(url, "/ocn/messages"),
+                    url = urlJoin(url, "/ocn/message"),
                     headers = headers,
                     body = HubGenericRequest(
                             method = "GET",
                             module = "sessions",
                             role = InterfaceRole.SENDER,
                             params = params,
+                            body = null,
                             expectedResponseType = HubRequestResponseType.SESSION_ARRAY),
                     expectedDataType = Array<Session>::class)
         }
@@ -160,6 +161,7 @@ class SessionsController(private val routingService: RoutingService) {
                     body = HubGenericRequest(
                             method = "GET",
                             module = "sessions",
+                            body = null,
                             path = urlJoin(url, "/$countryCode/$partyID/$sessionID"),
                             role = InterfaceRole.RECEIVER,
                             expectedResponseType = HubRequestResponseType.SESSION),

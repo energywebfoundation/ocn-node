@@ -37,6 +37,16 @@ class Configuration(private val properties: Properties) {
                             endpointRepo: EndpointRepository) = ApplicationRunner {}
 
     @Bean
+    fun requestLoggingFilter(): CommonsRequestLoggingFilter {
+        val filter = CommonsRequestLoggingFilter()
+        filter.setIncludeHeaders(true)
+        filter.setIncludePayload(true)
+        filter.setIncludePayload(true)
+        filter.setMaxPayloadLength(10000)
+        return filter
+    }
+
+    @Bean
     fun registryFacade(): RegistryFacade {
         return RegistryFacade.load(
                 properties.web3.contracts.registry,
@@ -44,15 +54,6 @@ class Configuration(private val properties: Properties) {
                 credentials,
                 gasProvider
         )
-    }
-
-    @Bean
-    fun logFilter(): CommonsRequestLoggingFilter {
-        val filter = CommonsRequestLoggingFilter()
-        filter.setIncludeQueryString(true)
-        filter.setIncludePayload(true)
-        filter.setIncludeHeaders(true)
-        return filter
     }
 
     init {

@@ -27,7 +27,7 @@ class MessageController(val routingService: RoutingService,
                     @RequestHeader("OCPI-from-party-id") fromPartyID: String,
                     @RequestHeader("OCPI-to-country-code") toCountryCode: String,
                     @RequestHeader("OCPI-to-party-id") toPartyID: String,
-                    @RequestBody body: HubGenericRequest): ResponseEntity<OcpiResponse<out Any>> {
+                    @RequestBody body: HubGenericRequest<Any>): ResponseEntity<OcpiResponse<out Any>> {
 
         val sender = BasicRole(fromPartyID, fromCountryCode)
         val receiver = BasicRole(toPartyID, toCountryCode)
