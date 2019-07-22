@@ -1,6 +1,9 @@
 # Open Charging Network Client
 
-The Open Charging Network (OCN) Client with OCPI 2.2 connection.
+The Open Charging Network (OCN) Client with OCPI 2.2 connection. 
+
+**This software is in alpha**. Starting from end of July, a testing period will be run to aid and inform development.
+Additionally, contributions are always welcome in the form of pull requests and issues.
 
 ## API Documentation
 
@@ -23,18 +26,34 @@ web3j wallet create
 ```
 
 Follow the instructions to create the wallet, making note of the filepath and password. They will need to be referenced
-in the application properties file. With the wallet created, we can now configure the application properties for your 
-desired environment, e.g. `local`:
+in the application properties file.
+
+With the wallet created, we can now configure the application properties for your desired environment, e.g. `local`:
 
 ```
 cd src/main/resources
-cp application.example.properties application.local.properties
+cp application.dev.properties application.local.properties
 vi application.local properties
 ```
 
+The dev properties connects the client to an in-memory database, which will not persist data across client restarts.
+If running the client in a test or production environment with Postgres installed, copy from the `psql` properties file 
+instead:
+
+```
+cd application.psql.properties application.local.properties
+```
+
+The client may also be connected to a different database. This requires installing the relevant database driver as 
+an `ocn-client` dependency via gradle, in addition to the database server itself.
+
 Be sure to also change the other relevant `ocn.client.web3` configuration properties to match your Ethereum 
-environment (i.e. if on Tobalaba, point to a Tobababa HTTP provider and use the address of the Registry contract
-which has been deployed on Tobalaba).
+environment. The provided configuration points the client to a HTTP provider on localhost and to the Registry smart 
+contract on Tobalaba (`0xD7Fa6B5CD7333F02EE443BfeA81911e3d9724810`).
+
+Note that for development on a local Ethereum chain (using e.g. `ganache`), you need not create a wallet. If the 
+client cannot find the provided wallet file, it will default to using a pre-defined keypair. As this is pre-defined,
+it **should not be used on a public chain**.
 
 Next, build the client with the desired profile:
 
