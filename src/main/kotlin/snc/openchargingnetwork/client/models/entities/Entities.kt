@@ -53,7 +53,6 @@ class RoleEntity(
         @Embedded var businessDetails: BusinessDetails,
         var partyID: String,
         var countryCode: String,
-        var privateKey: String,
         @Id @GeneratedValue var id: Long? = null
 )
 

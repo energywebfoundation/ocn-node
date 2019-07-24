@@ -33,7 +33,6 @@ import snc.openchargingnetwork.client.models.exceptions.OcpiClientInvalidParamet
 import snc.openchargingnetwork.client.models.exceptions.OcpiServerNoMatchingEndpointsException
 import snc.openchargingnetwork.client.models.ocpi.*
 import snc.openchargingnetwork.client.services.HttpRequestService
-import snc.openchargingnetwork.client.services.RoutingService
 import snc.openchargingnetwork.client.tools.*
 
 @RestController
@@ -42,7 +41,6 @@ class CredentialsController(private val platformRepo: PlatformRepository,
                             private val roleRepo: RoleRepository,
                             private val endpointRepo: EndpointRepository,
                             private val properties: Properties,
-                            private val routingService: RoutingService,
                             private val httpRequestService: HttpRequestService) {
 
     @GetMapping
@@ -106,17 +104,13 @@ class CredentialsController(private val platformRepo: PlatformRepository,
         val roles = mutableListOf<RoleEntity>()
 
         for (role in body.roles) {
-            val privateKey = generatePrivateKey()
             roles.add(RoleEntity(
                     platformID = platform.id!!,
                     role = role.role,
                     businessDetails = role.businessDetails,
                     partyID = role.partyID,
-                    countryCode = role.countryCode,
-                    privateKey = privateKey))
+                    countryCode = role.countryCode))
         }
-
-        routingService.writeToRegistry(roles)
 
         platformRepo.save(platform)
         roleRepo.saveAll(roles)
@@ -173,25 +167,20 @@ class CredentialsController(private val platformRepo: PlatformRepository,
         platform.lastUpdated = getTimestamp()
 
         endpointRepo.deleteByPlatformID(platform.id)
-
-        val oldRoles = roleRepo.findAllByPlatformID(platform.id)
         roleRepo.deleteByPlatformID(platform.id)
 
         // set platform's roles' credentials
         val roles = mutableListOf<RoleEntity>()
 
         for (role in body.roles) {
-            val oldRole = oldRoles.filter { (it.partyID == role.partyID) && (it.countryCode == role.countryCode) }
             roles.add(RoleEntity(
                     platformID = platform.id!!,
                     role = role.role,
                     businessDetails = role.businessDetails,
                     partyID = role.partyID,
-                    countryCode = role.countryCode,
-                    privateKey = oldRole.firstOrNull()?.privateKey ?: generatePrivateKey()))
+                    countryCode = role.countryCode))
         }
 
-        routingService.writeToRegistry(roles)
         platformRepo.save(platform)
         roleRepo.saveAll(roles)
 
@@ -224,9 +213,6 @@ class CredentialsController(private val platformRepo: PlatformRepository,
 
         val platform = platformRepo.findByAuth_TokenC(authorization.extractToken())
                 ?: throw OcpiClientInvalidParametersException("Invalid CREDENTIALS_TOKEN_C")
-
-        val roles = roleRepo.findAllByPlatformID(platform.id)
-        routingService.deleteFromRegistry(roles.asSequence().toList())
 
         platformRepo.deleteById(platform.id!!)
         roleRepo.deleteByPlatformID(platform.id)

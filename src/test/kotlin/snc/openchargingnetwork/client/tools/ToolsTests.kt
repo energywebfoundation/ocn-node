@@ -13,11 +13,4 @@ class ToolsTests {
         assertThat(urlJoin("http://localhost:3000", "/endpoint/")).isEqualTo("http://localhost:3000/endpoint")
     }
 
-    @Test
-    fun generatePrivKey() {
-        val pkey1 = generatePrivateKey()
-        val pkey2 = generatePrivateKey()
-        assertThat(pkey1).isNotEqualTo(pkey2)
-    }
-
 }

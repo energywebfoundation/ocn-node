@@ -15,7 +15,6 @@ import snc.openchargingnetwork.client.models.entities.PlatformEntity
 import snc.openchargingnetwork.client.models.entities.RoleEntity
 import snc.openchargingnetwork.client.models.ocpi.*
 import snc.openchargingnetwork.client.repositories.*
-import snc.openchargingnetwork.client.tools.generatePrivateKey
 import snc.openchargingnetwork.client.tools.generateUUIDv4Token
 import snc.openchargingnetwork.contracts.RegistryFacade
 
@@ -53,7 +52,7 @@ class RoutingServiceTest {
 
     @Test
     fun getPlatformID() {
-        val role = RoleEntity(5L, Role.CPO, BusinessDetails("SENDER Co"), "SENDER", "DE", generatePrivateKey())
+        val role = RoleEntity(5L, Role.CPO, BusinessDetails("SENDER Co"), "SENDER", "DE")
         every { roleRepo.findByCountryCodeAndPartyIDAllIgnoreCase(role.countryCode, role.partyID) } returns role
         assertThat(routingService.getPlatformID(BasicRole(role.partyID, role.countryCode))).isEqualTo(5L)
     }

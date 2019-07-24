@@ -1,0 +1,54 @@
+version: "3.7"
+
+
+services:
+
+  ganache:
+    container_name: ganache
+    image: "trufflesuite/ganache-cli"
+    ports:
+      - "8544:8544"
+    networks:
+      ocn-dev-net:
+        ipv4_address: 172.16.238.10
+    command: ["-m", "candy maple cake sugar pudding cream honey rich smooth crumble sweet treat", "--port", "8544", "--accounts", "20", "--networkId=9", "--gasPrice=1", "--gasLimit=10000000"]
+
+  deploy-registry:
+    container_name: deploy-registry
+    build:
+      context: ../ocn-registry
+      dockerfile: Dockerfile
+    image: "registry-deploy"
+    networks:
+      - ocn-dev-net
+
+  ocn-client-1:
+    container_name: ocn-client-1
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: "ocn-client"
+    networks:
+      - ocn-dev-net
+    ports:
+      - "8080:8080"
+
+  ocn-client-2:
+    container_name: ocn-client-2
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: "ocn-client"
+    networks:
+      - ocn-dev-net
+    ports:
+      - "8081:8081"
+    command: ["java", "-jar", "-Dserver.port=8081", "-Docn.client.url=http://localhost:8081", "./libs/ocn-client-0.1.0-SNAPSHOT.jar"]
+
+
+networks:
+  ocn-dev-net:
+    ipam:
+      driver: default
+      config:
+        - subnet: "172.16.238.0/24"

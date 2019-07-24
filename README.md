@@ -18,34 +18,9 @@ git clone git@bitbucket.org:shareandcharge/ocn-client.git
 cd ocn-client
 ```
 
-### 1. Creating and Funding a Wallet
+### 1. Modifying Client Configuration
 
-You will need to create an Ethereum-compliant wallet before you can start the client 
-(for instance, with [web3j](https://github.com/web3j/web3j/releases)):
-
-```
-web3j wallet create
-```
-
-Follow the instructions to create the wallet, making note of the filepath and password. They will need to be referenced
-in the application's configuration.
-
-In this initial version of the OCN client, interaction with the decentralized registry (used for routing OCPI requests
-between clients) is taken care of by the OCN client on which the OCPI platform is registered. For example, if a CPO
-registers with an OCN client, in order to be reachable on the network, the client registers the CPO to the Registry
-smart contract. Normally the CPO platform would need to manage a blockchain wallet, obtain funds and send a 
-transaction to the smart contract to signal that they are registered with a particular OCN client. As this step 
-requires additional work and is not the focus of this first test version, it has been delegated to the OCN client. 
-In future releases, **registering to an OCN client and registering to the Registry smart contract will be decoupled**.
-
-For the reasons outlined above, the wallet that is created will need to be funded. As the OCN client is configured
-to use the Energy Web Foundation's Volta test network by default, the [Volta faucet](https://voltafaucet.energyweb.org/)
-can be used to request funds.
-
-### 2. Modifying Client Configuration
-
-With the wallet created and funded, we can now configure the application properties for your desired environment, 
-e.g. `local`:
+Firstly, it is important to configure the application properties for the desired environment or profile, e.g. `local`:
 
 ```
 cd src/main/resources
@@ -53,17 +28,25 @@ cp application.dev.properties application.local.properties
 vi application.local properties
 ```
 
-#### 2.1. Setting the Client Address
+#### 1.1. Setting the Client Address
 
-The field `ocn.client.url` describes the client's server address. If running a local network as part of development, 
-this would be `http://localhost:8080`. If requesting endpoints from the OCPI `versions` module, the sender 
-interface for the `locations` module would therefore be located at `http://localhost:8080/ocpi/2.2/sender/locations`. 
-Likewise, for a public node on the test network, the url would be `https://client.example.com`. This would translate
-to `https://client.example.com/ocpi/2.2/sender/locations`.
+The field `ocn.client.url` describes the client's server address. If running a local network for development purposes,
+setting the following:
 
-#### 2.2. Connecting to a Database
+```
+ocn.client.url = http://localhost:8080
+``` 
 
-The dev properties connects the client to an in-memory database, which will not persist data across client restarts.
+Results in requesting platforms obtaining OCPI module endpoints starting with `http://localhost:8080`, for 
+example `http://localhost:8080/ocpi/2.2/sender/locations` for the locations module's sender interface.
+ 
+Likewise, for a public node on the test network, the url would be `https://server.example.com`. This would translate
+to `https://server.example.com/ocpi/2.2/sender/locations`. Be sure to include the protocol so that connected platforms
+can correctly parse the endpoints provided.
+
+#### 1.2. Connecting to a Database
+
+The `dev` properties connects the client to an in-memory database, which will not persist data across client restarts.
 If running the client in a test or production environment with Postgres installed, copy from the `psql` properties file 
 instead:
 
@@ -72,40 +55,115 @@ cd application.psql.properties application.local.properties
 ```
 
 The client may also be connected to a different database. This requires installing the relevant database driver as 
-an `ocn-client` dependency via gradle, in addition to the database server itself.
+an `ocn-client` dependency via gradle and modifying application properties accordingly, in addition to running the 
+database server itself. 
 
-#### 2.3. Configuring the Network
+#### 1.3. Configuring the Network
 
-The network on which any OCN client is running on depends purely on the Registry smart contract it is connected to.
+The network on which any OCN client is running on depends purely on the OCN Registry smart contract it is connected to.
 These configuration properties belong to `ocn.client.web3`. Currently the OCN test environment exists on the Energy Web 
-Foundation's Volta test network. The provided configuration points the client to a 
-[remote Volta node](https://energyweb.atlassian.net/wiki/spaces/EWF/pages/703201459/Volta+Connecting+to+Remote+RPC) 
-and to the Registry smart contract deployed on Volta (with address `0x668956FE2Eb6ED52C5a961b02bEEbAc8913A2731`).
+Foundation's Volta test network. The provided `dev` and `psql` profiles already point the client to a [remote Volta node](https://energyweb.atlassian.net/wiki/spaces/EWF/pages/703201459/Volta+Connecting+to+Remote+RPC) 
+and to the OCN Registry smart contract deployed on Volta (with address `0x668956FE2Eb6ED52C5a961b02bEEbAc8913A2731`).
 
-Note that for development on a local Ethereum chain (using e.g. `ganache`), you need not create a wallet. If the 
-client cannot find the provided wallet file, it will default to using a pre-defined keypair. As this is pre-defined,
-it **should not be used on a public chain**.
+#### 1.4. Setting the Admin API key [optional]
 
-### 3. Building and Running the Client
+The Admin API allows, for example, generating new OCPI tokens (`CREDENTIALS_TOKEN_A`) for planned platforms. An API
+key can be set in the application's properties, else a new one will be generated on restart:
 
-Next, build the client with the desired profile (relating to the `application.<ENV>.properties` file):
+```
+ocn.client.apikey = randomkey
+```
+
+The API key will be printed on client start, be it generated or user-specified. Consult the [API documentation](https://shareandcharge.bitbucket.io)
+for more information on how to use the Admin API. 
+
+### 2. Building and Running the Client
+
+There are multiple ways to run an OCN client.
+
+#### 2.1. Building and Executing a JAR file
+
+To build the client with the desired profile (relating to the `application.<PROFILE>.properties` file), for example a
+`local` profile, run the following:
 
 ```
 ./gradlew -Pprofile=local build
 ```
 
-Finally, run the compiled client:
+Once built, the packaged client can be run using:
 ```
-java -jar ./build/libs/ocn-client-0.0.1-SNAPSHOT.jar
+java -jar ./build/libs/ocn-client-0.1.0-SNAPSHOT.jar
 ```
 
-Once it is built and running, test that it is working with the following request:
+Alternatively, a different profile can be selected at runtime, e.g.:
+```
+java -jar -Dspring.config.location=/path/to/application.prod.properties ./build/libs/ocn-client-0.1.0-SNAPSHOT.jar
+```
+
+#### 2.2. Using the Gradle Wrapper
+
+Especially helpful for development, the client can quickly be run in one step with Gradle using the provided wrapper:
+
+```
+./gradlew bootRun -Pprofile=<PROFILE>
+```
+
+#### 2.3. Using Docker
+
+A Dockerfile is provided which, once built, will run the above command in a container. By default it will use the 
+`docker` profile. This can be changed by modifying the Dockerfile directly, or by changing the location of the
+properties file at runtime, as shown below:
+
+```
+docker build . -n ocn-client
+docker run ocn-client java -jar -Dspring.config.location=resources/main/application.<PROFILE>.properties lib/ocn-client-0.1.0-SNAPSHOT.jar
+```
+
+Note that building the docker image can take a few minutes.
+
+To setup a local network, a compose file has been provided which runs a local Open Charging Network. This uses a test 
+Ethereum blockchain with pre-funded accounts and the OCN Registry contract already deployed. Two clients are setup to 
+start with, such that it is possible to test messages relayed between clients. Therefore, it is possible to register for
+example, an eMSP with the first client, and a CPO with the second client.
+
+In order to set this up, the OCN Registry contract repository needs to be cloned:
+
+```
+cd ..
+git clone git@bitbucket.org:shareandcharge/ocn-registry.git
+```
+
+Following this, return to the OCN client directory (which should be under the same parent directory as the registry 
+repo) and start the network:
+
+```
+cd ocn-client
+docker-compose up
+```
+
+The first build may take a while (as above) but subsequent `docker-compose up` commands will be much faster. The 
+following information is relevant to using this local network:
+
+- OCN client 1 address: `http://localhost:8080`
+- OCN client 2 address: `http://localhost:8081`
+- Both Admin APIs use the same key, printend on startup: `randomkey`
+- OCN Registry address: `0x345cA3e014Aaf5dcA488057592ee47305D9B3e10`
+- OCN Registry owner: `0x627306090abaB3A6e1400e9345bC60c78a8BEf57`
+- Ethereum blockchain JSON RPC address: `http://localhost:8544`
+- Ethereum blockchain JSON RPC address from within container network: `http://172.16.238.10:8544`
+- HD Wallet Mnemonic: `candy maple cake sugar pudding cream honey rich smooth crumble sweet treat`
+
+### Using the OCN Client
+
+Once the client is built and running, test that it is working with the following request:
 
 ```
 curl localhost:8080/health
 ```
 
 You should see a 200 OK response.
+
+For further usage documentation, consult the [API Documentation](https://shareandcharge.bitbucket.io).
 
 ### Generating new API documentation
 

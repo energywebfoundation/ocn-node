@@ -99,7 +99,6 @@ class CredentialsControllerTest(@Autowired val mockMvc: MockMvc) {
         every { roleRepo.existsByCountryCodeAndPartyIDAllIgnoreCase(role2.countryCode, role2.partyID) } returns false
         every { platformRepo.save(any<PlatformEntity>()) } returns platform
         every { endpointRepo.save(any<EndpointEntity>()) } returns mockk()
-        every { routingService.writeToRegistry(any<List<RoleEntity>>()) } returns mockk()
         every { roleRepo.saveAll(any<List<RoleEntity>>())} returns mockk()
 
         mockMvc.perform(post("/ocpi/2.2/credentials")
@@ -155,7 +154,6 @@ class CredentialsControllerTest(@Autowired val mockMvc: MockMvc) {
         every { endpointRepo.save(any<EndpointEntity>()) } returns mockk()
         every { roleRepo.findAllByPlatformID(platform.id) } returns listOf<RoleEntity>()
         every { roleRepo.deleteByPlatformID(platform.id) } returns mockk()
-        every { routingService.writeToRegistry(any<List<RoleEntity>>()) } returns mockk()
         every { roleRepo.saveAll(any<List<RoleEntity>>())} returns mockk()
 
         mockMvc.perform(put("/ocpi/2.2/credentials")
@@ -186,7 +184,6 @@ class CredentialsControllerTest(@Autowired val mockMvc: MockMvc) {
         every { platformRepo.findByAuth_TokenC(platform.auth.tokenC) } returns platform
         every { platformRepo.deleteById(platform.id!!) } returns mockk()
         every { roleRepo.findAllByPlatformID(platform.id) } returns listOf<RoleEntity>()
-        every { routingService.deleteFromRegistry(any<List<RoleEntity>>()) } returns mockk()
         every { roleRepo.deleteByPlatformID(platform.id) } returns mockk()
         every { endpointRepo.deleteByPlatformID(platform.id) } returns mockk()
 
