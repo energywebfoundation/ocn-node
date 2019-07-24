@@ -50,7 +50,7 @@ class CdrsControllerTest(@Autowired val mockMvc: MockMvc) {
         every { routingService.getPlatformID(receiver) } returns 9L
         every { routingService.getPlatformEndpoint(9L, "cdrs", InterfaceRole.RECEIVER) } returns receiverEndpoint
         every { routingService.makeHeaders(9L, "4567878", sender, receiver) } returns headers
-        every { routingService.forwardRequest("PUT", receiverEndpoint.url, headers, null, exampleCDR, Nothing::class) } returns HttpResponse(
+        every { routingService.forwardRequest("POST", receiverEndpoint.url, headers, null, exampleCDR, Nothing::class) } returns HttpResponse(
                 statusCode = 200,
                 headers = mapOf("Location" to "http://platform.com/cdrs/42"),
                 body = OcpiResponse(statusCode = 1000)

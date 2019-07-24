@@ -1,3 +1,22 @@
+/*
+    Copyright 2019 Energy Web Foundation
+
+    This file is part of Open Charging Network Client.
+
+    Open Charging Network Client is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Open Charging Network Client is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Open Charging Network Client.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
 package snc.openchargingnetwork.client.controllers.ocpi.v2_2
 
 import org.springframework.http.ResponseEntity
@@ -56,7 +75,8 @@ class CommandsController(private val routingService: RoutingService,
                             method = "POST",
                             module = "commands",
                             path = "/$command",
-                            role = InterfaceRole.RECEIVER),
+                            body = body,
+                            role = InterfaceRole.SENDER),
                     expectedDataType = Nothing::class)
         }
 
@@ -86,7 +106,7 @@ class CommandsController(private val routingService: RoutingService,
 
         val response = if (routingService.isRoleKnown(receiver)) {
             val platformID = routingService.getPlatformID(receiver)
-            val endpoint = routingService.getPlatformEndpoint(platformID, "commands", InterfaceRole.SENDER)
+            val endpoint = routingService.getPlatformEndpoint(platformID, "commands", InterfaceRole.RECEIVER)
             val headers = routingService.makeHeaders(platformID, correlationID, sender, receiver)
 
             // intercept response_url and replace with broker-readable URL (async post mapping above)
@@ -133,7 +153,7 @@ class CommandsController(private val routingService: RoutingService,
 
         val response = if (routingService.isRoleKnown(receiver)) {
             val platformID = routingService.getPlatformID(receiver)
-            val endpoint = routingService.getPlatformEndpoint(platformID, "commands", InterfaceRole.SENDER)
+            val endpoint = routingService.getPlatformEndpoint(platformID, "commands", InterfaceRole.RECEIVER)
             val headers = routingService.makeHeaders(platformID, correlationID, sender, receiver)
 
             // intercept response_url and replace with broker-readable URL (async post mapping above)
@@ -164,7 +184,7 @@ class CommandsController(private val routingService: RoutingService,
 
     }
 
-    @PostMapping("/ocpi/receiver2.2/commands/START_SESSION")
+    @PostMapping("/ocpi/receiver/2.2/commands/START_SESSION")
     fun postStartSession(@RequestHeader("authorization") authorization: String,
                          @RequestHeader("X-Request-ID") requestID: String,
                          @RequestHeader("X-Correlation-ID") correlationID: String,
@@ -181,7 +201,7 @@ class CommandsController(private val routingService: RoutingService,
 
         val response = if (routingService.isRoleKnown(receiver)) {
             val platformID = routingService.getPlatformID(receiver)
-            val endpoint = routingService.getPlatformEndpoint(platformID, "commands", InterfaceRole.SENDER)
+            val endpoint = routingService.getPlatformEndpoint(platformID, "commands", InterfaceRole.RECEIVER)
             val headers = routingService.makeHeaders(platformID, correlationID, sender, receiver)
 
             // intercept response_url and replace with broker-readable URL (async post mapping above)
@@ -229,7 +249,7 @@ class CommandsController(private val routingService: RoutingService,
 
         val response = if (routingService.isRoleKnown(receiver)) {
             val platformID = routingService.getPlatformID(receiver)
-            val endpoint = routingService.getPlatformEndpoint(platformID, "commands", InterfaceRole.SENDER)
+            val endpoint = routingService.getPlatformEndpoint(platformID, "commands", InterfaceRole.RECEIVER)
             val headers = routingService.makeHeaders(platformID, correlationID, sender, receiver)
 
             // intercept response_url and replace with broker-readable URL (async post mapping above)
@@ -277,7 +297,7 @@ class CommandsController(private val routingService: RoutingService,
 
         val response = if (routingService.isRoleKnown(receiver)) {
             val platformID = routingService.getPlatformID(receiver)
-            val endpoint = routingService.getPlatformEndpoint(platformID, "commands", InterfaceRole.SENDER)
+            val endpoint = routingService.getPlatformEndpoint(platformID, "commands", InterfaceRole.RECEIVER)
             val headers = routingService.makeHeaders(platformID, correlationID, sender, receiver)
 
             // intercept response_url and replace with broker-readable URL (async post mapping above)

@@ -1,19 +1,43 @@
+/*
+    Copyright 2019 Energy Web Foundation
+
+    This file is part of Open Charging Network Client.
+
+    Open Charging Network Client is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Open Charging Network Client is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Open Charging Network Client.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
 package snc.openchargingnetwork.client.services
 
+import com.fasterxml.jackson.module.kotlin.readValue
 import org.springframework.stereotype.Service
+import org.web3j.crypto.*
+import org.web3j.crypto.Credentials
+import snc.openchargingnetwork.client.config.Properties
 import snc.openchargingnetwork.client.models.HttpResponse
 import snc.openchargingnetwork.client.models.entities.CdrEntity
 import snc.openchargingnetwork.client.models.entities.CommandResponseUrlEntity
+import snc.openchargingnetwork.client.models.entities.RoleEntity
+import snc.openchargingnetwork.client.models.exceptions.OcpiClientGenericException
 import snc.openchargingnetwork.client.models.exceptions.OcpiClientInvalidParametersException
 import snc.openchargingnetwork.client.models.exceptions.OcpiHubUnknownReceiverException
-import snc.openchargingnetwork.client.models.ocpi.BasicRole
-import snc.openchargingnetwork.client.models.ocpi.ClientInfo
-import snc.openchargingnetwork.client.models.ocpi.CommandType
-import snc.openchargingnetwork.client.models.ocpi.InterfaceRole
+import snc.openchargingnetwork.client.models.ocpi.*
 import snc.openchargingnetwork.client.repositories.*
 import snc.openchargingnetwork.client.tools.extractToken
 import snc.openchargingnetwork.client.tools.generateUUIDv4Token
 import snc.openchargingnetwork.contracts.RegistryFacade
+import java.math.BigInteger
+import java.nio.charset.StandardCharsets
 import kotlin.reflect.KClass
 
 @Service
@@ -23,7 +47,8 @@ class RoutingService(private val platformRepo: PlatformRepository,
                      private val cdrRepo: CdrRepository,
                      private val commandResponseUrlRepo: CommandResponseUrlRepository,
                      private val httpService: HttpRequestService,
-                     private val registry: RegistryFacade) {
+                     private val registry: RegistryFacade,
+                     private val properties: Properties) {
 
     fun isRoleKnown(role: BasicRole) = roleRepo.existsByCountryCodeAndPartyIDAllIgnoreCase(role.country, role.id)
 
@@ -104,8 +129,13 @@ class RoutingService(private val platformRepo: PlatformRepository,
                                 params: Map<String, String>? = null,
                                 body: Any? = null,
                                 expectedDataType: KClass<T>): HttpResponse<T> {
-
-        return httpService.makeRequest(method, url, headers, params, body, expectedDataType)
+        var jsonBody: Map<String,Any>? = null
+        if (body != null) {
+            val jsonString = httpService.mapper.writeValueAsString(body)
+            println(jsonString)
+            jsonBody = httpService.mapper.readValue(jsonString)
+        }
+        return httpService.makeRequest(method, url, headers, params, jsonBody, expectedDataType)
     }
 
     fun findBrokerUrl(receiver: BasicRole): String {
@@ -175,11 +205,11 @@ class RoutingService(private val platformRepo: PlatformRepository,
         return result.url
     }
 
-    fun findClientInfo(): Array<ClientInfo> {
-        var allClientInfo = arrayOf<ClientInfo>()
+    fun findClientInfo(): List<ClientInfo> {
+        val allClientInfo = mutableListOf<ClientInfo>()
         for (platform in platformRepo.findAll()) {
             for (role in roleRepo.findAllByPlatformID(platform.id)) {
-                allClientInfo = allClientInfo.plus(ClientInfo(
+                allClientInfo.add(ClientInfo(
                         partyID = role.partyID,
                         countryCode = role.countryCode,
                         role = role.role,
@@ -188,6 +218,52 @@ class RoutingService(private val platformRepo: PlatformRepository,
             }
         }
         return allClientInfo
+    }
+
+    fun writeToRegistry(roles: List<RoleEntity>) {
+        val rolesToRegister = mutableListOf<RoleEntity>()
+        for (role in roles) {
+            val address = registry.addressOf(role.countryCode.toByteArray(), role.partyID.toByteArray()).sendAsync().get()
+            if (address != "0x0000000000000000000000000000000000000000") {
+                val broker = registry.brokerOf(address).sendAsync().get()
+                if (broker != properties.url) {
+                    throw OcpiClientGenericException("Party with party_id=${role.partyID} and country_code=${role.countryCode} already registered on Open Charging Network.")
+                }
+            } else {
+                rolesToRegister.add(role)
+            }
+        }
+        for (role in rolesToRegister) {
+            val credentials = Credentials.create(role.privateKey)
+            println("${role.countryCode} ${role.partyID}: ${role.privateKey.length}")
+            val message = role.countryCode + role.partyID + properties.url
+            val hash = Hash.sha3(message.toByteArray(StandardCharsets.UTF_8))
+            val signature = Sign.signPrefixedMessage(hash, credentials.ecKeyPair)
+            val tx = registry.register(
+                    role.countryCode.toByteArray(),
+                    role.partyID.toByteArray(),
+                    properties.url,
+                    BigInteger(signature.v),
+                    signature.r,
+                    signature.s).sendAsync().get()
+            println("Registered ${role.countryCode} ${role.partyID}: $tx")
+        }
+    }
+
+    fun deleteFromRegistry(roles: List<RoleEntity>) {
+        for (role in roles) {
+            val credentials = Credentials.create(role.privateKey)
+            val message = role.countryCode + role.partyID
+            val hash = Hash.sha3(message.toByteArray(StandardCharsets.UTF_8))
+            val signature = Sign.signPrefixedMessage(hash, credentials.ecKeyPair)
+            val tx = registry.deregister(
+                    role.countryCode.toByteArray(),
+                    role.partyID.toByteArray(),
+                    BigInteger(signature.v),
+                    signature.r,
+                    signature.s).sendAsync().get()
+            println("Deregistered ${role.countryCode} ${role.partyID}: $tx")
+        }
     }
 
 }

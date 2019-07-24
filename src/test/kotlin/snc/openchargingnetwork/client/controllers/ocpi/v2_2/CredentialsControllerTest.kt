@@ -23,6 +23,7 @@ import snc.openchargingnetwork.client.models.entities.PlatformEntity
 import snc.openchargingnetwork.client.models.entities.RoleEntity
 import snc.openchargingnetwork.client.models.ocpi.*
 import snc.openchargingnetwork.client.services.HttpRequestService
+import snc.openchargingnetwork.client.services.RoutingService
 
 @WebMvcTest(CredentialsController::class)
 class CredentialsControllerTest(@Autowired val mockMvc: MockMvc) {
@@ -38,6 +39,9 @@ class CredentialsControllerTest(@Autowired val mockMvc: MockMvc) {
 
     @MockkBean
     lateinit var properties: Properties
+
+    @MockkBean
+    lateinit var routingService: RoutingService
 
     @MockkBean
     lateinit var httpRequestService: HttpRequestService
@@ -95,7 +99,8 @@ class CredentialsControllerTest(@Autowired val mockMvc: MockMvc) {
         every { roleRepo.existsByCountryCodeAndPartyIDAllIgnoreCase(role2.countryCode, role2.partyID) } returns false
         every { platformRepo.save(any<PlatformEntity>()) } returns platform
         every { endpointRepo.save(any<EndpointEntity>()) } returns mockk()
-        every { roleRepo.save(any<RoleEntity>())} returns mockk()
+        every { routingService.writeToRegistry(any<List<RoleEntity>>()) } returns mockk()
+        every { roleRepo.saveAll(any<List<RoleEntity>>())} returns mockk()
 
         mockMvc.perform(post("/ocpi/2.2/credentials")
                 .header("Authorization", "Token ${platform.auth.tokenA}")
@@ -148,8 +153,10 @@ class CredentialsControllerTest(@Autowired val mockMvc: MockMvc) {
         every { platformRepo.save(any<PlatformEntity>()) } returns platform
         every { endpointRepo.deleteByPlatformID(platform.id) } returns mockk()
         every { endpointRepo.save(any<EndpointEntity>()) } returns mockk()
+        every { roleRepo.findAllByPlatformID(platform.id) } returns listOf<RoleEntity>()
         every { roleRepo.deleteByPlatformID(platform.id) } returns mockk()
-        every { roleRepo.save(any<RoleEntity>())} returns mockk()
+        every { routingService.writeToRegistry(any<List<RoleEntity>>()) } returns mockk()
+        every { roleRepo.saveAll(any<List<RoleEntity>>())} returns mockk()
 
         mockMvc.perform(put("/ocpi/2.2/credentials")
                 .header("Authorization", "Token ${platform.auth.tokenC}")
@@ -178,6 +185,8 @@ class CredentialsControllerTest(@Autowired val mockMvc: MockMvc) {
         val platform = PlatformEntity(id = 3L, auth = Auth(tokenA = null, tokenB = "123", tokenC = "456"))
         every { platformRepo.findByAuth_TokenC(platform.auth.tokenC) } returns platform
         every { platformRepo.deleteById(platform.id!!) } returns mockk()
+        every { roleRepo.findAllByPlatformID(platform.id) } returns listOf<RoleEntity>()
+        every { routingService.deleteFromRegistry(any<List<RoleEntity>>()) } returns mockk()
         every { roleRepo.deleteByPlatformID(platform.id) } returns mockk()
         every { endpointRepo.deleteByPlatformID(platform.id) } returns mockk()
 

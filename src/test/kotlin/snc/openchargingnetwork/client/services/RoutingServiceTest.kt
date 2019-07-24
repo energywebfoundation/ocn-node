@@ -1,9 +1,12 @@
 package snc.openchargingnetwork.client.services
 
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import io.mockk.every
 import io.mockk.mockk
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import snc.openchargingnetwork.client.config.Properties
 import snc.openchargingnetwork.client.data.exampleLocation1
 import snc.openchargingnetwork.client.data.exampleLocation2
 import snc.openchargingnetwork.client.models.HttpResponse
@@ -12,6 +15,7 @@ import snc.openchargingnetwork.client.models.entities.PlatformEntity
 import snc.openchargingnetwork.client.models.entities.RoleEntity
 import snc.openchargingnetwork.client.models.ocpi.*
 import snc.openchargingnetwork.client.repositories.*
+import snc.openchargingnetwork.client.tools.generatePrivateKey
 import snc.openchargingnetwork.client.tools.generateUUIDv4Token
 import snc.openchargingnetwork.contracts.RegistryFacade
 
@@ -24,6 +28,7 @@ class RoutingServiceTest {
     private val responseUrlRepo: CommandResponseUrlRepository = mockk()
     private val httpRequestService: HttpRequestService = mockk()
     private val registry: RegistryFacade = mockk()
+    private val properties: Properties = mockk()
 
     private val routingService: RoutingService
 
@@ -35,7 +40,8 @@ class RoutingServiceTest {
                 cdrRepo,
                 responseUrlRepo,
                 httpRequestService,
-                registry)
+                registry,
+                properties)
     }
 
     @Test
@@ -47,7 +53,7 @@ class RoutingServiceTest {
 
     @Test
     fun getPlatformID() {
-        val role = RoleEntity(5L, Role.CPO, BusinessDetails("SENDER Co"), "SENDER", "DE")
+        val role = RoleEntity(5L, Role.CPO, BusinessDetails("SENDER Co"), "SENDER", "DE", generatePrivateKey())
         every { roleRepo.findByCountryCodeAndPartyIDAllIgnoreCase(role.countryCode, role.partyID) } returns role
         assertThat(routingService.getPlatformID(BasicRole(role.partyID, role.countryCode))).isEqualTo(5L)
     }
@@ -123,7 +129,10 @@ class RoutingServiceTest {
                 "OCPI-from-party-id" to "XXX",
                 "OCPI-to-country-code" to "DE",
                 "OCPI-to-party-id" to "AAA")
-        every { httpRequestService.makeRequest("POST", url, headers, body = exampleLocation1, expectedDataType = Nothing::class) } returns HttpResponse(
+        val mapper = jacksonObjectMapper()
+        val body: Map<String, Any>? = mapper.readValue(mapper.writeValueAsString(exampleLocation1))
+        every { httpRequestService.mapper } returns mapper
+        every { httpRequestService.makeRequest("POST", url, headers, body = body, expectedDataType = Nothing::class) } returns HttpResponse(
                 statusCode = 200,
                 headers = mapOf(),
                 body = OcpiResponse(

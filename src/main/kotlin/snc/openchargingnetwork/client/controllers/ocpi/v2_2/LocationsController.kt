@@ -1,3 +1,22 @@
+/*
+    Copyright 2019 Energy Web Foundation
+
+    This file is part of Open Charging Network Client.
+
+    Open Charging Network Client is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Open Charging Network Client is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Open Charging Network Client.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
 package snc.openchargingnetwork.client.controllers.ocpi.v2_2
 
 import org.springframework.http.HttpHeaders
@@ -51,13 +70,14 @@ class LocationsController(private val routingService: RoutingService) {
             val headers = routingService.makeHeaders(correlationID, sender, receiver)
             routingService.forwardRequest(
                     method = "POST",
-                    url = urlJoin(url, "/ocn/messages"),
+                    url = urlJoin(url, "/ocn/message"),
                     headers = headers,
                     body = HubGenericRequest(
                             method = "GET",
                             module = "locations",
                             role = InterfaceRole.SENDER,
                             params = params,
+                            body = null,
                             expectedResponseType = HubRequestResponseType.LOCATION_ARRAY),
                     expectedDataType = Array<Location>::class)
         }
@@ -103,13 +123,14 @@ class LocationsController(private val routingService: RoutingService) {
             val headers = routingService.makeHeaders(correlationID, sender, receiver)
             routingService.forwardRequest(
                     method = "POST",
-                    url = urlJoin(url, "/ocn/messages"),
+                    url = urlJoin(url, "/ocn/message"),
                     headers = headers,
                     body = HubGenericRequest(
                             method = "GET",
                             module = "locations",
                             role = InterfaceRole.SENDER,
                             path = "/$locationID",
+                            body = null,
                             expectedResponseType = HubRequestResponseType.LOCATION),
                     expectedDataType = Location::class)
         }
@@ -147,13 +168,14 @@ class LocationsController(private val routingService: RoutingService) {
             val headers = routingService.makeHeaders(correlationID, sender, receiver)
             routingService.forwardRequest(
                     method = "POST",
-                    url = urlJoin(url, "/ocn/messages"),
+                    url = urlJoin(url, "/ocn/message"),
                     headers = headers,
                     body = HubGenericRequest(
                             method = "GET",
                             module = "locations",
                             role = InterfaceRole.SENDER,
                             path = "/$locationID/$evseUID",
+                            body = null,
                             expectedResponseType = HubRequestResponseType.EVSE),
                     expectedDataType = Evse::class)
         }
@@ -192,13 +214,14 @@ class LocationsController(private val routingService: RoutingService) {
             val headers = routingService.makeHeaders(correlationID, sender, receiver)
             routingService.forwardRequest(
                     method = "POST",
-                    url = urlJoin(url, "/ocn/messages"),
+                    url = urlJoin(url, "/ocn/message"),
                     headers = headers,
                     body = HubGenericRequest(
                             method = "GET",
                             module = "locations",
                             role = InterfaceRole.SENDER,
                             path = "/$locationID/$evseUID/$connectorID",
+                            body = null,
                             expectedResponseType = HubRequestResponseType.CONNECTOR),
                     expectedDataType = Connector::class)
         }
@@ -242,13 +265,14 @@ class LocationsController(private val routingService: RoutingService) {
             val headers = routingService.makeHeaders(correlationID, sender, receiver)
             routingService.forwardRequest(
                     method = "POST",
-                    url = urlJoin(url, "/ocn/messages"),
+                    url = urlJoin(url, "/ocn/message"),
                     headers = headers,
                     body = HubGenericRequest(
                             method = "GET",
                             module = "locations",
                             role = InterfaceRole.RECEIVER,
                             path = "/$countryCode/$partyID/$locationID",
+                            body = null,
                             expectedResponseType = HubRequestResponseType.LOCATION),
                     expectedDataType = Location::class)
         }
@@ -289,13 +313,14 @@ class LocationsController(private val routingService: RoutingService) {
             val headers = routingService.makeHeaders(correlationID, sender, receiver)
             routingService.forwardRequest(
                     method = "POST",
-                    url = urlJoin(url, "/ocn/messages"),
+                    url = urlJoin(url, "/ocn/message"),
                     headers = headers,
                     body = HubGenericRequest(
                             method = "GET",
                             module = "locations",
                             role = InterfaceRole.RECEIVER,
                             path = "/$countryCode/$partyID/$locationID/$evseUID",
+                            body = null,
                             expectedResponseType = HubRequestResponseType.EVSE),
                     expectedDataType = Evse::class)
         }
@@ -337,13 +362,14 @@ class LocationsController(private val routingService: RoutingService) {
             val headers = routingService.makeHeaders(correlationID, sender, receiver)
             routingService.forwardRequest(
                     method = "POST",
-                    url = urlJoin(url, "/ocn/messages"),
+                    url = urlJoin(url, "/ocn/message"),
                     headers = headers,
                     body = HubGenericRequest(
                             method = "GET",
                             module = "locations",
                             role = InterfaceRole.RECEIVER,
                             path = "/$countryCode/$partyID/$locationID/$evseUID/$connectorID",
+                            body = null,
                             expectedResponseType = HubRequestResponseType.CONNECTOR),
                     expectedDataType = Connector::class)
         }

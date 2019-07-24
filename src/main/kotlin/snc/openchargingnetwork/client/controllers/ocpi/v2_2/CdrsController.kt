@@ -1,3 +1,22 @@
+/*
+    Copyright 2019 Energy Web Foundation
+
+    This file is part of Open Charging Network Client.
+
+    Open Charging Network Client is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Open Charging Network Client is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Open Charging Network Client.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
 package snc.openchargingnetwork.client.controllers.ocpi.v2_2
 
 import org.springframework.http.HttpHeaders
@@ -61,6 +80,7 @@ class CdrsController(val routingService: RoutingService,
                             module = "cdrs",
                             role = InterfaceRole.SENDER,
                             params = params,
+                            body = null,
                             expectedResponseType = HubRequestResponseType.CDR_ARRAY),
                     expectedDataType = Array<CDR>::class)
         }
@@ -117,6 +137,7 @@ class CdrsController(val routingService: RoutingService,
                             method = "GET",
                             module = "cdrs",
                             role = InterfaceRole.RECEIVER,
+                            body = null,
                             expectedResponseType = HubRequestResponseType.CDR),
                     expectedDataType = CDR::class)
         }
@@ -146,7 +167,7 @@ class CdrsController(val routingService: RoutingService,
             val endpoint = routingService.getPlatformEndpoint(platformID, "cdrs", InterfaceRole.RECEIVER)
             val headers = routingService.makeHeaders(platformID, correlationID, sender, receiver)
             routingService.forwardRequest(
-                    method = "PUT",
+                    method = "POST",
                     url = endpoint.url,
                     headers = headers,
                     body = body,
@@ -159,7 +180,7 @@ class CdrsController(val routingService: RoutingService,
                     url = urlJoin(url, "/ocn/message"),
                     headers = headers,
                     body = HubGenericRequest(
-                            method = "PUT",
+                            method = "POST",
                             module = "cdrs",
                             path = url,
                             role = InterfaceRole.RECEIVER,
