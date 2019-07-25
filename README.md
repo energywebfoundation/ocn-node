@@ -122,10 +122,17 @@ properties file at runtime, as shown below:
 
 ```
 docker build . -n ocn-client
-docker run ocn-client java -jar -Dspring.config.location=resources/main/application.<PROFILE>.properties lib/ocn-client-0.1.0-SNAPSHOT.jar
+docker run -p 8080:8080 ocn-client java -jar -Dspring.config.location=resources/main/application.<PROFILE>.properties lib/ocn-client-0.1.0-SNAPSHOT.jar
+```
+
+Alternatively use the provided command in the Dockerfile to use the default profile:
+```
+docker run -p 8080:8080 ocn-client 
 ```
 
 Note that building the docker image can take a few minutes.
+
+#### 2.3.1. Running a local Open Charging Network with Docker
 
 To setup a local network, a compose file has been provided which runs a local Open Charging Network. This uses a test 
 Ethereum blockchain with pre-funded accounts and the OCN Registry contract already deployed. Two clients are setup to 
