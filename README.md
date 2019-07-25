@@ -2,8 +2,28 @@
 
 The Open Charging Network (OCN) Client with OCPI 2.2 connection. 
 
-**This software is in alpha**. Starting from end of July, a testing period will be run to aid and inform development.
-Additionally, contributions are always welcome in the form of pull requests and issues.
+**This software is in alpha**. 
+
+Starting from end of July, a testing period will be run to aid and inform development.
+The main branch, currently`open-testing`, refers to the version run during this test period, 
+and is connected to the [OCN Registry](https://bitbucket.org/shareandcharge/ocn-registry/src/master/) which has been deployed on the [Energy Web
+Foundation's Volta test network](https://energyweb.atlassian.net/wiki/spaces/EWF/pages/702677023/Chain+Volta+Test+Network).
+
+OCN Registry smart contract address: `0x668956FE2Eb6ED52C5a961b02bEEbAc8913A2731`
+
+This version contains automatic registering of OCPI platforms to the OCN Registry, as a means
+of allowing easier registration. **Future version will not support this feature**; OCPI platforms
+should either manage their OCN Registry listing themselves or delegate the work to an additional
+service running on top of the Open Charging Network.
+
+Additionally, as the aim is for this to be a community project, contributions are always welcome in the 
+form of comments, pull requests, raised issues, etc., though there are currently no published contributing
+guidelines. 
+
+The latest development is focused on the [`develop`](https://bitbucket.org/shareandcharge/ocn-client/src/develop/) branch. As such,
+contributions should largely be submitted there. 
+
+
 
 ## API Documentation
 
@@ -36,7 +56,8 @@ registers with an OCN client, in order to be reachable on the network, the clien
 smart contract. Normally the CPO platform would need to manage a blockchain wallet, obtain funds and send a 
 transaction to the smart contract to signal that they are registered with a particular OCN client. As this step 
 requires additional work and is not the focus of this first test version, it has been delegated to the OCN client. 
-In future releases, **registering to an OCN client and registering to the Registry smart contract will be decoupled**.
+As stated above, in future releases, **registering to an OCN client and registering to the Registry smart contract will 
+be decoupled**.
 
 For the reasons outlined above, the wallet that is created will need to be funded. As the OCN client is configured
 to use the Energy Web Foundation's Volta test network by default, the [Volta faucet](https://voltafaucet.energyweb.org/)
