@@ -2,8 +2,14 @@
 
 The Open Charging Network (OCN) Client with OCPI 2.2 connection. 
 
-**This software is in alpha**. Starting from end of July, a testing period will be run to aid and inform development.
-Additionally, contributions are always welcome in the form of pull requests and issues.
+**This software is in alpha**. 
+
+Starting from end of July, a testing period will be run to aid and inform development. 
+This test version is contained in the branch [`open-testing`](https://bitbucket.org/shareandcharge/ocn-client/src/open-testing/).
+
+Additionally, as the aim is for this to be a community project, contributions are always welcome in the form of comments, pull requests, raised issues, etc., though there are currently no published contributing guidelines.
+
+The latest development is focused on the develop branch. As such, contributions should largely be submitted there.
 
 ## API Documentation
 
