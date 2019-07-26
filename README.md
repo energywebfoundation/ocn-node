@@ -1,21 +1,44 @@
 # Open Charging Network Client
 
-The Open Charging Network (OCN) Client with OCPI 2.2 connection. 
+The Open Charging Network (OCN) Client with Open Charge Point Interface (OCPI) v2.2 API. 
 
 **This software is in alpha**. 
 
 Starting from end of July, a testing period will be run to aid and inform development. 
-This test version is contained in the branch [`open-testing`](https://bitbucket.org/shareandcharge/ocn-client/src/open-testing/).
+If you want to run a client on that test network, switch to the [`open-testing`](https://bitbucket.org/shareandcharge/ocn-client/src/open-testing/) branch.
+A second test network will soon be setup, using clients from the `develop` branch. Therefore,
+it is recommended to stay on this branch.
 
-Additionally, as the aim is for this to be a community project, contributions are always welcome in the form of comments, pull requests, raised issues, etc., though there are currently no published contributing guidelines.
+As the aim is for this to be a community project, contributions are always welcome in the form of comments, pull 
+requests and raised issues. Questions may also be asked on Stack Overflow using the tag `ShareAndCharge`.
 
-The latest development is focused on the develop branch. As such, contributions should largely be submitted there.
+## Open Charging Network
+
+To participate in the OCN, a client must be used to broker OCPI requests (e.g. start/stop requests, POI data retrieval) 
+between parties. There are two ways to use a client. Either it is run on-premises by an administrator working for the
+OCPI party wishing to participate in the network, or it is provided as a Service by an OCN Client Provider. If the 
+latter scenario is desired, the OCPI party needs only to obtain a `CREDENTIALS_TOKEN_A` and versions endpoint from said 
+provider to begin the regular OCPI 2.2 credentials registration process with the provider's OCN Client.  
+
+For more information about the OCN, check out the [wiki](https://bitbucket.org/shareandcharge/ocn-client/wiki/).
 
 ## API Documentation
 
 See [Open Charging Network Client Documentation](https://shareandcharge.bitbucket.io).
 
-## Running a Client Locally
+## Dependencies
+
+The OCN Client is built with Kotlin, targeting the JVM. Either OpenJDK 8 or Docker can be used to build and run the client.
+If following the Local OCN tutorial below, it is only necessary to have Docker installed.
+
+## Running a Local Open Charging Network
+
+Before running a client and connecting it to a local, test or prod environment, it is recommended to become acquainted 
+with how the network operates first. The `docker-compose` file provided spins up a local environment with the OCN
+Registry and two OCN clients already pre-configured. A [tutorial](./examples) has been provided to guide 
+administrators and users of an OCN client alike through various use case examples.  
+
+## Running a Client
 
 First of all, clone the repository:
 
@@ -57,7 +80,7 @@ If running the client in a test or production environment with Postgres installe
 instead:
 
 ```
-cd application.psql.properties application.local.properties
+cp application.psql.properties application.local.properties
 ```
 
 The client may also be connected to a different database. This requires installing the relevant database driver as 
@@ -69,7 +92,8 @@ database server itself.
 The network on which any OCN client is running on depends purely on the OCN Registry smart contract it is connected to.
 These configuration properties belong to `ocn.client.web3`. Currently the OCN test environment exists on the Energy Web 
 Foundation's Volta test network. The provided `dev` and `psql` profiles already point the client to a [remote Volta node](https://energyweb.atlassian.net/wiki/spaces/EWF/pages/703201459/Volta+Connecting+to+Remote+RPC) 
-and to the OCN Registry smart contract deployed on Volta (with address `0x668956FE2Eb6ED52C5a961b02bEEbAc8913A2731`).
+and to the OCN Registry smart contract deployed on Volta (with address `0x668956FE2Eb6ED52C5a961b02bEEbAc8913A2731`). Note
+that subsequent commits may change this address as development of the OCN Registry takes place.
 
 #### 1.4. Setting the Admin API key [optional]
 
@@ -83,9 +107,20 @@ ocn.client.apikey = randomkey
 The API key will be printed on client start, be it generated or user-specified. Consult the [API documentation](https://shareandcharge.bitbucket.io)
 for more information on how to use the Admin API. 
 
-### 2. Building and Running the Client
+### 2. Running the Client
 
-There are multiple ways to run an OCN client.
+There are multiple ways to run an OCN client. First of all, return to the root of the repository:
+
+```
+cd ../../..
+```
+
+Or you can enter the following shortcut to return to the previous directory, which should be the root if following
+these instructions:
+
+```
+cd -
+```
 
 #### 2.1. Building and Executing a JAR file
 
@@ -116,59 +151,30 @@ Especially helpful for development, the client can quickly be run in one step wi
 
 #### 2.3. Using Docker
 
-A Dockerfile is provided which, once built, will run the above command in a container. By default it will use the 
-`docker` profile. This can be changed by modifying the Dockerfile directly, or by changing the location of the
-properties file at runtime, as shown below:
+A Dockerfile is provided which, once built, will run the above command in a container. To build, simply run the following
+with a name flag so that we can identify it later:
 
 ```
 docker build . -n ocn-client
-docker run -p 8080:8080 ocn-client java -jar -Dspring.config.location=resources/main/application.<PROFILE>.properties lib/ocn-client-0.1.0-SNAPSHOT.jar
-```
-
-Alternatively use the provided command in the Dockerfile to use the default profile:
-```
-docker run -p 8080:8080 ocn-client 
 ```
 
 Note that building the docker image can take a few minutes.
 
-#### 2.3.1. Running a local Open Charging Network with Docker
-
-To setup a local network, a compose file has been provided which runs a local Open Charging Network. This uses a test 
-Ethereum blockchain with pre-funded accounts and the OCN Registry contract already deployed. Two clients are setup to 
-start with, such that it is possible to test messages relayed between clients. Therefore, it is possible to register for
-example, an eMSP with the first client, and a CPO with the second client.
-
-In order to set this up, the OCN Registry contract repository needs to be cloned:
-
+Once built, the client can be run, exposing the application server's `8080` port within the container to the outside environment:
 ```
-cd ..
-git clone git@bitbucket.org:shareandcharge/ocn-registry.git
+docker run -p 8080:8080 ocn-client 
 ```
 
-Following this, return to the OCN client directory (which should be under the same parent directory as the registry 
-repo) and start the network:
+By default this will use the `docker` profile. This can be changed by modifying the Dockerfile directly (and rebuilding
+if necessary), or by changing the location of the properties file at runtime with a custom command, as shown below:
 
 ```
-cd ocn-client
-docker-compose up
+docker run -p 8080:8080 ocn-client java -jar -Dspring.config.location=resources/main/application.<PROFILE>.properties lib/ocn-client-0.1.0-SNAPSHOT.jar
 ```
 
-The first build may take a while (as above) but subsequent `docker-compose up` commands will be much faster. The 
-following information is relevant to using this local network:
+### 3. Operating the OCN Client
 
-- OCN client 1 address: `http://localhost:8080`
-- OCN client 2 address: `http://localhost:8081`
-- Both Admin APIs use the same key, printend on startup: `randomkey`
-- OCN Registry address: `0x345cA3e014Aaf5dcA488057592ee47305D9B3e10`
-- OCN Registry owner: `0x627306090abaB3A6e1400e9345bC60c78a8BEf57`
-- Ethereum blockchain JSON RPC address: `http://localhost:8544`
-- Ethereum blockchain JSON RPC address from within container network: `http://172.16.238.10:8544`
-- HD Wallet Mnemonic: `candy maple cake sugar pudding cream honey rich smooth crumble sweet treat`
-
-### Using the OCN Client
-
-Once the client is built and running, test that it is working with the following request:
+Once the client is running, test that it is working with the following request:
 
 ```
 curl localhost:8080/health

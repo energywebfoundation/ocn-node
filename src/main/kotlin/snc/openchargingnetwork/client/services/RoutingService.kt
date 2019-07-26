@@ -41,8 +41,7 @@ class RoutingService(private val platformRepo: PlatformRepository,
                      private val cdrRepo: CdrRepository,
                      private val commandResponseUrlRepo: CommandResponseUrlRepository,
                      private val httpService: HttpRequestService,
-                     private val registry: RegistryFacade,
-                     private val properties: Properties) {
+                     private val registry: RegistryFacade) {
 
     fun isRoleKnown(role: BasicRole) = roleRepo.existsByCountryCodeAndPartyIDAllIgnoreCase(role.country, role.id)
 

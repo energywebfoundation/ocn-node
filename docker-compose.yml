@@ -28,8 +28,7 @@ services:
       context: .
       dockerfile: Dockerfile
     image: "ocn-client"
-    networks:
-      - ocn-dev-net
+    network_mode: "host"
     ports:
       - "8080:8080"
 
@@ -39,8 +38,7 @@ services:
       context: .
       dockerfile: Dockerfile
     image: "ocn-client"
-    networks:
-      - ocn-dev-net
+    network_mode: "host"
     ports:
       - "8081:8081"
     command: ["java", "-jar", "-Dserver.port=8081", "-Docn.client.url=http://localhost:8081", "./libs/ocn-client-0.1.0-SNAPSHOT.jar"]
