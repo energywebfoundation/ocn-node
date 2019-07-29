@@ -86,7 +86,7 @@ class CredentialsController(private val platformRepo: PlatformRepository,
         // ensure each role does not already exist
         for (role in body.roles) {
             val basicRole = BasicRole(role.partyID, role.countryCode)
-            if (roleRepo.existsByCountryCodeAndPartyIDAllIgnoreCase(basicRole.id, basicRole.country)) {
+            if (roleRepo.existsByCountryCodeAndPartyIDAllIgnoreCase(basicRole.country, basicRole.id)) {
                 throw OcpiClientInvalidParametersException("Role with party_id=${basicRole.id} and country_code=${basicRole.country} already registered")
             }
         }

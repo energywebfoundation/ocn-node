@@ -49,7 +49,7 @@ class RoutingServiceTest {
 
     @Test
     fun getPlatformID() {
-        val role = RoleEntity(5L, Role.CPO, BusinessDetails("SENDER Co"), "SENDER", "DE")
+        val role = RoleEntity(5L, Role.CPO, BusinessDetails("SENDER Co"), "SEN", "DE")
         every { roleRepo.findByCountryCodeAndPartyIDAllIgnoreCase(role.countryCode, role.partyID) } returns role
         assertThat(routingService.getPlatformID(BasicRole(role.partyID, role.countryCode))).isEqualTo(5L)
     }
