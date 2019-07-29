@@ -6,15 +6,15 @@
 image: openjdk:8
 
 pipelines:
+  default:
+    - step:
+        caches:
+          - gradle
+        script: # Modify the commands below to build your repository.
+          # You must commit the Gradle wrapper to your repository
+          # https://docs.gradle.org/current/userguide/gradle_wrapper.html
+          - bash ./gradlew build
   branches:
-    default:
-      - step:
-          caches:
-            - gradle
-          script: # Modify the commands below to build your repository.
-            # You must commit the Gradle wrapper to your repository
-            # https://docs.gradle.org/current/userguide/gradle_wrapper.html
-            - bash ./gradlew build
     open-testing:
       - step:
           deployment: test
