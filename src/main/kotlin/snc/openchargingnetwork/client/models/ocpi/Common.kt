@@ -21,6 +21,7 @@ package snc.openchargingnetwork.client.models.ocpi
 
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
+import snc.openchargingnetwork.client.models.exceptions.OcpiClientInvalidParametersException
 import java.time.Instant
 import java.time.format.DateTimeFormatter
 import javax.persistence.Embeddable
@@ -28,6 +29,15 @@ import javax.persistence.Embedded
 
 data class BasicRole(@JsonProperty("party_id") var id: String,
                      @JsonProperty("country_code") var country: String) {
+
+    init {
+        if (country.length != 2) {
+            throw OcpiClientInvalidParametersException("Given country_code \"$country\" not 2 characters")
+        }
+        if (id.length != 3) {
+            throw OcpiClientInvalidParametersException("Given party-id \"$id\" not 3 characters")
+        }
+    }
 
     fun toLowerCase(): BasicRole {
         this.id = id.toLowerCase()

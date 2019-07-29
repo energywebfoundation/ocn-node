@@ -87,7 +87,6 @@ class LocationsController(private val routingService: RoutingService) {
         response.headers["X-Total-Count"]?.let { headers.add("X-Total-Count", it) }
         response.headers["X-Limit"]?.let { headers.add("X-Limit", it) }
 
-
         return ResponseEntity
                 .status(response.statusCode)
                 .headers(headers)

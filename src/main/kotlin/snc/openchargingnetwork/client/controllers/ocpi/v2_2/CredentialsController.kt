@@ -83,11 +83,11 @@ class CredentialsController(private val platformRepo: PlatformRepository,
         // GET 2.2 version details
         val versionDetail = httpRequestService.getVersionDetail(correctVersion.url, body.token)
 
-
         // ensure each role does not already exist
         for (role in body.roles) {
-            if (roleRepo.existsByCountryCodeAndPartyIDAllIgnoreCase(role.countryCode, role.partyID)) {
-                throw OcpiClientInvalidParametersException("Role with party_id=${role.partyID} and country_code=${role.countryCode} already registered")
+            val basicRole = BasicRole(role.partyID, role.countryCode)
+            if (roleRepo.existsByCountryCodeAndPartyIDAllIgnoreCase(basicRole.id, basicRole.country)) {
+                throw OcpiClientInvalidParametersException("Role with party_id=${basicRole.id} and country_code=${basicRole.country} already registered")
             }
         }
 

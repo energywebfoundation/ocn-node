@@ -241,6 +241,189 @@
 								"description": "Request a list of locations from a CPO."
 							},
 							"response": []
+						},
+						{
+							"name": "Location Object",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Token CREDENTIALS_TOKEN_C",
+										"type": "text"
+									},
+									{
+										"key": "X-Request-ID",
+										"value": "1",
+										"type": "text"
+									},
+									{
+										"key": "X-Correlation-ID",
+										"value": "1",
+										"type": "text"
+									},
+									{
+										"key": "OCPI-from-country-code",
+										"value": "DE",
+										"type": "text"
+									},
+									{
+										"key": "OCPI-from-party-id",
+										"value": "MSP",
+										"type": "text"
+									},
+									{
+										"key": "OCPI-to-country-code",
+										"value": "DE",
+										"type": "text"
+									},
+									{
+										"key": "OCPI-to-party-id",
+										"value": "CPO",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "http://localhost:8080/ocpi/sender/2.2/locations/LOC1",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"ocpi",
+										"sender",
+										"2.2",
+										"locations",
+										"LOC1"
+									]
+								},
+								"description": "Request a single location object from a CPO."
+							},
+							"response": []
+						},
+						{
+							"name": "EVSE",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Token CREDENTIALS_TOKEN_C",
+										"type": "text"
+									},
+									{
+										"key": "X-Request-ID",
+										"value": "1",
+										"type": "text"
+									},
+									{
+										"key": "X-Correlation-ID",
+										"value": "1",
+										"type": "text"
+									},
+									{
+										"key": "OCPI-from-country-code",
+										"value": "DE",
+										"type": "text"
+									},
+									{
+										"key": "OCPI-from-party-id",
+										"value": "MSP",
+										"type": "text"
+									},
+									{
+										"key": "OCPI-to-country-code",
+										"value": "DE",
+										"type": "text"
+									},
+									{
+										"key": "OCPI-to-party-id",
+										"value": "CPO",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "http://localhost:8080/ocpi/sender/2.2/locations/LOC1/1234",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"ocpi",
+										"sender",
+										"2.2",
+										"locations",
+										"LOC1",
+										"1234"
+									]
+								},
+								"description": "Request a specific EVSE from a CPO."
+							},
+							"response": []
+						},
+						{
+							"name": "Connector",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Token CREDENTIALS_TOKEN_C",
+										"type": "text"
+									},
+									{
+										"key": "X-Request-ID",
+										"value": "1",
+										"type": "text"
+									},
+									{
+										"key": "X-Correlation-ID",
+										"value": "1",
+										"type": "text"
+									},
+									{
+										"key": "OCPI-from-country-code",
+										"value": "DE",
+										"type": "text"
+									},
+									{
+										"key": "OCPI-from-party-id",
+										"value": "MSP",
+										"type": "text"
+									},
+									{
+										"key": "OCPI-to-country-code",
+										"value": "DE",
+										"type": "text"
+									},
+									{
+										"key": "OCPI-to-party-id",
+										"value": "CPO",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "http://localhost:8080/ocpi/sender/2.2/locations/LOC1/1234/1",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"ocpi",
+										"sender",
+										"2.2",
+										"locations",
+										"LOC1",
+										"1234",
+										"1"
+									]
+								},
+								"description": "Request a specific connector from a CPO."
+							},
+							"response": []
 						}
 					],
 					"description": "OCPI locations module request examples.\n\nSee [locations documentation](https://github.com/ocpi/ocpi/blob/develop/mod_locations.asciidoc) for more. ",
@@ -270,6 +453,71 @@
 					}
 				}
 			]
+		},
+		{
+			"name": "Tariffs",
+			"item": [
+				{
+					"name": "Tariffs",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Token CREDENTIALS_TOKEN_C",
+								"type": "text"
+							},
+							{
+								"key": "X-Request-ID",
+								"value": "1",
+								"type": "text"
+							},
+							{
+								"key": "X-Correlation-ID",
+								"value": "1",
+								"type": "text"
+							},
+							{
+								"key": "OCPI-from-country-code",
+								"value": "DE",
+								"type": "text"
+							},
+							{
+								"key": "OCPI-from-party-id",
+								"value": "MSP",
+								"type": "text"
+							},
+							{
+								"key": "OCPI-to-country-code",
+								"value": "DE",
+								"type": "text"
+							},
+							{
+								"key": "OCPI-to-party-id",
+								"value": "CPO",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:8080/ocpi/sender/2.2/tariffs",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"ocpi",
+								"sender",
+								"2.2",
+								"tariffs"
+							]
+						},
+						"description": "Example tariffs request from EMSP to CPO."
+					},
+					"response": []
+				}
+			],
+			"description": "OCPI Tariffs example requests.\n\n"
 		}
 	]
 }

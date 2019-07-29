@@ -171,7 +171,7 @@ Go ahead and send the request once the proper `Authorization` header has been se
 
 You should see the OCN client's credentials returned to you. There is a new token in the body: this is what's known as
 `CREDENTIALS_TOKEN_C` and will allow you to authorize any subsequent OCPI requests you make to your OCN client. The 
-previous token is now discarded and will not be used again.
+previous token is now discarded and will not be used again, so make sure to save this new token.
 
 In addition, you should see that there were two requests made to the EMSP server. This shows that the OCN client has
 requested and stored your OCPI module endpoints for future use.
@@ -180,10 +180,10 @@ This now completes the registration to the OCN client.
 
 ### 4. Adding an entry to the OCN Registry
 
-Though we have successfully registered to an OCN client, there is no way of an OCPI party connected to a different
+Though we have successfully registered to an OCN client, there is no way for an OCPI party connected to a different
 client to contact us. To become *visible* on the network, we must register ourselves to the OCN Registry.
 
-This step has no tutorial yet, and it is not essential if we only need to communicate with parties connected to our
+This step has no tutorial yet, and it is not essential if we only need to communicate with parties connected to our own
 OCN client. 
 
 The CPO in our network has already fully registered on the network. You can see how this was achieved by reading [some
@@ -191,4 +191,77 @@ code](https://bitbucket.org/shareandcharge/ocn-demo/src/master/src/index.js)! Li
 
 ### 5. Making OCPI requests to the CPO
 
-Coming soon...
+Now that we have registered to our OCN client, we can send requests to the CPO. In this request, we wish to fetch a 
+list of the CPO's locations (i.e. charging stations under OCPI terminology). To do so, navigate to the `GET locations
+list` request in the locations directory of the Postman collection. Substitute the `CREDENTIALS_TOKEN_C` in the
+Authorization header and make the request.
+
+The result should look like the following:
+```
+{
+    "status_code": 1000,
+    "data": [
+        {
+            "country_code": "DE",
+            "party_id": "CPO",
+            "id": "LOC1",
+            "type": "ON_STREET",
+            "address": "somestreet 1",
+            "city": "Essen",
+            "country": "DEU",
+            "coordinates": {
+                "latitude": "52.232",
+                "longitude": "0.809"
+            },
+            "evses": [
+                {
+                    "uid": "1234",
+                    "status": "AVAILABLE",
+                    "connectors": [
+                        {
+                            "id": "1",
+                            "standard": "IEC_62196_T2",
+                            "format": "SOCKET",
+                            "power_type": "AC_3_PHASE",
+                            "max_voltage": 400,
+                            "max_amperage": 32,
+                            "last_updated": "2019-07-29T09:45:55.536Z"
+                        }
+                    ],
+                    "last_updated": "2019-07-29T09:45:55.536Z"
+                }
+            ],
+            "last_updated": "2019-07-29T09:45:55.536Z"
+        }
+    ],
+    "timestamp": "2019-07-29T09:45:55.536Z"
+}
+```
+
+We see that the request was successfully processed, returning an array of a single location. The OCPI location data
+type follows a hierarchy of `location` -> `evse` -> `connector`. We can make also make requests that fetch a single
+location, or a specific EVSE or connector. Take a look at the other requests in the locations directory to see how they
+work.
+
+Let's now look at an example of a request that will fail. The CPO has only implemented the `locations` module for 
+PULL requests (OCPI offers two way communication, i.e. a CPO can also send messages to an EMSP). What if we want to
+request tariff information from them? In the tariffs directory of the Postman collection there is an example tariffs
+request. This request would fetch an array of tariffs implemented by the CPO. If we try it out (after changing the
+Authorization header again), we see this message:
+
+```
+{
+    "status_code": 2001,
+    "status_message": "Receiver does not support the requested module",
+    "timestamp": "2019-07-29T09:59:06.444Z"
+}
+```
+
+The response tells us that the request was unsuccessful, as the CPO (the receiver of the request) does not support
+the OCPI module that we requested.
+
+That marks the end of this tutorial. More examples and use cases will be added to this tutorial in the future, but for
+now it should be enough to get started on creating an OCPI 2.2 platform that is ready to join the Open Charging Network.
+
+The complete OCPI documentation can be found here: [https://github.com/ocpi/ocpi/tree/develop](https://github.com/ocpi/ocpi/tree/develop) 
+(version 2.2 is contained in the develop branch).
