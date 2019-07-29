@@ -6,7 +6,6 @@ import io.mockk.every
 import io.mockk.mockk
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import snc.openchargingnetwork.client.config.Properties
 import snc.openchargingnetwork.client.data.exampleLocation1
 import snc.openchargingnetwork.client.data.exampleLocation2
 import snc.openchargingnetwork.client.models.HttpResponse
@@ -27,7 +26,6 @@ class RoutingServiceTest {
     private val responseUrlRepo: CommandResponseUrlRepository = mockk()
     private val httpRequestService: HttpRequestService = mockk()
     private val registry: RegistryFacade = mockk()
-    private val properties: Properties = mockk()
 
     private val routingService: RoutingService
 
@@ -39,8 +37,7 @@ class RoutingServiceTest {
                 cdrRepo,
                 responseUrlRepo,
                 httpRequestService,
-                registry,
-                properties)
+                registry)
     }
 
     @Test
