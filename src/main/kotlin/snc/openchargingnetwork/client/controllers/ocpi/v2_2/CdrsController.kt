@@ -25,9 +25,11 @@ import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.bind.annotation.*
 import snc.openchargingnetwork.client.config.Properties
 import snc.openchargingnetwork.client.models.HubGenericRequest
+import snc.openchargingnetwork.client.models.HubRequestParameters
 import snc.openchargingnetwork.client.models.HubRequestResponseType
 import snc.openchargingnetwork.client.models.ocpi.*
 import snc.openchargingnetwork.client.services.RoutingService
+import snc.openchargingnetwork.client.tools.generateUUIDv4Token
 import snc.openchargingnetwork.client.tools.urlJoin
 
 @RestController
@@ -56,7 +58,7 @@ class CdrsController(val routingService: RoutingService,
 
         routingService.validateSender(authorization, sender)
 
-        val params = PaginatedRequest(dateFrom, dateTo, offset, limit).encode()
+        val params = HubRequestParameters(dateFrom = dateFrom, dateTo = dateTo, offset = offset, limit = limit)
 
         val response = if (routingService.isRoleKnown(receiver)) {
             val platformID = routingService.getPlatformID(receiver)
@@ -66,22 +68,26 @@ class CdrsController(val routingService: RoutingService,
                     method = "GET",
                     url = endpoint.url,
                     headers = headers,
-                    params = params,
+                    params = params.encode(),
                     expectedDataType = Array<CDR>::class)
         } else {
             val url = routingService.findBrokerUrl(receiver)
-            val headers = routingService.makeHeaders(correlationID, sender, receiver)
+            val headers = routingService.makeHeaders(requestID, correlationID, sender, receiver)
+            val hubRequestBody = HubGenericRequest(
+                    method = "GET",
+                    module = "cdrs",
+                    role = InterfaceRole.SENDER,
+                    params = params,
+                    headers = headers,
+                    body = null,
+                    expectedResponseType = HubRequestResponseType.CDR_ARRAY)
             routingService.forwardRequest(
                     method = "POST",
                     url = urlJoin(url, "/ocn/message"),
-                    headers = headers,
-                    body = HubGenericRequest(
-                            method = "GET",
-                            module = "cdrs",
-                            role = InterfaceRole.SENDER,
-                            params = params,
-                            body = null,
-                            expectedResponseType = HubRequestResponseType.CDR_ARRAY),
+                    headers = mapOf(
+                            "X-Request-ID" to generateUUIDv4Token(),
+                            "OCN-Signature" to routingService.signRequest(hubRequestBody)),
+                    body = hubRequestBody,
                     expectedDataType = Array<CDR>::class)
         }
 
@@ -127,18 +133,22 @@ class CdrsController(val routingService: RoutingService,
                     expectedDataType = CDR::class)
         } else {
             val url = routingService.findBrokerUrl(receiver)
-            val headers = routingService.makeHeaders(correlationID, sender, receiver)
+            val headers = routingService.makeHeaders(requestID, correlationID, sender, receiver)
+            val hubRequestBody = HubGenericRequest(
+                    method = "GET",
+                    module = "cdrs",
+                    role = InterfaceRole.RECEIVER,
+                    headers = headers,
+                    body = null,
+                    expectedResponseType = HubRequestResponseType.CDR)
             //TODO: save URL on remote broker
             routingService.forwardRequest(
                     method = "POST",
                     url = urlJoin(url, "/ocn/message"),
-                    headers = headers,
-                    body = HubGenericRequest(
-                            method = "GET",
-                            module = "cdrs",
-                            role = InterfaceRole.RECEIVER,
-                            body = null,
-                            expectedResponseType = HubRequestResponseType.CDR),
+                    headers = mapOf(
+                            "X-Request-ID" to generateUUIDv4Token(),
+                            "OCN-Signature" to routingService.signRequest(hubRequestBody)),
+                    body = hubRequestBody,
                     expectedDataType = CDR::class)
         }
 
@@ -174,17 +184,21 @@ class CdrsController(val routingService: RoutingService,
                     expectedDataType = Nothing::class)
         } else {
             val url = routingService.findBrokerUrl(receiver)
-            val headers = routingService.makeHeaders(correlationID, sender, receiver)
+            val headers = routingService.makeHeaders(requestID, correlationID, sender, receiver)
+            val hubRequestBody = HubGenericRequest(
+                    method = "POST",
+                    module = "cdrs",
+                    path = url,
+                    role = InterfaceRole.RECEIVER,
+                    headers = headers,
+                    body = body)
             routingService.forwardRequest(
                     method = "POST",
                     url = urlJoin(url, "/ocn/message"),
-                    headers = headers,
-                    body = HubGenericRequest(
-                            method = "POST",
-                            module = "cdrs",
-                            path = url,
-                            role = InterfaceRole.RECEIVER,
-                            body = body),
+                    headers = mapOf(
+                            "X-Request-ID" to generateUUIDv4Token(),
+                            "OCN-Signature" to routingService.signRequest(hubRequestBody)),
+                    body = hubRequestBody,
                     expectedDataType = Nothing::class)
         }
 

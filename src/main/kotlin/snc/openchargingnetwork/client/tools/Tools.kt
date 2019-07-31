@@ -52,3 +52,8 @@ fun urlJoin(base: String, vararg paths: String): String {
 fun getTimestamp(): String {
     return DateTimeFormatter.ISO_INSTANT.format(Instant.now())
 }
+
+fun generatePrivateKey(): String {
+    val keys = Keys.createEcKeyPair()
+    return keys.privateKey.toString(16)
+}

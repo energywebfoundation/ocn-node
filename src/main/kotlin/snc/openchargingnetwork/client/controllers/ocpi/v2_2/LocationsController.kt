@@ -23,9 +23,11 @@ import org.springframework.http.HttpHeaders
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import snc.openchargingnetwork.client.models.HubGenericRequest
+import snc.openchargingnetwork.client.models.HubRequestParameters
 import snc.openchargingnetwork.client.models.HubRequestResponseType
 import snc.openchargingnetwork.client.models.ocpi.*
 import snc.openchargingnetwork.client.services.RoutingService
+import snc.openchargingnetwork.client.tools.generateUUIDv4Token
 import snc.openchargingnetwork.client.tools.urlJoin
 
 @RestController
@@ -53,7 +55,7 @@ class LocationsController(private val routingService: RoutingService) {
 
         routingService.validateSender(authorization, sender)
 
-        val params = PaginatedRequest(dateFrom, dateTo, offset, limit).encode()
+        val params = HubRequestParameters(dateFrom = dateFrom, dateTo = dateTo, offset = offset, limit = limit)
 
         val response = if (routingService.isRoleKnown(receiver)) {
             val platformID = routingService.getPlatformID(receiver)
@@ -63,22 +65,26 @@ class LocationsController(private val routingService: RoutingService) {
                     method = "GET",
                     url = endpoint.url,
                     headers = headers,
-                    params = params,
+                    params = params.encode(),
                     expectedDataType = Array<Location>::class)
         } else {
             val url = routingService.findBrokerUrl(receiver)
-            val headers = routingService.makeHeaders(correlationID, sender, receiver)
+            val headers = routingService.makeHeaders(requestID, correlationID, sender, receiver)
+            val hubRequestBody = HubGenericRequest(
+                    method = "GET",
+                    module = "locations",
+                    role = InterfaceRole.SENDER,
+                    params = params,
+                    headers = headers,
+                    body = null,
+                    expectedResponseType = HubRequestResponseType.LOCATION_ARRAY)
             routingService.forwardRequest(
                     method = "POST",
                     url = urlJoin(url, "/ocn/message"),
-                    headers = headers,
-                    body = HubGenericRequest(
-                            method = "GET",
-                            module = "locations",
-                            role = InterfaceRole.SENDER,
-                            params = params,
-                            body = null,
-                            expectedResponseType = HubRequestResponseType.LOCATION_ARRAY),
+                    headers = mapOf(
+                            "X-Request-ID" to generateUUIDv4Token(),
+                            "OCN-Signature" to routingService.signRequest(hubRequestBody)),
+                    body = hubRequestBody,
                     expectedDataType = Array<Location>::class)
         }
 
@@ -119,18 +125,22 @@ class LocationsController(private val routingService: RoutingService) {
                     expectedDataType = Location::class)
         } else {
             val url = routingService.findBrokerUrl(receiver)
-            val headers = routingService.makeHeaders(correlationID, sender, receiver)
+            val headers = routingService.makeHeaders(requestID, correlationID, sender, receiver)
+            val hubRequestBody = HubGenericRequest(
+                    method = "GET",
+                    module = "locations",
+                    role = InterfaceRole.SENDER,
+                    path = "/$locationID",
+                    headers = headers,
+                    body = null,
+                    expectedResponseType = HubRequestResponseType.LOCATION)
             routingService.forwardRequest(
                     method = "POST",
                     url = urlJoin(url, "/ocn/message"),
-                    headers = headers,
-                    body = HubGenericRequest(
-                            method = "GET",
-                            module = "locations",
-                            role = InterfaceRole.SENDER,
-                            path = "/$locationID",
-                            body = null,
-                            expectedResponseType = HubRequestResponseType.LOCATION),
+                    headers = mapOf(
+                            "X-Request-ID" to generateUUIDv4Token(),
+                            "OCN-Signature" to routingService.signRequest(hubRequestBody)),
+                    body = hubRequestBody,
                     expectedDataType = Location::class)
         }
 
@@ -164,18 +174,22 @@ class LocationsController(private val routingService: RoutingService) {
                     expectedDataType = Evse::class)
         } else {
             val url = routingService.findBrokerUrl(receiver)
-            val headers = routingService.makeHeaders(correlationID, sender, receiver)
+            val headers = routingService.makeHeaders(requestID, correlationID, sender, receiver)
+            val hubRequestBody = HubGenericRequest(
+                    method = "GET",
+                    module = "locations",
+                    role = InterfaceRole.SENDER,
+                    path = "/$locationID/$evseUID",
+                    headers = headers,
+                    body = null,
+                    expectedResponseType = HubRequestResponseType.EVSE)
             routingService.forwardRequest(
                     method = "POST",
                     url = urlJoin(url, "/ocn/message"),
-                    headers = headers,
-                    body = HubGenericRequest(
-                            method = "GET",
-                            module = "locations",
-                            role = InterfaceRole.SENDER,
-                            path = "/$locationID/$evseUID",
-                            body = null,
-                            expectedResponseType = HubRequestResponseType.EVSE),
+                    headers = mapOf(
+                            "X-Request-ID" to generateUUIDv4Token(),
+                            "OCN-Signature" to routingService.signRequest(hubRequestBody)),
+                    body = hubRequestBody,
                     expectedDataType = Evse::class)
         }
 
@@ -210,18 +224,22 @@ class LocationsController(private val routingService: RoutingService) {
                     expectedDataType = Connector::class)
         } else {
             val url = routingService.findBrokerUrl(receiver)
-            val headers = routingService.makeHeaders(correlationID, sender, receiver)
+            val headers = routingService.makeHeaders(requestID, correlationID, sender, receiver)
+            val hubRequestBody = HubGenericRequest(
+                    method = "GET",
+                    module = "locations",
+                    role = InterfaceRole.SENDER,
+                    path = "/$locationID/$evseUID/$connectorID",
+                    headers = headers,
+                    body = null,
+                    expectedResponseType = HubRequestResponseType.CONNECTOR)
             routingService.forwardRequest(
                     method = "POST",
                     url = urlJoin(url, "/ocn/message"),
-                    headers = headers,
-                    body = HubGenericRequest(
-                            method = "GET",
-                            module = "locations",
-                            role = InterfaceRole.SENDER,
-                            path = "/$locationID/$evseUID/$connectorID",
-                            body = null,
-                            expectedResponseType = HubRequestResponseType.CONNECTOR),
+                    headers = mapOf(
+                            "X-Request-ID" to generateUUIDv4Token(),
+                            "OCN-Signature" to routingService.signRequest(hubRequestBody)),
+                    body = hubRequestBody,
                     expectedDataType = Connector::class)
         }
 
@@ -261,18 +279,22 @@ class LocationsController(private val routingService: RoutingService) {
                     expectedDataType = Location::class)
         } else {
             val url = routingService.findBrokerUrl(receiver)
-            val headers = routingService.makeHeaders(correlationID, sender, receiver)
+            val headers = routingService.makeHeaders(requestID, correlationID, sender, receiver)
+            val hubRequestBody = HubGenericRequest(
+                    method = "GET",
+                    module = "locations",
+                    role = InterfaceRole.RECEIVER,
+                    path = "/$countryCode/$partyID/$locationID",
+                    headers = headers,
+                    body = null,
+                    expectedResponseType = HubRequestResponseType.LOCATION)
             routingService.forwardRequest(
                     method = "POST",
                     url = urlJoin(url, "/ocn/message"),
-                    headers = headers,
-                    body = HubGenericRequest(
-                            method = "GET",
-                            module = "locations",
-                            role = InterfaceRole.RECEIVER,
-                            path = "/$countryCode/$partyID/$locationID",
-                            body = null,
-                            expectedResponseType = HubRequestResponseType.LOCATION),
+                    headers = mapOf(
+                            "X-Request-ID" to generateUUIDv4Token(),
+                            "OCN-Signature" to routingService.signRequest(hubRequestBody)),
+                    body = hubRequestBody,
                     expectedDataType = Location::class)
         }
 
@@ -309,18 +331,22 @@ class LocationsController(private val routingService: RoutingService) {
                     expectedDataType = Evse::class)
         } else {
             val url = routingService.findBrokerUrl(receiver)
-            val headers = routingService.makeHeaders(correlationID, sender, receiver)
+            val headers = routingService.makeHeaders(requestID, correlationID, sender, receiver)
+            val hubRequestBody = HubGenericRequest(
+                    method = "GET",
+                    module = "locations",
+                    role = InterfaceRole.RECEIVER,
+                    path = "/$countryCode/$partyID/$locationID/$evseUID",
+                    headers = headers,
+                    body = null,
+                    expectedResponseType = HubRequestResponseType.EVSE)
             routingService.forwardRequest(
                     method = "POST",
                     url = urlJoin(url, "/ocn/message"),
-                    headers = headers,
-                    body = HubGenericRequest(
-                            method = "GET",
-                            module = "locations",
-                            role = InterfaceRole.RECEIVER,
-                            path = "/$countryCode/$partyID/$locationID/$evseUID",
-                            body = null,
-                            expectedResponseType = HubRequestResponseType.EVSE),
+                    headers = mapOf(
+                            "X-Request-ID" to generateUUIDv4Token(),
+                            "OCN-Signature" to routingService.signRequest(hubRequestBody)),
+                    body = hubRequestBody,
                     expectedDataType = Evse::class)
         }
 
@@ -358,18 +384,22 @@ class LocationsController(private val routingService: RoutingService) {
                     expectedDataType = Connector::class)
         } else {
             val url = routingService.findBrokerUrl(receiver)
-            val headers = routingService.makeHeaders(correlationID, sender, receiver)
+            val headers = routingService.makeHeaders(requestID, correlationID, sender, receiver)
+            val hubRequestBody = HubGenericRequest(
+                    method = "GET",
+                    module = "locations",
+                    role = InterfaceRole.RECEIVER,
+                    path = "/$countryCode/$partyID/$locationID/$evseUID/$connectorID",
+                    headers = headers,
+                    body = null,
+                    expectedResponseType = HubRequestResponseType.CONNECTOR)
             routingService.forwardRequest(
                     method = "POST",
                     url = urlJoin(url, "/ocn/message"),
-                    headers = headers,
-                    body = HubGenericRequest(
-                            method = "GET",
-                            module = "locations",
-                            role = InterfaceRole.RECEIVER,
-                            path = "/$countryCode/$partyID/$locationID/$evseUID/$connectorID",
-                            body = null,
-                            expectedResponseType = HubRequestResponseType.CONNECTOR),
+                    headers = mapOf(
+                            "X-Request-ID" to generateUUIDv4Token(),
+                            "OCN-Signature" to routingService.signRequest(hubRequestBody)),
+                    body = hubRequestBody,
                     expectedDataType = Connector::class)
         }
 
@@ -408,17 +438,21 @@ class LocationsController(private val routingService: RoutingService) {
                     expectedDataType = Nothing::class)
         } else {
             val url = routingService.findBrokerUrl(receiver)
-            val headers = routingService.makeHeaders(correlationID, sender, receiver)
+            val headers = routingService.makeHeaders(requestID, correlationID, sender, receiver)
+            val hubRequestBody = HubGenericRequest(
+                    method = "PUT",
+                    module = "locations",
+                    role = InterfaceRole.RECEIVER,
+                    path = "/$countryCode/$partyID/$locationID",
+                    headers = headers,
+                    body = body)
             routingService.forwardRequest(
                     method = "POST",
                     url = urlJoin(url, "/ocn/message"),
-                    headers = headers,
-                    body = HubGenericRequest(
-                            method = "PUT",
-                            module = "locations",
-                            role = InterfaceRole.RECEIVER,
-                            path = "/$countryCode/$partyID/$locationID",
-                            body = body),
+                    headers = mapOf(
+                            "X-Request-ID" to generateUUIDv4Token(),
+                            "OCN-Signature" to routingService.signRequest(hubRequestBody)),
+                    body = hubRequestBody,
                     expectedDataType = Nothing::class)
         }
 
@@ -457,17 +491,21 @@ class LocationsController(private val routingService: RoutingService) {
                     expectedDataType = Nothing::class)
         } else {
             val url = routingService.findBrokerUrl(receiver)
-            val headers = routingService.makeHeaders(correlationID, sender, receiver)
+            val headers = routingService.makeHeaders(requestID, correlationID, sender, receiver)
+            val hubRequestBody = HubGenericRequest(
+                    method = "PUT",
+                    module = "locations",
+                    role = InterfaceRole.RECEIVER,
+                    path = "/$countryCode/$partyID/$locationID/$evseUID",
+                    headers = headers,
+                    body = body)
             routingService.forwardRequest(
                     method = "POST",
                     url = urlJoin(url, "/ocn/message"),
-                    headers = headers,
-                    body = HubGenericRequest(
-                            method = "PUT",
-                            module = "locations",
-                            role = InterfaceRole.RECEIVER,
-                            path = "/$countryCode/$partyID/$locationID/$evseUID",
-                            body = body),
+                    headers = mapOf(
+                            "X-Request-ID" to generateUUIDv4Token(),
+                            "OCN-Signature" to routingService.signRequest(hubRequestBody)),
+                    body = hubRequestBody,
                     expectedDataType = Nothing::class)
         }
 
@@ -507,17 +545,21 @@ class LocationsController(private val routingService: RoutingService) {
                     expectedDataType = Nothing::class)
         } else {
             val url = routingService.findBrokerUrl(receiver)
-            val headers = routingService.makeHeaders(correlationID, sender, receiver)
+            val headers = routingService.makeHeaders(requestID, correlationID, sender, receiver)
+            val hubRequestBody = HubGenericRequest(
+                    method = "PUT",
+                    module = "locations",
+                    role = InterfaceRole.RECEIVER,
+                    path = "/$countryCode/$partyID/$locationID/$evseUID/$connectorID",
+                    headers = headers,
+                    body = body)
             routingService.forwardRequest(
                     method = "POST",
                     url = urlJoin(url, "/ocn/message"),
-                    headers = headers,
-                    body = HubGenericRequest(
-                            method = "PUT",
-                            module = "locations",
-                            role = InterfaceRole.RECEIVER,
-                            path = "/$countryCode/$partyID/$locationID/$evseUID/$connectorID",
-                            body = body),
+                    headers = mapOf(
+                            "X-Request-ID" to generateUUIDv4Token(),
+                            "OCN-Signature" to routingService.signRequest(hubRequestBody)),
+                    body = hubRequestBody,
                     expectedDataType = Nothing::class)
         }
 
@@ -555,17 +597,21 @@ class LocationsController(private val routingService: RoutingService) {
                     expectedDataType = Nothing::class)
         } else {
             val url = routingService.findBrokerUrl(receiver)
-            val headers = routingService.makeHeaders(correlationID, sender, receiver)
+            val headers = routingService.makeHeaders(requestID, correlationID, sender, receiver)
+            val hubRequestBody = HubGenericRequest(
+                    method = "PATCH",
+                    module = "locations",
+                    role = InterfaceRole.RECEIVER,
+                    path = "/$countryCode/$partyID/$locationID",
+                    headers = headers,
+                    body = body)
             routingService.forwardRequest(
                     method = "POST",
                     url = urlJoin(url, "/ocn/message"),
-                    headers = headers,
-                    body = HubGenericRequest(
-                            method = "PATCH",
-                            module = "locations",
-                            role = InterfaceRole.RECEIVER,
-                            path = "/$countryCode/$partyID/$locationID",
-                            body = body),
+                    headers = mapOf(
+                            "X-Request-ID" to generateUUIDv4Token(),
+                            "OCN-Signature" to routingService.signRequest(hubRequestBody)),
+                    body = hubRequestBody,
                     expectedDataType = Nothing::class)
         }
 
@@ -604,17 +650,21 @@ class LocationsController(private val routingService: RoutingService) {
                     expectedDataType = Nothing::class)
         } else {
             val url = routingService.findBrokerUrl(receiver)
-            val headers = routingService.makeHeaders(correlationID, sender, receiver)
+            val headers = routingService.makeHeaders(requestID, correlationID, sender, receiver)
+            val hubRequestBody = HubGenericRequest(
+                    method = "PATCH",
+                    module = "locations",
+                    role = InterfaceRole.RECEIVER,
+                    path = "/$countryCode/$partyID/$locationID/$evseUID",
+                    headers = headers,
+                    body = body)
             routingService.forwardRequest(
                     method = "POST",
                     url = urlJoin(url, "/ocn/message"),
-                    headers = headers,
-                    body = HubGenericRequest(
-                            method = "PATCH",
-                            module = "locations",
-                            role = InterfaceRole.RECEIVER,
-                            path = "/$countryCode/$partyID/$locationID/$evseUID",
-                            body = body),
+                    headers = mapOf(
+                            "X-Request-ID" to generateUUIDv4Token(),
+                            "OCN-Signature" to routingService.signRequest(hubRequestBody)),
+                    body = hubRequestBody,
                     expectedDataType = Nothing::class)
         }
 
@@ -654,17 +704,21 @@ class LocationsController(private val routingService: RoutingService) {
                     expectedDataType = Nothing::class)
         } else {
             val url = routingService.findBrokerUrl(receiver)
-            val headers = routingService.makeHeaders(correlationID, sender, receiver)
+            val headers = routingService.makeHeaders(requestID, correlationID, sender, receiver)
+            val hubRequestBody = HubGenericRequest(
+                    method = "PATCH",
+                    module = "locations",
+                    role = InterfaceRole.RECEIVER,
+                    path = "/$countryCode/$partyID/$locationID/$evseUID/$connectorID",
+                    headers = headers,
+                    body = body)
             routingService.forwardRequest(
                     method = "POST",
                     url = urlJoin(url, "/ocn/message"),
-                    headers = headers,
-                    body = HubGenericRequest(
-                            method = "PATCH",
-                            module = "locations",
-                            role = InterfaceRole.RECEIVER,
-                            path = "/$countryCode/$partyID/$locationID/$evseUID/$connectorID",
-                            body = body),
+                    headers = mapOf(
+                            "X-Request-ID" to generateUUIDv4Token(),
+                            "OCN-Signature" to routingService.signRequest(hubRequestBody)),
+                    body = hubRequestBody,
                     expectedDataType = Nothing::class)
         }
 

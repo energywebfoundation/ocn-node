@@ -28,14 +28,14 @@ import org.web3j.protocol.http.HttpService
 import org.web3j.tx.ClientTransactionManager
 import org.web3j.tx.TransactionManager
 import org.web3j.tx.gas.StaticGasProvider
-import snc.openchargingnetwork.client.repositories.RoleRepository
-import snc.openchargingnetwork.client.repositories.EndpointRepository
-import snc.openchargingnetwork.client.repositories.PlatformRepository
+import snc.openchargingnetwork.client.repositories.*
+import snc.openchargingnetwork.client.services.CredentialsService
 import snc.openchargingnetwork.client.tools.generateUUIDv4Token
 import snc.openchargingnetwork.contracts.RegistryFacade
 
 @Configuration
-class Configuration(private val properties: Properties) {
+class Configuration(private val properties: Properties,
+                    private val credentialsService: CredentialsService) {
 
     private val web3: Web3j = Web3j.build(HttpService(properties.web3.provider))
     private val txManager: TransactionManager = ClientTransactionManager(web3, null)
@@ -44,7 +44,10 @@ class Configuration(private val properties: Properties) {
     @Bean
     fun databaseInitializer(platformRepo: PlatformRepository,
                             roleRepo: RoleRepository,
-                            endpointRepo: EndpointRepository) = ApplicationRunner {}
+                            endpointRepo: EndpointRepository,
+                            cdrRepo: CdrRepository,
+                            cmdResponseRepo: CommandResponseUrlRepository,
+                            walletRepo: WalletRepository) = ApplicationRunner {}
 
     @Bean
     fun requestLoggingFilter(): CommonsRequestLoggingFilter {
@@ -70,10 +73,11 @@ class Configuration(private val properties: Properties) {
         if (properties.apikey.isNullOrEmpty()) {
             properties.apikey = generateUUIDv4Token()
         }
-        println("\n===================================================\n" +
+        println("\n====================================================\n" +
                 "ADMIN_APIKEY = ${properties.apikey}\n" +
-                "URL = ${properties.url}" +
-                "\n===================================================\n")
+                "URL = ${properties.url}\n" +
+                "ADDRESS = ${credentialsService.credentials.address}" +
+                "\n====================================================\n")
     }
 
 }

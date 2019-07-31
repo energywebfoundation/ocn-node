@@ -23,9 +23,11 @@ import org.springframework.http.HttpHeaders
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import snc.openchargingnetwork.client.models.HubGenericRequest
+import snc.openchargingnetwork.client.models.HubRequestParameters
 import snc.openchargingnetwork.client.models.HubRequestResponseType
 import snc.openchargingnetwork.client.models.ocpi.*
 import snc.openchargingnetwork.client.services.RoutingService
+import snc.openchargingnetwork.client.tools.generateUUIDv4Token
 import snc.openchargingnetwork.client.tools.urlJoin
 
 @RestController
@@ -53,7 +55,7 @@ class TariffsController(val routingService: RoutingService) {
 
         routingService.validateSender(authorization, sender)
 
-        val params = PaginatedRequest(dateFrom, dateTo, offset, limit).encode()
+        val params = HubRequestParameters(dateFrom = dateFrom, dateTo = dateTo, offset = offset, limit = limit)
 
         val response = if (routingService.isRoleKnown(receiver)) {
             val platformID = routingService.getPlatformID(receiver)
@@ -63,22 +65,26 @@ class TariffsController(val routingService: RoutingService) {
                     method = "GET",
                     url = endpoint.url,
                     headers = headers,
-                    params = params,
+                    params = params.encode(),
                     expectedDataType = Array<Tariff>::class)
         } else {
             val url = routingService.findBrokerUrl(receiver)
-            val headers = routingService.makeHeaders(correlationID, sender, receiver)
+            val headers = routingService.makeHeaders(requestID, correlationID, sender, receiver)
+            val hubRequestBody = HubGenericRequest(
+                    method = "GET",
+                    module = "tariffs",
+                    role = InterfaceRole.SENDER,
+                    params = params,
+                    headers = headers,
+                    body = null,
+                    expectedResponseType = HubRequestResponseType.TARIFF_ARRAY)
             routingService.forwardRequest(
                     method = "POST",
                     url = urlJoin(url, "/ocn/message"),
-                    headers = headers,
-                    body = HubGenericRequest(
-                            method = "GET",
-                            module = "tariffs",
-                            role = InterfaceRole.SENDER,
-                            params = params,
-                            body = null,
-                            expectedResponseType = HubRequestResponseType.TARIFF_ARRAY),
+                    headers = mapOf(
+                            "X-Request-ID" to generateUUIDv4Token(),
+                            "OCN-Signature" to routingService.signRequest(hubRequestBody)),
+                    body = hubRequestBody,
                     expectedDataType = Array<Tariff>::class)
         }
 
@@ -126,18 +132,22 @@ class TariffsController(val routingService: RoutingService) {
                     expectedDataType = Tariff::class)
         } else {
             val url = routingService.findBrokerUrl(receiver)
-            val headers = routingService.makeHeaders(correlationID, sender, receiver)
+            val headers = routingService.makeHeaders(requestID, correlationID, sender, receiver)
+            val hubRequestBody = HubGenericRequest(
+                    method = "GET",
+                    module = "tariffs",
+                    path = urlJoin(url, "/$countryCode/$partyID/$tariffID"),
+                    headers = headers,
+                    body = null,
+                    role = InterfaceRole.RECEIVER,
+                    expectedResponseType = HubRequestResponseType.TARIFF)
             routingService.forwardRequest(
                     method = "POST",
                     url = urlJoin(url, "/ocn/message"),
-                    headers = headers,
-                    body = HubGenericRequest(
-                            method = "GET",
-                            module = "tariffs",
-                            path = urlJoin(url, "/$countryCode/$partyID/$tariffID"),
-                            body = null,
-                            role = InterfaceRole.RECEIVER,
-                            expectedResponseType = HubRequestResponseType.TARIFF),
+                    headers = mapOf(
+                            "X-Request-ID" to generateUUIDv4Token(),
+                            "OCN-Signature" to routingService.signRequest(hubRequestBody)),
+                    body = hubRequestBody,
                     expectedDataType = Tariff::class)
         }
 
@@ -176,17 +186,21 @@ class TariffsController(val routingService: RoutingService) {
                     expectedDataType = Nothing::class)
         } else {
             val url = routingService.findBrokerUrl(receiver)
-            val headers = routingService.makeHeaders(correlationID, sender, receiver)
+            val headers = routingService.makeHeaders(requestID, correlationID, sender, receiver)
+            val hubRequestBody = HubGenericRequest(
+                    method = "PUT",
+                    module = "tariffs",
+                    path = urlJoin(url, "/$countryCode/$partyID/$tariffID"),
+                    headers = headers,
+                    role = InterfaceRole.RECEIVER,
+                    body = body)
             routingService.forwardRequest(
                     method = "POST",
                     url = urlJoin(url, "/ocn/message"),
-                    headers = headers,
-                    body = HubGenericRequest(
-                            method = "PUT",
-                            module = "tariffs",
-                            path = urlJoin(url, "/$countryCode/$partyID/$tariffID"),
-                            role = InterfaceRole.RECEIVER,
-                            body = body),
+                    headers = mapOf(
+                            "X-Request-ID" to generateUUIDv4Token(),
+                            "OCN-Signature" to routingService.signRequest(hubRequestBody)),
+                    body = hubRequestBody,
                     expectedDataType = Nothing::class)
         }
 
@@ -222,17 +236,21 @@ class TariffsController(val routingService: RoutingService) {
                     expectedDataType = Nothing::class)
         } else {
             val url = routingService.findBrokerUrl(receiver)
-            val headers = routingService.makeHeaders(correlationID, sender, receiver)
+            val headers = routingService.makeHeaders(requestID, correlationID, sender, receiver)
+            val hubRequestBody = HubGenericRequest(
+                    method = "DELETE",
+                    module = "tariffs",
+                    path = urlJoin(url, "/$countryCode/$partyID/$tariffID"),
+                    headers = headers,
+                    body = null,
+                    role = InterfaceRole.RECEIVER)
             routingService.forwardRequest(
                     method = "POST",
                     url = urlJoin(url, "/ocn/message"),
-                    headers = headers,
-                    body = HubGenericRequest(
-                            method = "DELETE",
-                            module = "tariffs",
-                            path = urlJoin(url, "/$countryCode/$partyID/$tariffID"),
-                            body = null,
-                            role = InterfaceRole.RECEIVER),
+                    headers = mapOf(
+                            "X-Request-ID" to generateUUIDv4Token(),
+                            "OCN-Signature" to routingService.signRequest(hubRequestBody)),
+                    body = hubRequestBody,
                     expectedDataType = Nothing::class)
         }
 

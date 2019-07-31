@@ -23,9 +23,11 @@ import org.springframework.http.HttpHeaders
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import snc.openchargingnetwork.client.models.HubGenericRequest
+import snc.openchargingnetwork.client.models.HubRequestParameters
 import snc.openchargingnetwork.client.models.HubRequestResponseType
 import snc.openchargingnetwork.client.models.ocpi.*
 import snc.openchargingnetwork.client.services.RoutingService
+import snc.openchargingnetwork.client.tools.generateUUIDv4Token
 import snc.openchargingnetwork.client.tools.urlJoin
 
 @RestController
@@ -53,7 +55,7 @@ class SessionsController(private val routingService: RoutingService) {
 
         routingService.validateSender(authorization, sender)
 
-        val params = PaginatedRequest(dateFrom, dateTo, offset, limit).encode()
+        val params = HubRequestParameters(dateFrom = dateFrom, dateTo = dateTo, offset = offset, limit = limit)
 
         val response = if (routingService.isRoleKnown(receiver)) {
             val platformID = routingService.getPlatformID(receiver)
@@ -63,22 +65,26 @@ class SessionsController(private val routingService: RoutingService) {
                     method = "GET",
                     url = endpoint.url,
                     headers = headers,
-                    params = params,
+                    params = params.encode(),
                     expectedDataType = Array<Session>::class)
         } else {
             val url = routingService.findBrokerUrl(receiver)
-            val headers = routingService.makeHeaders(correlationID, sender, receiver)
+            val headers = routingService.makeHeaders(requestID, correlationID, sender, receiver)
+            val hubRequestBody = HubGenericRequest(
+                    method = "GET",
+                    module = "sessions",
+                    role = InterfaceRole.SENDER,
+                    params = params,
+                    headers = headers,
+                    body = null,
+                    expectedResponseType = HubRequestResponseType.SESSION_ARRAY)
             routingService.forwardRequest(
                     method = "POST",
                     url = urlJoin(url, "/ocn/message"),
-                    headers = headers,
-                    body = HubGenericRequest(
-                            method = "GET",
-                            module = "sessions",
-                            role = InterfaceRole.SENDER,
-                            params = params,
-                            body = null,
-                            expectedResponseType = HubRequestResponseType.SESSION_ARRAY),
+                    headers = mapOf(
+                            "X-Request-ID" to generateUUIDv4Token(),
+                            "OCN-Signature" to routingService.signRequest(hubRequestBody)),
+                    body = hubRequestBody,
                     expectedDataType = Array<Session>::class)
         }
 
@@ -121,18 +127,22 @@ class SessionsController(private val routingService: RoutingService) {
                     expectedDataType = ChargingPreferencesResponse::class)
         } else {
             val url = routingService.findBrokerUrl(receiver)
-            val headers = routingService.makeHeaders(correlationID, sender, receiver)
+            val headers = routingService.makeHeaders(requestID, correlationID, sender, receiver)
+            val hubRequestBody = HubGenericRequest(
+                    method = "PUT",
+                    module = "sessions",
+                    path = "/$sessionID/charging_preferences",
+                    role = InterfaceRole.SENDER,
+                    headers = headers,
+                    body = body,
+                    expectedResponseType = HubRequestResponseType.CHARGING_PREFERENCE_RESPONSE)
             routingService.forwardRequest(
                     method = "POST",
                     url = urlJoin(url, "/ocn/message"),
-                    headers = headers,
-                    body = HubGenericRequest(
-                            method = "PUT",
-                            module = "sessions",
-                            path = "/$sessionID/charging_preferences",
-                            role = InterfaceRole.SENDER,
-                            body = body,
-                            expectedResponseType = HubRequestResponseType.CHARGING_PREFERENCE_RESPONSE),
+                    headers = mapOf(
+                            "X-Request-ID" to generateUUIDv4Token(),
+                            "OCN-Signature" to routingService.signRequest(hubRequestBody)),
+                    body = hubRequestBody,
                     expectedDataType = ChargingPreferencesResponse::class)
         }
 
@@ -172,18 +182,22 @@ class SessionsController(private val routingService: RoutingService) {
                     expectedDataType = Session::class)
         } else {
             val url = routingService.findBrokerUrl(receiver)
-            val headers = routingService.makeHeaders(correlationID, sender, receiver)
+            val headers = routingService.makeHeaders(requestID, correlationID, sender, receiver)
+            val hubRequestBody = HubGenericRequest(
+                    method = "GET",
+                    module = "sessions",
+                    body = null,
+                    path = urlJoin(url, "/$countryCode/$partyID/$sessionID"),
+                    headers = headers,
+                    role = InterfaceRole.RECEIVER,
+                    expectedResponseType = HubRequestResponseType.SESSION)
             routingService.forwardRequest(
                     method = "POST",
                     url = urlJoin(url, "/ocn/message"),
-                    headers = headers,
-                    body = HubGenericRequest(
-                            method = "GET",
-                            module = "sessions",
-                            body = null,
-                            path = urlJoin(url, "/$countryCode/$partyID/$sessionID"),
-                            role = InterfaceRole.RECEIVER,
-                            expectedResponseType = HubRequestResponseType.SESSION),
+                    headers = mapOf(
+                            "X-Request-ID" to generateUUIDv4Token(),
+                            "OCN-Signature" to routingService.signRequest(hubRequestBody)),
+                    body = hubRequestBody,
                     expectedDataType = Session::class)
         }
 
@@ -222,17 +236,21 @@ class SessionsController(private val routingService: RoutingService) {
                     expectedDataType = Nothing::class)
         } else {
             val url = routingService.findBrokerUrl(receiver)
-            val headers = routingService.makeHeaders(correlationID, sender, receiver)
+            val headers = routingService.makeHeaders(requestID, correlationID, sender, receiver)
+            val hubRequestBody = HubGenericRequest(
+                    method = "PUT",
+                    module = "sessions",
+                    path = urlJoin(url, "/$countryCode/$partyID/$sessionID"),
+                    headers = headers,
+                    role = InterfaceRole.RECEIVER,
+                    body = body)
             routingService.forwardRequest(
                     method = "POST",
                     url = urlJoin(url, "/ocn/message"),
-                    headers = headers,
-                    body = HubGenericRequest(
-                            method = "PUT",
-                            module = "sessions",
-                            path = urlJoin(url, "/$countryCode/$partyID/$sessionID"),
-                            role = InterfaceRole.RECEIVER,
-                            body = body),
+                    headers = mapOf(
+                            "X-Request-ID" to generateUUIDv4Token(),
+                            "OCN-Signature" to routingService.signRequest(hubRequestBody)),
+                    body = hubRequestBody,
                     expectedDataType = Nothing::class)
         }
 
@@ -270,17 +288,21 @@ class SessionsController(private val routingService: RoutingService) {
                     expectedDataType = Nothing::class)
         } else {
             val url = routingService.findBrokerUrl(receiver)
-            val headers = routingService.makeHeaders(correlationID, sender, receiver)
+            val headers = routingService.makeHeaders(requestID, correlationID, sender, receiver)
+            val hubRequestBody = HubGenericRequest(
+                    method = "PATCH",
+                    module = "sessions",
+                    path = urlJoin(url, "/$countryCode/$partyID/$sessionID"),
+                    headers = headers,
+                    role = InterfaceRole.RECEIVER,
+                    body = body)
             routingService.forwardRequest(
                     method = "POST",
                     url = urlJoin(url, "/ocn/message"),
-                    headers = headers,
-                    body = HubGenericRequest(
-                            method = "PATCH",
-                            module = "sessions",
-                            path = urlJoin(url, "/$countryCode/$partyID/$sessionID"),
-                            role = InterfaceRole.RECEIVER,
-                            body = body),
+                    headers = mapOf(
+                            "X-Request-ID" to generateUUIDv4Token(),
+                            "OCN-Signature" to routingService.signRequest(hubRequestBody)),
+                    body = hubRequestBody,
                     expectedDataType = Nothing::class)
         }
 

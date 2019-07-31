@@ -21,17 +21,22 @@ package snc.openchargingnetwork.client.services
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import org.springframework.stereotype.Service
-import snc.openchargingnetwork.client.config.Properties
+import org.web3j.crypto.Keys
+import org.web3j.crypto.Sign
+import org.web3j.utils.Numeric
 import snc.openchargingnetwork.client.models.HttpResponse
+import snc.openchargingnetwork.client.models.HubRequestHeaders
 import snc.openchargingnetwork.client.models.entities.CdrEntity
 import snc.openchargingnetwork.client.models.entities.CommandResponseUrlEntity
 import snc.openchargingnetwork.client.models.exceptions.OcpiClientInvalidParametersException
+import snc.openchargingnetwork.client.models.exceptions.OcpiHubConnectionProblemException
 import snc.openchargingnetwork.client.models.exceptions.OcpiHubUnknownReceiverException
 import snc.openchargingnetwork.client.models.ocpi.*
 import snc.openchargingnetwork.client.repositories.*
 import snc.openchargingnetwork.client.tools.extractToken
 import snc.openchargingnetwork.client.tools.generateUUIDv4Token
 import snc.openchargingnetwork.contracts.RegistryFacade
+import java.nio.charset.StandardCharsets
 import kotlin.reflect.KClass
 
 @Service
@@ -41,7 +46,8 @@ class RoutingService(private val platformRepo: PlatformRepository,
                      private val cdrRepo: CdrRepository,
                      private val commandResponseUrlRepo: CommandResponseUrlRepository,
                      private val httpService: HttpRequestService,
-                     private val registry: RegistryFacade) {
+                     private val registry: RegistryFacade,
+                     private val credentialsService: CredentialsService) {
 
     fun isRoleKnown(role: BasicRole) = roleRepo.existsByCountryCodeAndPartyIDAllIgnoreCase(role.country, role.id)
 
@@ -94,26 +100,36 @@ class RoutingService(private val platformRepo: PlatformRepository,
         }
     }
 
+    fun makeHeaders(requestID: String, correlationID: String, sender: BasicRole, receiver: BasicRole): HubRequestHeaders {
+        return HubRequestHeaders(
+                requestID = requestID,
+                correlationID = correlationID,
+                ocpiFromCountryCode = sender.country,
+                ocpiFromPartyID = sender.id,
+                ocpiToCountryCode = receiver.country,
+                ocpiToPartyID = receiver.id)
+    }
+
     fun makeHeaders(receiverPlatformID: Long?, correlationID: String, sender: BasicRole, receiver: BasicRole): Map<String, String> {
         val token = platformRepo.findById(receiverPlatformID!!).get().auth.tokenB
         return mapOf(
                 "Authorization" to "Token $token",
                 "X-Request-ID" to generateUUIDv4Token(),
                 "X-Correlation-ID" to correlationID,
-                "OCPI-from-country-code" to sender.country,
-                "OCPI-from-party-id" to sender.id,
-                "OCPI-to-country-code" to receiver.country,
-                "OCPI-to-party-id" to receiver.id)
+                "OCPI-From-Country-Code" to sender.country,
+                "OCPI-From-Party-ID" to sender.id,
+                "OCPI-To-Country-Code" to receiver.country,
+                "OCPI-To-Party-ID" to receiver.id)
     }
 
     fun makeHeaders(correlationID: String, sender: BasicRole, receiver: BasicRole): Map<String, String> {
         return mapOf(
                 "X-Request-ID" to generateUUIDv4Token(),
                 "X-Correlation-ID" to correlationID,
-                "OCPI-from-country-code" to sender.country,
-                "OCPI-from-party-id" to sender.id,
-                "OCPI-to-country-code" to receiver.country,
-                "OCPI-to-party-id" to receiver.id)
+                "OCPI-From-Country-Code" to sender.country,
+                "OCPI-From-Party-ID" to sender.id,
+                "OCPI-To-Country-Code" to receiver.country,
+                "OCPI-To-Party-ID" to receiver.id)
     }
 
     fun <T: Any> forwardRequest(method: String,
@@ -125,15 +141,13 @@ class RoutingService(private val platformRepo: PlatformRepository,
         var jsonBody: Map<String,Any>? = null
         if (body != null) {
             val jsonString = httpService.mapper.writeValueAsString(body)
-            println(jsonString)
             jsonBody = httpService.mapper.readValue(jsonString)
         }
         return httpService.makeRequest(method, url, headers, params, jsonBody, expectedDataType)
     }
 
     fun findBrokerUrl(receiver: BasicRole): String {
-        val address = registry.addressOf(receiver.country.toByteArray(), receiver.id.toByteArray()).sendAsync().get()
-        val broker = registry.brokerOf(address).sendAsync().get()
+        val broker = registry.clientURLOf(receiver.country.toByteArray(), receiver.id.toByteArray()).sendAsync().get()
         if (broker == "") {
             throw OcpiHubUnknownReceiverException()
         }
@@ -141,8 +155,7 @@ class RoutingService(private val platformRepo: PlatformRepository,
     }
 
     fun isRoleKnownOnNetwork(role: BasicRole): Boolean {
-        val address = registry.addressOf(role.country.toByteArray(), role.id.toByteArray()).sendAsync().get()
-        val broker = registry.brokerOf(address).sendAsync().get()
+        val broker = registry.clientURLOf(role.country.toByteArray(), role.id.toByteArray()).sendAsync().get()
         return broker != ""
     }
 
@@ -212,6 +225,33 @@ class RoutingService(private val platformRepo: PlatformRepository,
             }
         }
         return allClientInfo
+    }
+
+    fun signRequest(body: Any): String {
+        val dataToSign = stringify(body).toByteArray(StandardCharsets.UTF_8)
+        val signature = Sign.signPrefixedMessage(dataToSign, credentialsService.credentials.ecKeyPair)
+        return Numeric.cleanHexPrefix(Numeric.toHexString(signature.r)) +
+               Numeric.cleanHexPrefix(Numeric.toHexString(signature.s)) +
+               Numeric.cleanHexPrefix(Numeric.toHexString(signature.v))
+    }
+
+    fun verifyRequest(body: Any, signature: String, sender: BasicRole) {
+        val signedRequest = stringify(body).toByteArray(StandardCharsets.UTF_8)
+        val cleanSignature = Numeric.cleanHexPrefix(signature)
+        val r = cleanSignature.substring(0, 64)
+        val s = cleanSignature.substring(64, 128)
+        val v = cleanSignature.substring(128, 130)
+        val signingKey = Sign.signedPrefixedMessageToKey(signedRequest, Sign.SignatureData(
+                Numeric.hexStringToByteArray(v),
+                Numeric.hexStringToByteArray(r),
+                Numeric.hexStringToByteArray(s)))
+        val signingAddress = "0x${Keys.getAddress(signingKey)}"
+        val registeredClientAddress = registry.clientAddressOf(
+                sender.country.toByteArray(),
+                sender.id.toByteArray()).sendAsync().get()
+        if (signingAddress != registeredClientAddress) {
+            throw OcpiHubConnectionProblemException("Could not verify OCN-Signature of request")
+        }
     }
 
 }

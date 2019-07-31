@@ -260,8 +260,9 @@ Authorization header again), we see this message:
 The response tells us that the request was unsuccessful, as the CPO (the receiver of the request) does not support
 the OCPI module that we requested.
 
-That marks the end of this tutorial. More examples and use cases will be added to this tutorial in the future, but for
-now it should be enough to get started on creating an OCPI 2.2 platform that is ready to join the Open Charging Network.
+That marks the end of this tutorial. As a next step, you might try registering a new party to the client on `http://localhost:8081`.
+More examples and use cases will be added to this tutorial in the future, but for now this should be enough to get started 
+on creating an OCPI 2.2 platform that is ready to join the Open Charging Network.
 
 The complete OCPI documentation can be found here: [https://github.com/ocpi/ocpi/tree/develop](https://github.com/ocpi/ocpi/tree/develop) 
 (version 2.2 is contained in the develop branch).

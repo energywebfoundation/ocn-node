@@ -23,9 +23,11 @@ import org.springframework.http.HttpHeaders
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import snc.openchargingnetwork.client.models.HubGenericRequest
+import snc.openchargingnetwork.client.models.HubRequestParameters
 import snc.openchargingnetwork.client.models.HubRequestResponseType
 import snc.openchargingnetwork.client.models.ocpi.*
 import snc.openchargingnetwork.client.services.RoutingService
+import snc.openchargingnetwork.client.tools.generateUUIDv4Token
 import snc.openchargingnetwork.client.tools.urlJoin
 
 @RestController
@@ -53,7 +55,7 @@ class TokensController(private val routingService: RoutingService) {
 
         routingService.validateSender(authorization, sender)
 
-        val params = PaginatedRequest(dateFrom, dateTo, offset, limit).encode()
+        val params = HubRequestParameters(dateFrom = dateFrom, dateTo = dateTo, offset = offset, limit = limit)
 
         val response = if (routingService.isRoleKnown(receiver)) {
             val platformID = routingService.getPlatformID(receiver)
@@ -63,22 +65,26 @@ class TokensController(private val routingService: RoutingService) {
                     method = "GET",
                     url = endpoint.url,
                     headers = headers,
-                    params = params,
+                    params = params.encode(),
                     expectedDataType = Array<Token>::class)
         } else {
             val url = routingService.findBrokerUrl(receiver)
-            val headers = routingService.makeHeaders(correlationID, sender, receiver)
+            val headers = routingService.makeHeaders(requestID, correlationID, sender, receiver)
+            val hubRequestBody = HubGenericRequest(
+                    method = "GET",
+                    module = "tokens",
+                    role = InterfaceRole.SENDER,
+                    params = params,
+                    headers = headers,
+                    body = null,
+                    expectedResponseType = HubRequestResponseType.TOKEN_ARRAY)
             routingService.forwardRequest(
                     method = "POST",
                     url = urlJoin(url, "/ocn/message"),
-                    headers = headers,
-                    body = HubGenericRequest(
-                            method = "GET",
-                            module = "tokens",
-                            role = InterfaceRole.SENDER,
-                            params = params,
-                            body = null,
-                            expectedResponseType = HubRequestResponseType.TOKEN_ARRAY),
+                    headers = mapOf(
+                            "X-Request-ID" to generateUUIDv4Token(),
+                            "OCN-Signature" to routingService.signRequest(hubRequestBody)),
+                    body = hubRequestBody,
                     expectedDataType = Array<Token>::class)
         }
 
@@ -110,6 +116,8 @@ class TokensController(private val routingService: RoutingService) {
 
         routingService.validateSender(authorization, sender)
 
+        val params = HubRequestParameters(type = type)
+
         val response = if (routingService.isRoleKnown(receiver)) {
             val platformID = routingService.getPlatformID(receiver)
             val endpoint = routingService.getPlatformEndpoint(platformID, "tokens", InterfaceRole.SENDER)
@@ -118,24 +126,28 @@ class TokensController(private val routingService: RoutingService) {
                     method = "POST",
                     url = urlJoin(endpoint.url, "/$tokenUID/authorize"),
                     headers = headers,
-                    params = mapOf("type" to type.toString()),
+                    params = params.encode(),
                     body = body,
                     expectedDataType = AuthorizationInfo::class)
         } else {
             val url = routingService.findBrokerUrl(receiver)
-            val headers = routingService.makeHeaders(correlationID, sender, receiver)
+            val headers = routingService.makeHeaders(requestID, correlationID, sender, receiver)
+            val hubRequestBody = HubGenericRequest(
+                    method = "POST",
+                    module = "tokens",
+                    role = InterfaceRole.SENDER,
+                    path = "/$tokenUID/authorization",
+                    params = params,
+                    headers = headers,
+                    body = body,
+                    expectedResponseType = HubRequestResponseType.AUTHORIZATION_INFO)
             routingService.forwardRequest(
                     method = "POST",
                     url = urlJoin(url, "/ocn/message"),
-                    headers = headers,
-                    body = HubGenericRequest(
-                            method = "POST",
-                            module = "tokens",
-                            role = InterfaceRole.SENDER,
-                            path = "/$tokenUID/authorization",
-                            params = mapOf("type" to type.toString()),
-                            body = body,
-                            expectedResponseType = HubRequestResponseType.AUTHORIZATION_INFO),
+                    headers = mapOf(
+                            "X-Request-ID" to generateUUIDv4Token(),
+                            "OCN-Signature" to routingService.signRequest(hubRequestBody)),
+                    body = hubRequestBody,
                     expectedDataType = AuthorizationInfo::class)
         }
 
@@ -165,6 +177,8 @@ class TokensController(private val routingService: RoutingService) {
 
         routingService.validateSender(authorization, sender, objectOwner)
 
+        val params = HubRequestParameters(type = type)
+
         val response = if (routingService.isRoleKnown(receiver)) {
             val platformID = routingService.getPlatformID(receiver)
             val endpoint = routingService.getPlatformEndpoint(platformID, "tokens", InterfaceRole.RECEIVER)
@@ -173,23 +187,27 @@ class TokensController(private val routingService: RoutingService) {
                     method = "GET",
                     url = urlJoin(endpoint.url, "/$countryCode/$partyID/$tokenUID"),
                     headers = headers,
-                    params = mapOf("type" to type.toString()),
+                    params = params.encode(),
                     expectedDataType = Token::class)
         } else {
             val url = routingService.findBrokerUrl(receiver)
-            val headers = routingService.makeHeaders(correlationID, sender, receiver)
+            val headers = routingService.makeHeaders(requestID, correlationID, sender, receiver)
+            val hubRequestBody = HubGenericRequest(
+                    method = "GET",
+                    module = "tokens",
+                    path = urlJoin(url, "/$countryCode/$partyID/$tokenUID"),
+                    params = params,
+                    headers = headers,
+                    body = null,
+                    role = InterfaceRole.RECEIVER,
+                    expectedResponseType = HubRequestResponseType.TOKEN)
             routingService.forwardRequest(
                     method = "POST",
                     url = urlJoin(url, "/ocn/message"),
-                    headers = headers,
-                    body = HubGenericRequest(
-                            method = "GET",
-                            module = "tokens",
-                            path = urlJoin(url, "/$countryCode/$partyID/$tokenUID"),
-                            params = mapOf("type" to type.toString()),
-                            body = null,
-                            role = InterfaceRole.RECEIVER,
-                            expectedResponseType = HubRequestResponseType.TOKEN),
+                    headers = mapOf(
+                            "X-Request-ID" to generateUUIDv4Token(),
+                            "OCN-Signature" to routingService.signRequest(hubRequestBody)),
+                    body = hubRequestBody,
                     expectedDataType = Token::class)
         }
 
@@ -215,6 +233,8 @@ class TokensController(private val routingService: RoutingService) {
         val objectOwner = BasicRole(partyID, countryCode)
         val objectData = BasicRole(body.partyID, body.countryCode)
 
+        val params = HubRequestParameters(type = type)
+
         routingService.validateSender(authorization, sender, objectOwner, objectData)
 
         val response = if (routingService.isRoleKnown(receiver)) {
@@ -225,23 +245,27 @@ class TokensController(private val routingService: RoutingService) {
                     method = "PUT",
                     url = urlJoin(endpoint.url, "/$countryCode/$partyID/$tokenUID"),
                     headers = headers,
-                    params = mapOf("type" to type.toString()),
+                    params = params.encode(),
                     body = body,
                     expectedDataType = Nothing::class)
         } else {
             val url = routingService.findBrokerUrl(receiver)
-            val headers = routingService.makeHeaders(correlationID, sender, receiver)
+            val headers = routingService.makeHeaders(requestID, correlationID, sender, receiver)
+            val hubRequestBody = HubGenericRequest(
+                    method = "PUT",
+                    module = "tokens",
+                    path = urlJoin(url, "/$countryCode/$partyID/$tokenUID"),
+                    params = params,
+                    headers = headers,
+                    role = InterfaceRole.RECEIVER,
+                    body = body)
             routingService.forwardRequest(
                     method = "POST",
                     url = urlJoin(url, "/ocn/message"),
-                    headers = headers,
-                    body = HubGenericRequest(
-                            method = "PUT",
-                            module = "tokens",
-                            path = urlJoin(url, "/$countryCode/$partyID/$tokenUID"),
-                            params = mapOf("type" to type.toString()),
-                            role = InterfaceRole.RECEIVER,
-                            body = body),
+                    headers = mapOf(
+                            "X-Request-ID" to generateUUIDv4Token(),
+                            "OCN-Signature" to routingService.signRequest(hubRequestBody)),
+                    body = hubRequestBody,
                     expectedDataType = Nothing::class)
         }
 
@@ -266,6 +290,8 @@ class TokensController(private val routingService: RoutingService) {
         val receiver = BasicRole(toPartyID, toCountryCode)
         val objectOwner = BasicRole(partyID, countryCode)
 
+        val params = HubRequestParameters(type = type)
+
         routingService.validateSender(authorization, sender, objectOwner)
 
         val response = if (routingService.isRoleKnown(receiver)) {
@@ -276,23 +302,27 @@ class TokensController(private val routingService: RoutingService) {
                     method = "PATCH",
                     url = urlJoin(endpoint.url, "/$countryCode/$partyID/$tokenUID"),
                     headers = headers,
-                    params = mapOf("type" to type.toString()),
+                    params = params.encode(),
                     body = body,
                     expectedDataType = Nothing::class)
         } else {
             val url = routingService.findBrokerUrl(receiver)
-            val headers = routingService.makeHeaders(correlationID, sender, receiver)
+            val headers = routingService.makeHeaders(requestID, correlationID, sender, receiver)
+            val hubRequestBody = HubGenericRequest(
+                    method = "PATCH",
+                    module = "tokens",
+                    path = urlJoin(url, "/$countryCode/$partyID/$tokenUID"),
+                    params = params,
+                    headers = headers,
+                    role = InterfaceRole.RECEIVER,
+                    body = body)
             routingService.forwardRequest(
                     method = "POST",
                     url = urlJoin(url, "/ocn/message"),
-                    headers = headers,
-                    body = HubGenericRequest(
-                            method = "PATCH",
-                            module = "tokens",
-                            path = urlJoin(url, "/$countryCode/$partyID/$tokenUID"),
-                            params = mapOf("type" to type.toString()),
-                            role = InterfaceRole.RECEIVER,
-                            body = body),
+                    headers = mapOf(
+                            "X-Request-ID" to generateUUIDv4Token(),
+                            "OCN-Signature" to routingService.signRequest(hubRequestBody)),
+                    body = hubRequestBody,
                     expectedDataType = Nothing::class)
         }
 

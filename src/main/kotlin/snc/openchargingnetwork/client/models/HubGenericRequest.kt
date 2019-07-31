@@ -23,15 +23,52 @@ import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
 import snc.openchargingnetwork.client.models.ocpi.CommandType
 import snc.openchargingnetwork.client.models.ocpi.InterfaceRole
+import snc.openchargingnetwork.client.models.ocpi.TokenType
+
+class HubRequestHeaders(@JsonProperty("X-Request-ID") val requestID: String,
+                        @JsonProperty("X-Correlation-ID") val correlationID: String,
+                        @JsonProperty("OCPI-From-Country-Code") val ocpiFromCountryCode: String,
+                        @JsonProperty("OCPI-From-Party-ID") val ocpiFromPartyID: String,
+                        @JsonProperty("OCPI-To-Country-Code") val ocpiToCountryCode: String,
+                        @JsonProperty("OCPI-To-Party-ID") val ocpiToPartyID: String)
+
+@JsonInclude(JsonInclude.Include.NON_NULL)
+class HubRequestParameters(@JsonProperty("type") val type: TokenType? = null,
+                           @JsonProperty("date_from") val dateFrom: String? = null,
+                           @JsonProperty("date_to") val dateTo: String? = null,
+                           @JsonProperty("offset") val offset: Int? = null,
+                           @JsonProperty("limit") val limit: Int? = null) {
+
+    fun encode(): Map<String, String> {
+        val map = mutableMapOf<String, String>()
+        if (type != null) {
+            map["type"] = type.toString()
+        }
+        if (dateFrom != null) {
+            map["date_from"] = dateFrom
+        }
+        if (dateTo != null) {
+            map["date_to"] = dateTo
+        }
+        if (offset != null) {
+            map["offset"] = offset.toString()
+        }
+        if (limit != null) {
+            map["limit"] = limit.toString()
+        }
+        return map
+    }
+}
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 class HubGenericRequest<T>(@JsonProperty("method") val method: String,
-                        @JsonProperty("module") val module: String,
-                        @JsonProperty("role") val role: InterfaceRole,
-                        @JsonProperty("path") val path: String? = null,
-                        @JsonProperty("params") val params: Map<String, String>? = null,
-                        @JsonProperty("body") val body: T? = null,
-                        @JsonProperty("expectedResponseType") val expectedResponseType: HubRequestResponseType = HubRequestResponseType.NOTHING)
+                           @JsonProperty("module") val module: String,
+                           @JsonProperty("role") val role: InterfaceRole,
+                           @JsonProperty("path") val path: String? = null,
+                           @JsonProperty("params") val params: HubRequestParameters? = null,
+                           @JsonProperty("headers") val headers: HubRequestHeaders,
+                           @JsonProperty("body") val body: T? = null,
+                           @JsonProperty("expectedResponseType") val expectedResponseType: HubRequestResponseType = HubRequestResponseType.NOTHING)
 
 enum class HubRequestResponseType {
     LOCATION,
@@ -53,4 +90,5 @@ enum class HubRequestResponseType {
 }
 
 class HubCommandsRequest(@JsonProperty("type") val type: CommandType,
+                         @JsonProperty("headers") val headers: HubRequestHeaders,
                          @JsonProperty("body") val body: String)

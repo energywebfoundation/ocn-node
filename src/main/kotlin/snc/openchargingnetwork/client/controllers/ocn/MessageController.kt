@@ -29,6 +29,7 @@ import snc.openchargingnetwork.client.models.HubCommandsRequest
 import snc.openchargingnetwork.client.models.HubGenericRequest
 import snc.openchargingnetwork.client.models.HubRequestResponseType
 import snc.openchargingnetwork.client.models.exceptions.OcpiClientInvalidParametersException
+import snc.openchargingnetwork.client.models.exceptions.OcpiHubConnectionProblemException
 import snc.openchargingnetwork.client.models.exceptions.OcpiHubUnknownReceiverException
 import snc.openchargingnetwork.client.models.ocpi.*
 import snc.openchargingnetwork.client.services.RoutingService
@@ -41,15 +42,13 @@ class MessageController(val routingService: RoutingService,
 
     @PostMapping
     fun postMessage(@RequestHeader("X-Request-ID") requestID: String,
-                    @RequestHeader("X-Correlation-ID") correlationID: String,
-                    @RequestHeader("OCPI-from-country-code") fromCountryCode: String,
-                    @RequestHeader("OCPI-from-party-id") fromPartyID: String,
-                    @RequestHeader("OCPI-to-country-code") toCountryCode: String,
-                    @RequestHeader("OCPI-to-party-id") toPartyID: String,
+                    @RequestHeader("OCN-Signature") signature: String,
                     @RequestBody body: HubGenericRequest<Any>): ResponseEntity<OcpiResponse<out Any>> {
 
-        val sender = BasicRole(fromPartyID, fromCountryCode)
-        val receiver = BasicRole(toPartyID, toCountryCode)
+        val sender = BasicRole(body.headers.ocpiFromPartyID, body.headers.ocpiFromCountryCode)
+        val receiver = BasicRole(body.headers.ocpiToPartyID, body.headers.ocpiToCountryCode)
+
+        routingService.verifyRequest(body, signature, sender)
 
         // check sender has been registered on network
         val response = if (routingService.isRoleKnownOnNetwork(sender)) {
@@ -60,13 +59,13 @@ class MessageController(val routingService: RoutingService,
                 // forward message
                 val platformID = routingService.getPlatformID(receiver)
                 val endpoint = routingService.getPlatformEndpoint(platformID, body.module, body.role)
-                val headers = routingService.makeHeaders(platformID, correlationID, sender, receiver)
+                val headers = routingService.makeHeaders(platformID, body.headers.correlationID, sender, receiver)
 
                 routingService.forwardRequest(
                         method = body.method,
                         url = if (body.path != null) { urlJoin(endpoint.url, body.path) } else { endpoint.url },
                         headers = headers,
-                        params = body.params,
+                        params = body.params?.encode(),
                         body = body.body,
                         expectedDataType = when (body.expectedResponseType) {
                             HubRequestResponseType.LOCATION -> Location::class
@@ -86,7 +85,6 @@ class MessageController(val routingService: RoutingService,
                             HubRequestResponseType.NOTHING -> Nothing::class
                             HubRequestResponseType.COMMAND_RESPONSE -> CommandResponse::class
                         })
-
             } else {
                 throw OcpiHubUnknownReceiverException()
             }
@@ -106,15 +104,13 @@ class MessageController(val routingService: RoutingService,
 
     @PostMapping("/command")
     fun postCommand(@RequestHeader("X-Request-ID") requestID: String,
-                    @RequestHeader("X-Correlation-ID") correlationID: String,
-                    @RequestHeader("OCPI-from-country-code") fromCountryCode: String,
-                    @RequestHeader("OCPI-from-party-id") fromPartyID: String,
-                    @RequestHeader("OCPI-to-country-code") toCountryCode: String,
-                    @RequestHeader("OCPI-to-party-id") toPartyID: String,
-                    @RequestBody requestBody: HubCommandsRequest): ResponseEntity<OcpiResponse<CommandResponse>> {
+                    @RequestHeader("OCN-Signature") signature: String,
+                    @RequestBody body: HubCommandsRequest): ResponseEntity<OcpiResponse<CommandResponse>> {
 
-        val sender = BasicRole(fromPartyID, fromCountryCode)
-        val receiver = BasicRole(toPartyID, toCountryCode)
+        val sender = BasicRole(body.headers.ocpiFromPartyID, body.headers.ocpiFromCountryCode)
+        val receiver = BasicRole(body.headers.ocpiToPartyID, body.headers.ocpiToCountryCode)
+
+        routingService.verifyRequest(body, signature, sender)
 
         // check sender has been registered on network
         val response = if (routingService.isRoleKnownOnNetwork(sender)) {
@@ -125,16 +121,16 @@ class MessageController(val routingService: RoutingService,
                 // forward message
                 val platformID = routingService.getPlatformID(receiver)
                 val endpoint = routingService.getPlatformEndpoint(platformID, "commands", InterfaceRole.SENDER)
-                val headers = routingService.makeHeaders(platformID, correlationID, sender, receiver)
+                val headers = routingService.makeHeaders(platformID, body.headers.correlationID, sender, receiver)
 
-                val commandBody: MutableMap<String, Any> = jacksonObjectMapper().readValue(requestBody.body)
+                val commandBody: MutableMap<String, Any> = jacksonObjectMapper().readValue(body.body)
                 val originalResponseURL = commandBody["response_url"] ?: throw OcpiClientInvalidParametersException("No response_url found")
-                val uid = routingService.saveResponseURL(originalResponseURL.toString(), requestBody.type, sender, receiver)
-                commandBody["response_url"] = urlJoin(properties.url, "/ocpi/emsp/2.2/commands/${requestBody.type}/$uid")
+                val uid = routingService.saveResponseURL(originalResponseURL.toString(), body.type, sender, receiver)
+                commandBody["response_url"] = urlJoin(properties.url, "/ocpi/sender/2.2/commands/${body.type}/$uid")
 
                 routingService.forwardRequest(
                         method = "POST",
-                        url = urlJoin(endpoint.url, "/${requestBody.type}"),
+                        url = urlJoin(endpoint.url, "/${body.type}"),
                         headers = headers,
                         body = commandBody,
                         expectedDataType = CommandResponse::class)

@@ -14,6 +14,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers
 import snc.openchargingnetwork.client.data.exampleLocation2
 import snc.openchargingnetwork.client.models.HttpResponse
 import snc.openchargingnetwork.client.models.HubGenericRequest
+import snc.openchargingnetwork.client.models.HubRequestHeaders
 import snc.openchargingnetwork.client.models.HubRequestResponseType
 import snc.openchargingnetwork.client.models.entities.EndpointEntity
 import snc.openchargingnetwork.client.models.ocpi.*
@@ -33,6 +34,22 @@ class MessageControllerTest(@Autowired val mockMvc: MockMvc) {
 
         val receiverEndpoint = EndpointEntity(8L, "locations", InterfaceRole.SENDER, "http://client.net/locations")
 
+        val body = HubGenericRequest(
+                method = "GET",
+                module = "locations",
+                role = InterfaceRole.SENDER,
+                path = "/LOC2",
+                headers = HubRequestHeaders(
+                        requestID = "123",
+                        correlationID = "abc-123",
+                        ocpiFromCountryCode = senderRole.country,
+                        ocpiFromPartyID = senderRole.id,
+                        ocpiToCountryCode = receiverRole.country,
+                        ocpiToPartyID = receiverRole.id),
+                body = null,
+                expectedResponseType = HubRequestResponseType.LOCATION)
+
+        every { routingService.verifyRequest(any(), "0x1234", senderRole) } returns Unit
         every { routingService.isRoleKnownOnNetwork(senderRole) } returns true
         every { routingService.isRoleKnown(receiverRole) } returns true
         every { routingService.getPlatformID(receiverRole) } returns 8L
@@ -51,20 +68,10 @@ class MessageControllerTest(@Autowired val mockMvc: MockMvc) {
                 body = OcpiResponse(1000, data = exampleLocation2))
 
         mockMvc.perform(post("/ocn/message")
-                .header("X-Request-ID", "123")
-                .header("X-Correlation-ID", "abc-123")
-                .header("OCPI-from-country-code", senderRole.country)
-                .header("OCPI-from-party-id", senderRole.id)
-                .header("OCPI-to-country-code", receiverRole.country)
-                .header("OCPI-to-party-id", receiverRole.id)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(jacksonObjectMapper().writeValueAsString(HubGenericRequest(
-                        method = "GET",
-                        module = "locations",
-                        role = InterfaceRole.SENDER,
-                        path = "/LOC2",
-                        body = null,
-                        expectedResponseType = HubRequestResponseType.LOCATION))))
+                .header("X-Request-ID", "xyz")
+                .header("OCN-Signature", "0x1234")
+                .content(jacksonObjectMapper().writeValueAsString(body)))
                 .andExpect(MockMvcResultMatchers.status().isOk)
                 .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_UTF8))
                 .andExpect(MockMvcResultMatchers.jsonPath("\$.status_code").value(OcpiStatus.SUCCESS.code))

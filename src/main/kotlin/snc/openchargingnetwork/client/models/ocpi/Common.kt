@@ -49,10 +49,11 @@ data class BasicRole(@JsonProperty("party_id") var id: String,
 data class RegistrationInfo(@JsonProperty("token") val token: String,
                             @JsonProperty("versions") val versions: String)
 
-data class PaginatedRequest(val dateFrom: String? = null,
-                            val dateTo: String? = null,
-                            val offset: Int? = null,
-                            val limit: Int? = null) {
+@JsonInclude(JsonInclude.Include.NON_NULL)
+data class PaginatedRequest(@JsonProperty("date_from") val dateFrom: String? = null,
+                            @JsonProperty("date_to") val dateTo: String? = null,
+                            @JsonProperty("offset") val offset: Int? = null,
+                            @JsonProperty("limit") val limit: Int? = null) {
 
     fun encode(): Map<String, String> {
         val map = mutableMapOf<String, String>()
