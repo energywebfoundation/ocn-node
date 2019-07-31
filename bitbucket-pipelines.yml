@@ -22,7 +22,7 @@ pipelines:
             - gradle
           script:
             - bash ./gradlew build
-            - scp -r ./build $HOST/:ocn-client/
+            - scp -r ./build $HOST:ocn-client/
             - ssh $HOST 'sh ./ocn-client/restart.sh'
     open-testing:
       - step:
