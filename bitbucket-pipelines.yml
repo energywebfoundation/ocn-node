@@ -15,6 +15,15 @@ pipelines:
           # https://docs.gradle.org/current/userguide/gradle_wrapper.html
           - bash ./gradlew build
   branches:
+    develop:
+      - step:
+          deployment: test2
+          caches:
+            - gradle
+          script:
+            - bash ./gradlew build
+            - scp -r ./build $HOST/:ocn-client/
+            - ssh $HOST 'sh ./ocn-client/restart.sh'
     open-testing:
       - step:
           deployment: test
