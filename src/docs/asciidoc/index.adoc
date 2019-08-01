@@ -47,7 +47,7 @@ start the registration process.
 
 == Open Charge Point Interface
 
-The Open Charge Point Interface enables eMobility platforms to connect to one another. The Open Charge Network
+The Open Charge Point Interface enables eMobility platforms to connect to one another. The Open Charging Network
 uses this as it's primary means of connecting such parties. It is important to have developed an OCPI version 2.2
 API beforehand, in order to connect to and use an OCN client. Documentation for version 2.2 can be found on
 https://github.com/ocpi/ocpi/tree/develop[OCPI @ *GitHub*].

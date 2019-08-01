@@ -90,9 +90,9 @@ database server itself.
 #### 1.3. Configuring the Network
 
 The network on which any OCN client is running on depends purely on the OCN Registry smart contract it is connected to.
-These configuration properties belong to `ocn.client.web3`. Currently the OCN test environment exists on the Energy Web 
-Foundation's Volta test network. The provided `dev` and `psql` profiles already point the client to a [remote Volta node](https://energyweb.atlassian.net/wiki/spaces/EWF/pages/703201459/Volta+Connecting+to+Remote+RPC) 
-and to the OCN Registry smart contract deployed on Volta (with address `0x668956FE2Eb6ED52C5a961b02bEEbAc8913A2731`). Note
+These configuration properties belong to `ocn.client.web3`. Currently the `develop` branch is pre-configured (using the
+provided `dev` and `psql` profiles) to use to the Energy Web Foundation's Volta test network, by connecting to a [remote Volta node](https://energyweb.atlassian.net/wiki/spaces/EWF/pages/703201459/Volta+Connecting+to+Remote+RPC) 
+and the OCN Registry smart contract deployed on Volta with address `0x50ba770224D92424D72d382F5F367E4d1DBeB4b2`. Note
 that subsequent commits may change this address as development of the OCN Registry takes place.
 
 #### 1.4. Setting the Admin API key [optional]
