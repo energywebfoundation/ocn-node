@@ -19,6 +19,7 @@
 
 package snc.openchargingnetwork.client.controllers
 
+import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.transaction.annotation.Transactional
@@ -41,6 +42,25 @@ class AdminController(private val platformRepo: PlatformRepository,
 
     fun isAuthorized(authorization: String): Boolean {
         return authorization == "Token ${properties.apikey}"
+    }
+
+    @GetMapping("/connection-status/{countryCode}/{partyID}")
+    fun getConnectionStatus(@RequestHeader("Authorization") authorization: String,
+                            @PathVariable countryCode: String,
+                            @PathVariable partyID: String): ResponseEntity<String> {
+
+        // check admin is authorized
+        if (!isAuthorized(authorization)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized")
+        }
+
+        val role = roleRepo.findByCountryCodeAndPartyIDAllIgnoreCase(countryCode, partyID)
+                ?: return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Role not found")
+
+        val platform = platformRepo.findByIdOrNull(role.platformID)
+                        ?: return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Could not find connection status")
+
+        return ResponseEntity.ok().body(platform.status.toString())
     }
 
     @PostMapping("/generate-registration-token")
