@@ -24,6 +24,8 @@ pipelines:
             - bash ./gradlew build
             - scp -r ./build $HOST:ocn-client/
             - ssh $HOST 'sh ./ocn-client/restart.sh'
+            - scp -r ./build $ALT_HOST:ocn-client/
+            - ssh $ALT_HOST 'sh./ocn-client/restart.sh'
     open-testing:
       - step:
           deployment: test
