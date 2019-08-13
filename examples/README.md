@@ -107,11 +107,53 @@ import the JSON collection file provided in this directory and you are ready to 
 
 ## Tutorial
 
-As the communication across OCN clients is still experimental, we will for now only be sending requests to OCPI parties
-connected to the same OCN client. Therefore, our EMSP will connect to the same OCN client as the CPO registered in
-step 2 of the setup. 
+In this tutorial, we will create an OCPI 2.2 connection with the OCN Client at [http:localhost:8080](http://localhost:8080). The CPO in our
+demo has already registered to the other OCN Client at [http://localhost:8081](http://localhost:8081), which gives us
+a chance to make requests across the network.
 
-### 1. Generating a CREDENTIALS_TOKEN_A
+### 1. Adding an entry to the OCN Registry
+
+Before we create a connection to an OCN client, we must enter our party into the OCN Registry to become visible on the 
+network. To do this, we must sign a transaction which states our party's country code, party ID and client info of
+the OCN client we will connect to. The OCN Client info that we need is its Ethereum address and base url.
+
+Provided in the Postman collection is a request `GET Client Info` under the OCN directory. Note that there is no
+authorization needed to make this request. The response should be the following:
+
+```json
+{
+    "url": "http://localhost:8080",
+    "address": "<ETHEREUM_ADDRESS>"
+}
+```
+
+You might recall seeing the same information printed to stdout when running the local OCN. The above request can be used
+when registering yourself to a test or production OCN environment. In our local development case, we can skip this 
+manual step and use a script provided in the `ocn-demo` repository to save us some time. 
+
+```
+cd ocn-demo
+npm run register-msp
+```
+
+You should see the following output: 
+
+```
+EMSP [DE MSP] has registered to the OCN on client http://localhost:8080 using wallet with address <ETHEREUM_ADDRESS>
+```
+
+Your EMSP wallet was generated randomly and has already been discarded. Fortunately, you won't need it again for this
+tutorial. Should you wish to move to a different OCN Client (which you might want to in production), you would 
+have to update your listing in the OCN Registry using the same wallet.
+
+The script uses the above client info request under the hood to make sure that the data we are listing in the registry
+is correct. You may inspect the rest of the script (located at `ocn-demo/scripts/register.js`) to see how the 
+transaction was signed and sent to the network. 
+
+### 2. Generating a CREDENTIALS_TOKEN_A
+
+Now that we have listed ourselves in the OCN Registry smart contract, we need to create a connection with our OCN 
+Client.
 
 In order to connect to an OCN client, the administrator first must generate a token to be used in the OCPI credentials
 registration flow. This, described as `CREDENTIALS_TOKEN_A`, will be used to obtain information about the OCN Client, 
@@ -178,17 +220,6 @@ requested and stored your OCPI module endpoints for future use.
 
 This now completes the registration to the OCN client.
 
-### 4. Adding an entry to the OCN Registry
-
-Though we have successfully registered to an OCN client, there is no way for an OCPI party connected to a different
-client to contact us. To become *visible* on the network, we must register ourselves to the OCN Registry.
-
-This step has no tutorial yet, and it is not essential if we only need to communicate with parties connected to our own
-OCN client. 
-
-The CPO in our network has already fully registered on the network. You can see how this was achieved by reading [some
-code](https://bitbucket.org/shareandcharge/ocn-demo/src/master/src/index.js)! Line 80-100 shows how it was done.
-
 ### 5. Making OCPI requests to the CPO
 
 Now that we have registered to our OCN client, we can send requests to the CPO. In this request, we wish to fetch a 
@@ -201,68 +232,79 @@ The result should look like the following:
 {
     "status_code": 1000,
     "data": [
-        {
-            "country_code": "DE",
-            "party_id": "CPO",
-            "id": "LOC1",
-            "type": "ON_STREET",
-            "address": "somestreet 1",
-            "city": "Essen",
-            "country": "DEU",
-            "coordinates": {
-                "latitude": "52.232",
-                "longitude": "0.809"
-            },
-            "evses": [
-                {
-                    "uid": "1234",
-                    "status": "AVAILABLE",
-                    "connectors": [
-                        {
-                            "id": "1",
-                            "standard": "IEC_62196_T2",
-                            "format": "SOCKET",
-                            "power_type": "AC_3_PHASE",
-                            "max_voltage": 400,
-                            "max_amperage": 32,
-                            "last_updated": "2019-07-29T09:45:55.536Z"
-                        }
-                    ],
-                    "last_updated": "2019-07-29T09:45:55.536Z"
-                }
-            ],
-            "last_updated": "2019-07-29T09:45:55.536Z"
-        }
-    ],
-    "timestamp": "2019-07-29T09:45:55.536Z"
+                    {
+                        "country_code": "DE",
+                        "party_id": "MSP",
+                        "id": "LOC1",
+                        "type": "ON_STREET",
+                        "address": "somestreet 1",
+                        "city": "Essen",
+                        "country": "DEU",
+                        "coordinates": {
+                            "latitude": "52.232",
+                            "longitude": "0.809"
+                        },
+                        "evses": [
+                            {
+                                "uid": "1234",
+                                "status": "AVAILABLE",
+                                "connectors": [
+                                    {
+                                        "id": "1",
+                                        "standard": "IEC_62196_T2",
+                                        "format": "SOCKET",
+                                        "power_type": "AC_3_PHASE",
+                                        "max_voltage": 400,
+                                        "max_amperage": 32,
+                                        "tariff_ids": [
+                                            "xxx-123"
+                                        ],
+                                        "last_updated": "2019-08-13T14:44:25.561Z"
+                                    }
+                                ],
+                                "last_updated": "2019-08-13T14:44:25.561Z"
+                            },
+                            {
+                                "uid": "4567",
+                                "status": "RESERVED",
+                                "connectors": [
+                                    {
+                                        "id": "1",
+                                        "standard": "IEC_62196_T2",
+                                        "format": "SOCKET",
+                                        "power_type": "AC_3_PHASE",
+                                        "max_voltage": 400,
+                                        "max_amperage": 32,
+                                        "tariff_ids": [
+                                            "xyz-456"
+                                        ],
+                                        "last_updated": "2019-08-13T14:44:25.561Z"
+                                    }
+                                ],
+                                "last_updated": "2019-08-13T14:44:25.561Z"
+                            }
+                        ],
+                        "last_updated": "2019-08-13T14:44:25.561Z"
+                    }
+                ],
+    "timestamp": "2019-08-13T15:25:24.435Z"
 }
 ```
 
 We see that the request was successfully processed, returning an array of a single location. The OCPI location data
 type follows a hierarchy of `location` -> `evse` -> `connector`. We can make also make requests that fetch a single
 location, or a specific EVSE or connector. Take a look at the other requests in the locations directory to see how they
-work.
+work. 
 
-Let's now look at an example of a request that will fail. The CPO has only implemented the `locations` module for 
-PULL requests (OCPI offers two way communication, i.e. a CPO can also send messages to an EMSP). What if we want to
-request tariff information from them? In the tariffs directory of the Postman collection there is an example tariffs
-request. This request would fetch an array of tariffs implemented by the CPO. If we try it out (after changing the
-Authorization header again), we see this message:
+Notice how on the Connector object there is a `tariff_ids` array. What does this mean? 
 
-```
-{
-    "status_code": 2001,
-    "status_message": "Receiver does not support the requested module",
-    "timestamp": "2019-07-29T09:59:06.444Z"
-}
-```
+Let's find out. Navigate to the tariffs directory and send the `GET tariffs` request. This is an example of a dependency
+between OCPI modules. However, all OCPI modules aside from `credentials` are optional. It is up to the EMSP/CPO (or any 
+other role) to implement the modules themselves. Therefore if we try to make, for instance, a `sessions` request to the 
+CPO, we might receive a message telling us that the CPO has not implemented the module (yet). 
 
-The response tells us that the request was unsuccessful, as the CPO (the receiver of the request) does not support
-the OCPI module that we requested.
-
-That marks the end of this tutorial. As a next step, you might try registering a new party to the client on `http://localhost:8081`.
-More examples and use cases will be added to this tutorial in the future, but for now this should be enough to get started 
-on creating an OCPI 2.2 platform that is ready to join the Open Charging Network.
+That marks the end of this tutorial. More examples and use cases will be added to this tutorial in the future, but for 
+now this should be enough to get started on creating an OCPI 2.2 platform that is ready to join the Open Charging Network.
 
 The complete OCPI documentation can be found here: [https://github.com/ocpi/ocpi/tree/develop](https://github.com/ocpi/ocpi/tree/develop) 
 (version 2.2 is contained in the develop branch).
