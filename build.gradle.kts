@@ -10,7 +10,7 @@ plugins {
     kotlin("plugin.spring") version "1.3.41"
     kotlin("plugin.allopen") version "1.3.41"
     kotlin("kapt") version "1.3.41"
-    id("org.asciidoctor.convert") version "2.3.0"
+    id("org.asciidoctor.convert") version "1.5.9.2"
 }
 
 group = "snc.openchargingnetwork.client"
