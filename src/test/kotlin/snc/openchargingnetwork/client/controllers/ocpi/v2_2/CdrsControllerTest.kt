@@ -196,6 +196,7 @@ class CdrsControllerTest(@Autowired val mockMvc: MockMvc) {
                 .andExpect(jsonPath("\$.status_code").value(1000))
                 .andExpect(jsonPath("\$.status_message").doesNotExist())
                 .andExpect(jsonPath("\$.data").doesNotExist())
+                .andExpect(jsonPath("\$.timestamp").isString)
                 .andExpect(header().string("Location", "https://super.hub.net/ocpi/receiver/2.2/cdrs/5"))
     }
 
