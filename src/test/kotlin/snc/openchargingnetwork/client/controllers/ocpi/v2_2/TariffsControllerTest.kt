@@ -22,25 +22,25 @@ class TariffsControllerTest(@Autowired val mockMvc: MockMvc) {
     @MockkBean
     lateinit var routingService: RoutingService
 
-    @Test
-    fun `when GET sender tariffs returns unauthorized`() {
-        val sender = BasicRole("DIY", "YO")
-        val receiver = BasicRole("ADA", "MM")
-        every { routingService.validateSender("Token 12345", sender) } throws OcpiClientInvalidParametersException("Invalid CREDENTIALS_TOKEN_C")
-        mockMvc.perform(get("/ocpi/sender/2.2/tariffs")
-                .header("Authorization", "Token 12345")
-                .header("X-Request-ID", "12345")
-                .header("X-Correlation-ID", "4567878")
-                .header("OCPI-from-country-code", sender.country)
-                .header("OCPI-from-party-id", sender.id)
-                .header("OCPI-to-country-code", receiver.country)
-                .header("OCPI-to-party-id", receiver.id)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(jacksonObjectMapper().writeValueAsString(exampleCDR)))
-                .andExpect(MockMvcResultMatchers.status().isBadRequest)
-                .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_UTF8))
-                .andExpect(MockMvcResultMatchers.jsonPath("\$.status_code").value(OcpiStatus.CLIENT_INVALID_PARAMETERS.code))
-                .andExpect(MockMvcResultMatchers.jsonPath("\$.status_message").value("Invalid CREDENTIALS_TOKEN_C"))
-                .andExpect(MockMvcResultMatchers.jsonPath("\$.data").doesNotExist())
-    }
+//    @Test
+//    fun `when GET sender tariffs returns unauthorized`() {
+//        val sender = BasicRole("DIY", "YO")
+//        val receiver = BasicRole("ADA", "MM")
+//        every { routingService.validateSender("Token 12345", sender) } throws OcpiClientInvalidParametersException("Invalid CREDENTIALS_TOKEN_C")
+//        mockMvc.perform(get("/ocpi/sender/2.2/tariffs")
+//                .header("Authorization", "Token 12345")
+//                .header("X-Request-ID", "12345")
+//                .header("X-Correlation-ID", "4567878")
+//                .header("OCPI-from-country-code", sender.country)
+//                .header("OCPI-from-party-id", sender.id)
+//                .header("OCPI-to-country-code", receiver.country)
+//                .header("OCPI-to-party-id", receiver.id)
+//                .contentType(MediaType.APPLICATION_JSON)
+//                .content(jacksonObjectMapper().writeValueAsString(exampleCDR)))
+//                .andExpect(MockMvcResultMatchers.status().isBadRequest)
+//                .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_UTF8))
+//                .andExpect(MockMvcResultMatchers.jsonPath("\$.status_code").value(OcpiStatus.CLIENT_INVALID_PARAMETERS.code))
+//                .andExpect(MockMvcResultMatchers.jsonPath("\$.status_message").value("Invalid CREDENTIALS_TOKEN_C"))
+//                .andExpect(MockMvcResultMatchers.jsonPath("\$.data").doesNotExist())
+//    }
 }

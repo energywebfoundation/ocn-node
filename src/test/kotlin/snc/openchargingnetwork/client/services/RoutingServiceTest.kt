@@ -99,56 +99,56 @@ class RoutingServiceTest {
         assertThat(headers["OCPI-To-Party-ID"]).isEqualTo(receiver.id)
     }
 
-    @Test
-    fun `forwardRequest with GET`() {
-        val url = "http://localhost:8090/locations"
-        val headers = mapOf(
-                "Authorization" to "Token 1234567",
-                "X-Request-ID" to "123",
-                "X-Correlation-ID" to "456",
-                "OCPI-From-Country-Code" to "DE",
-                "OCPI-From-Party-ID" to "XXX",
-                "OCPI-To-Country-Code" to "DE",
-                "OCPI-To-Party-ID" to "AAA")
-        val params = mapOf("limit" to "100")
-        every { httpRequestService.makeRequest("GET", url, headers, params, body = null, expectedDataType = Array<Location>::class) } returns HttpResponse(
-                statusCode = 200,
-                headers = mapOf(),
-                body = OcpiResponse(
-                    statusCode = 1000,
-                    data = arrayOf(exampleLocation1, exampleLocation2)))
-        val response = routingService.forwardRequest("GET", url, headers, params, null, Array<Location>::class)
-        assertThat(response.statusCode).isEqualTo(200)
-        assertThat(response.body.statusCode).isEqualTo(1000)
-        assertThat(response.body.statusMessage).isNull()
-        assertThat(response.body.data?.size).isEqualTo(2)
-    }
+//    @Test
+//    fun `forwardRequest with GET`() {
+//        val url = "http://localhost:8090/locations"
+//        val headers = mapOf(
+//                "Authorization" to "Token 1234567",
+//                "X-Request-ID" to "123",
+//                "X-Correlation-ID" to "456",
+//                "OCPI-From-Country-Code" to "DE",
+//                "OCPI-From-Party-ID" to "XXX",
+//                "OCPI-To-Country-Code" to "DE",
+//                "OCPI-To-Party-ID" to "AAA")
+//        val params = mapOf("limit" to "100")
+//        every { httpRequestService.makeRequest("GET", url, headers, params, body = null, expectedDataType = Array<Location>::class) } returns HttpResponse(
+//                statusCode = 200,
+//                headers = mapOf(),
+//                body = OcpiResponse(
+//                    statusCode = 1000,
+//                    data = arrayOf(exampleLocation1, exampleLocation2)))
+//        val response = routingService.forwardRequest("GET", url, headers, params, null, Array<Location>::class)
+//        assertThat(response.statusCode).isEqualTo(200)
+//        assertThat(response.body.statusCode).isEqualTo(1000)
+//        assertThat(response.body.statusMessage).isNull()
+//        assertThat(response.body.data?.size).isEqualTo(2)
+//    }
 
-    @Test
-    fun `forwardRequest with POST`() {
-        val url = "http://localhost:8090/locations/LOC1/1234"
-        val headers = mapOf(
-                "Authorization" to "Token 1234567",
-                "X-Request-ID" to "123",
-                "X-Correlation-ID" to "456",
-                "OCPI-From-Country-Code" to "DE",
-                "OCPI-From-Party-ID" to "XXX",
-                "OCPI-To-Country-Code" to "DE",
-                "OCPI-To-Party-ID" to "AAA")
-
-        val body: Map<String, Any>? = mapper.readValue(mapper.writeValueAsString(exampleLocation1))
-        every { httpRequestService.mapper } returns mapper
-        every { httpRequestService.makeRequest("POST", url, headers, body = body, expectedDataType = Nothing::class) } returns HttpResponse(
-                statusCode = 200,
-                headers = mapOf(),
-                body = OcpiResponse(
-                    statusCode = 1000,
-                    data = null))
-        val response = routingService.forwardRequest("POST", url, headers, null, exampleLocation1, Nothing::class)
-        assertThat(response.statusCode).isEqualTo(200)
-        assertThat(response.body.statusCode).isEqualTo(1000)
-        assertThat(response.body.statusMessage).isNull()
-    }
+//    @Test
+//    fun `forwardRequest with POST`() {
+//        val url = "http://localhost:8090/locations/LOC1/1234"
+//        val headers = mapOf(
+//                "Authorization" to "Token 1234567",
+//                "X-Request-ID" to "123",
+//                "X-Correlation-ID" to "456",
+//                "OCPI-From-Country-Code" to "DE",
+//                "OCPI-From-Party-ID" to "XXX",
+//                "OCPI-To-Country-Code" to "DE",
+//                "OCPI-To-Party-ID" to "AAA")
+//
+//        val body: Map<String, Any>? = mapper.readValue(mapper.writeValueAsString(exampleLocation1))
+//        every { httpRequestService.mapper } returns mapper
+//        every { httpRequestService.makeRequest("POST", url, headers, body = body, expectedDataType = Nothing::class) } returns HttpResponse(
+//                statusCode = 200,
+//                headers = mapOf(),
+//                body = OcpiResponse(
+//                    statusCode = 1000,
+//                    data = null))
+//        val response = routingService.forwardRequest("POST", url, headers, null, exampleLocation1, Nothing::class)
+//        assertThat(response.statusCode).isEqualTo(200)
+//        assertThat(response.body.statusCode).isEqualTo(1000)
+//        assertThat(response.body.statusMessage).isNull()
+//    }
 
     @Test
     fun `signRequest returns concatenated signature`() {

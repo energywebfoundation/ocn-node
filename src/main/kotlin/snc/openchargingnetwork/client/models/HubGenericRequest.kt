@@ -21,23 +21,24 @@ package snc.openchargingnetwork.client.models
 
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
-import snc.openchargingnetwork.client.models.ocpi.CommandType
-import snc.openchargingnetwork.client.models.ocpi.InterfaceRole
-import snc.openchargingnetwork.client.models.ocpi.TokenType
+import snc.openchargingnetwork.client.models.ocpi.*
+import snc.openchargingnetwork.client.models.ocpi.CDR as ChargeDetailRecord
+import kotlin.reflect.KClass
 
-class HubRequestHeaders(@JsonProperty("X-Request-ID") val requestID: String,
-                        @JsonProperty("X-Correlation-ID") val correlationID: String,
-                        @JsonProperty("OCPI-From-Country-Code") val ocpiFromCountryCode: String,
-                        @JsonProperty("OCPI-From-Party-ID") val ocpiFromPartyID: String,
-                        @JsonProperty("OCPI-To-Country-Code") val ocpiToCountryCode: String,
-                        @JsonProperty("OCPI-To-Party-ID") val ocpiToPartyID: String)
+data class HubRequestHeaders(@JsonProperty("Authorization") val authorization: String? = null,
+                             @JsonProperty("X-Request-ID") val requestID: String,
+                             @JsonProperty("X-Correlation-ID") val correlationID: String,
+                             @JsonProperty("OCPI-From-Country-Code") val ocpiFromCountryCode: String,
+                             @JsonProperty("OCPI-From-Party-ID") val ocpiFromPartyID: String,
+                             @JsonProperty("OCPI-To-Country-Code") val ocpiToCountryCode: String,
+                             @JsonProperty("OCPI-To-Party-ID") val ocpiToPartyID: String)
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-class HubRequestParameters(@JsonProperty("type") val type: TokenType? = null,
-                           @JsonProperty("date_from") val dateFrom: String? = null,
-                           @JsonProperty("date_to") val dateTo: String? = null,
-                           @JsonProperty("offset") val offset: Int? = null,
-                           @JsonProperty("limit") val limit: Int? = null) {
+data class HubRequestParameters(@JsonProperty("type") val type: TokenType? = null,
+                                @JsonProperty("date_from") val dateFrom: String? = null,
+                                @JsonProperty("date_to") val dateTo: String? = null,
+                                @JsonProperty("offset") val offset: Int? = null,
+                                @JsonProperty("limit") val limit: Int? = null) {
 
     fun encode(): Map<String, String> {
         val map = mutableMapOf<String, String>()
@@ -61,34 +62,34 @@ class HubRequestParameters(@JsonProperty("type") val type: TokenType? = null,
 }
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-class HubGenericRequest<T>(@JsonProperty("method") val method: String,
-                           @JsonProperty("module") val module: String,
-                           @JsonProperty("role") val role: InterfaceRole,
-                           @JsonProperty("path") val path: String? = null,
-                           @JsonProperty("params") val params: HubRequestParameters? = null,
-                           @JsonProperty("headers") val headers: HubRequestHeaders,
-                           @JsonProperty("body") val body: T? = null,
-                           @JsonProperty("expectedResponseType") val expectedResponseType: HubRequestResponseType = HubRequestResponseType.NOTHING)
+data class HubGenericRequest<T: Any>(@JsonProperty("method") val method: String,
+                                     @JsonProperty("module") val module: String,
+                                     @JsonProperty("role") val role: InterfaceRole,
+                                     @JsonProperty("path") val path: String? = null,
+                                     @JsonProperty("params") val params: HubRequestParameters? = null,
+                                     @JsonProperty("headers") val headers: HubRequestHeaders,
+                                     @JsonProperty("body") val body: Any? = null,
+                                     @JsonProperty("expectedResponseType") val expectedResponseType: HubRequestResponseType<T>)
 
-enum class HubRequestResponseType {
-    LOCATION,
-    LOCATION_ARRAY,
-    EVSE,
-    CONNECTOR,
-    SESSION,
-    SESSION_ARRAY,
-    CHARGING_PREFERENCE_RESPONSE,
-    CDR,
-    CDR_ARRAY,
-    TARIFF,
-    TARIFF_ARRAY,
-    TOKEN,
-    TOKEN_ARRAY,
-    AUTHORIZATION_INFO,
-    COMMAND_RESPONSE,
-    NOTHING
+sealed class HubRequestResponseType<T: Any>(val type: KClass<T>) {
+    object LOCATION: HubRequestResponseType<Location>(Location::class)
+    object LOCATION_ARRAY: HubRequestResponseType<Array<Location>>(Array<Location>::class)
+    object EVSE: HubRequestResponseType<Evse>(Evse::class)
+    object CONNECTOR: HubRequestResponseType<Connector>(Connector::class)
+    object SESSION: HubRequestResponseType<Session>(Session::class)
+    object SESSION_ARRAY: HubRequestResponseType<Array<Session>>(Array<Session>::class)
+    object CHARGING_PREFERENCE_RESPONSE: HubRequestResponseType<ChargingPreferencesResponse>(ChargingPreferencesResponse::class)
+    object CDR: HubRequestResponseType<ChargeDetailRecord>(ChargeDetailRecord::class)
+    object CDR_ARRAY: HubRequestResponseType<Array<ChargeDetailRecord>>(Array<ChargeDetailRecord>::class)
+    object TARIFF: HubRequestResponseType<Tariff>(Tariff::class)
+    object TARIFF_ARRAY: HubRequestResponseType<Array<Tariff>>(Array<Tariff>::class)
+    object TOKEN: HubRequestResponseType<Token>(Token::class)
+    object TOKEN_ARRAY: HubRequestResponseType<Array<Token>>(Array<Token>::class)
+    object AUTHORIZATION_INFO: HubRequestResponseType<AuthorizationInfo>(AuthorizationInfo::class)
+    object COMMAND_RESPONSE: HubRequestResponseType<CommandResponse>(CommandResponse::class)
+    object NOTHING: HubRequestResponseType<Nothing>(Nothing::class)
 }
 
-class HubCommandsRequest(@JsonProperty("type") val type: CommandType,
-                         @JsonProperty("headers") val headers: HubRequestHeaders,
-                         @JsonProperty("body") val body: String)
+data class HubCommandsRequest(@JsonProperty("type") val type: CommandType,
+                              @JsonProperty("headers") val headers: HubRequestHeaders,
+                              @JsonProperty("body") val body: String)

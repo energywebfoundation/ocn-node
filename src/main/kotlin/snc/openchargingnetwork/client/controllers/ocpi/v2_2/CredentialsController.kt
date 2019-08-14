@@ -133,8 +133,8 @@ class CredentialsController(private val platformRepo: PlatformRepository,
                         url = urlJoin(properties.url, "/ocpi/versions"),
                         roles = listOf(CredentialsRole(
                                 role = Role.HUB,
-                                businessDetails = BusinessDetails(name = "Share&Charge Message Broker"),
-                                partyID = "SNC",
+                                businessDetails = BusinessDetails(name = "Open Charging Network Client"),
+                                partyID = "OCN",
                                 countryCode = "DE"))))
     }
 
@@ -202,8 +202,8 @@ class CredentialsController(private val platformRepo: PlatformRepository,
                         url = urlJoin(properties.url, "/ocpi/versions"),
                         roles = listOf(CredentialsRole(
                                 role = Role.HUB,
-                                businessDetails = BusinessDetails(name = "Share&Charge Message Broker"),
-                                partyID = "SNC",
+                                businessDetails = BusinessDetails(name = "Open Charging Network Client"),
+                                partyID = "OCN",
                                 countryCode = "DE"))))
     }
 

@@ -19,13 +19,12 @@
 
 package snc.openchargingnetwork.client.services
 
-import com.fasterxml.jackson.module.kotlin.readValue
+import org.springframework.http.HttpMethod
 import org.springframework.stereotype.Service
 import org.web3j.crypto.Keys
 import org.web3j.crypto.Sign
 import org.web3j.utils.Numeric
-import snc.openchargingnetwork.client.models.HttpResponse
-import snc.openchargingnetwork.client.models.HubRequestHeaders
+import snc.openchargingnetwork.client.models.*
 import snc.openchargingnetwork.client.models.entities.CdrEntity
 import snc.openchargingnetwork.client.models.entities.CommandResponseUrlEntity
 import snc.openchargingnetwork.client.models.exceptions.OcpiClientInvalidParametersException
@@ -35,9 +34,9 @@ import snc.openchargingnetwork.client.models.ocpi.*
 import snc.openchargingnetwork.client.repositories.*
 import snc.openchargingnetwork.client.tools.extractToken
 import snc.openchargingnetwork.client.tools.generateUUIDv4Token
+import snc.openchargingnetwork.client.tools.urlJoin
 import snc.openchargingnetwork.contracts.RegistryFacade
 import java.nio.charset.StandardCharsets
-import kotlin.reflect.KClass
 
 @Service
 class RoutingService(private val platformRepo: PlatformRepository,
@@ -49,9 +48,69 @@ class RoutingService(private val platformRepo: PlatformRepository,
                      private val registry: RegistryFacade,
                      private val credentialsService: CredentialsService) {
 
+    fun <T: Any> forwardRequest(module: ModuleID,
+                                interfaceRole: InterfaceRole,
+                                method: HttpMethod,
+                                headers: HubRequestHeaders,
+                                urlEncodedParameters: HubRequestParameters? = null,
+                                urlPathVariables: String? = null,
+                                body: Any? = null,
+                                responseBodyType: HubRequestResponseType<T>): HttpResponse<T> {
+
+        // validate OCPI routing headers
+        val sender = BasicRole(headers.ocpiFromPartyID, headers.ocpiFromCountryCode)
+        val receiver = BasicRole(headers.ocpiToPartyID, headers.ocpiToCountryCode)
+
+        // validate sender has OCPI connection with this OCN Client
+        validateSender(headers.authorization!!, sender)
+
+        // check receiver has OCPI connection with this OCN Client
+        getPlatformID(receiver)?.let {
+
+            // find the module endpoint as implemented by the receiver
+            val endpoint = getPlatformEndpoint(it, module.toString(), interfaceRole)
+
+            // create new headers for the request to be forwarded
+            val clientHeaders = makeHeaders(it, headers.correlationID, sender, receiver)
+
+            // forward the request to the "local" receiver (sharing the same OCN Client)
+            return httpService.makeRequest(
+                    method = method,
+                    url = endpoint.url,
+                    headers = clientHeaders,
+                    params = urlEncodedParameters?.encode(),
+                    expectedDataType = responseBodyType.type)
+        }
+
+        // look up Client URL of receiver in OCN Registry
+        val url = findRemoteClientUrl(receiver)
+
+        // create the OCN message request body
+        val clientBody = HubGenericRequest(
+                module = module.toString(),
+                method = method.toString(),
+                role = interfaceRole,
+                headers = headers,
+                params = urlEncodedParameters,
+                path = urlPathVariables,
+                body = body,
+                expectedResponseType = responseBodyType)
+
+        // forward the request to the remote receiver's OCN client
+        return httpService.makeRequest(
+                method = HttpMethod.POST,
+                url = urlJoin(url, "/ocn/message"),
+                headers = mapOf(
+                        "X-Request-ID" to generateUUIDv4Token(),
+                        "OCN-Signature" to signRequest(clientBody)),
+                body = clientBody,
+                expectedDataType = responseBodyType.type)
+    }
+
+
     fun isRoleKnown(role: BasicRole) = roleRepo.existsByCountryCodeAndPartyIDAllIgnoreCase(role.country, role.id)
 
-    fun getPlatformID(role: BasicRole) = roleRepo.findByCountryCodeAndPartyIDAllIgnoreCase(role.country, role.id)!!.platformID
+    fun getPlatformID(role: BasicRole) = roleRepo.findByCountryCodeAndPartyIDAllIgnoreCase(role.country, role.id)?.platformID
 
     fun getPlatformEndpoint(platformID: Long?, identifier: String, interfaceRole: InterfaceRole)
             = endpointRepo.findByPlatformIDAndIdentifierAndRole(platformID, identifier, interfaceRole)
@@ -73,7 +132,6 @@ class RoutingService(private val platformRepo: PlatformRepository,
         if (!roleRepo.existsByPlatformIDAndCountryCodeAndPartyIDAllIgnoreCase(senderPlatform.id, sender.country, sender.id)) {
             throw OcpiClientInvalidParametersException("Could not find role on sending platform using OCPI-from-* headers")
         }
-
     }
 
     // check sender is authorized on this message broker AND that sender is original client-owned object creator
@@ -86,7 +144,6 @@ class RoutingService(private val platformRepo: PlatformRepository,
         if (sender.toLowerCase() != objectCreator.toLowerCase()) {
             throw OcpiClientInvalidParametersException("Client-owned object does not belong to this sender")
         }
-
     }
 
     // check sender is authorized on msg broker, sender is creator of object AND object contains the same sender role
@@ -132,26 +189,12 @@ class RoutingService(private val platformRepo: PlatformRepository,
                 "OCPI-To-Party-ID" to receiver.id)
     }
 
-    fun <T: Any> forwardRequest(method: String,
-                                url: String,
-                                headers: Map<String, String>,
-                                params: Map<String, String>? = null,
-                                body: Any? = null,
-                                expectedDataType: KClass<T>): HttpResponse<T> {
-        var jsonBody: Map<String,Any>? = null
-        if (body != null) {
-            val jsonString = httpService.mapper.writeValueAsString(body)
-            jsonBody = httpService.mapper.readValue(jsonString)
-        }
-        return httpService.makeRequest(method, url, headers, params, jsonBody, expectedDataType)
-    }
-
-    fun findBrokerUrl(receiver: BasicRole): String {
-        val broker = registry.clientURLOf(receiver.country.toByteArray(), receiver.id.toByteArray()).sendAsync().get()
-        if (broker == "") {
+    fun findRemoteClientUrl(receiver: BasicRole): String {
+        val url = registry.clientURLOf(receiver.country.toByteArray(), receiver.id.toByteArray()).sendAsync().get()
+        if (url == "") {
             throw OcpiHubUnknownReceiverException()
         }
-        return broker
+        return url
     }
 
     fun isRoleKnownOnNetwork(role: BasicRole): Boolean {

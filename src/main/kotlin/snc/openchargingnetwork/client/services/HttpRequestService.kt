@@ -20,7 +20,9 @@
 package snc.openchargingnetwork.client.services
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import khttp.*
+import org.springframework.http.HttpMethod
 import org.springframework.stereotype.Service
 import snc.openchargingnetwork.client.models.HttpResponse
 import snc.openchargingnetwork.client.models.exceptions.OcpiServerUnusableApiException
@@ -35,19 +37,25 @@ class HttpRequestService {
     val mapper = jacksonObjectMapper()
 
 
-    fun <In: Any?, Out: Any> makeRequest(method: String,
+    fun <T: Any> makeRequest(method: HttpMethod,
                                          url: String,
                                          headers: Map<String, String>,
                                          params: Map<String, String>? = null,
-                                         body: In? = null,
-                                         expectedDataType: KClass<Out>): HttpResponse<Out> {
+                                         body: Any? = null,
+                                         expectedDataType: KClass<T>): HttpResponse<T> {
+
+        var jsonBody: Map<String,Any>? = null
+        if (body != null) {
+            val jsonString = mapper.writeValueAsString(body)
+            jsonBody = mapper.readValue(jsonString)
+        }
 
         val response = when (method) {
-            "GET" -> get(url = url, headers = headers, params = params ?: mapOf())
-            "POST" -> post(url = url, headers = headers, json = body, params = params ?: mapOf())
-            "PUT" -> put(url = url, headers = headers, json = body)
-            "PATCH" -> patch(url = url, headers = headers, json = body)
-            "DELETE" -> delete(url = url, headers = headers, json = body)
+            HttpMethod.GET -> get(url = url, headers = headers, params = params ?: mapOf())
+            HttpMethod.POST -> post(url = url, headers = headers, json = jsonBody, params = params ?: mapOf())
+            HttpMethod.PUT -> put(url = url, headers = headers, json = jsonBody)
+            HttpMethod.PATCH -> patch(url = url, headers = headers, json = jsonBody)
+            HttpMethod.DELETE -> delete(url = url, headers = headers, json = jsonBody)
             else -> throw IllegalStateException("Invalid method: $method")
         }
 
@@ -61,7 +69,7 @@ class HttpRequestService {
     fun getVersions(url: String, authorization: String): Versions {
         try {
 
-            val response = this.makeRequest("GET", url, mapOf("Authorization" to "Token $authorization"), body = null, expectedDataType = Versions::class)
+            val response = this.makeRequest(HttpMethod.GET, url, mapOf("Authorization" to "Token $authorization"), body = null, expectedDataType = Versions::class)
 
             return if (response.statusCode == 200 && response.body.statusCode == 1000) {
                 response.body.data!!
@@ -76,7 +84,7 @@ class HttpRequestService {
 
     fun getVersionDetail(url: String, authorization: String): VersionDetail {
         try {
-            val response = this.makeRequest("GET", url, mapOf("Authorization" to "Token $authorization"), body = null, expectedDataType = VersionDetail::class)
+            val response = this.makeRequest(HttpMethod.GET, url, mapOf("Authorization" to "Token $authorization"), body = null, expectedDataType = VersionDetail::class)
 
             return if (response.statusCode == 200 && response.body.statusCode == 1000) {
                 response.body.data!!
