@@ -19,15 +19,17 @@
 
 package snc.openchargingnetwork.client.services
 
+import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpMethod
 import org.springframework.stereotype.Service
 import org.web3j.crypto.Keys
 import org.web3j.crypto.Sign
 import org.web3j.utils.Numeric
 import snc.openchargingnetwork.client.models.*
-import snc.openchargingnetwork.client.models.entities.CdrEntity
-import snc.openchargingnetwork.client.models.entities.CommandResponseUrlEntity
+//import snc.openchargingnetwork.client.models.entities.CdrEntity
+//import snc.openchargingnetwork.client.models.entities.CommandResponseUrlEntity
 import snc.openchargingnetwork.client.models.exceptions.OcpiClientInvalidParametersException
+import snc.openchargingnetwork.client.models.exceptions.OcpiClientUnknownLocationException
 import snc.openchargingnetwork.client.models.exceptions.OcpiHubConnectionProblemException
 import snc.openchargingnetwork.client.models.exceptions.OcpiHubUnknownReceiverException
 import snc.openchargingnetwork.client.models.ocpi.*
@@ -42,14 +44,16 @@ import java.nio.charset.StandardCharsets
 class RoutingService(private val platformRepo: PlatformRepository,
                      private val roleRepo: RoleRepository,
                      private val endpointRepo: EndpointRepository,
-                     private val cdrRepo: CdrRepository,
-                     private val commandResponseUrlRepo: CommandResponseUrlRepository,
+                     private val proxyResourceRepository: ProxyResourceRepository,
+//                     private val cdrRepo: CdrRepository,
+//                     private val commandResponseUrlRepo: CommandResponseUrlRepository,
                      private val httpService: HttpRequestService,
                      private val registry: RegistryFacade,
                      private val credentialsService: CredentialsService) {
 
     fun <T: Any> forwardRequest(module: ModuleID,
                                 interfaceRole: InterfaceRole,
+                                proxy: Boolean = false,
                                 method: HttpMethod,
                                 headers: HubRequestHeaders,
                                 urlEncodedParameters: HubRequestParameters? = null,
@@ -67,8 +71,24 @@ class RoutingService(private val platformRepo: PlatformRepository,
         // check receiver has OCPI connection with this OCN Client
         getPlatformID(receiver)?.let {
 
-            // find the module endpoint as implemented by the receiver
-            val endpoint = getPlatformEndpoint(it, module.toString(), interfaceRole)
+            // find/build the module endpoint url of the receiver
+            val url = if (proxy) {
+
+                // find url stored by proxy
+                getProxyResource(urlPathVariables, sender, receiver)
+
+            } else {
+
+                // find url stored during module handshake
+                val endpoint = getPlatformEndpoint(it, module.toString(), interfaceRole)
+
+                // join url path variables if applicable
+                if (urlPathVariables != null) {
+                    urlJoin(endpoint.url, urlPathVariables)
+                } else {
+                    endpoint.url
+                }
+            }
 
             // create new headers for the request to be forwarded
             val clientHeaders = makeHeaders(it, headers.correlationID, sender, receiver)
@@ -76,7 +96,7 @@ class RoutingService(private val platformRepo: PlatformRepository,
             // forward the request to the "local" receiver (sharing the same OCN Client)
             return httpService.makeRequest(
                     method = method,
-                    url = endpoint.url,
+                    url = url,
                     headers = clientHeaders,
                     params = urlEncodedParameters?.encode(),
                     expectedDataType = responseBodyType.type)
@@ -84,6 +104,9 @@ class RoutingService(private val platformRepo: PlatformRepository,
 
         // look up Client URL of receiver in OCN Registry
         val url = findRemoteClientUrl(receiver)
+
+        // Include the true resource location for the other OCN client to use
+        val proxyResource = if (proxy) { getProxyResource(urlPathVariables, sender, receiver) } else { null }
 
         // create the OCN message request body
         val clientBody = HubGenericRequest(
@@ -94,6 +117,7 @@ class RoutingService(private val platformRepo: PlatformRepository,
                 params = urlEncodedParameters,
                 path = urlPathVariables,
                 body = body,
+                proxyResource = proxyResource,
                 expectedResponseType = responseBodyType)
 
         // forward the request to the remote receiver's OCN client
@@ -107,6 +131,13 @@ class RoutingService(private val platformRepo: PlatformRepository,
                 expectedDataType = responseBodyType.type)
     }
 
+    fun getProxyResource(id: String?, sender: BasicRole, receiver: BasicRole): String {
+        id?.let {
+            return proxyResourceRepository.findByIdOrNull(id.toLong())?.resource
+                    ?: throw OcpiClientUnknownLocationException("Resource not found")
+        }
+        throw OcpiClientUnknownLocationException("Resource not found")
+    }
 
     fun isRoleKnown(role: BasicRole) = roleRepo.existsByCountryCodeAndPartyIDAllIgnoreCase(role.country, role.id)
 
@@ -206,53 +237,53 @@ class RoutingService(private val platformRepo: PlatformRepository,
         return httpService.mapper.writeValueAsString(body)
     }
 
-    fun saveCDR(id: String, location: String, sender: BasicRole, receiver: BasicRole) {
-        cdrRepo.save(CdrEntity(
-                cdrID = id,
-                ownerID = receiver.id,
-                ownerCountry = receiver.country,
-                creatorID = sender.id,
-                creatorCountry = sender.country,
-                location = location
-        ))
-    }
+//    fun saveCDR(id: String, location: String, sender: BasicRole, receiver: BasicRole) {
+//        cdrRepo.save(CdrEntity(
+//                cdrID = id,
+//                ownerID = receiver.id,
+//                ownerCountry = receiver.country,
+//                creatorID = sender.id,
+//                creatorCountry = sender.country,
+//                location = location
+//        ))
+//    }
+//
+//    fun findCDR(id: String, sender: BasicRole, receiver: BasicRole): String {
+//        val result = cdrRepo.findByCdrIDAndOwnerIDAndOwnerCountryAndCreatorIDAndCreatorCountryAllIgnoreCase(
+//                cdrID = id,
+//                ownerCountry = receiver.country,
+//                ownerID = receiver.id,
+//                creatorCountry = sender.country,
+//                creatorID = sender.id) ?: throw OcpiClientInvalidParametersException("cdr_id not found")
+//        return result.location
+//
+//    }
 
-    fun findCDR(id: String, sender: BasicRole, receiver: BasicRole): String {
-        val result = cdrRepo.findByCdrIDAndOwnerIDAndOwnerCountryAndCreatorIDAndCreatorCountryAllIgnoreCase(
-                cdrID = id,
-                ownerCountry = receiver.country,
-                ownerID = receiver.id,
-                creatorCountry = sender.country,
-                creatorID = sender.id) ?: throw OcpiClientInvalidParametersException("cdr_id not found")
-        return result.location
-
-    }
-
-    fun saveResponseURL(url: String, type: CommandType, sender: BasicRole, receiver: BasicRole): String {
-        val uid = generateUUIDv4Token()
-
-        commandResponseUrlRepo.save(CommandResponseUrlEntity(
-                url = url,
-                type = type,
-                uid = uid,
-                senderCountry = sender.country,
-                senderID = sender.id,
-                receiverCountry = receiver.country,
-                receiverID = receiver.id))
-
-        return uid
-    }
-
-    fun findResponseURL(type: CommandType, uid: String, sender: BasicRole, receiver: BasicRole): String {
-        val result = commandResponseUrlRepo.findByUidAndTypeAndSenderIDAndSenderCountryAndReceiverIDAndReceiverCountryAllIgnoreCase(
-                uid = uid,
-                type = type,
-                senderCountry = receiver.country,
-                senderID = receiver.id,
-                receiverCountry = sender.country,
-                receiverID = sender.id) ?: throw OcpiClientInvalidParametersException("Async response for given uid not permitted")
-        return result.url
-    }
+//    fun saveResponseURL(url: String, type: CommandType, sender: BasicRole, receiver: BasicRole): String {
+//        val uid = generateUUIDv4Token()
+//
+//        commandResponseUrlRepo.save(CommandResponseUrlEntity(
+//                url = url,
+//                type = type,
+//                uid = uid,
+//                senderCountry = sender.country,
+//                senderID = sender.id,
+//                receiverCountry = receiver.country,
+//                receiverID = receiver.id))
+//
+//        return uid
+//    }
+//
+//    fun findResponseURL(type: CommandType, uid: String, sender: BasicRole, receiver: BasicRole): String {
+//        val result = commandResponseUrlRepo.findByUidAndTypeAndSenderIDAndSenderCountryAndReceiverIDAndReceiverCountryAllIgnoreCase(
+//                uid = uid,
+//                type = type,
+//                senderCountry = receiver.country,
+//                senderID = receiver.id,
+//                receiverCountry = sender.country,
+//                receiverID = sender.id) ?: throw OcpiClientInvalidParametersException("Async response for given uid not permitted")
+//        return result.url
+//    }
 
     // TODO: create client info service (polls status PUSH requests)
     fun findClientInfo(): List<ClientInfo> {

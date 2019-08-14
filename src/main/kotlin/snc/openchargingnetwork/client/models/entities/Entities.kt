@@ -66,22 +66,29 @@ class EndpointEntity(var platformID: Long,
                      @Id @GeneratedValue var id: Long? = null)
 
 @Entity
-@Table(name = "cdrs")
-class CdrEntity(val cdrID: String,
-                val ownerID: String,
-                val ownerCountry: String,
-                val creatorID: String,
-                val creatorCountry: String,
-                val location: String,
-                @Id @GeneratedValue var id: Long? = null)
+@Table(name = "proxy_resources")
+class ProxyResourceEntity(@Embedded val sender: BasicRole,
+                          @Embedded val receiver: BasicRole,
+                          val resource: String,
+                          @Id @GeneratedValue var id: Long? = null)
 
-@Entity
-@Table(name = "command_response_urls")
-class CommandResponseUrlEntity(val url: String,
-                               @Enumerated(EnumType.STRING) var type: CommandType,
-                               val uid: String,
-                               val senderID: String,
-                               val senderCountry: String,
-                               val receiverID: String,
-                               val receiverCountry: String,
-                               @Id @GeneratedValue var id: Long? = null)
+//@Entity
+//@Table(name = "cdrs")
+//class CdrEntity(val cdrID: String,
+//                val ownerID: String,
+//                val ownerCountry: String,
+//                val creatorID: String,
+//                val creatorCountry: String,
+//                val location: String,
+//                @Id @GeneratedValue var id: Long? = null)
+//
+//@Entity
+//@Table(name = "command_response_urls")
+//class CommandResponseUrlEntity(val url: String,
+//                               @Enumerated(EnumType.STRING) var type: CommandType,
+//                               val uid: String,
+//                               val senderID: String,
+//                               val senderCountry: String,
+//                               val receiverID: String,
+//                               val receiverCountry: String,
+//                               @Id @GeneratedValue var id: Long? = null)

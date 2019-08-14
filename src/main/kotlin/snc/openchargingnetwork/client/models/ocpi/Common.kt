@@ -27,6 +27,7 @@ import java.time.format.DateTimeFormatter
 import javax.persistence.Embeddable
 import javax.persistence.Embedded
 
+@Embeddable
 data class BasicRole(@JsonProperty("party_id") var id: String,
                      @JsonProperty("country_code") var country: String) {
 

@@ -49,19 +49,22 @@ interface EndpointRepository: CrudRepository<EndpointEntity, Long> {
     fun deleteByPlatformID(platformID: Long?)
 }
 
-interface CdrRepository: CrudRepository<CdrEntity, Long> {
-    fun findByCdrIDAndOwnerIDAndOwnerCountryAndCreatorIDAndCreatorCountryAllIgnoreCase(cdrID: String,
-                                                                                       ownerID: String,
-                                                                                       ownerCountry: String,
-                                                                                       creatorID: String,
-                                                                                       creatorCountry: String): CdrEntity?
+interface ProxyResourceRepository: CrudRepository<ProxyResourceEntity, Long> {
 }
 
-interface CommandResponseUrlRepository: CrudRepository<CommandResponseUrlEntity, Long> {
-    fun findByUidAndTypeAndSenderIDAndSenderCountryAndReceiverIDAndReceiverCountryAllIgnoreCase(uid: String,
-                                                                                                type: CommandType,
-                                                                                                senderID: String,
-                                                                                                senderCountry: String,
-                                                                                                receiverID: String,
-                                                                                                receiverCountry: String): CommandResponseUrlEntity?
-}
+//interface CdrRepository: CrudRepository<CdrEntity, Long> {
+//    fun findByCdrIDAndOwnerIDAndOwnerCountryAndCreatorIDAndCreatorCountryAllIgnoreCase(cdrID: String,
+//                                                                                       ownerID: String,
+//                                                                                       ownerCountry: String,
+//                                                                                       creatorID: String,
+//                                                                                       creatorCountry: String): CdrEntity?
+//}
+//
+//interface CommandResponseUrlRepository: CrudRepository<CommandResponseUrlEntity, Long> {
+//    fun findByUidAndTypeAndSenderIDAndSenderCountryAndReceiverIDAndReceiverCountryAllIgnoreCase(uid: String,
+//                                                                                                type: CommandType,
+//                                                                                                senderID: String,
+//                                                                                                senderCountry: String,
+//                                                                                                receiverID: String,
+//                                                                                                receiverCountry: String): CommandResponseUrlEntity?
+//}

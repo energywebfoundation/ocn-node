@@ -30,8 +30,9 @@ class RoutingServiceTest {
     private val platformRepo: PlatformRepository = mockk()
     private val roleRepo: RoleRepository = mockk()
     private val endpointRepo: EndpointRepository = mockk()
-    private val cdrRepo: CdrRepository = mockk()
-    private val responseUrlRepo: CommandResponseUrlRepository = mockk()
+    private val proxyResourceRepo: ProxyResourceRepository = mockk()
+//    private val cdrRepo: CdrRepository = mockk()
+//    private val responseUrlRepo: CommandResponseUrlRepository = mockk()
     private val httpRequestService: HttpRequestService = mockk()
     private val registry: RegistryFacade = mockk()
     private val credentialsService: CredentialsService = mockk()
@@ -43,8 +44,9 @@ class RoutingServiceTest {
                 platformRepo,
                 roleRepo,
                 endpointRepo,
-                cdrRepo,
-                responseUrlRepo,
+                proxyResourceRepo,
+//                cdrRepo,
+//                responseUrlRepo,
                 httpRequestService,
                 registry,
                 credentialsService)

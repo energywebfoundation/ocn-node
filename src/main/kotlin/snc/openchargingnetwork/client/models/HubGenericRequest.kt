@@ -69,6 +69,7 @@ data class HubGenericRequest<T: Any>(@JsonProperty("method") val method: String,
                                      @JsonProperty("params") val params: HubRequestParameters? = null,
                                      @JsonProperty("headers") val headers: HubRequestHeaders,
                                      @JsonProperty("body") val body: Any? = null,
+                                     @JsonProperty("proxy_resource") val proxyResource: String? = null,
                                      @JsonProperty("expectedResponseType") val expectedResponseType: HubRequestResponseType<T>)
 
 sealed class HubRequestResponseType<T: Any>(val type: KClass<T>) {

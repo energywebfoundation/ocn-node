@@ -26,13 +26,16 @@ import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.bind.annotation.*
 import snc.openchargingnetwork.client.config.Properties
 import snc.openchargingnetwork.client.models.*
+import snc.openchargingnetwork.client.models.entities.ProxyResourceEntity
 import snc.openchargingnetwork.client.models.ocpi.*
+import snc.openchargingnetwork.client.repositories.ProxyResourceRepository
 import snc.openchargingnetwork.client.services.RoutingService
 import snc.openchargingnetwork.client.tools.generateUUIDv4Token
 import snc.openchargingnetwork.client.tools.urlJoin
 
 @RestController
 class CdrsController(val routingService: RoutingService,
+                     val proxyResourceRepo: ProxyResourceRepository,
                      val properties: Properties) {
 
     /**
@@ -52,7 +55,7 @@ class CdrsController(val routingService: RoutingService,
                              @RequestParam("offset", required = false) offset: Int?,
                              @RequestParam("limit", required = false) limit: Int?): ResponseEntity<OcpiResponse<Array<CDR>>> {
 
-        val response: HttpResponse<Array<CDR>> = routingService.forwardRequest(
+        val response = routingService.forwardRequest(
                 module = ModuleID.Cdrs,
                 interfaceRole = InterfaceRole.SENDER,
                 method = HttpMethod.GET,
@@ -81,15 +84,6 @@ class CdrsController(val routingService: RoutingService,
                 .status(response.statusCode)
                 .headers(headers)
                 .body(response.body)
-
-
-
-
-
-
-
-
-
 
 //        val sender = BasicRole(fromPartyID, fromCountryCode)
 //        val receiver = BasicRole(toPartyID, toCountryCode)
@@ -145,16 +139,35 @@ class CdrsController(val routingService: RoutingService,
      * RECEIVER INTERFACE
      */
 
-//    @GetMapping("/ocpi/receiver/2.2/cdrs/{cdrID}")
-//    fun getCdr(@RequestHeader("authorization") authorization: String,
-//                              @RequestHeader("X-Request-ID") requestID: String,
-//                              @RequestHeader("X-Correlation-ID") correlationID: String,
-//                              @RequestHeader("OCPI-from-country-code") fromCountryCode: String,
-//                              @RequestHeader("OCPI-from-party-id") fromPartyID: String,
-//                              @RequestHeader("OCPI-to-country-code") toCountryCode: String,
-//                              @RequestHeader("OCPI-to-party-id") toPartyID: String,
-//                              @PathVariable cdrID: String): ResponseEntity<OcpiResponse<CDR>> {
-//
+    @GetMapping("/ocpi/receiver/2.2/cdrs/{cdrID}")
+    fun getCdr(@RequestHeader("authorization") authorization: String,
+                              @RequestHeader("X-Request-ID") requestID: String,
+                              @RequestHeader("X-Correlation-ID") correlationID: String,
+                              @RequestHeader("OCPI-from-country-code") fromCountryCode: String,
+                              @RequestHeader("OCPI-from-party-id") fromPartyID: String,
+                              @RequestHeader("OCPI-to-country-code") toCountryCode: String,
+                              @RequestHeader("OCPI-to-party-id") toPartyID: String,
+                              @PathVariable cdrID: String): ResponseEntity<OcpiResponse<CDR>> {
+
+        val response = routingService.forwardRequest(
+                proxy = true,
+                module = ModuleID.Cdrs,
+                interfaceRole = InterfaceRole.RECEIVER,
+                method = HttpMethod.GET,
+                headers = HubRequestHeaders(
+                        authorization = authorization,
+                        requestID = requestID,
+                        correlationID = correlationID,
+                        ocpiFromCountryCode = fromCountryCode,
+                        ocpiFromPartyID = fromPartyID,
+                        ocpiToCountryCode = toCountryCode,
+                        ocpiToPartyID = toPartyID),
+                urlPathVariables = cdrID,
+                responseBodyType = HubRequestResponseType.CDR)
+
+        return ResponseEntity.status(response.statusCode).body(response.body)
+
+
 //        val sender = BasicRole(fromPartyID, fromCountryCode)
 //        val receiver = BasicRole(toPartyID, toCountryCode)
 //
@@ -191,19 +204,54 @@ class CdrsController(val routingService: RoutingService,
 //        }
 //
 //        return ResponseEntity.status(response.statusCode).body(response.body)
-//    }
+    }
 //
-//    @Transactional
-//    @PostMapping("/ocpi/receiver/2.2/cdrs")
-//    fun postCdr(@RequestHeader("authorization") authorization: String,
-//                @RequestHeader("X-Request-ID") requestID: String,
-//                @RequestHeader("X-Correlation-ID") correlationID: String,
-//                @RequestHeader("OCPI-from-country-code") fromCountryCode: String,
-//                @RequestHeader("OCPI-from-party-id") fromPartyID: String,
-//                @RequestHeader("OCPI-to-country-code") toCountryCode: String,
-//                @RequestHeader("OCPI-to-party-id") toPartyID: String,
-//                @RequestBody body: CDR): ResponseEntity<OcpiResponse<Nothing>> {
-//
+    @Transactional
+    @PostMapping("/ocpi/receiver/2.2/cdrs")
+    fun postCdr(@RequestHeader("authorization") authorization: String,
+                @RequestHeader("X-Request-ID") requestID: String,
+                @RequestHeader("X-Correlation-ID") correlationID: String,
+                @RequestHeader("OCPI-from-country-code") fromCountryCode: String,
+                @RequestHeader("OCPI-from-party-id") fromPartyID: String,
+                @RequestHeader("OCPI-to-country-code") toCountryCode: String,
+                @RequestHeader("OCPI-to-party-id") toPartyID: String,
+                @RequestBody body: CDR): ResponseEntity<OcpiResponse<Nothing>> {
+
+    val response = routingService.forwardRequest(
+            module = ModuleID.Cdrs,
+            interfaceRole = InterfaceRole.RECEIVER,
+            method = HttpMethod.POST,
+            headers = HubRequestHeaders(
+                    authorization = authorization,
+                    requestID = requestID,
+                    correlationID = correlationID,
+                    ocpiFromCountryCode = fromCountryCode,
+                    ocpiFromPartyID = fromPartyID,
+                    ocpiToCountryCode = toCountryCode,
+                    ocpiToPartyID = toPartyID),
+            body = body,
+            responseBodyType = HubRequestResponseType.NOTHING)
+
+    val headers = HttpHeaders()
+    response.headers["Location"]?.let {
+        val proxyResource = ProxyResourceEntity(
+                resource = it,
+                sender = BasicRole(fromPartyID, fromCountryCode),
+                receiver = BasicRole(toPartyID, toCountryCode))
+        val savedEntity = proxyResourceRepo.save(proxyResource)
+        val proxyLocation = urlJoin(properties.url, "/ocpi/receiver/2.2/cdrs/${savedEntity.id}")
+        headers["Location"] = proxyLocation
+    }
+
+    return ResponseEntity
+            .status(response.statusCode)
+            .headers(headers)
+            .body(response.body)
+
+
+    // store Location header
+    // return new header
+
 //        val sender = BasicRole(fromPartyID, fromCountryCode)
 //        val receiver = BasicRole(toPartyID, toCountryCode)
 //        val objectData = BasicRole(body.partyID, body.countryCode)
@@ -252,6 +300,6 @@ class CdrsController(val routingService: RoutingService,
 //                .status(response.statusCode)
 //                .headers(headers)
 //                .body(response.body)
-//    }
+    }
 
 }

@@ -45,8 +45,9 @@ class Configuration(private val properties: Properties,
     fun databaseInitializer(platformRepo: PlatformRepository,
                             roleRepo: RoleRepository,
                             endpointRepo: EndpointRepository,
-                            cdrRepo: CdrRepository,
-                            cmdResponseRepo: CommandResponseUrlRepository,
+                            proxyResourceRepository: ProxyResourceRepository,
+//                            cdrRepo: CdrRepository,
+//                            cmdResponseRepo: CommandResponseUrlRepository,
                             walletRepo: WalletRepository) = ApplicationRunner {}
 
     @Bean
