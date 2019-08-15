@@ -19,16 +19,8 @@
 
 package snc.openchargingnetwork.client.controllers.ocpi.v2_2
 
-import org.springframework.http.HttpHeaders
-import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
-import snc.openchargingnetwork.client.models.HubGenericRequest
-import snc.openchargingnetwork.client.models.HubRequestParameters
-import snc.openchargingnetwork.client.models.HubRequestResponseType
-import snc.openchargingnetwork.client.models.ocpi.*
 import snc.openchargingnetwork.client.services.RoutingService
-import snc.openchargingnetwork.client.tools.generateUUIDv4Token
-import snc.openchargingnetwork.client.tools.urlJoin
 
 @RestController
 class TariffsController(val routingService: RoutingService) {

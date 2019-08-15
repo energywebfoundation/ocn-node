@@ -20,6 +20,9 @@
 package snc.openchargingnetwork.client.tools
 
 import org.web3j.crypto.Keys
+import snc.openchargingnetwork.client.models.HttpResponse
+import snc.openchargingnetwork.client.models.ocpi.CommandResponse
+import snc.openchargingnetwork.client.models.ocpi.CommandResponseType
 import java.time.Instant
 import java.time.format.DateTimeFormatter
 import java.util.UUID
@@ -56,4 +59,13 @@ fun getTimestamp(): String {
 fun generatePrivateKey(): String {
     val keys = Keys.createEcKeyPair()
     return keys.privateKey.toString(16)
+}
+
+fun isCommandResponseAccepted(response: HttpResponse<CommandResponse>): Boolean {
+    if (response.body.data == null) {
+        return false
+    }
+    return response.statusCode == 200 &&
+            response.body.statusCode == 1000 &&
+            response.body.data.result == CommandResponseType.ACCEPTED
 }

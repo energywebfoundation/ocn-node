@@ -19,21 +19,9 @@
 
 package snc.openchargingnetwork.client.controllers.ocn
 
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
-import org.springframework.http.HttpHeaders
-import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import snc.openchargingnetwork.client.config.Properties
-import snc.openchargingnetwork.client.models.HubCommandsRequest
-import snc.openchargingnetwork.client.models.HubGenericRequest
-import snc.openchargingnetwork.client.models.HubRequestResponseType
-import snc.openchargingnetwork.client.models.exceptions.OcpiClientInvalidParametersException
-import snc.openchargingnetwork.client.models.exceptions.OcpiHubConnectionProblemException
-import snc.openchargingnetwork.client.models.exceptions.OcpiHubUnknownReceiverException
-import snc.openchargingnetwork.client.models.ocpi.*
 import snc.openchargingnetwork.client.services.RoutingService
-import snc.openchargingnetwork.client.tools.urlJoin
 
 @RestController
 @RequestMapping("/ocn/message")

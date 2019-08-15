@@ -1,23 +1,9 @@
 package snc.openchargingnetwork.client.controllers.ocn
 
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.ninjasquad.springmockk.MockkBean
-import io.mockk.every
-import io.mockk.mockk
-import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
-import org.springframework.http.MediaType
 import org.springframework.test.web.servlet.MockMvc
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers
-import snc.openchargingnetwork.client.data.exampleLocation2
-import snc.openchargingnetwork.client.models.HttpResponse
-import snc.openchargingnetwork.client.models.HubGenericRequest
-import snc.openchargingnetwork.client.models.HubRequestHeaders
-import snc.openchargingnetwork.client.models.HubRequestResponseType
-import snc.openchargingnetwork.client.models.entities.EndpointEntity
-import snc.openchargingnetwork.client.models.ocpi.*
 import snc.openchargingnetwork.client.services.RoutingService
 
 @WebMvcTest(MessageController::class)

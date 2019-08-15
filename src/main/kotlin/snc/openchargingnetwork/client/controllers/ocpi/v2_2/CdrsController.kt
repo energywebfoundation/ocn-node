@@ -29,12 +29,13 @@ import snc.openchargingnetwork.client.models.*
 import snc.openchargingnetwork.client.models.entities.ProxyResourceEntity
 import snc.openchargingnetwork.client.models.ocpi.*
 import snc.openchargingnetwork.client.repositories.ProxyResourceRepository
+import snc.openchargingnetwork.client.services.HttpRequestService
 import snc.openchargingnetwork.client.services.RoutingService
-import snc.openchargingnetwork.client.tools.generateUUIDv4Token
 import snc.openchargingnetwork.client.tools.urlJoin
 
 @RestController
 class CdrsController(val routingService: RoutingService,
+                     val httpService: HttpRequestService,
                      val proxyResourceRepo: ProxyResourceRepository,
                      val properties: Properties) {
 
@@ -55,35 +56,57 @@ class CdrsController(val routingService: RoutingService,
                              @RequestParam("offset", required = false) offset: Int?,
                              @RequestParam("limit", required = false) limit: Int?): ResponseEntity<OcpiResponse<Array<CDR>>> {
 
-        val response = routingService.forwardRequest(
+
+        val sender = BasicRole(fromPartyID, fromCountryCode)
+        val receiver = BasicRole(toPartyID, toCountryCode)
+
+        routingService.validateSender(authorization, sender)
+
+        val requestVariables = OcpiRequestVariables(
                 module = ModuleID.Cdrs,
                 interfaceRole = InterfaceRole.SENDER,
                 method = HttpMethod.GET,
-                headers = HubRequestHeaders(
-                        authorization = authorization,
-                        requestID = requestID,
-                        correlationID = correlationID,
-                        ocpiFromCountryCode = fromCountryCode,
-                        ocpiFromPartyID = fromPartyID,
-                        ocpiToCountryCode = toCountryCode,
-                        ocpiToPartyID = toPartyID),
-                urlEncodedParameters = HubRequestParameters(
+                requestID = requestID,
+                correlationID = correlationID,
+                sender = sender,
+                receiver = receiver,
+                urlEncodedParameters = OcpiRequestParameters(
                         dateFrom = dateFrom,
                         dateTo = dateTo,
                         offset = offset,
                         limit = limit),
-                responseBodyType = HubRequestResponseType.CDR_ARRAY)
+                expectedResponseType = OcpiResponseDataType.CDR_ARRAY)
 
-        val headers = HttpHeaders()
-        //TODO: implement brokered pagination (somehow)
-        response.headers["Link"]?.let { headers.add("Link", "<PROXY_RESPONSE_URL>; rel=\"next\"")}
-        response.headers["X-Total-Count"]?.let { headers.add("X-Total-Count", it) }
-        response.headers["X-Limit"]?.let { headers.add("X-Limit", it) }
+        val response = when (routingService.validateReceiver(receiver)) {
+
+            OcpiRequestType.LOCAL -> {
+
+                val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables)
+
+                httpService.makeRequest(
+                        method = requestVariables.method,
+                        url = url,
+                        headers = headers,
+                        params = requestVariables.urlEncodedParameters,
+                        expectedDataType = requestVariables.expectedResponseType)
+            }
+
+            OcpiRequestType.REMOTE -> {
+
+                val (url, headers, body) = routingService.prepareRemotePlatformRequest(requestVariables)
+
+                httpService.postClientMessage(url = url, headers = headers, body = body)
+            }
+
+        }
+
+        val headers = routingService.proxyPaginationHeaders(response.headers)
 
         return ResponseEntity
                 .status(response.statusCode)
                 .headers(headers)
                 .body(response.body)
+
 
 //        val sender = BasicRole(fromPartyID, fromCountryCode)
 //        val receiver = BasicRole(toPartyID, toCountryCode)
@@ -149,21 +172,43 @@ class CdrsController(val routingService: RoutingService,
                               @RequestHeader("OCPI-to-party-id") toPartyID: String,
                               @PathVariable cdrID: String): ResponseEntity<OcpiResponse<CDR>> {
 
-        val response = routingService.forwardRequest(
-                proxy = true,
+        val sender = BasicRole(fromPartyID, fromCountryCode)
+        val receiver = BasicRole(toPartyID, toCountryCode)
+
+        routingService.validateSender(authorization, sender)
+
+        val requestVariables = OcpiRequestVariables(
                 module = ModuleID.Cdrs,
                 interfaceRole = InterfaceRole.RECEIVER,
                 method = HttpMethod.GET,
-                headers = HubRequestHeaders(
-                        authorization = authorization,
-                        requestID = requestID,
-                        correlationID = correlationID,
-                        ocpiFromCountryCode = fromCountryCode,
-                        ocpiFromPartyID = fromPartyID,
-                        ocpiToCountryCode = toCountryCode,
-                        ocpiToPartyID = toPartyID),
+                requestID = requestID,
+                correlationID = correlationID,
+                sender = sender,
+                receiver = receiver,
                 urlPathVariables = cdrID,
-                responseBodyType = HubRequestResponseType.CDR)
+                expectedResponseType = OcpiResponseDataType.CDR)
+
+        val response = when (routingService.validateReceiver(receiver)) {
+
+            OcpiRequestType.LOCAL -> {
+
+                val (url, headers) = routingService.prepareLocalProxiedPlatformRequest(requestVariables)
+
+                httpService.makeRequest(
+                        method = requestVariables.method,
+                        url = url,
+                        headers = headers,
+                        expectedDataType = requestVariables.expectedResponseType)
+            }
+
+            OcpiRequestType.REMOTE -> {
+
+                val (url, headers, body) = routingService.prepareRemotePlatformRequest(requestVariables)
+
+                httpService.postClientMessage(url = url, headers = headers, body = body)
+            }
+
+        }
 
         return ResponseEntity.status(response.statusCode).body(response.body)
 
@@ -217,40 +262,57 @@ class CdrsController(val routingService: RoutingService,
                 @RequestHeader("OCPI-to-party-id") toPartyID: String,
                 @RequestBody body: CDR): ResponseEntity<OcpiResponse<Nothing>> {
 
-    val response = routingService.forwardRequest(
-            module = ModuleID.Cdrs,
-            interfaceRole = InterfaceRole.RECEIVER,
-            method = HttpMethod.POST,
-            headers = HubRequestHeaders(
-                    authorization = authorization,
-                    requestID = requestID,
-                    correlationID = correlationID,
-                    ocpiFromCountryCode = fromCountryCode,
-                    ocpiFromPartyID = fromPartyID,
-                    ocpiToCountryCode = toCountryCode,
-                    ocpiToPartyID = toPartyID),
-            body = body,
-            responseBodyType = HubRequestResponseType.NOTHING)
+        val sender = BasicRole(fromPartyID, fromCountryCode)
+        val receiver = BasicRole(toPartyID, toCountryCode)
 
-    val headers = HttpHeaders()
-    response.headers["Location"]?.let {
-        val proxyResource = ProxyResourceEntity(
-                resource = it,
-                sender = BasicRole(fromPartyID, fromCountryCode),
-                receiver = BasicRole(toPartyID, toCountryCode))
-        val savedEntity = proxyResourceRepo.save(proxyResource)
-        val proxyLocation = urlJoin(properties.url, "/ocpi/receiver/2.2/cdrs/${savedEntity.id}")
-        headers["Location"] = proxyLocation
-    }
+        routingService.validateSender(authorization, sender)
 
-    return ResponseEntity
-            .status(response.statusCode)
-            .headers(headers)
-            .body(response.body)
+        val requestVariables = OcpiRequestVariables(
+                module = ModuleID.Cdrs,
+                interfaceRole = InterfaceRole.RECEIVER,
+                method = HttpMethod.POST,
+                requestID = requestID,
+                correlationID = correlationID,
+                sender = sender,
+                receiver = receiver,
+                body = body,
+                expectedResponseType = OcpiResponseDataType.NOTHING)
+
+        val response = when (routingService.validateReceiver(receiver)) {
+
+            OcpiRequestType.LOCAL -> {
+
+                val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables)
+
+                httpService.makeRequest(
+                        method = requestVariables.method,
+                        url = url,
+                        headers = headers,
+                        expectedDataType = requestVariables.expectedResponseType)
+            }
+
+            OcpiRequestType.REMOTE -> {
+
+                val (url, headers, ocnBody) = routingService.prepareRemotePlatformRequest(requestVariables)
+
+                httpService.postClientMessage(url = url, headers = headers, body = ocnBody)
+            }
+
+        }
+
+        val headers = HttpHeaders()
+
+        response.headers["Location"]?.let {
+
+            val resourceID = routingService.setProxyResource(it, sender, receiver)
+
+            headers["Location"] = urlJoin(properties.url, "/ocpi/receiver/2.2/cdrs/$resourceID")
+
+        }
+
+        return ResponseEntity.status(response.statusCode).body(response.body)
 
 
-    // store Location header
-    // return new header
 
 //        val sender = BasicRole(fromPartyID, fromCountryCode)
 //        val receiver = BasicRole(toPartyID, toCountryCode)

@@ -21,56 +21,35 @@ package snc.openchargingnetwork.client.controllers.ocpi.v2_2
 
 import org.springframework.http.HttpMethod
 import org.springframework.http.ResponseEntity
-import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.bind.annotation.*
 import snc.openchargingnetwork.client.config.Properties
-import snc.openchargingnetwork.client.models.HubCommandsRequest
-import snc.openchargingnetwork.client.models.HubGenericRequest
-import snc.openchargingnetwork.client.models.HubRequestHeaders
-import snc.openchargingnetwork.client.models.HubRequestResponseType
+import snc.openchargingnetwork.client.models.*
 import snc.openchargingnetwork.client.models.ocpi.*
+import snc.openchargingnetwork.client.repositories.ProxyResourceRepository
+import snc.openchargingnetwork.client.services.HttpRequestService
 import snc.openchargingnetwork.client.services.RoutingService
-import snc.openchargingnetwork.client.tools.generateUUIDv4Token
-import snc.openchargingnetwork.client.tools.urlJoin
 
 @RestController
 class CommandsController(private val routingService: RoutingService,
+                         private val httpService: HttpRequestService,
+                         private val proxyResourceRepo: ProxyResourceRepository,
                          private val properties: Properties) {
 
     /**
      * SENDER INTERFACE
      */
 
-    @PostMapping("/ocpi/sender/2.2/commands/{command}/{uid}")
-    fun postAsyncResponse(@RequestHeader("authorization") authorization: String,
-                          @RequestHeader("X-Request-ID") requestID: String,
-                          @RequestHeader("X-Correlation-ID") correlationID: String,
-                          @RequestHeader("OCPI-from-country-code") fromCountryCode: String,
-                          @RequestHeader("OCPI-from-party-id") fromPartyID: String,
-                          @RequestHeader("OCPI-to-country-code") toCountryCode: String,
-                          @RequestHeader("OCPI-to-party-id") toPartyID: String,
-                          @PathVariable("command") command: CommandType,
-                          @PathVariable("uid") uid: String,
-                          @RequestBody body: CommandResult): ResponseEntity<OcpiResponse<Nothing>> {
-
-        val response = routingService.forwardRequest(
-                proxy = true,
-                module = ModuleID.Commands,
-                interfaceRole = InterfaceRole.SENDER,
-                method = HttpMethod.POST,
-                headers = HubRequestHeaders(
-                        authorization = authorization,
-                        requestID = requestID,
-                        correlationID = correlationID,
-                        ocpiFromCountryCode = fromCountryCode,
-                        ocpiFromPartyID = fromPartyID,
-                        ocpiToCountryCode = toCountryCode,
-                        ocpiToPartyID = toPartyID),
-                urlPathVariables = uid,
-                body = body,
-                responseBodyType = HubRequestResponseType.NOTHING)
-
-        return ResponseEntity.status(response.statusCode).body(response.body)
+//    @PostMapping("/ocpi/sender/2.2/commands/{command}/{uid}")
+//    fun postAsyncResponse(@RequestHeader("authorization") authorization: String,
+//                          @RequestHeader("X-Request-ID") requestID: String,
+//                          @RequestHeader("X-Correlation-ID") correlationID: String,
+//                          @RequestHeader("OCPI-from-country-code") fromCountryCode: String,
+//                          @RequestHeader("OCPI-from-party-id") fromPartyID: String,
+//                          @RequestHeader("OCPI-to-country-code") toCountryCode: String,
+//                          @RequestHeader("OCPI-to-party-id") toPartyID: String,
+//                          @PathVariable("command") command: CommandType,
+//                          @PathVariable("uid") uid: String,
+//                          @RequestBody body: CommandResult): ResponseEntity<OcpiResponse<Nothing>> {
 //
 //        val sender = BasicRole(fromPartyID, fromCountryCode)
 //        val receiver = BasicRole(toPartyID, toCountryCode)
@@ -109,7 +88,7 @@ class CommandsController(private val routingService: RoutingService,
 //
 //        return ResponseEntity.status(response.statusCode).body(response.body)
 //
-    }
+//    }
 
     /**
      * RECEIVER INTERFACE
@@ -125,7 +104,7 @@ class CommandsController(private val routingService: RoutingService,
 //                              @RequestHeader("OCPI-to-country-code") toCountryCode: String,
 //                              @RequestHeader("OCPI-to-party-id") toPartyID: String,
 //                              @RequestBody body: CancelReservation): ResponseEntity<OcpiResponse<CommandResponse>> {
-//
+
 //        val sender = BasicRole(fromPartyID, fromCountryCode)
 //        val receiver = BasicRole(toPartyID, toCountryCode)
 //

@@ -20,120 +20,204 @@
 package snc.openchargingnetwork.client.services
 
 import org.springframework.data.repository.findByIdOrNull
+import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
 import org.springframework.stereotype.Service
-import org.web3j.crypto.Keys
-import org.web3j.crypto.Sign
-import org.web3j.utils.Numeric
 import snc.openchargingnetwork.client.models.*
+import snc.openchargingnetwork.client.models.entities.ProxyResourceEntity
 //import snc.openchargingnetwork.client.models.entities.CdrEntity
 //import snc.openchargingnetwork.client.models.entities.CommandResponseUrlEntity
 import snc.openchargingnetwork.client.models.exceptions.OcpiClientInvalidParametersException
 import snc.openchargingnetwork.client.models.exceptions.OcpiClientUnknownLocationException
-import snc.openchargingnetwork.client.models.exceptions.OcpiHubConnectionProblemException
 import snc.openchargingnetwork.client.models.exceptions.OcpiHubUnknownReceiverException
 import snc.openchargingnetwork.client.models.ocpi.*
 import snc.openchargingnetwork.client.repositories.*
 import snc.openchargingnetwork.client.tools.extractToken
 import snc.openchargingnetwork.client.tools.generateUUIDv4Token
-import snc.openchargingnetwork.client.tools.urlJoin
 import snc.openchargingnetwork.contracts.RegistryFacade
-import java.nio.charset.StandardCharsets
 
 @Service
 class RoutingService(private val platformRepo: PlatformRepository,
                      private val roleRepo: RoleRepository,
                      private val endpointRepo: EndpointRepository,
-                     private val proxyResourceRepository: ProxyResourceRepository,
+                     private val proxyResourceRepo: ProxyResourceRepository,
 //                     private val cdrRepo: CdrRepository,
 //                     private val commandResponseUrlRepo: CommandResponseUrlRepository,
                      private val httpService: HttpRequestService,
                      private val registry: RegistryFacade,
                      private val credentialsService: CredentialsService) {
 
-    fun <T: Any> forwardRequest(module: ModuleID,
-                                interfaceRole: InterfaceRole,
-                                proxy: Boolean = false,
-                                method: HttpMethod,
-                                headers: HubRequestHeaders,
-                                urlEncodedParameters: HubRequestParameters? = null,
-                                urlPathVariables: String? = null,
-                                body: Any? = null,
-                                responseBodyType: HubRequestResponseType<T>): HttpResponse<T> {
+//    fun <T: Any> forwardRequest(module: ModuleID,
+//                                interfaceRole: InterfaceRole,
+//                                proxy: Boolean = false,
+//                                method: HttpMethod,
+//                                headers: HubRequestHeaders,
+//                                urlEncodedParameters: HubRequestParameters? = null,
+//                                urlPathVariables: String? = null,
+//                                body: Any? = null,
+//                                responseBodyType: HubRequestResponseType<T>): HttpResponse<T> {
+//
+//        // validate OCPI routing headers
+//        val sender = BasicRole(headers.ocpiFromPartyID, headers.ocpiFromCountryCode)
+//        val receiver = BasicRole(headers.ocpiToPartyID, headers.ocpiToCountryCode)
+//
+//        // validate sender has OCPI connection with this OCN Client
+//        validateSender(headers.authorization!!, sender)
+//
+//        // check receiver has OCPI connection with this OCN Client
+//        getPlatformID(receiver)?.let {
+//
+//            // find/build the module endpoint url of the receiver
+//            val url = if (proxy) {
+//
+//                /**
+//                 * DIFFERENTIATE BETWEEN PROXY REQUEST / RESPONSE
+//                 * i.e. a request that includes a proxy resource (requiring lookup of true resource location)
+//                 * v.s. a request that includes a resource which needs to be proxied
+//                 */
+//
+//                // find url stored by proxy
+//                getProxyResource(urlPathVariables, sender, receiver)
+//
+//            } else {
+//
+//                // find url stored during module handshake
+//                val endpoint = getPlatformEndpoint(it, module.toString(), interfaceRole)
+//
+//                // join url path variables if applicable
+//                if (urlPathVariables != null) {
+//                    urlJoin(endpoint.url, urlPathVariables)
+//                } else {
+//                    endpoint.url
+//                }
+//            }
+//
+//            // create new headers for the request to be forwarded
+//            val clientHeaders = makeHeaders(it, headers.correlationID, sender, receiver)
+//
+//            // forward the request to the "local" receiver (sharing the same OCN Client)
+//            return httpService.makeRequest(
+//                    method = method,
+//                    url = url,
+//                    headers = clientHeaders,
+//                    params = urlEncodedParameters?.encode(),
+//                    expectedDataType = responseBodyType.type)
+//        }
+//
+//        // look up Client URL of receiver in OCN Registry
+//        val url = findRemoteClientUrl(receiver)
+//
+//        // Include the true resource location for the other OCN client to use
+//        val proxyResource = if (proxy) { getProxyResource(urlPathVariables, sender, receiver) } else { null }
+//
+//        // create the OCN message request body
+//        val clientBody = HubGenericRequest(
+//                module = module.toString(),
+//                method = method.toString(),
+//                role = interfaceRole,
+//                headers = headers,
+//                params = urlEncodedParameters,
+//                path = urlPathVariables,
+//                body = body,
+//                proxyResource = proxyResource,
+//                expectedResponseType = responseBodyType)
+//
+//        // forward the request to the remote receiver's OCN client
+//        return httpService.makeRequest(
+//                method = HttpMethod.POST,
+//                url = urlJoin(url, "/ocn/message"),
+//                headers = mapOf(
+//                        "X-Request-ID" to generateUUIDv4Token(),
+//                        "OCN-Signature" to signRequest(clientBody)),
+//                body = clientBody,
+//                expectedDataType = responseBodyType.type)
+//    }
 
-        // validate OCPI routing headers
-        val sender = BasicRole(headers.ocpiFromPartyID, headers.ocpiFromCountryCode)
-        val receiver = BasicRole(headers.ocpiToPartyID, headers.ocpiToCountryCode)
+    fun <T: Any> prepareLocalPlatformRequest(request: OcpiRequestVariables<T>): Pair<String, OcpiRequestHeaders> {
 
-        // validate sender has OCPI connection with this OCN Client
-        validateSender(headers.authorization!!, sender)
+        val platformID = getPlatformID(request.receiver)
+        val url = getPlatformEndpoint(platformID, request.module, request.interfaceRole).url
 
-        // check receiver has OCPI connection with this OCN Client
-        getPlatformID(receiver)?.let {
+        val tokenB = platformRepo.findById(platformID).get().auth.tokenB
+        val headers = OcpiRequestHeaders(
+                authorization = "Token $tokenB",
+                requestID = generateUUIDv4Token(),
+                correlationID = request.correlationID,
+                ocpiFromCountryCode = request.sender.country,
+                ocpiFromPartyID = request.sender.id,
+                ocpiToCountryCode = request.receiver.country,
+                ocpiToPartyID = request.receiver.id)
 
-            // find/build the module endpoint url of the receiver
-            val url = if (proxy) {
+        return Pair(url, headers)
+    }
 
-                // find url stored by proxy
-                getProxyResource(urlPathVariables, sender, receiver)
+    fun <T: Any> prepareLocalProxiedPlatformRequest(request: OcpiRequestVariables<T>): Pair<String, OcpiRequestHeaders> {
 
-            } else {
+        val url = getProxyResource(request.urlPathVariables, request.sender, request.receiver)
 
-                // find url stored during module handshake
-                val endpoint = getPlatformEndpoint(it, module.toString(), interfaceRole)
+        val platformID = getPlatformID(request.receiver)
+        val tokenB = platformRepo.findById(platformID).get().auth.tokenB
+        val headers = OcpiRequestHeaders(
+                authorization = "Token $tokenB",
+                requestID = generateUUIDv4Token(),
+                correlationID = request.correlationID,
+                ocpiFromCountryCode = request.sender.country,
+                ocpiFromPartyID = request.sender.id,
+                ocpiToCountryCode = request.receiver.country,
+                ocpiToPartyID = request.receiver.id)
 
-                // join url path variables if applicable
-                if (urlPathVariables != null) {
-                    urlJoin(endpoint.url, urlPathVariables)
-                } else {
-                    endpoint.url
-                }
-            }
+        return Pair(url, headers)
+    }
 
-            // create new headers for the request to be forwarded
-            val clientHeaders = makeHeaders(it, headers.correlationID, sender, receiver)
+    fun <T: Any> prepareRemotePlatformRequest(request: OcpiRequestVariables<T>): Triple<String, OcnMessageHeaders, OcnMessageRequestBody<T>> {
 
-            // forward the request to the "local" receiver (sharing the same OCN Client)
-            return httpService.makeRequest(
-                    method = method,
-                    url = url,
-                    headers = clientHeaders,
-                    params = urlEncodedParameters?.encode(),
-                    expectedDataType = responseBodyType.type)
-        }
+        val url = getRemoteClientUrl(request.receiver)
 
-        // look up Client URL of receiver in OCN Registry
-        val url = findRemoteClientUrl(receiver)
+        val body = OcnMessageRequestBody(
+                method = request.method,
+                interfaceRole = request.interfaceRole,
+                module = request.module,
+                headers = OcpiRequestHeaders(
+                        requestID = request.requestID,
+                        correlationID = request.correlationID,
+                        ocpiFromCountryCode = request.sender.country,
+                        ocpiFromPartyID = request.sender.id,
+                        ocpiToCountryCode = request.receiver.country,
+                        ocpiToPartyID = request.receiver.id),
+                urlPathVariables = request.urlPathVariables,
+                urlEncodedParameters = request.urlEncodedParameters,
+                body = request.body,
+                proxyResource = request.proxyResource,
+                expectedResponseType = request.expectedResponseType)
 
-        // Include the true resource location for the other OCN client to use
-        val proxyResource = if (proxy) { getProxyResource(urlPathVariables, sender, receiver) } else { null }
+        val headers = OcnMessageHeaders(
+                requestID = generateUUIDv4Token(),
+                signature = credentialsService.signRequest(stringify(body)))
 
-        // create the OCN message request body
-        val clientBody = HubGenericRequest(
-                module = module.toString(),
-                method = method.toString(),
-                role = interfaceRole,
-                headers = headers,
-                params = urlEncodedParameters,
-                path = urlPathVariables,
-                body = body,
-                proxyResource = proxyResource,
-                expectedResponseType = responseBodyType)
+        return Triple(url, headers, body)
+    }
 
-        // forward the request to the remote receiver's OCN client
-        return httpService.makeRequest(
-                method = HttpMethod.POST,
-                url = urlJoin(url, "/ocn/message"),
-                headers = mapOf(
-                        "X-Request-ID" to generateUUIDv4Token(),
-                        "OCN-Signature" to signRequest(clientBody)),
-                body = clientBody,
-                expectedDataType = responseBodyType.type)
+    fun proxyPaginationHeaders(responseHeaders: Map<String, String>): HttpHeaders {
+        val headers = HttpHeaders()
+        //TODO: implement brokered pagination (save platform's link and replace with client-readable link)
+        responseHeaders["Link"]?.let { headers.add("Link", "<PROXY_RESPONSE_URL>; rel=\"next\"")}
+        responseHeaders["X-Total-Count"]?.let { headers.add("X-Total-Count", it) }
+        responseHeaders["X-Limit"]?.let { headers.add("X-Limit", it) }
+        return headers
+    }
+
+    fun setProxyResource(resource: String, sender: BasicRole, receiver: BasicRole): Long {
+        val proxyResource = ProxyResourceEntity(
+                resource = resource,
+                sender = sender,
+                receiver = receiver)
+        val savedEntity = proxyResourceRepo.save(proxyResource)
+        return savedEntity.id!!
     }
 
     fun getProxyResource(id: String?, sender: BasicRole, receiver: BasicRole): String {
         id?.let {
-            return proxyResourceRepository.findByIdOrNull(id.toLong())?.resource
+            return proxyResourceRepo.findByIdOrNull(id.toLong())?.resource
                     ?: throw OcpiClientUnknownLocationException("Resource not found")
         }
         throw OcpiClientUnknownLocationException("Resource not found")
@@ -142,9 +226,10 @@ class RoutingService(private val platformRepo: PlatformRepository,
     fun isRoleKnown(role: BasicRole) = roleRepo.existsByCountryCodeAndPartyIDAllIgnoreCase(role.country, role.id)
 
     fun getPlatformID(role: BasicRole) = roleRepo.findByCountryCodeAndPartyIDAllIgnoreCase(role.country, role.id)?.platformID
+            ?: throw OcpiHubUnknownReceiverException("Could not find platform ID of $role")
 
-    fun getPlatformEndpoint(platformID: Long?, identifier: String, interfaceRole: InterfaceRole)
-            = endpointRepo.findByPlatformIDAndIdentifierAndRole(platformID, identifier, interfaceRole)
+    fun getPlatformEndpoint(platformID: Long?, module: ModuleID, interfaceRole: InterfaceRole)
+            = endpointRepo.findByPlatformIDAndIdentifierAndRole(platformID, module.value, interfaceRole)
             ?: throw OcpiClientInvalidParametersException("Receiver does not support the requested module")
 
     fun validateSender(authorization: String) {
@@ -188,42 +273,51 @@ class RoutingService(private val platformRepo: PlatformRepository,
         }
     }
 
-    fun makeHeaders(requestID: String, correlationID: String, sender: BasicRole, receiver: BasicRole): HubRequestHeaders {
-        return HubRequestHeaders(
-                requestID = requestID,
-                correlationID = correlationID,
-                ocpiFromCountryCode = sender.country,
-                ocpiFromPartyID = sender.id,
-                ocpiToCountryCode = receiver.country,
-                ocpiToPartyID = receiver.id)
+    // check recipient exists local/remote
+    fun validateReceiver(receiver: BasicRole): OcpiRequestType {
+        return when {
+            isRoleKnown(receiver) -> OcpiRequestType.LOCAL
+            isRoleKnownOnNetwork(receiver) -> OcpiRequestType.REMOTE
+            else -> throw OcpiHubUnknownReceiverException("Receiver not registered on Open Charging Network")
+        }
     }
 
-    fun makeHeaders(receiverPlatformID: Long?, correlationID: String, sender: BasicRole, receiver: BasicRole): Map<String, String> {
-        val token = platformRepo.findById(receiverPlatformID!!).get().auth.tokenB
-        return mapOf(
-                "Authorization" to "Token $token",
-                "X-Request-ID" to generateUUIDv4Token(),
-                "X-Correlation-ID" to correlationID,
-                "OCPI-From-Country-Code" to sender.country,
-                "OCPI-From-Party-ID" to sender.id,
-                "OCPI-To-Country-Code" to receiver.country,
-                "OCPI-To-Party-ID" to receiver.id)
-    }
+//    fun makeHeaders(requestID: String, correlationID: String, sender: BasicRole, receiver: BasicRole): OcpiRequestHeaders {
+//        return OcpiRequestHeaders(
+//                requestID = requestID,
+//                correlationID = correlationID,
+//                ocpiFromCountryCode = sender.country,
+//                ocpiFromPartyID = sender.id,
+//                ocpiToCountryCode = receiver.country,
+//                ocpiToPartyID = receiver.id)
+//    }
 
-    fun makeHeaders(correlationID: String, sender: BasicRole, receiver: BasicRole): Map<String, String> {
-        return mapOf(
-                "X-Request-ID" to generateUUIDv4Token(),
-                "X-Correlation-ID" to correlationID,
-                "OCPI-From-Country-Code" to sender.country,
-                "OCPI-From-Party-ID" to sender.id,
-                "OCPI-To-Country-Code" to receiver.country,
-                "OCPI-To-Party-ID" to receiver.id)
-    }
+//    fun makeHeaders(receiverPlatformID: Long?, correlationID: String, sender: BasicRole, receiver: BasicRole): Map<String, String> {
+//        val token = platformRepo.findById(receiverPlatformID!!).get().auth.tokenB
+//        return mapOf(
+//                "Authorization" to "Token $token",
+//                "X-Request-ID" to generateUUIDv4Token(),
+//                "X-Correlation-ID" to correlationID,
+//                "OCPI-From-Country-Code" to sender.country,
+//                "OCPI-From-Party-ID" to sender.id,
+//                "OCPI-To-Country-Code" to receiver.country,
+//                "OCPI-To-Party-ID" to receiver.id)
+//    }
+//
+//    fun makeHeaders(correlationID: String, sender: BasicRole, receiver: BasicRole): Map<String, String> {
+//        return mapOf(
+//                "X-Request-ID" to generateUUIDv4Token(),
+//                "X-Correlation-ID" to correlationID,
+//                "OCPI-From-Country-Code" to sender.country,
+//                "OCPI-From-Party-ID" to sender.id,
+//                "OCPI-To-Country-Code" to receiver.country,
+//                "OCPI-To-Party-ID" to receiver.id)
+//    }
 
-    fun findRemoteClientUrl(receiver: BasicRole): String {
+    fun getRemoteClientUrl(receiver: BasicRole): String {
         val url = registry.clientURLOf(receiver.country.toByteArray(), receiver.id.toByteArray()).sendAsync().get()
         if (url == "") {
-            throw OcpiHubUnknownReceiverException()
+            throw OcpiHubUnknownReceiverException("Recipient not registered on OCN")
         }
         return url
     }
@@ -299,33 +393,6 @@ class RoutingService(private val platformRepo: PlatformRepository,
             }
         }
         return allClientInfo
-    }
-
-    fun signRequest(body: Any): String {
-        val dataToSign = stringify(body).toByteArray(StandardCharsets.UTF_8)
-        val signature = Sign.signPrefixedMessage(dataToSign, credentialsService.credentials.ecKeyPair)
-        return Numeric.cleanHexPrefix(Numeric.toHexString(signature.r)) +
-               Numeric.cleanHexPrefix(Numeric.toHexString(signature.s)) +
-               Numeric.cleanHexPrefix(Numeric.toHexString(signature.v))
-    }
-
-    fun verifyRequest(body: Any, signature: String, sender: BasicRole) {
-        val signedRequest = stringify(body).toByteArray(StandardCharsets.UTF_8)
-        val cleanSignature = Numeric.cleanHexPrefix(signature)
-        val r = cleanSignature.substring(0, 64)
-        val s = cleanSignature.substring(64, 128)
-        val v = cleanSignature.substring(128, 130)
-        val signingKey = Sign.signedPrefixedMessageToKey(signedRequest, Sign.SignatureData(
-                Numeric.hexStringToByteArray(v),
-                Numeric.hexStringToByteArray(r),
-                Numeric.hexStringToByteArray(s)))
-        val signingAddress = "0x${Keys.getAddress(signingKey)}"
-        val registeredClientAddress = registry.clientAddressOf(
-                sender.country.toByteArray(),
-                sender.id.toByteArray()).sendAsync().get()
-        if (signingAddress != registeredClientAddress) {
-            throw OcpiHubConnectionProblemException("Could not verify OCN-Signature of request")
-        }
     }
 
 }
