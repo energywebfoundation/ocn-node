@@ -27,7 +27,6 @@ import org.springframework.web.bind.annotation.*
 import snc.openchargingnetwork.client.config.Properties
 import snc.openchargingnetwork.client.models.*
 import snc.openchargingnetwork.client.models.ocpi.*
-import snc.openchargingnetwork.client.repositories.ProxyResourceRepository
 import snc.openchargingnetwork.client.services.HttpRequestService
 import snc.openchargingnetwork.client.services.RoutingService
 import snc.openchargingnetwork.client.tools.urlJoin
