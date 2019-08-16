@@ -26,7 +26,6 @@ import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.bind.annotation.*
 import snc.openchargingnetwork.client.config.Properties
 import snc.openchargingnetwork.client.models.*
-import snc.openchargingnetwork.client.models.entities.ProxyResourceEntity
 import snc.openchargingnetwork.client.models.ocpi.*
 import snc.openchargingnetwork.client.repositories.ProxyResourceRepository
 import snc.openchargingnetwork.client.services.HttpRequestService
@@ -36,8 +35,8 @@ import snc.openchargingnetwork.client.tools.urlJoin
 @RestController
 class CdrsController(val routingService: RoutingService,
                      val httpService: HttpRequestService,
-                     val proxyResourceRepo: ProxyResourceRepository,
                      val properties: Properties) {
+
 
     /**
      * SENDER INTERFACE
@@ -106,56 +105,6 @@ class CdrsController(val routingService: RoutingService,
                 .status(response.statusCode)
                 .headers(headers)
                 .body(response.body)
-
-
-//        val sender = BasicRole(fromPartyID, fromCountryCode)
-//        val receiver = BasicRole(toPartyID, toCountryCode)
-//
-//        routingService.validateSender(authorization, sender)
-//
-//        val params = HubRequestParameters(dateFrom = dateFrom, dateTo = dateTo, offset = offset, limit = limit)
-//
-//        val response = if (routingService.isRoleKnown(receiver)) {
-//            val platformID = routingService.getPlatformID(receiver)
-//            val endpoint = routingService.getPlatformEndpoint(platformID, "cdrs", InterfaceRole.SENDER)
-//            val headers = routingService.makeHeaders(platformID, correlationID, sender, receiver)
-//            routingService.forwardRequest(
-//                    method = "GET",
-//                    url = endpoint.url,
-//                    headers = headers,
-//                    params = params.encode(),
-//                    expectedDataType = Array<CDR>::class)
-//        } else {
-//            val url = routingService.findBrokerUrl(receiver)
-//            val headers = routingService.makeHeaders(requestID, correlationID, sender, receiver)
-//            val hubRequestBody = HubGenericRequest(
-//                    method = "GET",
-//                    module = "cdrs",
-//                    role = InterfaceRole.SENDER,
-//                    params = params,
-//                    headers = headers,
-//                    body = null,
-//                    expectedResponseType = HubRequestResponseType.CDR_ARRAY)
-//            routingService.forwardRequest(
-//                    method = "POST",
-//                    url = urlJoin(url, "/ocn/message"),
-//                    headers = mapOf(
-//                            "X-Request-ID" to generateUUIDv4Token(),
-//                            "OCN-Signature" to routingService.signRequest(hubRequestBody)),
-//                    body = hubRequestBody,
-//                    expectedDataType = Array<CDR>::class)
-//        }
-//
-//        val headers = HttpHeaders()
-//        //TODO: implement brokered pagination (somehow)
-//        response.headers["Link"]?.let { headers.add("Link", "<RESPONSE_URL>; rel=\"next\"")}
-//        response.headers["X-Total-Count"]?.let { headers.add("X-Total-Count", it) }
-//        response.headers["X-Limit"]?.let { headers.add("X-Limit", it) }
-//
-//        return ResponseEntity
-//                .status(response.statusCode)
-//                .headers(headers)
-//                .body(response.body)
     }
 
     /**
@@ -211,46 +160,9 @@ class CdrsController(val routingService: RoutingService,
         }
 
         return ResponseEntity.status(response.statusCode).body(response.body)
-
-
-//        val sender = BasicRole(fromPartyID, fromCountryCode)
-//        val receiver = BasicRole(toPartyID, toCountryCode)
-//
-//        routingService.validateSender(authorization, sender)
-//
-//        val response = if (routingService.isRoleKnown(receiver)) {
-//            val platformID = routingService.getPlatformID(receiver)
-//            val headers = routingService.makeHeaders(platformID, correlationID, sender, receiver)
-//            val url = routingService.findCDR(cdrID, sender, receiver)
-//            routingService.forwardRequest(
-//                    method = "GET",
-//                    url = url,
-//                    headers = headers,
-//                    expectedDataType = CDR::class)
-//        } else {
-//            val url = routingService.findBrokerUrl(receiver)
-//            val headers = routingService.makeHeaders(requestID, correlationID, sender, receiver)
-//            val hubRequestBody = HubGenericRequest(
-//                    method = "GET",
-//                    module = "cdrs",
-//                    role = InterfaceRole.RECEIVER,
-//                    headers = headers,
-//                    body = null,
-//                    expectedResponseType = HubRequestResponseType.CDR)
-//            //TODO: save URL on remote broker
-//            routingService.forwardRequest(
-//                    method = "POST",
-//                    url = urlJoin(url, "/ocn/message"),
-//                    headers = mapOf(
-//                            "X-Request-ID" to generateUUIDv4Token(),
-//                            "OCN-Signature" to routingService.signRequest(hubRequestBody)),
-//                    body = hubRequestBody,
-//                    expectedDataType = CDR::class)
-//        }
-//
-//        return ResponseEntity.status(response.statusCode).body(response.body)
     }
-//
+
+
     @Transactional
     @PostMapping("/ocpi/receiver/2.2/cdrs")
     fun postCdr(@RequestHeader("authorization") authorization: String,
@@ -303,68 +215,14 @@ class CdrsController(val routingService: RoutingService,
         val headers = HttpHeaders()
 
         response.headers["Location"]?.let {
-
             val resourceID = routingService.setProxyResource(it, sender, receiver)
-
             headers["Location"] = urlJoin(properties.url, "/ocpi/receiver/2.2/cdrs/$resourceID")
-
         }
 
         return ResponseEntity
                 .status(response.statusCode)
                 .headers(headers)
                 .body(response.body)
-
-
-
-//        val sender = BasicRole(fromPartyID, fromCountryCode)
-//        val receiver = BasicRole(toPartyID, toCountryCode)
-//        val objectData = BasicRole(body.partyID, body.countryCode)
-//
-//        routingService.validateSender(authorization, sender, objectData)
-//
-//        val response = if (routingService.isRoleKnown(receiver)) {
-//            val platformID = routingService.getPlatformID(receiver)
-//            val endpoint = routingService.getPlatformEndpoint(platformID, "cdrs", InterfaceRole.RECEIVER)
-//            val headers = routingService.makeHeaders(platformID, correlationID, sender, receiver)
-//            routingService.forwardRequest(
-//                    method = "POST",
-//                    url = endpoint.url,
-//                    headers = headers,
-//                    body = body,
-//                    expectedDataType = Nothing::class)
-//        } else {
-//            val url = routingService.findBrokerUrl(receiver)
-//            val headers = routingService.makeHeaders(requestID, correlationID, sender, receiver)
-//            val hubRequestBody = HubGenericRequest(
-//                    method = "POST",
-//                    module = "cdrs",
-//                    path = url,
-//                    role = InterfaceRole.RECEIVER,
-//                    headers = headers,
-//                    body = body)
-//            routingService.forwardRequest(
-//                    method = "POST",
-//                    url = urlJoin(url, "/ocn/message"),
-//                    headers = mapOf(
-//                            "X-Request-ID" to generateUUIDv4Token(),
-//                            "OCN-Signature" to routingService.signRequest(hubRequestBody)),
-//                    body = hubRequestBody,
-//                    expectedDataType = Nothing::class)
-//        }
-//
-//        val headers = HttpHeaders()
-//
-//        response.headers["Location"]?.let {
-//            routingService.saveCDR(body.id, it, sender, receiver)
-//            val cdr = urlJoin(properties.url, "/ocpi/receiver/2.2/cdrs/${body.id}")
-//            headers.add("Location", cdr)
-//        }
-//
-//        return ResponseEntity
-//                .status(response.statusCode)
-//                .headers(headers)
-//                .body(response.body)
     }
 
 }
