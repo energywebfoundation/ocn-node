@@ -72,7 +72,7 @@ class CdrsControllerTest(@Autowired val mockMvc: MockMvc) {
                 ocpiToCountryCode = receiver.country,
                 ocpiToPartyID = receiver.id)
 
-        every { routingService.validateSender("Token token-b", sender) } just Runs
+        every { routingService.validateSender("Token token-c", sender) } just Runs
         every { routingService.validateReceiver(receiver) } returns OcpiRequestType.LOCAL
         every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, headers)
 
@@ -101,7 +101,7 @@ class CdrsControllerTest(@Autowired val mockMvc: MockMvc) {
         every { routingService.proxyPaginationHeaders(responseHeaders) } returns httpHeaders
 
         mockMvc.perform(get("/ocpi/sender/2.2/cdrs")
-                .header("Authorization", headers.authorization)
+                .header("Authorization", "Token token-c")
                 .header("X-Request-ID", requestVariables.requestID)
                 .header("X-Correlation-ID", requestVariables.correlationID)
                 .header("OCPI-from-country-code", requestVariables.sender.country)
@@ -122,111 +122,137 @@ class CdrsControllerTest(@Autowired val mockMvc: MockMvc) {
                 .andExpect(jsonPath("\$.timestamp").isString)
     }
 
-//    @Test
-//    fun `When GET receiver CDRs should return single CDR`() {
-//
-//        val cdrID = generateUUIDv4Token()
-//
-//        val headers = OcpiRequestHeaders(
-//                authorization = "Token ${generateUUIDv4Token()}",
-//                requestID = generateUUIDv4Token(),
-//                correlationID = generateUUIDv4Token(),
-//                ocpiFromPartyID = "ZUB",
-//                ocpiFromCountryCode = "UK",
-//                ocpiToPartyID = "ABC",
-//                ocpiToCountryCode = "DE")
-//
-//        every {
-//
-//            routingService.forwardRequest(
-//                    proxy = true,
-//                    module = ModuleID.Cdrs,
-//                    interfaceRole = InterfaceRole.RECEIVER,
-//                    method = HttpMethod.GET,
-//                    headers = headers,
-//                    urlPathVariables = cdrID,
-//                    responseBodyType = OcpiResponseDataType.CDR)
-//
-//        } returns HttpResponse(
-//                statusCode = 200,
-//                headers = mapOf(),
-//                body = OcpiResponse(
-//                        statusCode = 1000,
-//                        data = exampleCDR))
-//
-//        mockMvc.perform(get("/ocpi/receiver/2.2/cdrs/$cdrID")
-//                .header("Authorization", headers.authorization)
-//                .header("X-Request-ID", headers.requestID)
-//                .header("X-Correlation-ID", headers.correlationID)
-//                .header("OCPI-from-country-code", headers.ocpiFromCountryCode)
-//                .header("OCPI-from-party-id", headers.ocpiFromPartyID)
-//                .header("OCPI-to-country-code", headers.ocpiToCountryCode)
-//                .header("OCPI-to-party-id", headers.ocpiToPartyID))
-//                .andExpect(status().isOk)
-//                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
-//                .andExpect(jsonPath("\$.status_code").value(1000))
-//                .andExpect(jsonPath("\$.status_message").doesNotExist())
-//                .andExpect(jsonPath("\$.data.id").value(exampleCDR.id))
-//                .andExpect(jsonPath("\$.data.party_id").value(exampleCDR.partyID))
-//                .andExpect(jsonPath("\$.timestamp").isString)
-//    }
-//
-//    @Test
-//    fun `when POST receiver cdrs should return Location header`() {
-//
-//        val location = "https://cool.emsp.net/ocpi/receiver/2.2/cdrs/1234567890"
-//
-//        val headers = OcpiRequestHeaders(
-//                authorization = "Token ${generateUUIDv4Token()}",
-//                requestID = generateUUIDv4Token(),
-//                correlationID = generateUUIDv4Token(),
-//                ocpiFromPartyID = "DDD",
-//                ocpiFromCountryCode = "BE",
-//                ocpiToPartyID = "EEE",
-//                ocpiToCountryCode = "NL")
-//
-//        every {
-//
-//            routingService.forwardRequest(
-//                    module = ModuleID.Cdrs,
-//                    interfaceRole = InterfaceRole.RECEIVER,
-//                    method = HttpMethod.POST,
-//                    headers = headers,
-//                    body = exampleCDR,
-//                    responseBodyType = OcpiResponseDataType.NOTHING)
-//
-//        } returns HttpResponse(
-//                statusCode = 200,
-//                headers = mapOf("Location" to location),
-//                body = OcpiResponse(
-//                        statusCode = 1000,
-//                        data = null))
-//
-//        every { proxyResourceRepo.save(any<ProxyResourceEntity>()) } returns ProxyResourceEntity(
-//                id = 5L,
-//                resource = location,
-//                sender = BasicRole(headers.ocpiFromPartyID, headers.ocpiFromCountryCode),
-//                receiver = BasicRole(headers.ocpiToPartyID, headers.ocpiToCountryCode))
-//
-//        every { properties.url } returns "https://super.hub.net"
-//
-//        mockMvc.perform(post("/ocpi/receiver/2.2/cdrs")
-//                .header("Authorization", headers.authorization)
-//                .header("X-Request-ID", headers.requestID)
-//                .header("X-Correlation-ID", headers.correlationID)
-//                .header("OCPI-from-country-code", headers.ocpiFromCountryCode)
-//                .header("OCPI-from-party-id", headers.ocpiFromPartyID)
-//                .header("OCPI-to-country-code", headers.ocpiToCountryCode)
-//                .header("OCPI-to-party-id", headers.ocpiToPartyID)
-//                .contentType(MediaType.APPLICATION_JSON)
-//                .content(jacksonObjectMapper().writeValueAsString(exampleCDR)))
-//                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
-//                .andExpect(jsonPath("\$.status_code").value(1000))
-//                .andExpect(jsonPath("\$.status_message").doesNotExist())
-//                .andExpect(jsonPath("\$.data").doesNotExist())
-//                .andExpect(jsonPath("\$.timestamp").isString)
-//                .andExpect(header().string("Location", "https://super.hub.net/ocpi/receiver/2.2/cdrs/5"))
-//    }
+    @Test
+    fun `When GET receiver CDRs should return single CDR`() {
+
+        val sender = BasicRole("ZTP", "CH")
+        val receiver = BasicRole("EMY", "DE")
+
+        val requestVariables = OcpiRequestVariables(
+                module = ModuleID.Cdrs,
+                interfaceRole = InterfaceRole.RECEIVER,
+                method = HttpMethod.GET,
+                requestID = generateUUIDv4Token(),
+                correlationID = generateUUIDv4Token(),
+                sender = sender,
+                receiver = receiver,
+                urlPathVariables = "6534",
+                expectedResponseType = OcpiResponseDataType.CDR)
+
+        val url = "https://some.cpo.com/ocpi/emsp/2.2/cdrs"
+
+        val headers = OcpiRequestHeaders(
+                authorization = "Token token-b",
+                requestID = generateUUIDv4Token(),
+                correlationID = requestVariables.correlationID,
+                ocpiFromCountryCode = sender.country,
+                ocpiFromPartyID = sender.id,
+                ocpiToCountryCode = receiver.country,
+                ocpiToPartyID = receiver.id)
+
+        every { routingService.validateSender("Token token-c", sender) } just Runs
+        every { routingService.validateReceiver(receiver) } returns OcpiRequestType.LOCAL
+        every { routingService.prepareLocalPlatformRequest(requestVariables, proxied = true) } returns Pair(url, headers)
+
+        every {
+
+            httpService.makeRequest(
+                    method = requestVariables.method,
+                    url = url,
+                    headers = headers,
+                    params = requestVariables.urlEncodedParameters,
+                    expectedDataType = requestVariables.expectedResponseType)
+
+        } returns HttpResponse(
+                statusCode = 200,
+                headers = mapOf(),
+                body = OcpiResponse(statusCode = 1000, data = exampleCDR))
+
+        mockMvc.perform(get("/ocpi/receiver/2.2/cdrs/${requestVariables.urlPathVariables}")
+                .header("Authorization", "Token token-c")
+                .header("X-Request-ID", requestVariables.requestID)
+                .header("X-Correlation-ID", requestVariables.correlationID)
+                .header("OCPI-from-country-code", requestVariables.sender.country)
+                .header("OCPI-from-party-id", requestVariables.sender.id)
+                .header("OCPI-to-country-code", requestVariables.receiver.country)
+                .header("OCPI-to-party-id", requestVariables.receiver.id))
+                .andExpect(status().isOk)
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
+                .andExpect(jsonPath("\$.status_code").value(1000))
+                .andExpect(jsonPath("\$.status_message").doesNotExist())
+                .andExpect(jsonPath("\$.data.id").value(exampleCDR.id))
+                .andExpect(jsonPath("\$.data.party_id").value(exampleCDR.partyID))
+                .andExpect(jsonPath("\$.timestamp").isString)
+    }
+
+    @Test
+    fun `when POST receiver cdrs should return Location header`() {
+
+        val sender = BasicRole("ZTP", "CH")
+        val receiver = BasicRole("EMY", "DE")
+
+        val requestVariables = OcpiRequestVariables(
+                module = ModuleID.Cdrs,
+                interfaceRole = InterfaceRole.RECEIVER,
+                method = HttpMethod.POST,
+                requestID = generateUUIDv4Token(),
+                correlationID = generateUUIDv4Token(),
+                sender = sender,
+                receiver = receiver,
+                body = exampleCDR,
+                expectedResponseType = OcpiResponseDataType.NOTHING)
+
+        val url = "https://some.cpo.com/ocpi/emsp/2.2/cdrs"
+
+        val headers = OcpiRequestHeaders(
+                authorization = "Token token-b",
+                requestID = generateUUIDv4Token(),
+                correlationID = requestVariables.correlationID,
+                ocpiFromCountryCode = sender.country,
+                ocpiFromPartyID = sender.id,
+                ocpiToCountryCode = receiver.country,
+                ocpiToPartyID = receiver.id)
+
+        every { routingService.validateSender("Token token-c", sender) } just Runs
+        every { routingService.validateReceiver(receiver) } returns OcpiRequestType.LOCAL
+        every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, headers)
+
+        val locationHeader = "https://real.msp.net/path/to/location/1"
+
+        every {
+
+            httpService.makeRequest(
+                    method = requestVariables.method,
+                    url = url,
+                    headers = headers,
+                    params = requestVariables.urlEncodedParameters,
+                    expectedDataType = requestVariables.expectedResponseType)
+
+        } returns HttpResponse(
+                statusCode = 200,
+                headers = mapOf("Location" to locationHeader),
+                body = OcpiResponse(statusCode = 1000, data = null))
+
+        every { routingService.setProxyResource(locationHeader, sender, receiver) } returns 6545L
+        every { properties.url } returns "https://super.hub.net"
+
+        mockMvc.perform(post("/ocpi/receiver/2.2/cdrs")
+                .header("Authorization", "Token token-c")
+                .header("X-Request-ID", requestVariables.requestID)
+                .header("X-Correlation-ID", requestVariables.correlationID)
+                .header("OCPI-from-country-code", requestVariables.sender.country)
+                .header("OCPI-from-party-id", requestVariables.sender.id)
+                .header("OCPI-to-country-code", requestVariables.receiver.country)
+                .header("OCPI-to-party-id", requestVariables.receiver.id)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jacksonObjectMapper().writeValueAsString(exampleCDR)))
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
+                .andExpect(jsonPath("\$.status_code").value(1000))
+                .andExpect(jsonPath("\$.status_message").doesNotExist())
+                .andExpect(jsonPath("\$.data").doesNotExist())
+                .andExpect(jsonPath("\$.timestamp").isString)
+                .andExpect(header().string("Location", "https://super.hub.net/ocpi/receiver/2.2/cdrs/6545"))
+    }
 
 
 //        val sender = BasicRole("ZUG", "CH")

@@ -192,7 +192,7 @@ class CdrsController(val routingService: RoutingService,
 
             OcpiRequestType.LOCAL -> {
 
-                val (url, headers) = routingService.prepareLocalProxiedPlatformRequest(requestVariables)
+                val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables, proxied = true)
 
                 httpService.makeRequest(
                         method = requestVariables.method,
@@ -310,7 +310,10 @@ class CdrsController(val routingService: RoutingService,
 
         }
 
-        return ResponseEntity.status(response.statusCode).body(response.body)
+        return ResponseEntity
+                .status(response.statusCode)
+                .headers(headers)
+                .body(response.body)
 
 
 

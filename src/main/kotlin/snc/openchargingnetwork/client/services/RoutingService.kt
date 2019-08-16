@@ -133,29 +133,16 @@ class RoutingService(private val platformRepo: PlatformRepository,
 //                expectedDataType = responseBodyType.type)
 //    }
 
-    fun <T: Any> prepareLocalPlatformRequest(request: OcpiRequestVariables<T>): Pair<String, OcpiRequestHeaders> {
+    fun <T: Any> prepareLocalPlatformRequest(request: OcpiRequestVariables<T>, proxied: Boolean = false): Pair<String, OcpiRequestHeaders> {
 
         val platformID = getPlatformID(request.receiver)
-        val url = getPlatformEndpoint(platformID, request.module, request.interfaceRole).url
 
-        val tokenB = platformRepo.findById(platformID).get().auth.tokenB
-        val headers = OcpiRequestHeaders(
-                authorization = "Token $tokenB",
-                requestID = generateUUIDv4Token(),
-                correlationID = request.correlationID,
-                ocpiFromCountryCode = request.sender.country,
-                ocpiFromPartyID = request.sender.id,
-                ocpiToCountryCode = request.receiver.country,
-                ocpiToPartyID = request.receiver.id)
+        val url = if (proxied) {
+            getProxyResource(request.urlPathVariables, request.sender, request.receiver)
+        } else {
+            getPlatformEndpoint(platformID, request.module, request.interfaceRole).url
+        }
 
-        return Pair(url, headers)
-    }
-
-    fun <T: Any> prepareLocalProxiedPlatformRequest(request: OcpiRequestVariables<T>): Pair<String, OcpiRequestHeaders> {
-
-        val url = getProxyResource(request.urlPathVariables, request.sender, request.receiver)
-
-        val platformID = getPlatformID(request.receiver)
         val tokenB = platformRepo.findById(platformID).get().auth.tokenB
         val headers = OcpiRequestHeaders(
                 authorization = "Token $tokenB",
