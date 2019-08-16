@@ -95,7 +95,9 @@ class CredentialsControllerTest(@Autowired val mockMvc: MockMvc) {
                         Endpoint("credentials", InterfaceRole.SENDER, "https://org.charging.net/credentials"),
                         Endpoint("commands", InterfaceRole.RECEIVER, "https://org.charging.net/commands")))
         every { properties.url } returns "http://my.broker.com"
+        every { routingService.isRoleKnownOnNetwork(BasicRole(role1.partyID, role1.countryCode)) } returns true
         every { roleRepo.existsByCountryCodeAndPartyIDAllIgnoreCase(role1.countryCode, role1.partyID) } returns false
+        every { routingService.isRoleKnownOnNetwork(BasicRole(role2.partyID, role2.countryCode)) } returns true
         every { roleRepo.existsByCountryCodeAndPartyIDAllIgnoreCase(role2.countryCode, role2.partyID) } returns false
         every { platformRepo.save(any<PlatformEntity>()) } returns platform
         every { endpointRepo.save(any<EndpointEntity>()) } returns mockk()

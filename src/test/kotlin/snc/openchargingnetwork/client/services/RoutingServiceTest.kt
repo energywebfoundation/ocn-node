@@ -7,6 +7,7 @@ import io.mockk.mockk
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.web3j.crypto.Credentials
+import snc.openchargingnetwork.client.config.Properties
 import snc.openchargingnetwork.client.data.exampleLocation1
 import snc.openchargingnetwork.client.data.exampleLocation2
 import snc.openchargingnetwork.client.models.HttpResponse
@@ -34,6 +35,7 @@ class RoutingServiceTest {
     private val responseUrlRepo: CommandResponseUrlRepository = mockk()
     private val httpRequestService: HttpRequestService = mockk()
     private val registry: RegistryFacade = mockk()
+    private val properties: Properties = mockk()
     private val credentialsService: CredentialsService = mockk()
 
     private val routingService: RoutingService
@@ -47,6 +49,7 @@ class RoutingServiceTest {
                 responseUrlRepo,
                 httpRequestService,
                 registry,
+                properties,
                 credentialsService)
     }
 
@@ -221,6 +224,26 @@ class RoutingServiceTest {
         } catch (e: OcpiHubConnectionProblemException) {
             assertThat(e.message).isEqualTo("Could not verify OCN-Signature of request")
         }
+    }
+
+    @Test
+    fun `isRoleKnownOnNetwork with belongsToMe flag returns true`() {
+        val role = BasicRole("XYZ", "CH")
+        val serverURL = "https://my.server.com"
+        val serverEthAddress = "0xd13B66e4027cF454A4a1918394425b9969b99daB"
+        every { registry.clientURLOf(role.country.toByteArray(), role.id.toByteArray()).sendAsync().get() } returns serverURL
+        every { registry.clientAddressOf(role.country.toByteArray(), role.id.toByteArray()).sendAsync().get() } returns serverEthAddress
+        every { properties.url } returns serverURL
+        every { credentialsService.credentials.address } returns serverEthAddress
+        assertThat(routingService.isRoleKnownOnNetwork(role)).isEqualTo(true)
+    }
+
+    @Test
+    fun `isRoleKnownOnNetwork without belongsToMe flag returns true`() {
+        val role = BasicRole("XYZ", "CH")
+        val serverURL = "https://my.server.com"
+        every { registry.clientURLOf(role.country.toByteArray(), role.id.toByteArray()).sendAsync().get() } returns serverURL
+        assertThat(routingService.isRoleKnownOnNetwork(role, belongsToMe = false)).isEqualTo(true)
     }
 
 }

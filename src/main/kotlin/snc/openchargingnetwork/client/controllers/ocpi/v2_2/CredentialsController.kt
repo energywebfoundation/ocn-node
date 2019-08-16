@@ -33,6 +33,7 @@ import snc.openchargingnetwork.client.models.exceptions.OcpiClientInvalidParamet
 import snc.openchargingnetwork.client.models.exceptions.OcpiServerNoMatchingEndpointsException
 import snc.openchargingnetwork.client.models.ocpi.*
 import snc.openchargingnetwork.client.services.HttpRequestService
+import snc.openchargingnetwork.client.services.RoutingService
 import snc.openchargingnetwork.client.tools.*
 
 @RestController
@@ -41,6 +42,7 @@ class CredentialsController(private val platformRepo: PlatformRepository,
                             private val roleRepo: RoleRepository,
                             private val endpointRepo: EndpointRepository,
                             private val properties: Properties,
+                            private val routingService: RoutingService,
                             private val httpRequestService: HttpRequestService) {
 
     @GetMapping
@@ -86,10 +88,14 @@ class CredentialsController(private val platformRepo: PlatformRepository,
         // ensure each role does not already exist
         for (role in body.roles) {
             val basicRole = BasicRole(role.partyID, role.countryCode)
+            if (!routingService.isRoleKnownOnNetwork(basicRole)) {
+                throw OcpiClientInvalidParametersException("Role with party_id=${basicRole.id} and country_code=${basicRole.country} not listed in OCN Registry with my client info!")
+            }
             if (roleRepo.existsByCountryCodeAndPartyIDAllIgnoreCase(basicRole.country, basicRole.id)) {
-                throw OcpiClientInvalidParametersException("Role with party_id=${basicRole.id} and country_code=${basicRole.country} already registered")
+                throw OcpiClientInvalidParametersException("Role with party_id=${basicRole.id} and country_code=${basicRole.country} already connected to this client!")
             }
         }
+
 
         // generate TOKEN_C
         val tokenC = generateUUIDv4Token()

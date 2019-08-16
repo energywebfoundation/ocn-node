@@ -51,7 +51,7 @@ class MessageController(val routingService: RoutingService,
         routingService.verifyRequest(body, signature, sender)
 
         // check sender has been registered on network
-        val response = if (routingService.isRoleKnownOnNetwork(sender)) {
+        val response = if (routingService.isRoleKnownOnNetwork(sender, belongsToMe = false)) {
 
             // check receiver known to client
             if (routingService.isRoleKnown(receiver)) {
@@ -113,7 +113,7 @@ class MessageController(val routingService: RoutingService,
         routingService.verifyRequest(body, signature, sender)
 
         // check sender has been registered on network
-        val response = if (routingService.isRoleKnownOnNetwork(sender)) {
+        val response = if (routingService.isRoleKnownOnNetwork(sender, belongsToMe = false)) {
 
             // check receiver known to client
             if (routingService.isRoleKnown(receiver)) {

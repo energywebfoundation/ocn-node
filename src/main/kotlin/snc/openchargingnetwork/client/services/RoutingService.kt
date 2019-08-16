@@ -24,6 +24,7 @@ import org.springframework.stereotype.Service
 import org.web3j.crypto.Keys
 import org.web3j.crypto.Sign
 import org.web3j.utils.Numeric
+import snc.openchargingnetwork.client.config.Properties
 import snc.openchargingnetwork.client.models.HttpResponse
 import snc.openchargingnetwork.client.models.HubRequestHeaders
 import snc.openchargingnetwork.client.models.entities.CdrEntity
@@ -47,6 +48,7 @@ class RoutingService(private val platformRepo: PlatformRepository,
                      private val commandResponseUrlRepo: CommandResponseUrlRepository,
                      private val httpService: HttpRequestService,
                      private val registry: RegistryFacade,
+                     private val properties: Properties,
                      private val credentialsService: CredentialsService) {
 
     fun isRoleKnown(role: BasicRole) = roleRepo.existsByCountryCodeAndPartyIDAllIgnoreCase(role.country, role.id)
@@ -154,9 +156,18 @@ class RoutingService(private val platformRepo: PlatformRepository,
         return broker
     }
 
-    fun isRoleKnownOnNetwork(role: BasicRole): Boolean {
-        val broker = registry.clientURLOf(role.country.toByteArray(), role.id.toByteArray()).sendAsync().get()
-        return broker != ""
+    fun isRoleKnownOnNetwork(role: BasicRole, belongsToMe: Boolean = true): Boolean {
+        val country = role.country.toByteArray()
+        val id = role.id.toByteArray()
+
+        val clientServerURL = registry.clientURLOf(country, id).sendAsync().get()
+
+        if (belongsToMe) {
+            val ethAddress = registry.clientAddressOf(country, id).sendAsync().get()
+            return clientServerURL == properties.url && ethAddress == credentialsService.credentials.address
+        }
+
+        return clientServerURL != ""
     }
 
     fun stringify(body: Any): String {

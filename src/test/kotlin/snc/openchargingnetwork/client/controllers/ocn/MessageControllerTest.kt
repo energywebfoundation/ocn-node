@@ -50,7 +50,7 @@ class MessageControllerTest(@Autowired val mockMvc: MockMvc) {
                 expectedResponseType = HubRequestResponseType.LOCATION)
 
         every { routingService.verifyRequest(any(), "0x1234", senderRole) } returns Unit
-        every { routingService.isRoleKnownOnNetwork(senderRole) } returns true
+        every { routingService.isRoleKnownOnNetwork(senderRole, belongsToMe = false) } returns true
         every { routingService.isRoleKnown(receiverRole) } returns true
         every { routingService.getPlatformID(receiverRole) } returns 8L
         every { routingService.getPlatformEndpoint(8L, "locations", InterfaceRole.SENDER) } returns receiverEndpoint
