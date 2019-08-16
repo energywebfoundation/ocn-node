@@ -21,7 +21,6 @@ package snc.openchargingnetwork.client.repositories
 
 import org.springframework.data.repository.CrudRepository
 import snc.openchargingnetwork.client.models.entities.*
-import snc.openchargingnetwork.client.models.ocpi.CommandType
 import snc.openchargingnetwork.client.models.ocpi.InterfaceRole
 
 interface WalletRepository: CrudRepository<WalletEntity, Long> {}
@@ -50,21 +49,5 @@ interface EndpointRepository: CrudRepository<EndpointEntity, Long> {
 }
 
 interface ProxyResourceRepository: CrudRepository<ProxyResourceEntity, Long> {
+    // TODO: findByIDAndSenderAndReceiver
 }
-
-//interface CdrRepository: CrudRepository<CdrEntity, Long> {
-//    fun findByCdrIDAndOwnerIDAndOwnerCountryAndCreatorIDAndCreatorCountryAllIgnoreCase(cdrID: String,
-//                                                                                       ownerID: String,
-//                                                                                       ownerCountry: String,
-//                                                                                       creatorID: String,
-//                                                                                       creatorCountry: String): CdrEntity?
-//}
-//
-//interface CommandResponseUrlRepository: CrudRepository<CommandResponseUrlEntity, Long> {
-//    fun findByUidAndTypeAndSenderIDAndSenderCountryAndReceiverIDAndReceiverCountryAllIgnoreCase(uid: String,
-//                                                                                                type: CommandType,
-//                                                                                                senderID: String,
-//                                                                                                senderCountry: String,
-//                                                                                                receiverID: String,
-//                                                                                                receiverCountry: String): CommandResponseUrlEntity?
-//}

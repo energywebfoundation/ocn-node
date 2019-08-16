@@ -39,6 +39,7 @@ class CdrsControllerTest(@Autowired val mockMvc: MockMvc) {
     @MockkBean
     lateinit var properties: Properties
 
+
     @Test
     fun `When GET sender CDRs should return paginated response`() {
 
@@ -72,7 +73,7 @@ class CdrsControllerTest(@Autowired val mockMvc: MockMvc) {
         every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, headers)
 
         val responseHeaders = mapOf(
-                "Link" to "https://some.emsp.com/actual/cdr/location/1234; rel=\"next\"",
+                "Link" to "https://some.emsp.com/actual/cdr/page/2; rel=\"next\"",
                 "X-Limit" to "100")
 
         every {
@@ -120,6 +121,92 @@ class CdrsControllerTest(@Autowired val mockMvc: MockMvc) {
                 .andExpect(jsonPath("\$.data[0].party_id").value(exampleCDR.partyID))
                 .andExpect(jsonPath("\$.timestamp").isString)
     }
+
+
+    @Test
+    fun `When GET sender CDRs page should return proxied page`() {
+
+        val sender = BasicRole("EMY", "DE")
+        val receiver = BasicRole("ZTP", "CH")
+
+        val requestVariables = OcpiRequestVariables(
+                module = ModuleID.Cdrs,
+                interfaceRole = InterfaceRole.SENDER,
+                method = HttpMethod.GET,
+                requestID = generateUUIDv4Token(),
+                correlationID = generateUUIDv4Token(),
+                sender = sender,
+                receiver = receiver,
+                urlPathVariables = "67",
+                expectedResponseType = OcpiResponseDataType.CDR_ARRAY)
+
+        val url = "https://some.emsp.com/actual/cdr/page/2"
+
+        val headers = OcpiRequestHeaders(
+                authorization = "Token token-b",
+                requestID = generateUUIDv4Token(),
+                correlationID = requestVariables.correlationID,
+                ocpiFromCountryCode = sender.country,
+                ocpiFromPartyID = sender.id,
+                ocpiToCountryCode = receiver.country,
+                ocpiToPartyID = receiver.id)
+
+        every { routingService.validateSender("Token token-c", sender) } just Runs
+        every { routingService.validateReceiver(receiver) } returns OcpiRequestType.LOCAL
+        every { routingService.prepareLocalPlatformRequest(requestVariables, proxied = true) } returns Pair(url, headers)
+
+        val responseHeaders = mapOf(
+                "Link" to "https://some.emsp.com/actual/cdr/page/3; rel=\"next\"",
+                "X-Limit" to "100")
+
+        every {
+
+            httpService.makeRequest(
+                    method = requestVariables.method,
+                    url = url,
+                    headers = headers,
+                    params = requestVariables.urlEncodedParameters,
+                    expectedDataType = requestVariables.expectedResponseType)
+
+        } returns HttpResponse(
+                statusCode = 200,
+                headers = responseHeaders,
+                body = OcpiResponse(statusCode = 1000, data = arrayOf(exampleCDR)))
+
+        val httpHeaders = HttpHeaders()
+        httpHeaders["Link"] = "https://client.ocn.co/ocpi/sender/2.2/cdrs/68; rel=\"next\""
+        httpHeaders["X-Limit"] = responseHeaders["X-Limit"]
+
+        every { routingService.deleteProxyResource(requestVariables.urlPathVariables!!) } just Runs
+
+        every { routingService.proxyPaginationHeaders(
+                responseHeaders = responseHeaders,
+                proxyEndpoint = "/ocpi/sender/2.2/cdrs",
+                sender = sender,
+                receiver = receiver) } returns httpHeaders
+
+        mockMvc.perform(get("/ocpi/sender/2.2/cdrs/${requestVariables.urlPathVariables}")
+                .header("Authorization", "Token token-c")
+                .header("X-Request-ID", requestVariables.requestID)
+                .header("X-Correlation-ID", requestVariables.correlationID)
+                .header("OCPI-from-country-code", requestVariables.sender.country)
+                .header("OCPI-from-party-id", requestVariables.sender.id)
+                .header("OCPI-to-country-code", requestVariables.receiver.country)
+                .header("OCPI-to-party-id", requestVariables.receiver.id)
+                .param("limit", "100"))
+                .andExpect(status().isOk)
+                .andExpect(header().string("Link", "https://client.ocn.co/ocpi/sender/2.2/cdrs/68; rel=\"next\""))
+                .andExpect(header().string("X-Limit", "100"))
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
+                .andExpect(jsonPath("\$.status_code").value(1000))
+                .andExpect(jsonPath("\$.status_message").doesNotExist())
+                .andExpect(jsonPath("\$.data").isArray)
+                .andExpect(jsonPath("\$.data", hasSize<Array<CDR>>(1)))
+                .andExpect(jsonPath("\$.data[0].id").value(exampleCDR.id))
+                .andExpect(jsonPath("\$.data[0].party_id").value(exampleCDR.partyID))
+                .andExpect(jsonPath("\$.timestamp").isString)
+    }
+
 
     @Test
     fun `When GET receiver CDRs should return single CDR`() {
@@ -183,6 +270,7 @@ class CdrsControllerTest(@Autowired val mockMvc: MockMvc) {
                 .andExpect(jsonPath("\$.data.party_id").value(exampleCDR.partyID))
                 .andExpect(jsonPath("\$.timestamp").isString)
     }
+
 
     @Test
     fun `when POST receiver cdrs should return Location header`() {

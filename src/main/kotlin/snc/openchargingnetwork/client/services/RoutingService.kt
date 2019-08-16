@@ -115,6 +115,15 @@ class RoutingService(private val platformRepo: PlatformRepository,
     }
 
 
+    fun getProxyResource(id: String?, sender: BasicRole, receiver: BasicRole): String {
+        id?.let {
+            return proxyResourceRepo.findByIdOrNull(id.toLong())?.resource
+                    ?: throw OcpiClientUnknownLocationException("Proxied resource not found")
+        }
+        throw OcpiClientUnknownLocationException("Error fetching proxied resource: internal platform ID not found")
+    }
+
+
     fun setProxyResource(resource: String, sender: BasicRole, receiver: BasicRole): Long {
         val proxyResource = ProxyResourceEntity(
                 resource = resource,
@@ -125,12 +134,8 @@ class RoutingService(private val platformRepo: PlatformRepository,
     }
 
 
-    fun getProxyResource(id: String?, sender: BasicRole, receiver: BasicRole): String {
-        id?.let {
-            return proxyResourceRepo.findByIdOrNull(id.toLong())?.resource
-                    ?: throw OcpiClientUnknownLocationException("Proxied resource not found")
-        }
-        throw OcpiClientUnknownLocationException("Error fetching proxied resource: internal platform ID not found")
+    fun deleteProxyResource(resourceID: String) {
+        proxyResourceRepo.deleteById(resourceID.toLong())
     }
 
 
