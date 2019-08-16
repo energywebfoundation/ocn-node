@@ -15,7 +15,7 @@ data class OcnMessageRequestBody<T: Any>(@JsonProperty("module_id") val module: 
                                          @JsonProperty("url_path_variables") val urlPathVariables: String? = null,
                                          @JsonProperty("url_encoded_parameters") val urlEncodedParameters: OcpiRequestParameters? = null,
                                          @JsonProperty("body") val body: Any? = null,
-                                         @JsonProperty("proxy_resource") val proxyResource: String? = null,
+                                         @JsonProperty("proxy_resource") var proxyResource: String? = null,
                                          @JsonProperty("expectedResponseType") val expectedResponseType: OcpiResponseDataType<T>)
 
 data class OcnMessageCommandRequestBody(@JsonProperty("type") val type: CommandType,

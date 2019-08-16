@@ -5,33 +5,23 @@ import io.mockk.every
 import io.mockk.mockk
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import org.web3j.crypto.Credentials
-import snc.openchargingnetwork.client.models.OcnMessageRequestBody
-import snc.openchargingnetwork.client.models.OcpiRequestHeaders
-import snc.openchargingnetwork.client.models.OcpiResponseDataType
-import snc.openchargingnetwork.client.models.entities.Auth
+import snc.openchargingnetwork.client.config.Properties
 import snc.openchargingnetwork.client.models.entities.PlatformEntity
 import snc.openchargingnetwork.client.models.entities.RoleEntity
-import snc.openchargingnetwork.client.models.exceptions.OcpiHubConnectionProblemException
 import snc.openchargingnetwork.client.models.ocpi.*
 import snc.openchargingnetwork.client.repositories.*
-import snc.openchargingnetwork.client.tools.generatePrivateKey
-import snc.openchargingnetwork.client.tools.generateUUIDv4Token
 import snc.openchargingnetwork.contracts.RegistryFacade
 
 class RoutingServiceTest {
-
-    private val mapper = jacksonObjectMapper()
 
     private val platformRepo: PlatformRepository = mockk()
     private val roleRepo: RoleRepository = mockk()
     private val endpointRepo: EndpointRepository = mockk()
     private val proxyResourceRepo: ProxyResourceRepository = mockk()
-//    private val cdrRepo: CdrRepository = mockk()
-//    private val responseUrlRepo: CommandResponseUrlRepository = mockk()
     private val httpRequestService: HttpRequestService = mockk()
     private val registry: RegistryFacade = mockk()
     private val credentialsService: CredentialsService = mockk()
+    private val properties: Properties = mockk()
 
     private val routingService: RoutingService
 
@@ -41,11 +31,10 @@ class RoutingServiceTest {
                 roleRepo,
                 endpointRepo,
                 proxyResourceRepo,
-//                cdrRepo,
-//                responseUrlRepo,
-                httpRequestService,
                 registry,
-                credentialsService)
+                httpRequestService,
+                credentialsService,
+                properties)
     }
 
     @Test

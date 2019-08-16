@@ -25,37 +25,75 @@ import org.springframework.web.bind.annotation.*
 import snc.openchargingnetwork.client.config.Properties
 import snc.openchargingnetwork.client.models.*
 import snc.openchargingnetwork.client.models.ocpi.*
-import snc.openchargingnetwork.client.repositories.ProxyResourceRepository
 import snc.openchargingnetwork.client.services.HttpRequestService
 import snc.openchargingnetwork.client.services.RoutingService
 
 @RestController
 class CommandsController(private val routingService: RoutingService,
                          private val httpService: HttpRequestService,
-                         private val proxyResourceRepo: ProxyResourceRepository,
                          private val properties: Properties) {
+
 
     /**
      * SENDER INTERFACE
      */
 
-//    @PostMapping("/ocpi/sender/2.2/commands/{command}/{uid}")
-//    fun postAsyncResponse(@RequestHeader("authorization") authorization: String,
-//                          @RequestHeader("X-Request-ID") requestID: String,
-//                          @RequestHeader("X-Correlation-ID") correlationID: String,
-//                          @RequestHeader("OCPI-from-country-code") fromCountryCode: String,
-//                          @RequestHeader("OCPI-from-party-id") fromPartyID: String,
-//                          @RequestHeader("OCPI-to-country-code") toCountryCode: String,
-//                          @RequestHeader("OCPI-to-party-id") toPartyID: String,
-//                          @PathVariable("command") command: CommandType,
-//                          @PathVariable("uid") uid: String,
-//                          @RequestBody body: CommandResult): ResponseEntity<OcpiResponse<Nothing>> {
-//
-//        val sender = BasicRole(fromPartyID, fromCountryCode)
-//        val receiver = BasicRole(toPartyID, toCountryCode)
-//
-//        routingService.validateSender(authorization, sender)
-//
+    @PostMapping("/ocpi/sender/2.2/commands/{command}/{uid}")
+    fun postAsyncResponse(@RequestHeader("authorization") authorization: String,
+                          @RequestHeader("X-Request-ID") requestID: String,
+                          @RequestHeader("X-Correlation-ID") correlationID: String,
+                          @RequestHeader("OCPI-from-country-code") fromCountryCode: String,
+                          @RequestHeader("OCPI-from-party-id") fromPartyID: String,
+                          @RequestHeader("OCPI-to-country-code") toCountryCode: String,
+                          @RequestHeader("OCPI-to-party-id") toPartyID: String,
+                          @PathVariable("command") command: CommandType,
+                          @PathVariable("uid") uid: String,
+                          @RequestBody body: CommandResult): ResponseEntity<OcpiResponse<Nothing>> {
+
+        val sender = BasicRole(fromPartyID, fromCountryCode)
+        val receiver = BasicRole(toPartyID, toCountryCode)
+
+        routingService.validateSender(authorization, sender)
+
+        val requestVariables = OcpiRequestVariables(
+                module = ModuleID.Commands,
+                interfaceRole = InterfaceRole.SENDER,
+                method = HttpMethod.POST,
+                requestID = requestID,
+                correlationID = correlationID,
+                sender = sender,
+                receiver = receiver,
+                urlPathVariables = uid,
+                body = body,
+                expectedResponseType = OcpiResponseDataType.NOTHING)
+
+        val response = when (routingService.validateReceiver(receiver)) {
+
+            OcpiRequestType.LOCAL -> {
+
+                val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables, proxied = true)
+
+                httpService.makeRequest(
+                        method = requestVariables.method,
+                        url = url,
+                        headers = headers,
+                        body = body,
+                        expectedDataType = requestVariables.expectedResponseType)
+
+            }
+
+            OcpiRequestType.REMOTE -> {
+
+                val (url, headers, ocnBody) = routingService.prepareRemotePlatformRequest(requestVariables, proxied = true)
+
+                httpService.postClientMessage(url = url, headers = headers, body = ocnBody)
+
+            }
+
+        }
+
+        return ResponseEntity.status(response.statusCode).body(response.body)
+
 //        val response = if (routingService.isRoleKnown(receiver)) {
 //            val platformID = routingService.getPlatformID(receiver)
 //            val headers = routingService.makeHeaders(platformID, correlationID, sender, receiver)
@@ -85,10 +123,7 @@ class CommandsController(private val routingService: RoutingService,
 //                    body = hubRequestBody,
 //                    expectedDataType = Nothing::class)
 //        }
-//
-//        return ResponseEntity.status(response.statusCode).body(response.body)
-//
-//    }
+    }
 
     /**
      * RECEIVER INTERFACE

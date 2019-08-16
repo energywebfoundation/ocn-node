@@ -26,6 +26,7 @@ import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.bind.annotation.*
 import snc.openchargingnetwork.client.config.Properties
 import snc.openchargingnetwork.client.models.*
+import snc.openchargingnetwork.client.models.exceptions.OcpiServerGenericException
 import snc.openchargingnetwork.client.models.ocpi.*
 import snc.openchargingnetwork.client.services.HttpRequestService
 import snc.openchargingnetwork.client.services.RoutingService
@@ -98,12 +99,31 @@ class CdrsController(val routingService: RoutingService,
 
         }
 
-        val headers = routingService.proxyPaginationHeaders(response.headers)
+        val headers = routingService.proxyPaginationHeaders(
+                responseHeaders = response.headers,
+                proxyEndpoint = "/ocpi/sender/2.2/cdrs",
+                sender = sender,
+                receiver = receiver)
 
         return ResponseEntity
                 .status(response.statusCode)
                 .headers(headers)
                 .body(response.body)
+    }
+
+    @GetMapping("/ocpi/sender/2.2/cdrs/{uid}")
+    fun getProxiedCdrPage(@RequestHeader("authorization") authorization: String,
+                          @RequestHeader("X-Request-ID") requestID: String,
+                          @RequestHeader("X-Correlation-ID") correlationID: String,
+                          @RequestHeader("OCPI-from-country-code") fromCountryCode: String,
+                          @RequestHeader("OCPI-from-party-id") fromPartyID: String,
+                          @RequestHeader("OCPI-to-country-code") toCountryCode: String,
+                          @RequestHeader("OCPI-to-party-id") toPartyID: String,
+                          @PathVariable uid: String): ResponseEntity<OcpiResponse<Array<CDR>>> {
+
+        // TODO: return the proxied cdr page (proxy url set in above method)
+
+        throw OcpiServerGenericException("Endpoint not yet implemented")
     }
 
     /**
@@ -112,13 +132,13 @@ class CdrsController(val routingService: RoutingService,
 
     @GetMapping("/ocpi/receiver/2.2/cdrs/{cdrID}")
     fun getCdr(@RequestHeader("authorization") authorization: String,
-                              @RequestHeader("X-Request-ID") requestID: String,
-                              @RequestHeader("X-Correlation-ID") correlationID: String,
-                              @RequestHeader("OCPI-from-country-code") fromCountryCode: String,
-                              @RequestHeader("OCPI-from-party-id") fromPartyID: String,
-                              @RequestHeader("OCPI-to-country-code") toCountryCode: String,
-                              @RequestHeader("OCPI-to-party-id") toPartyID: String,
-                              @PathVariable cdrID: String): ResponseEntity<OcpiResponse<CDR>> {
+               @RequestHeader("X-Request-ID") requestID: String,
+               @RequestHeader("X-Correlation-ID") correlationID: String,
+               @RequestHeader("OCPI-from-country-code") fromCountryCode: String,
+               @RequestHeader("OCPI-from-party-id") fromPartyID: String,
+               @RequestHeader("OCPI-to-country-code") toCountryCode: String,
+               @RequestHeader("OCPI-to-party-id") toPartyID: String,
+               @PathVariable cdrID: String): ResponseEntity<OcpiResponse<CDR>> {
 
         val sender = BasicRole(fromPartyID, fromCountryCode)
         val receiver = BasicRole(toPartyID, toCountryCode)
@@ -151,7 +171,7 @@ class CdrsController(val routingService: RoutingService,
 
             OcpiRequestType.REMOTE -> {
 
-                val (url, headers, body) = routingService.prepareRemotePlatformRequest(requestVariables)
+                val (url, headers, body) = routingService.prepareRemotePlatformRequest(requestVariables, proxied = true)
 
                 httpService.postClientMessage(url = url, headers = headers, body = body)
             }
