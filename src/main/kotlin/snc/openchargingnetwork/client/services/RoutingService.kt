@@ -53,7 +53,8 @@ class RoutingService(private val platformRepo: PlatformRepository,
         val url = if (proxied) {
             getProxyResource(request.urlPathVariables, request.sender, request.receiver)
         } else {
-            getPlatformEndpoint(platformID, request.module, request.interfaceRole).url
+            val endpoint = getPlatformEndpoint(platformID, request.module, request.interfaceRole)
+            urlJoin(endpoint.url, request.urlPathVariables)
         }
 
         val tokenB = platformRepo.findById(platformID).get().auth.tokenB

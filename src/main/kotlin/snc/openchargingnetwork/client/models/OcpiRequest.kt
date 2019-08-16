@@ -27,17 +27,17 @@ import snc.openchargingnetwork.client.models.ocpi.CDR as ChargeDetailRecord
 import kotlin.reflect.KClass
 
 data class OcpiRequestVariables<T: Any>(val module: ModuleID,
-                                val interfaceRole: InterfaceRole,
-                                val method: HttpMethod,
-                                val requestID: String,
-                                val correlationID: String,
-                                val sender: BasicRole,
-                                val receiver: BasicRole,
-                                val urlPathVariables: String? = null,
-                                val urlEncodedParameters: OcpiRequestParameters? = null,
-                                val body: Any? = null,
-                                val proxyResource: String? = null,
-                                val expectedResponseType: OcpiResponseDataType<T>)
+                                        val interfaceRole: InterfaceRole,
+                                        val method: HttpMethod,
+                                        val requestID: String,
+                                        val correlationID: String,
+                                        val sender: BasicRole,
+                                        val receiver: BasicRole,
+                                        val urlPathVariables: String? = null,
+                                        val urlEncodedParameters: OcpiRequestParameters? = null,
+                                        val body: Any? = null,
+                                        val proxyResource: String? = null,
+                                        val expectedResponseType: OcpiResponseDataType<T>)
 
 data class OcpiRequestHeaders(@JsonProperty("Authorization") val authorization: String? = null,
                               @JsonProperty("X-Request-ID") val requestID: String,

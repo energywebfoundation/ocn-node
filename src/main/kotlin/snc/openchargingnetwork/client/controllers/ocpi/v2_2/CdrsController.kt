@@ -237,7 +237,7 @@ class CdrsController(val routingService: RoutingService,
     }
 
 
-    @Transactional
+//    @Transactional
     @PostMapping("/ocpi/receiver/2.2/cdrs")
     fun postClientOwnedCdr(@RequestHeader("authorization") authorization: String,
                            @RequestHeader("X-Request-ID") requestID: String,

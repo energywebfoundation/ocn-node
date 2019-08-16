@@ -31,13 +31,16 @@ fun generateUUIDv4Token(): String {
     return UUID.randomUUID().toString()
 }
 
-fun urlJoin(base: String, vararg paths: String): String {
+fun urlJoin(base: String, vararg paths: String?): String {
     var url = if (base.endsWith("/")) {
         base.dropLast(1)
     } else {
         base
     }
     for (path in paths) {
+        if (path == null) {
+            continue
+        }
         val sanitizedPath: String = if (path.startsWith("/") && !path.endsWith("/")) {
             path
         } else if (path.startsWith("/") && path.endsWith("/")) {
