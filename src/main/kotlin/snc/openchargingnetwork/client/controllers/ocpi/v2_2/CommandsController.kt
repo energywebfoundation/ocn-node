@@ -164,13 +164,11 @@ class CommandsController(private val routingService: RoutingService,
 
                 val resourceID = routingService.setProxyResource(body.responseURL, sender, receiver)
 
-                val proxyBody = CancelReservation(
-                        responseURL = urlJoin(
-                                properties.url,
-                                "/ocpi/sender/2.2/commands",
-                                requestVariables.urlPathVariables!!,
-                                resourceID.toString()),
-                        reservationID = body.reservationID)
+                val proxyBody = body.copy(responseURL = urlJoin(
+                        properties.url,
+                        "/ocpi/sender/2.2/commands",
+                        requestVariables.urlPathVariables!!,
+                        resourceID.toString()))
 
                 val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables)
 
@@ -264,11 +262,11 @@ class CommandsController(private val routingService: RoutingService,
 
                 val resourceID = routingService.setProxyResource(body.responseURL, sender, receiver)
 
-                body.responseURL = urlJoin(
+                val proxyBody = body.copy(responseURL = urlJoin(
                         properties.url,
                         "/ocpi/sender/2.2/commands",
                         requestVariables.urlPathVariables!!,
-                        resourceID.toString())
+                        resourceID.toString()))
 
                 val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables)
 
@@ -276,7 +274,7 @@ class CommandsController(private val routingService: RoutingService,
                         method = requestVariables.method,
                         url = url,
                         headers = headers,
-                        body = body,
+                        body = proxyBody,
                         expectedDataType = requestVariables.expectedResponseType)
 
             }
@@ -365,11 +363,11 @@ class CommandsController(private val routingService: RoutingService,
 
                 val resourceID = routingService.setProxyResource(body.responseURL, sender, receiver)
 
-                body.responseURL = urlJoin(
+                val proxyBody = body.copy(responseURL = urlJoin(
                         properties.url,
                         "/ocpi/sender/2.2/commands",
                         requestVariables.urlPathVariables!!,
-                        resourceID.toString())
+                        resourceID.toString()))
 
                 val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables)
 
@@ -377,7 +375,7 @@ class CommandsController(private val routingService: RoutingService,
                         method = requestVariables.method,
                         url = url,
                         headers = headers,
-                        body = body,
+                        body = proxyBody,
                         expectedDataType = requestVariables.expectedResponseType)
 
             }
@@ -463,11 +461,11 @@ class CommandsController(private val routingService: RoutingService,
 
                 val resourceID = routingService.setProxyResource(body.responseURL, sender, receiver)
 
-                body.responseURL = urlJoin(
+                val proxyBody = body.copy(responseURL = urlJoin(
                         properties.url,
                         "/ocpi/sender/2.2/commands",
                         requestVariables.urlPathVariables!!,
-                        resourceID.toString())
+                        resourceID.toString()))
 
                 val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables)
 
@@ -475,7 +473,7 @@ class CommandsController(private val routingService: RoutingService,
                         method = requestVariables.method,
                         url = url,
                         headers = headers,
-                        body = body,
+                        body = proxyBody,
                         expectedDataType = requestVariables.expectedResponseType)
 
             }
@@ -561,11 +559,11 @@ class CommandsController(private val routingService: RoutingService,
 
                 val resourceID = routingService.setProxyResource(body.responseURL, sender, receiver)
 
-                body.responseURL = urlJoin(
+                val proxyBody = body.copy(responseURL = urlJoin(
                         properties.url,
                         "/ocpi/sender/2.2/commands",
                         requestVariables.urlPathVariables!!,
-                        resourceID.toString())
+                        resourceID.toString()))
 
                 val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables)
 
@@ -573,7 +571,7 @@ class CommandsController(private val routingService: RoutingService,
                         method = requestVariables.method,
                         url = url,
                         headers = headers,
-                        body = body,
+                        body = proxyBody,
                         expectedDataType = requestVariables.expectedResponseType)
 
             }
