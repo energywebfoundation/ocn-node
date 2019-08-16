@@ -94,37 +94,8 @@ class CommandsController(private val routingService: RoutingService,
         }
 
         return ResponseEntity.status(response.statusCode).body(response.body)
-
-//        val response = if (routingService.isRoleKnown(receiver)) {
-//            val platformID = routingService.getPlatformID(receiver)
-//            val headers = routingService.makeHeaders(platformID, correlationID, sender, receiver)
-//            val responseURL = routingService.findResponseURL(command, uid, sender, receiver)
-//            routingService.forwardRequest(
-//                    method = "POST",
-//                    url = responseURL,
-//                    headers = headers,
-//                    body = body,
-//                    expectedDataType = Nothing::class)
-//        } else {
-//            val url = routingService.findBrokerUrl(receiver)
-//            val headers = routingService.makeHeaders(requestID, correlationID, sender, receiver)
-//            val hubRequestBody = HubGenericRequest(
-//                    method = "POST",
-//                    module = "commands",
-//                    path = "/$command",
-//                    headers = headers,
-//                    body = body,
-//                    role = InterfaceRole.SENDER)
-//            routingService.forwardRequest(
-//                    method = "POST",
-//                    url = urlJoin(url, "/ocn/message"),
-//                    headers = mapOf(
-//                            "X-Request-ID" to generateUUIDv4Token(),
-//                            "OCN-Signature" to routingService.signRequest(hubRequestBody)),
-//                    body = hubRequestBody,
-//                    expectedDataType = Nothing::class)
-//        }
     }
+
 
     /**
      * RECEIVER INTERFACE
@@ -192,40 +163,6 @@ class CommandsController(private val routingService: RoutingService,
         }
 
         return ResponseEntity.status(response.statusCode).body(response.body)
-
-//        val response = if (routingService.isRoleKnown(receiver)) {
-//            val platformID = routingService.getPlatformID(receiver)
-//            val endpoint = routingService.getPlatformEndpoint(platformID, "commands", InterfaceRole.RECEIVER)
-//            val headers = routingService.makeHeaders(platformID, correlationID, sender, receiver)
-//
-//            // intercept response_url and replace with broker-readable URL (async post mapping above)
-//            val uid = routingService.saveResponseURL(body.responseURL, CommandType.CANCEL_RESERVATION, sender, receiver)
-//            body.responseURL = urlJoin(properties.url, "/ocpi/sender/2.2/commands/CANCEL_RESERVATION/$uid")
-//
-//            routingService.forwardRequest(
-//                    method = "POST",
-//                    url = urlJoin(endpoint.url, "/CANCEL_RESERVATION"),
-//                    headers = headers,
-//                    body = body,
-//                    expectedDataType = CommandResponse::class)
-//        } else {
-//            val url = routingService.findBrokerUrl(receiver)
-//            val headers = routingService.makeHeaders(requestID, correlationID, sender, receiver)
-//            val hubCommandsRequestBody = HubCommandsRequest(
-//                    type = CommandType.CANCEL_RESERVATION,
-//                    headers = headers,
-//                    body = routingService.stringify(body))
-//            routingService.forwardRequest(
-//                    method = "POST",
-//                    url = urlJoin(url, "/ocn/message/command"),
-//                    headers = mapOf(
-//                            "X-Request-ID" to generateUUIDv4Token(),
-//                            "OCN-Signature" to routingService.signRequest(hubCommandsRequestBody)),
-//                    body = hubCommandsRequestBody,
-//                    expectedDataType = CommandResponse::class)
-//        }
-//
-//        return ResponseEntity.status(response.statusCode).body(response.body)
     }
 
 
@@ -290,43 +227,6 @@ class CommandsController(private val routingService: RoutingService,
         }
 
         return ResponseEntity.status(response.statusCode).body(response.body)
-
-
-//        val response = if (routingService.isRoleKnown(receiver)) {
-//            val platformID = routingService.getPlatformID(receiver)
-//            val endpoint = routingService.getPlatformEndpoint(platformID, "commands", InterfaceRole.RECEIVER)
-//            val headers = routingService.makeHeaders(platformID, correlationID, sender, receiver)
-//
-//            // intercept response_url and replace with broker-readable URL (async post mapping above)
-//            val uid = routingService.saveResponseURL(body.responseURL, CommandType.RESERVE_NOW, sender, receiver)
-//            body.responseURL = urlJoin(properties.url, "/ocpi/sender/2.2/commands/RESERVE_NOW/$uid")
-//
-//            routingService.forwardRequest(
-//                    method = "POST",
-//                    url = urlJoin(endpoint.url, "/RESERVE_NOW"),
-//                    headers = headers,
-//                    body = body,
-//                    expectedDataType = CommandResponse::class)
-//        } else {
-//            val url = routingService.findBrokerUrl(receiver)
-//            val headers = routingService.makeHeaders(requestID, correlationID, sender, receiver)
-//            val hubCommandsRequestBody = HubCommandsRequest(
-//                    type = CommandType.RESERVE_NOW,
-//                    headers = headers,
-//                    body = routingService.stringify(body))
-//            routingService.forwardRequest(
-//                    method = "POST",
-//                    url = urlJoin(url, "/ocn/message"),
-//                    headers = mapOf(
-//                            "X-Request-ID" to generateUUIDv4Token(),
-//                            "OCN-Signature" to routingService.signRequest(hubCommandsRequestBody)),
-//                    body = hubCommandsRequestBody,
-//                    expectedDataType = CommandResponse::class)
-//        }
-//
-//        return ResponseEntity.status(response.statusCode).body(response.body)
-//
-//
     }
 
 
@@ -391,40 +291,6 @@ class CommandsController(private val routingService: RoutingService,
         }
 
         return ResponseEntity.status(response.statusCode).body(response.body)
-
-//        val response = if (routingService.isRoleKnown(receiver)) {
-//            val platformID = routingService.getPlatformID(receiver)
-//            val endpoint = routingService.getPlatformEndpoint(platformID, "commands", InterfaceRole.RECEIVER)
-//            val headers = routingService.makeHeaders(platformID, correlationID, sender, receiver)
-//
-//            // intercept response_url and replace with broker-readable URL (async post mapping above)
-//            val uid = routingService.saveResponseURL(body.responseURL, CommandType.START_SESSION, sender, receiver)
-//            body.responseURL = urlJoin(properties.url, "/ocpi/sender/2.2/commands/START_SESSION/$uid")
-//
-//            routingService.forwardRequest(
-//                    method = "POST",
-//                    url = urlJoin(endpoint.url, "/START_SESSION"),
-//                    headers = headers,
-//                    body = body,
-//                    expectedDataType = CommandResponse::class)
-//        } else {
-//            val url = routingService.findBrokerUrl(receiver)
-//            val headers = routingService.makeHeaders(requestID, correlationID, sender, receiver)
-//            val hubCommandsRequestBody = HubCommandsRequest(
-//                    type = CommandType.START_SESSION,
-//                    headers = headers,
-//                    body = routingService.stringify(body))
-//            routingService.forwardRequest(
-//                    method = "POST",
-//                    url = urlJoin(url, "/ocn/message"),
-//                    headers = mapOf(
-//                            "X-Request-ID" to generateUUIDv4Token(),
-//                            "OCN-Signature" to routingService.signRequest(hubCommandsRequestBody)),
-//                    body = hubCommandsRequestBody,
-//                    expectedDataType = CommandResponse::class)
-//        }
-//
-//        return ResponseEntity.status(response.statusCode).body(response.body)
     }
 
 
@@ -489,40 +355,6 @@ class CommandsController(private val routingService: RoutingService,
         }
 
         return ResponseEntity.status(response.statusCode).body(response.body)
-
-//        val response = if (routingService.isRoleKnown(receiver)) {
-//            val platformID = routingService.getPlatformID(receiver)
-//            val endpoint = routingService.getPlatformEndpoint(platformID, "commands", InterfaceRole.RECEIVER)
-//            val headers = routingService.makeHeaders(platformID, correlationID, sender, receiver)
-//
-//            // intercept response_url and replace with broker-readable URL (async post mapping above)
-//            val uid = routingService.saveResponseURL(body.responseURL, CommandType.STOP_SESSION, sender, receiver)
-//            body.responseURL = urlJoin(properties.url, "/ocpi/sender/2.2/commands/STOP_SESSION/$uid")
-//
-//            routingService.forwardRequest(
-//                    method = "POST",
-//                    url = urlJoin(endpoint.url, "/STOP_SESSION"),
-//                    headers = headers,
-//                    body = body,
-//                    expectedDataType = CommandResponse::class)
-//        } else {
-//            val url = routingService.findBrokerUrl(receiver)
-//            val headers = routingService.makeHeaders(requestID, correlationID, sender, receiver)
-//            val hubCommandsRequestBody = HubCommandsRequest(
-//                    type = CommandType.STOP_SESSION,
-//                    headers = headers,
-//                    body = routingService.stringify(body))
-//            routingService.forwardRequest(
-//                    method = "POST",
-//                    url = urlJoin(url, "/ocn/message"),
-//                    headers = mapOf(
-//                            "X-Request-ID" to generateUUIDv4Token(),
-//                            "OCN-Signature" to routingService.signRequest(hubCommandsRequestBody)),
-//                    body = hubCommandsRequestBody,
-//                    expectedDataType = CommandResponse::class)
-//        }
-//
-//        return ResponseEntity.status(response.statusCode).body(response.body)
     }
 
 
@@ -587,41 +419,6 @@ class CommandsController(private val routingService: RoutingService,
         }
 
         return ResponseEntity.status(response.statusCode).body(response.body)
-
-//        val response = if (routingService.isRoleKnown(receiver)) {
-//            val platformID = routingService.getPlatformID(receiver)
-//            val endpoint = routingService.getPlatformEndpoint(platformID, "commands", InterfaceRole.RECEIVER)
-//            val headers = routingService.makeHeaders(platformID, correlationID, sender, receiver)
-//
-//            // intercept response_url and replace with broker-readable URL (async post mapping above)
-//            val uid = routingService.saveResponseURL(body.responseURL, CommandType.UNLOCK_CONNECTOR, sender, receiver)
-//            body.responseURL = urlJoin(properties.url, "/ocpi/sender/2.2/commands/UNLOCK_CONNECTOR/$uid")
-//
-//            routingService.forwardRequest(
-//                    method = "POST",
-//                    url = urlJoin(endpoint.url, "/UNLOCK_CONNECTOR"),
-//                    headers = headers,
-//                    body = body,
-//                    expectedDataType = CommandResponse::class)
-//        } else {
-//            val url = routingService.findBrokerUrl(receiver)
-//            val headers = routingService.makeHeaders(requestID, correlationID, sender, receiver)
-//            val hubCommandsRequestBody = HubCommandsRequest(
-//                    type = CommandType.UNLOCK_CONNECTOR,
-//                    headers = headers,
-//                    body = routingService.stringify(body))
-//            routingService.forwardRequest(
-//                    method = "POST",
-//                    url = urlJoin(url, "/ocn/message"),
-//                    headers = mapOf(
-//                            "X-Request-ID" to generateUUIDv4Token(),
-//                            "OCN-Signature" to routingService.signRequest(hubCommandsRequestBody)),
-//                    body = hubCommandsRequestBody,
-//                    expectedDataType = CommandResponse::class)
-//        }
-//
-//        return ResponseEntity.status(response.statusCode).body(response.body)
-//
     }
 
 }
