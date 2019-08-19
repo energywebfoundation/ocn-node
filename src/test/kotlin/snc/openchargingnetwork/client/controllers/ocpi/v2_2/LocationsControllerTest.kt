@@ -37,7 +37,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
 
 
     @Test
-    fun `When GET sender Locations return location list`() {
+    fun `When GET sender Locations return paginated location list`() {
 
         val dateFrom = getTimestamp()
 
@@ -71,7 +71,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
         every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, headers)
 
         val responseHeaders = mapOf(
-                "Link" to "https://ocpi.cpo.com/location/page/2?dateFrom=$dateFrom; rel=\"next\"",
+                "Link" to "https://ocpi.cpo.com/locations/page/2?dateFrom=$dateFrom; rel=\"next\"",
                 "X-Limit" to "25",
                 "X-Total-Count" to "500")
 
@@ -96,7 +96,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every { routingService.proxyPaginationHeaders(
                 responseHeaders = responseHeaders,
-                proxyEndpoint = "/ocpi/sender/2.2/locations",
+                proxyEndpoint = "/ocpi/sender/2.2/locations/page",
                 sender = sender,
                 receiver = receiver) } returns httpHeaders
 
@@ -111,6 +111,9 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
                 .param("date_from", dateFrom))
                 .andExpect(status().isOk)
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
+                .andExpect(header().string("Link", "https://client.ocn.co/ocpi/sender/2.2/locations/189; rel=\"next\""))
+                .andExpect(header().string("X-Limit", "25"))
+                .andExpect(header().string("X-Total-Count", "500"))
                 .andExpect(jsonPath("\$.status_code").value(OcpiStatus.SUCCESS.code))
                 .andExpect(jsonPath("\$.status_message").doesNotExist())
                 .andExpect(jsonPath("\$.timestamp").isString)
@@ -120,6 +123,91 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
                 .andExpect(jsonPath("\$.data[0].party_id").value(exampleLocation1.partyID))
                 .andExpect(jsonPath("\$.data[1].id").value(exampleLocation2.id))
                 .andExpect(jsonPath("\$.data[1].party_id").value(exampleLocation2.partyID))
+    }
+
+
+    @Test
+    fun `When GET sender Locations page should return proxied page`() {
+
+        val sender = BasicRole("EMY", "DE")
+        val receiver = BasicRole("IGY", "DE")
+
+        val requestVariables = OcpiRequestVariables(
+                module = ModuleID.LOCATIONS,
+                interfaceRole = InterfaceRole.SENDER,
+                method = HttpMethod.GET,
+                requestID = generateUUIDv4Token(),
+                correlationID = generateUUIDv4Token(),
+                sender = sender,
+                receiver = receiver,
+                urlPathVariables = "67",
+                expectedResponseType = OcpiResponseDataType.LOCATION_ARRAY)
+
+        val url = "https://some.emsp.com/actual/locations/page/2"
+
+        val headers = OcpiRequestHeaders(
+                authorization = "Token token-b",
+                requestID = generateUUIDv4Token(),
+                correlationID = requestVariables.correlationID,
+                ocpiFromCountryCode = sender.country,
+                ocpiFromPartyID = sender.id,
+                ocpiToCountryCode = receiver.country,
+                ocpiToPartyID = receiver.id)
+
+        every { routingService.validateSender("Token token-c", sender) } just Runs
+        every { routingService.validateReceiver(receiver) } returns OcpiRequestType.LOCAL
+        every { routingService.prepareLocalPlatformRequest(requestVariables, proxied = true) } returns Pair(url, headers)
+
+        val responseHeaders = mapOf(
+                "Link" to "https://some.emsp.com/actual/locations/page/3; rel=\"next\"",
+                "X-Limit" to "100")
+
+        every {
+
+            httpService.makeRequest(
+                    method = requestVariables.method,
+                    url = url,
+                    headers = headers,
+                    params = requestVariables.urlEncodedParameters,
+                    expectedDataType = requestVariables.expectedResponseType)
+
+        } returns HttpResponse(
+                statusCode = 200,
+                headers = responseHeaders,
+                body = OcpiResponse(statusCode = 1000, data = arrayOf(exampleLocation2)))
+
+        val httpHeaders = HttpHeaders()
+        httpHeaders["Link"] = "https://client.ocn.co/ocpi/sender/2.2/locations/page/68; rel=\"next\""
+        httpHeaders["X-Limit"] = responseHeaders["X-Limit"]
+
+        every { routingService.deleteProxyResource(requestVariables.urlPathVariables!!) } just Runs
+
+        every { routingService.proxyPaginationHeaders(
+                responseHeaders = responseHeaders,
+                proxyEndpoint = "/ocpi/sender/2.2/locations/page",
+                sender = sender,
+                receiver = receiver) } returns httpHeaders
+
+        mockMvc.perform(get("/ocpi/sender/2.2/locations/page/${requestVariables.urlPathVariables}")
+                .header("Authorization", "Token token-c")
+                .header("X-Request-ID", requestVariables.requestID)
+                .header("X-Correlation-ID", requestVariables.correlationID)
+                .header("OCPI-from-country-code", requestVariables.sender.country)
+                .header("OCPI-from-party-id", requestVariables.sender.id)
+                .header("OCPI-to-country-code", requestVariables.receiver.country)
+                .header("OCPI-to-party-id", requestVariables.receiver.id)
+                .param("limit", "100"))
+                .andExpect(status().isOk)
+                .andExpect(header().string("Link", "https://client.ocn.co/ocpi/sender/2.2/locations/page/68; rel=\"next\""))
+                .andExpect(header().string("X-Limit", "100"))
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
+                .andExpect(jsonPath("\$.status_code").value(1000))
+                .andExpect(jsonPath("\$.status_message").doesNotExist())
+                .andExpect(jsonPath("\$.data").isArray)
+                .andExpect(jsonPath("\$.data", hasSize<Array<Location>>(1)))
+                .andExpect(jsonPath("\$.data[0].id").value(exampleLocation2.id))
+                .andExpect(jsonPath("\$.data[0].party_id").value(exampleLocation2.partyID))
+                .andExpect(jsonPath("\$.timestamp").isString)
     }
 
 

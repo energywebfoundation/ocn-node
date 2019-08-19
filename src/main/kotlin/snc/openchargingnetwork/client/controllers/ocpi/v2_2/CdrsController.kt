@@ -100,7 +100,7 @@ class CdrsController(val routingService: RoutingService,
 
         val headers = routingService.proxyPaginationHeaders(
                 responseHeaders = response.headers,
-                proxyEndpoint = "/ocpi/sender/2.2/cdrs",
+                proxyEndpoint = "/ocpi/sender/2.2/cdrs/page",
                 sender = sender,
                 receiver = receiver)
 
@@ -110,7 +110,7 @@ class CdrsController(val routingService: RoutingService,
                 .body(response.body)
     }
 
-    @GetMapping("/ocpi/sender/2.2/cdrs/{uid}")
+    @GetMapping("/ocpi/sender/2.2/cdrs/page/{uid}")
     fun getCdrPageFromDataOwner(@RequestHeader("authorization") authorization: String,
                                 @RequestHeader("X-Request-ID") requestID: String,
                                 @RequestHeader("X-Correlation-ID") correlationID: String,
@@ -168,7 +168,7 @@ class CdrsController(val routingService: RoutingService,
 
             headers = routingService.proxyPaginationHeaders(
                     responseHeaders = response.headers,
-                    proxyEndpoint = "/ocpi/sender/2.2/cdrs",
+                    proxyEndpoint = "/ocpi/sender/2.2/cdrs/page",
                     sender = sender,
                     receiver = receiver)
 

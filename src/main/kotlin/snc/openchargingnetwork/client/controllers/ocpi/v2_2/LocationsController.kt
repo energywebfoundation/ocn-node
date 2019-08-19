@@ -19,6 +19,7 @@
 
 package snc.openchargingnetwork.client.controllers.ocpi.v2_2
 
+import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -29,6 +30,7 @@ import snc.openchargingnetwork.client.models.OcpiResponseDataType
 import snc.openchargingnetwork.client.models.ocpi.*
 import snc.openchargingnetwork.client.services.HttpRequestService
 import snc.openchargingnetwork.client.services.RoutingService
+import snc.openchargingnetwork.client.tools.isOcpiSuccess
 
 @RestController
 class LocationsController(private val routingService: RoutingService,
@@ -97,9 +99,80 @@ class LocationsController(private val routingService: RoutingService,
 
         val headers = routingService.proxyPaginationHeaders(
                 responseHeaders = response.headers,
-                proxyEndpoint = "/ocpi/sender/2.2/locations",
+                proxyEndpoint = "/ocpi/sender/2.2/locations/page",
                 sender = sender,
                 receiver = receiver)
+
+        return ResponseEntity
+                .status(response.statusCode)
+                .headers(headers)
+                .body(response.body)
+    }
+
+
+    @GetMapping("/ocpi/sender/2.2/locations/page/{uid}")
+    fun getLocationPageFromDataOwner(@RequestHeader("authorization") authorization: String,
+                                     @RequestHeader("X-Request-ID") requestID: String,
+                                     @RequestHeader("X-Correlation-ID") correlationID: String,
+                                     @RequestHeader("OCPI-from-country-code") fromCountryCode: String,
+                                     @RequestHeader("OCPI-from-party-id") fromPartyID: String,
+                                     @RequestHeader("OCPI-to-country-code") toCountryCode: String,
+                                     @RequestHeader("OCPI-to-party-id") toPartyID: String,
+                                     @PathVariable uid: String): ResponseEntity<OcpiResponse<Array<Location>>> {
+
+        val sender = BasicRole(fromPartyID, fromCountryCode)
+        val receiver = BasicRole(toPartyID, toCountryCode)
+
+        routingService.validateSender(authorization, sender)
+
+        val requestVariables = OcpiRequestVariables(
+                module = ModuleID.LOCATIONS,
+                interfaceRole = InterfaceRole.SENDER,
+                method = HttpMethod.GET,
+                requestID = requestID,
+                correlationID = correlationID,
+                sender = sender,
+                receiver = receiver,
+                urlPathVariables = uid,
+                expectedResponseType = OcpiResponseDataType.LOCATION_ARRAY)
+
+        val response = when (routingService.validateReceiver(receiver)) {
+
+            OcpiRequestType.LOCAL -> {
+
+                val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables, proxied = true)
+
+                httpService.makeRequest(
+                        method = requestVariables.method,
+                        url = url,
+                        headers = headers,
+                        expectedDataType = requestVariables.expectedResponseType)
+
+            }
+
+            OcpiRequestType.REMOTE -> {
+
+                val (url, headers, body) = routingService.prepareRemotePlatformRequest(requestVariables, proxied = true)
+
+                httpService.postClientMessage(url = url, headers = headers, body = body)
+
+            }
+
+        }
+
+        var headers = HttpHeaders()
+
+        if (isOcpiSuccess(response)) {
+
+            routingService.deleteProxyResource(uid)
+
+            headers = routingService.proxyPaginationHeaders(
+                    responseHeaders = response.headers,
+                    proxyEndpoint = "/ocpi/sender/2.2/locations/page",
+                    sender = sender,
+                    receiver = receiver)
+
+        }
 
         return ResponseEntity
                 .status(response.statusCode)

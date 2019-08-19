@@ -91,12 +91,12 @@ class CdrsControllerTest(@Autowired val mockMvc: MockMvc) {
                 body = OcpiResponse(statusCode = 1000, data = arrayOf(exampleCDR)))
 
         val httpHeaders = HttpHeaders()
-        httpHeaders["Link"] = "https://client.ocn.co/ocpi/sender/2.2/cdrs/43; rel=\"next\""
+        httpHeaders["Link"] = "https://client.ocn.co/ocpi/sender/2.2/cdrs/page/43; rel=\"next\""
         httpHeaders["X-Limit"] = responseHeaders["X-Limit"]
 
         every { routingService.proxyPaginationHeaders(
                 responseHeaders = responseHeaders,
-                proxyEndpoint = "/ocpi/sender/2.2/cdrs",
+                proxyEndpoint = "/ocpi/sender/2.2/cdrs/page",
                 sender = sender,
                 receiver = receiver) } returns httpHeaders
 
@@ -110,7 +110,7 @@ class CdrsControllerTest(@Autowired val mockMvc: MockMvc) {
                 .header("OCPI-to-party-id", requestVariables.receiver.id)
                 .param("limit", "100"))
                 .andExpect(status().isOk)
-                .andExpect(header().string("Link", "https://client.ocn.co/ocpi/sender/2.2/cdrs/43; rel=\"next\""))
+                .andExpect(header().string("Link", "https://client.ocn.co/ocpi/sender/2.2/cdrs/page/43; rel=\"next\""))
                 .andExpect(header().string("X-Limit", "100"))
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
                 .andExpect(jsonPath("\$.status_code").value(1000))
@@ -174,18 +174,18 @@ class CdrsControllerTest(@Autowired val mockMvc: MockMvc) {
                 body = OcpiResponse(statusCode = 1000, data = arrayOf(exampleCDR)))
 
         val httpHeaders = HttpHeaders()
-        httpHeaders["Link"] = "https://client.ocn.co/ocpi/sender/2.2/cdrs/68; rel=\"next\""
+        httpHeaders["Link"] = "https://client.ocn.co/ocpi/sender/2.2/cdrs/page/68; rel=\"next\""
         httpHeaders["X-Limit"] = responseHeaders["X-Limit"]
 
         every { routingService.deleteProxyResource(requestVariables.urlPathVariables!!) } just Runs
 
         every { routingService.proxyPaginationHeaders(
                 responseHeaders = responseHeaders,
-                proxyEndpoint = "/ocpi/sender/2.2/cdrs",
+                proxyEndpoint = "/ocpi/sender/2.2/cdrs/page",
                 sender = sender,
                 receiver = receiver) } returns httpHeaders
 
-        mockMvc.perform(get("/ocpi/sender/2.2/cdrs/${requestVariables.urlPathVariables}")
+        mockMvc.perform(get("/ocpi/sender/2.2/cdrs/page/${requestVariables.urlPathVariables}")
                 .header("Authorization", "Token token-c")
                 .header("X-Request-ID", requestVariables.requestID)
                 .header("X-Correlation-ID", requestVariables.correlationID)
@@ -195,7 +195,7 @@ class CdrsControllerTest(@Autowired val mockMvc: MockMvc) {
                 .header("OCPI-to-party-id", requestVariables.receiver.id)
                 .param("limit", "100"))
                 .andExpect(status().isOk)
-                .andExpect(header().string("Link", "https://client.ocn.co/ocpi/sender/2.2/cdrs/68; rel=\"next\""))
+                .andExpect(header().string("Link", "https://client.ocn.co/ocpi/sender/2.2/cdrs/page/68; rel=\"next\""))
                 .andExpect(header().string("X-Limit", "100"))
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
                 .andExpect(jsonPath("\$.status_code").value(1000))
