@@ -90,7 +90,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
                 body = OcpiResponse(statusCode = 1000, data = arrayOf(exampleLocation1, exampleLocation2)))
 
         val httpHeaders = HttpHeaders()
-        httpHeaders["Link"] = "https://client.ocn.co/ocpi/sender/2.2/locations/189; rel=\"next\""
+        httpHeaders["Link"] = "https://client.ocn.co/ocpi/sender/2.2/locations/page/189; rel=\"next\""
         httpHeaders["X-Limit"] = responseHeaders["X-Limit"]
         httpHeaders["X-Total-Count"] = responseHeaders["X-Total-Count"]
 
@@ -111,7 +111,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
                 .param("date_from", dateFrom))
                 .andExpect(status().isOk)
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
-                .andExpect(header().string("Link", "https://client.ocn.co/ocpi/sender/2.2/locations/189; rel=\"next\""))
+                .andExpect(header().string("Link", "https://client.ocn.co/ocpi/sender/2.2/locations/page/189; rel=\"next\""))
                 .andExpect(header().string("X-Limit", "25"))
                 .andExpect(header().string("X-Total-Count", "500"))
                 .andExpect(jsonPath("\$.status_code").value(OcpiStatus.SUCCESS.code))
