@@ -103,11 +103,12 @@ class RoutingService(private val platformRepo: PlatformRepository,
     }
 
 
-    fun proxyPaginationHeaders(responseHeaders: Map<String, String>, proxyEndpoint: String, sender: BasicRole, receiver: BasicRole): HttpHeaders {
+    fun <T: Any> proxyPaginationHeaders(request: OcpiRequestVariables<T>, responseHeaders: Map<String, String>): HttpHeaders {
         val headers = HttpHeaders()
         responseHeaders["Link"]?.let {
-            val id = setProxyResource(it, sender, receiver)
-            val link = urlJoin(properties.url, proxyEndpoint, id.toString())
+            val id = setProxyResource(it, request.sender, request.receiver)
+            val proxyPaginationEndpoint = "/ocpi/${request.interfaceRole.id}/2.2/${request.module.id}/page"
+            val link = urlJoin(properties.url, proxyPaginationEndpoint, id.toString())
             headers.add("Link", "$link; rel=\"next\"")
         }
         responseHeaders["X-Total-Count"]?.let { headers.add("X-Total-Count", it) }

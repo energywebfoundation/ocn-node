@@ -98,10 +98,8 @@ class TariffsController(private val routingService: RoutingService,
         }
 
         val headers = routingService.proxyPaginationHeaders(
-                responseHeaders = response.headers,
-                proxyEndpoint = "/ocpi/sender/2.2/tariffs/page",
-                sender = sender,
-                receiver = receiver)
+                request = requestVariables,
+                responseHeaders = response.headers)
 
         return ResponseEntity
                 .status(response.statusCode)
@@ -167,10 +165,8 @@ class TariffsController(private val routingService: RoutingService,
             routingService.deleteProxyResource(uid)
 
             headers = routingService.proxyPaginationHeaders(
-                    responseHeaders = response.headers,
-                    proxyEndpoint = "/ocpi/sender/2.2/tariffs/page",
-                    sender = sender,
-                    receiver = receiver)
+                    request = requestVariables,
+                    responseHeaders = response.headers)
 
         }
 
@@ -185,24 +181,61 @@ class TariffsController(private val routingService: RoutingService,
      * RECEIVER INTERFACE
      */
 
-//    @GetMapping("/ocpi/receiver/2.2/tariffs/{countryCode}/{partyID}/{tariffID}")
-//    fun getClientOwnedTariff(@RequestHeader("authorization") authorization: String,
-//                             @RequestHeader("X-Request-ID") requestID: String,
-//                             @RequestHeader("X-Correlation-ID") correlationID: String,
-//                             @RequestHeader("OCPI-from-country-code") fromCountryCode: String,
-//                             @RequestHeader("OCPI-from-party-id") fromPartyID: String,
-//                             @RequestHeader("OCPI-to-country-code") toCountryCode: String,
-//                             @RequestHeader("OCPI-to-party-id") toPartyID: String,
-//                             @PathVariable countryCode: String,
-//                             @PathVariable partyID: String,
-//                             @PathVariable tariffID: String): ResponseEntity<OcpiResponse<Tariff>> {
-//
-//        val sender = BasicRole(fromPartyID, fromCountryCode)
-//        val receiver = BasicRole(toPartyID, toCountryCode)
-//        val objectOwner = BasicRole(partyID, countryCode)
-//
-//        routingService.validateSender(authorization, sender, objectOwner)
-//
+    @GetMapping("/ocpi/receiver/2.2/tariffs/{countryCode}/{partyID}/{tariffID}")
+    fun getClientOwnedTariff(@RequestHeader("authorization") authorization: String,
+                             @RequestHeader("X-Request-ID") requestID: String,
+                             @RequestHeader("X-Correlation-ID") correlationID: String,
+                             @RequestHeader("OCPI-from-country-code") fromCountryCode: String,
+                             @RequestHeader("OCPI-from-party-id") fromPartyID: String,
+                             @RequestHeader("OCPI-to-country-code") toCountryCode: String,
+                             @RequestHeader("OCPI-to-party-id") toPartyID: String,
+                             @PathVariable countryCode: String,
+                             @PathVariable partyID: String,
+                             @PathVariable tariffID: String): ResponseEntity<OcpiResponse<Tariff>> {
+
+        val sender = BasicRole(fromPartyID, fromCountryCode)
+        val receiver = BasicRole(toPartyID, toCountryCode)
+
+        routingService.validateSender(authorization, sender)
+
+        val requestVariables = OcpiRequestVariables(
+                module = ModuleID.TARIFFS,
+                interfaceRole = InterfaceRole.RECEIVER,
+                method = HttpMethod.GET,
+                requestID = requestID,
+                correlationID = correlationID,
+                sender = sender,
+                receiver = receiver,
+                urlPathVariables = "/$countryCode/$partyID/$tariffID",
+                expectedResponseType = OcpiResponseDataType.TARIFF)
+
+        val response = when (routingService.validateReceiver(receiver)) {
+
+            OcpiRequestType.LOCAL -> {
+
+                val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables)
+
+                httpService.makeRequest(
+                        method = requestVariables.method,
+                        url = url,
+                        headers = headers,
+                        expectedDataType = requestVariables.expectedResponseType)
+
+            }
+
+            OcpiRequestType.REMOTE -> {
+
+                val (url, headers, ocnBody) = routingService.prepareRemotePlatformRequest(requestVariables)
+
+                httpService.postClientMessage(url = url, headers = headers, body = ocnBody)
+
+            }
+
+        }
+
+        return ResponseEntity.status(response.statusCode).body(response.body)
+
+
 //        val response = if (routingService.isRoleKnown(receiver)) {
 //            val platformID = routingService.getPlatformID(receiver)
 //            val endpoint = routingService.getPlatformEndpoint(platformID, "tariffs", InterfaceRole.RECEIVER)
@@ -234,28 +267,66 @@ class TariffsController(private val routingService: RoutingService,
 //        }
 //
 //        return ResponseEntity.status(response.statusCode).body(response.body)
-//    }
-//
-//    @PutMapping("/ocpi/receiver/2.2/tariffs/{countryCode}/{partyID}/{tariffID}")
-//    fun putClientOwnedTariff(@RequestHeader("authorization") authorization: String,
-//                             @RequestHeader("X-Request-ID") requestID: String,
-//                             @RequestHeader("X-Correlation-ID") correlationID: String,
-//                             @RequestHeader("OCPI-from-country-code") fromCountryCode: String,
-//                             @RequestHeader("OCPI-from-party-id") fromPartyID: String,
-//                             @RequestHeader("OCPI-to-country-code") toCountryCode: String,
-//                             @RequestHeader("OCPI-to-party-id") toPartyID: String,
-//                             @PathVariable countryCode: String,
-//                             @PathVariable partyID: String,
-//                             @PathVariable tariffID: String,
-//                             @RequestBody body: Tariff): ResponseEntity<OcpiResponse<Nothing>> {
-//
-//        val sender = BasicRole(fromPartyID, fromCountryCode)
-//        val receiver = BasicRole(toPartyID, toCountryCode)
-//        val objectOwner = BasicRole(partyID, countryCode)
-//        val objectData = BasicRole(body.partyID, body.countryCode)
-//
-//        routingService.validateSender(authorization, sender, objectOwner, objectData)
-//
+    }
+
+
+    @PutMapping("/ocpi/receiver/2.2/tariffs/{countryCode}/{partyID}/{tariffID}")
+    fun putClientOwnedTariff(@RequestHeader("authorization") authorization: String,
+                             @RequestHeader("X-Request-ID") requestID: String,
+                             @RequestHeader("X-Correlation-ID") correlationID: String,
+                             @RequestHeader("OCPI-from-country-code") fromCountryCode: String,
+                             @RequestHeader("OCPI-from-party-id") fromPartyID: String,
+                             @RequestHeader("OCPI-to-country-code") toCountryCode: String,
+                             @RequestHeader("OCPI-to-party-id") toPartyID: String,
+                             @PathVariable countryCode: String,
+                             @PathVariable partyID: String,
+                             @PathVariable tariffID: String,
+                             @RequestBody body: Tariff): ResponseEntity<OcpiResponse<Nothing>> {
+
+        val sender = BasicRole(fromPartyID, fromCountryCode)
+        val receiver = BasicRole(toPartyID, toCountryCode)
+
+        routingService.validateSender(authorization, sender)
+
+        val requestVariables = OcpiRequestVariables(
+                module = ModuleID.TARIFFS,
+                interfaceRole = InterfaceRole.RECEIVER,
+                method = HttpMethod.PUT,
+                requestID = requestID,
+                correlationID = correlationID,
+                sender = sender,
+                receiver = receiver,
+                urlPathVariables = "/$countryCode/$partyID/$tariffID",
+                body = body,
+                expectedResponseType = OcpiResponseDataType.NOTHING)
+
+        val response = when (routingService.validateReceiver(receiver)) {
+
+            OcpiRequestType.LOCAL -> {
+
+                val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables)
+
+                httpService.makeRequest(
+                        method = requestVariables.method,
+                        url = url,
+                        headers = headers,
+                        body = body,
+                        expectedDataType = requestVariables.expectedResponseType)
+
+            }
+
+            OcpiRequestType.REMOTE -> {
+
+                val (url, headers, ocnBody) = routingService.prepareRemotePlatformRequest(requestVariables)
+
+                httpService.postClientMessage(url = url, headers = headers, body = ocnBody)
+
+            }
+
+        }
+
+        return ResponseEntity.status(response.statusCode).body(response.body)
+
 //        val response = if (routingService.isRoleKnown(receiver)) {
 //            val platformID = routingService.getPlatformID(receiver)
 //            val endpoint = routingService.getPlatformEndpoint(platformID, "tariffs", InterfaceRole.RECEIVER)
@@ -287,26 +358,63 @@ class TariffsController(private val routingService: RoutingService,
 //        }
 //
 //        return ResponseEntity.status(response.statusCode).body(response.body)
-//    }
-//
-//    @DeleteMapping("/ocpi/receiver/2.2/tariffs/{countryCode}/{partyID}/{tariffID}")
-//    fun deleteClientOwnedTariff(@RequestHeader("authorization") authorization: String,
-//                                @RequestHeader("X-Request-ID") requestID: String,
-//                                @RequestHeader("X-Correlation-ID") correlationID: String,
-//                                @RequestHeader("OCPI-from-country-code") fromCountryCode: String,
-//                                @RequestHeader("OCPI-from-party-id") fromPartyID: String,
-//                                @RequestHeader("OCPI-to-country-code") toCountryCode: String,
-//                                @RequestHeader("OCPI-to-party-id") toPartyID: String,
-//                                @PathVariable countryCode: String,
-//                                @PathVariable partyID: String,
-//                                @PathVariable tariffID: String): ResponseEntity<OcpiResponse<Nothing>> {
-//
-//        val sender = BasicRole(fromPartyID, fromCountryCode)
-//        val receiver = BasicRole(toPartyID, toCountryCode)
-//        val objectOwner = BasicRole(partyID, countryCode)
-//
-//        routingService.validateSender(authorization, sender, objectOwner)
-//
+    }
+
+
+    @DeleteMapping("/ocpi/receiver/2.2/tariffs/{countryCode}/{partyID}/{tariffID}")
+    fun deleteClientOwnedTariff(@RequestHeader("authorization") authorization: String,
+                                @RequestHeader("X-Request-ID") requestID: String,
+                                @RequestHeader("X-Correlation-ID") correlationID: String,
+                                @RequestHeader("OCPI-from-country-code") fromCountryCode: String,
+                                @RequestHeader("OCPI-from-party-id") fromPartyID: String,
+                                @RequestHeader("OCPI-to-country-code") toCountryCode: String,
+                                @RequestHeader("OCPI-to-party-id") toPartyID: String,
+                                @PathVariable countryCode: String,
+                                @PathVariable partyID: String,
+                                @PathVariable tariffID: String): ResponseEntity<OcpiResponse<Nothing>> {
+
+        val sender = BasicRole(fromPartyID, fromCountryCode)
+        val receiver = BasicRole(toPartyID, toCountryCode)
+
+        routingService.validateSender(authorization, sender)
+
+        val requestVariables = OcpiRequestVariables(
+                module = ModuleID.TARIFFS,
+                interfaceRole = InterfaceRole.RECEIVER,
+                method = HttpMethod.DELETE,
+                requestID = requestID,
+                correlationID = correlationID,
+                sender = sender,
+                receiver = receiver,
+                urlPathVariables = "/$countryCode/$partyID/$tariffID",
+                expectedResponseType = OcpiResponseDataType.NOTHING)
+
+        val response = when (routingService.validateReceiver(receiver)) {
+
+            OcpiRequestType.LOCAL -> {
+
+                val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables)
+
+                httpService.makeRequest(
+                        method = requestVariables.method,
+                        url = url,
+                        headers = headers,
+                        expectedDataType = requestVariables.expectedResponseType)
+
+            }
+
+            OcpiRequestType.REMOTE -> {
+
+                val (url, headers, ocnBody) = routingService.prepareRemotePlatformRequest(requestVariables)
+
+                httpService.postClientMessage(url = url, headers = headers, body = ocnBody)
+
+            }
+
+        }
+
+        return ResponseEntity.status(response.statusCode).body(response.body)
+
 //        val response = if (routingService.isRoleKnown(receiver)) {
 //            val platformID = routingService.getPlatformID(receiver)
 //            val endpoint = routingService.getPlatformEndpoint(platformID, "tariffs", InterfaceRole.RECEIVER)
@@ -337,6 +445,6 @@ class TariffsController(private val routingService: RoutingService,
 //        }
 //
 //        return ResponseEntity.status(response.statusCode).body(response.body)
-//    }
+    }
 
 }

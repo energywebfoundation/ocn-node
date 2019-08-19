@@ -98,10 +98,8 @@ class SessionsController(private val routingService: RoutingService,
         }
 
         val headers = routingService.proxyPaginationHeaders(
-                responseHeaders = response.headers,
-                proxyEndpoint = "/ocpi/sender/2.2/sessions/page",
-                sender = sender,
-                receiver = receiver)
+                request = requestVariables,
+                responseHeaders = response.headers)
 
         return ResponseEntity
                 .status(response.statusCode)
@@ -167,10 +165,8 @@ class SessionsController(private val routingService: RoutingService,
             routingService.deleteProxyResource(uid)
 
             headers = routingService.proxyPaginationHeaders(
-                    responseHeaders = response.headers,
-                    proxyEndpoint = "/ocpi/sender/2.2/sessions/page",
-                    sender = sender,
-                    receiver = receiver)
+                    request = requestVariables,
+                    responseHeaders = response.headers)
 
         }
 

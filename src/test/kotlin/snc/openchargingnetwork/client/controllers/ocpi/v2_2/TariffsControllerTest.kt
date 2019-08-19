@@ -13,15 +13,16 @@ import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
 import org.springframework.http.MediaType
 import org.springframework.test.web.servlet.MockMvc
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
 import snc.openchargingnetwork.client.data.exampleTariff
 import snc.openchargingnetwork.client.models.*
 import snc.openchargingnetwork.client.models.ocpi.*
 import snc.openchargingnetwork.client.services.HttpRequestService
 import snc.openchargingnetwork.client.services.RoutingService
 import snc.openchargingnetwork.client.tools.generateUUIDv4Token
-import snc.openchargingnetwork.client.tools.getTimestamp
 
 @WebMvcTest(TariffsController::class)
 class TariffsControllerTest(@Autowired val mockMvc: MockMvc) {
@@ -35,8 +36,6 @@ class TariffsControllerTest(@Autowired val mockMvc: MockMvc) {
 
     @Test
     fun `When GET sender tariffs return paginated tariffs list`() {
-
-        val dateFrom = getTimestamp()
 
         val sender = BasicRole("EMY", "DE")
         val receiver = BasicRole("BSE", "DE")
@@ -91,11 +90,10 @@ class TariffsControllerTest(@Autowired val mockMvc: MockMvc) {
         httpHeaders["X-Limit"] = responseHeaders["X-Limit"]
         httpHeaders["X-Total-Count"] = responseHeaders["X-Total-Count"]
 
-        every { routingService.proxyPaginationHeaders(
-                responseHeaders = responseHeaders,
-                proxyEndpoint = "/ocpi/sender/2.2/tariffs/page",
-                sender = sender,
-                receiver = receiver) } returns httpHeaders
+        every {
+            routingService.proxyPaginationHeaders(
+                    request = requestVariables,
+                    responseHeaders = responseHeaders) } returns httpHeaders
 
         mockMvc.perform(get("/ocpi/sender/2.2/tariffs")
                 .header("Authorization", "Token token-c")
@@ -106,18 +104,18 @@ class TariffsControllerTest(@Autowired val mockMvc: MockMvc) {
                 .header("OCPI-to-country-code", receiver.country)
                 .header("OCPI-to-party-id", receiver.id)
                 .param("limit", "10"))
-                .andExpect(MockMvcResultMatchers.status().isOk)
-                .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_UTF8))
-                .andExpect(MockMvcResultMatchers.header().string("Link", "https://client.ocn.co/ocpi/sender/2.2/tariffs/page/39; rel=\"next\""))
-                .andExpect(MockMvcResultMatchers.header().string("X-Limit", "10"))
-                .andExpect(MockMvcResultMatchers.header().string("X-Total-Count", "23"))
-                .andExpect(MockMvcResultMatchers.jsonPath("\$.status_code").value(OcpiStatus.SUCCESS.code))
-                .andExpect(MockMvcResultMatchers.jsonPath("\$.status_message").doesNotExist())
-                .andExpect(MockMvcResultMatchers.jsonPath("\$.timestamp").isString)
-                .andExpect(MockMvcResultMatchers.jsonPath("\$.data").isArray)
-                .andExpect(MockMvcResultMatchers.jsonPath("\$.data", Matchers.hasSize<Array<Tariff>>(1)))
-                .andExpect(MockMvcResultMatchers.jsonPath("\$.data[0].id").value(exampleTariff.id))
-                .andExpect(MockMvcResultMatchers.jsonPath("\$.data[0].party_id").value(exampleTariff.partyID))
+                .andExpect(status().isOk)
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
+                .andExpect(header().string("Link", "https://client.ocn.co/ocpi/sender/2.2/tariffs/page/39; rel=\"next\""))
+                .andExpect(header().string("X-Limit", "10"))
+                .andExpect(header().string("X-Total-Count", "23"))
+                .andExpect(jsonPath("\$.status_code").value(OcpiStatus.SUCCESS.code))
+                .andExpect(jsonPath("\$.status_message").doesNotExist())
+                .andExpect(jsonPath("\$.timestamp").isString)
+                .andExpect(jsonPath("\$.data").isArray)
+                .andExpect(jsonPath("\$.data", Matchers.hasSize<Array<Tariff>>(1)))
+                .andExpect(jsonPath("\$.data[0].id").value(exampleTariff.id))
+                .andExpect(jsonPath("\$.data[0].party_id").value(exampleTariff.partyID))
     }
 
 
@@ -179,10 +177,8 @@ class TariffsControllerTest(@Autowired val mockMvc: MockMvc) {
         every { routingService.deleteProxyResource(requestVariables.urlPathVariables!!) } just Runs
 
         every { routingService.proxyPaginationHeaders(
-                responseHeaders = responseHeaders,
-                proxyEndpoint = "/ocpi/sender/2.2/tariffs/page",
-                sender = sender,
-                receiver = receiver) } returns httpHeaders
+                request = requestVariables,
+                responseHeaders = responseHeaders) } returns httpHeaders
 
         mockMvc.perform(get("/ocpi/sender/2.2/tariffs/page/${requestVariables.urlPathVariables}")
                 .header("Authorization", "Token token-c")
@@ -193,17 +189,214 @@ class TariffsControllerTest(@Autowired val mockMvc: MockMvc) {
                 .header("OCPI-to-country-code", requestVariables.receiver.country)
                 .header("OCPI-to-party-id", requestVariables.receiver.id)
                 .param("limit", "100"))
-                .andExpect(MockMvcResultMatchers.status().isOk)
-                .andExpect(MockMvcResultMatchers.header().string("Link", "https://client.ocn.co/ocpi/sender/2.2/tariffs/page/40; rel=\"next\""))
-                .andExpect(MockMvcResultMatchers.header().string("X-Limit", "10"))
-                .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_UTF8))
-                .andExpect(MockMvcResultMatchers.jsonPath("\$.status_code").value(1000))
-                .andExpect(MockMvcResultMatchers.jsonPath("\$.status_message").doesNotExist())
-                .andExpect(MockMvcResultMatchers.jsonPath("\$.data").isArray)
-                .andExpect(MockMvcResultMatchers.jsonPath("\$.data", Matchers.hasSize<Array<Tariff>>(1)))
-                .andExpect(MockMvcResultMatchers.jsonPath("\$.data[0].id").value(exampleTariff.id))
-                .andExpect(MockMvcResultMatchers.jsonPath("\$.data[0].party_id").value(exampleTariff.partyID))
-                .andExpect(MockMvcResultMatchers.jsonPath("\$.timestamp").isString)
+                .andExpect(status().isOk)
+                .andExpect(header().string("Link", "https://client.ocn.co/ocpi/sender/2.2/tariffs/page/40; rel=\"next\""))
+                .andExpect(header().string("X-Limit", "10"))
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
+                .andExpect(jsonPath("\$.status_code").value(1000))
+                .andExpect(jsonPath("\$.status_message").doesNotExist())
+                .andExpect(jsonPath("\$.data").isArray)
+                .andExpect(jsonPath("\$.data", Matchers.hasSize<Array<Tariff>>(1)))
+                .andExpect(jsonPath("\$.data[0].id").value(exampleTariff.id))
+                .andExpect(jsonPath("\$.data[0].party_id").value(exampleTariff.partyID))
+                .andExpect(jsonPath("\$.timestamp").isString)
+    }
+
+
+    @Test
+    fun `When GET receiver Tariffs return single tariff object`() {
+
+        val tariffID = "xxx-1234"
+
+        val sender = BasicRole("BSE", "DE")
+        val receiver = BasicRole("EMY", "DE")
+
+        val requestVariables = OcpiRequestVariables(
+                module = ModuleID.TARIFFS,
+                interfaceRole = InterfaceRole.RECEIVER,
+                method = HttpMethod.GET,
+                requestID = generateUUIDv4Token(),
+                correlationID = generateUUIDv4Token(),
+                sender = sender,
+                receiver = receiver,
+                urlPathVariables = "/${sender.country}/${sender.id}/$tariffID",
+                expectedResponseType = OcpiResponseDataType.TARIFF)
+
+        val url = "https://ocpi.cpo.com/2.2/tariffs/${sender.country}/${sender.id}/$tariffID"
+
+        val headers = OcpiRequestHeaders(
+                authorization = "Token token-b",
+                requestID = generateUUIDv4Token(),
+                correlationID = requestVariables.correlationID,
+                ocpiFromCountryCode = sender.country,
+                ocpiFromPartyID = sender.id,
+                ocpiToCountryCode = receiver.country,
+                ocpiToPartyID = receiver.id)
+
+        every { routingService.validateSender("Token token-c", sender) } just Runs
+        every { routingService.validateReceiver(receiver) } returns OcpiRequestType.LOCAL
+        every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, headers)
+
+        every {
+
+            httpService.makeRequest(
+                    method = requestVariables.method,
+                    url = url,
+                    headers = headers,
+                    expectedDataType = requestVariables.expectedResponseType)
+
+        } returns HttpResponse(
+                statusCode = 200,
+                headers = mapOf(),
+                body = OcpiResponse(statusCode = 1000, data = exampleTariff))
+
+        mockMvc.perform(get("/ocpi/receiver/2.2/tariffs/${sender.country}/${sender.id}/$tariffID")
+                .header("Authorization", "Token token-c")
+                .header("X-Request-ID", requestVariables.requestID)
+                .header("X-Correlation-ID", requestVariables.correlationID)
+                .header("OCPI-from-country-code", sender.country)
+                .header("OCPI-from-party-id", sender.id)
+                .header("OCPI-to-country-code", receiver.country)
+                .header("OCPI-to-party-id", receiver.id))
+                .andExpect(status().isOk)
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
+                .andExpect(jsonPath("\$.status_code").value(OcpiStatus.SUCCESS.code))
+                .andExpect(jsonPath("\$.status_message").doesNotExist())
+                .andExpect(jsonPath("\$.timestamp").isString)
+                .andExpect(jsonPath("\$.data.id").value(exampleTariff.id))
+                .andExpect(jsonPath("\$.data.party_id").value(exampleTariff.partyID))
+    }
+
+
+    @Test
+    fun `When PUT receiver Tariffs return OCPI success`() {
+
+        val tariffID = "xxx-1234"
+
+        val sender = BasicRole("BSE", "DE")
+        val receiver = BasicRole("EMY", "DE")
+
+        val requestVariables = OcpiRequestVariables(
+                module = ModuleID.TARIFFS,
+                interfaceRole = InterfaceRole.RECEIVER,
+                method = HttpMethod.PUT,
+                requestID = generateUUIDv4Token(),
+                correlationID = generateUUIDv4Token(),
+                sender = sender,
+                receiver = receiver,
+                urlPathVariables = "/${sender.country}/${sender.id}/$tariffID",
+                body = exampleTariff,
+                expectedResponseType = OcpiResponseDataType.NOTHING)
+
+        val url = "https://ocpi.cpo.com/2.2/tariffs/${sender.country}/${sender.id}/$tariffID"
+
+        val headers = OcpiRequestHeaders(
+                authorization = "Token token-b",
+                requestID = generateUUIDv4Token(),
+                correlationID = requestVariables.correlationID,
+                ocpiFromCountryCode = sender.country,
+                ocpiFromPartyID = sender.id,
+                ocpiToCountryCode = receiver.country,
+                ocpiToPartyID = receiver.id)
+
+        every { routingService.validateSender("Token token-c", sender) } just Runs
+        every { routingService.validateReceiver(receiver) } returns OcpiRequestType.LOCAL
+        every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, headers)
+
+        every {
+
+            httpService.makeRequest(
+                    method = requestVariables.method,
+                    url = url,
+                    headers = headers,
+                    body = exampleTariff,
+                    expectedDataType = requestVariables.expectedResponseType)
+
+        } returns HttpResponse(
+                statusCode = 200,
+                headers = mapOf(),
+                body = OcpiResponse(statusCode = 1000))
+
+        mockMvc.perform(put("/ocpi/receiver/2.2/tariffs/${sender.country}/${sender.id}/$tariffID")
+                .header("Authorization", "Token token-c")
+                .header("X-Request-ID", requestVariables.requestID)
+                .header("X-Correlation-ID", requestVariables.correlationID)
+                .header("OCPI-from-country-code", sender.country)
+                .header("OCPI-from-party-id", sender.id)
+                .header("OCPI-to-country-code", receiver.country)
+                .header("OCPI-to-party-id", receiver.id)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jacksonObjectMapper().writeValueAsString(exampleTariff)))
+                .andExpect(status().isOk)
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
+                .andExpect(jsonPath("\$.status_code").value(OcpiStatus.SUCCESS.code))
+                .andExpect(jsonPath("\$.status_message").doesNotExist())
+                .andExpect(jsonPath("\$.data").doesNotExist())
+                .andExpect(jsonPath("\$.timestamp").isString)
+    }
+
+
+    @Test
+    fun `When DELETE receiver Tariffs return OCPI success`() {
+
+        val tariffID = "xxx-1234"
+
+        val sender = BasicRole("BSE", "DE")
+        val receiver = BasicRole("EMY", "DE")
+
+        val requestVariables = OcpiRequestVariables(
+                module = ModuleID.TARIFFS,
+                interfaceRole = InterfaceRole.RECEIVER,
+                method = HttpMethod.DELETE,
+                requestID = generateUUIDv4Token(),
+                correlationID = generateUUIDv4Token(),
+                sender = sender,
+                receiver = receiver,
+                urlPathVariables = "/${sender.country}/${sender.id}/$tariffID",
+                expectedResponseType = OcpiResponseDataType.NOTHING)
+
+        val url = "https://ocpi.cpo.com/2.2/tariffs/${sender.country}/${sender.id}/$tariffID"
+
+        val headers = OcpiRequestHeaders(
+                authorization = "Token token-b",
+                requestID = generateUUIDv4Token(),
+                correlationID = requestVariables.correlationID,
+                ocpiFromCountryCode = sender.country,
+                ocpiFromPartyID = sender.id,
+                ocpiToCountryCode = receiver.country,
+                ocpiToPartyID = receiver.id)
+
+        every { routingService.validateSender("Token token-c", sender) } just Runs
+        every { routingService.validateReceiver(receiver) } returns OcpiRequestType.LOCAL
+        every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, headers)
+
+        every {
+
+            httpService.makeRequest(
+                    method = requestVariables.method,
+                    url = url,
+                    headers = headers,
+                    expectedDataType = requestVariables.expectedResponseType)
+
+        } returns HttpResponse(
+                statusCode = 200,
+                headers = mapOf(),
+                body = OcpiResponse(statusCode = 1000))
+
+        mockMvc.perform(delete("/ocpi/receiver/2.2/tariffs/${sender.country}/${sender.id}/$tariffID")
+                .header("Authorization", "Token token-c")
+                .header("X-Request-ID", requestVariables.requestID)
+                .header("X-Correlation-ID", requestVariables.correlationID)
+                .header("OCPI-from-country-code", sender.country)
+                .header("OCPI-from-party-id", sender.id)
+                .header("OCPI-to-country-code", receiver.country)
+                .header("OCPI-to-party-id", receiver.id))
+                .andExpect(status().isOk)
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
+                .andExpect(jsonPath("\$.status_code").value(OcpiStatus.SUCCESS.code))
+                .andExpect(jsonPath("\$.status_message").doesNotExist())
+                .andExpect(jsonPath("\$.data").doesNotExist())
+                .andExpect(jsonPath("\$.timestamp").isString)
     }
 
 }

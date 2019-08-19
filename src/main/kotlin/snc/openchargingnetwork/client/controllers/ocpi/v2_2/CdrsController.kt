@@ -99,10 +99,8 @@ class CdrsController(val routingService: RoutingService,
         }
 
         val headers = routingService.proxyPaginationHeaders(
-                responseHeaders = response.headers,
-                proxyEndpoint = "/ocpi/sender/2.2/cdrs/page",
-                sender = sender,
-                receiver = receiver)
+                request = requestVariables,
+                responseHeaders = response.headers)
 
         return ResponseEntity
                 .status(response.statusCode)
@@ -167,10 +165,8 @@ class CdrsController(val routingService: RoutingService,
             routingService.deleteProxyResource(uid)
 
             headers = routingService.proxyPaginationHeaders(
-                    responseHeaders = response.headers,
-                    proxyEndpoint = "/ocpi/sender/2.2/cdrs/page",
-                    sender = sender,
-                    receiver = receiver)
+                    request = requestVariables,
+                    responseHeaders = response.headers)
 
         }
 

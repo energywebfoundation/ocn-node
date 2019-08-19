@@ -93,11 +93,10 @@ class SessionsControllerTest(@Autowired val mockMvc: MockMvc) {
         httpHeaders["X-Limit"] = responseHeaders["X-Limit"]
         httpHeaders["X-Total-Count"] = responseHeaders["X-Total-Count"]
 
-        every { routingService.proxyPaginationHeaders(
-                responseHeaders = responseHeaders,
-                proxyEndpoint = "/ocpi/sender/2.2/sessions/page",
-                sender = sender,
-                receiver = receiver) } returns httpHeaders
+        every {
+            routingService.proxyPaginationHeaders(
+                    request = requestVariables,
+                    responseHeaders = responseHeaders) } returns httpHeaders
 
         mockMvc.perform(get("/ocpi/sender/2.2/sessions")
                 .header("Authorization", "Token token-c")
@@ -181,11 +180,10 @@ class SessionsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every { routingService.deleteProxyResource(requestVariables.urlPathVariables!!) } just Runs
 
-        every { routingService.proxyPaginationHeaders(
-                responseHeaders = responseHeaders,
-                proxyEndpoint = "/ocpi/sender/2.2/sessions/page",
-                sender = sender,
-                receiver = receiver) } returns httpHeaders
+        every {
+            routingService.proxyPaginationHeaders(
+                    request = requestVariables,
+                    responseHeaders = responseHeaders) } returns httpHeaders
 
         mockMvc.perform(get("/ocpi/sender/2.2/sessions/page/${requestVariables.urlPathVariables}")
                 .header("Authorization", "Token token-c")

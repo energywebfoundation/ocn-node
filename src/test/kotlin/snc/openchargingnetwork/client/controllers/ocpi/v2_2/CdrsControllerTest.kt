@@ -95,10 +95,8 @@ class CdrsControllerTest(@Autowired val mockMvc: MockMvc) {
         httpHeaders["X-Limit"] = responseHeaders["X-Limit"]
 
         every { routingService.proxyPaginationHeaders(
-                responseHeaders = responseHeaders,
-                proxyEndpoint = "/ocpi/sender/2.2/cdrs/page",
-                sender = sender,
-                receiver = receiver) } returns httpHeaders
+                request = requestVariables,
+                responseHeaders = responseHeaders) } returns httpHeaders
 
         mockMvc.perform(get("/ocpi/sender/2.2/cdrs")
                 .header("Authorization", "Token token-c")
@@ -180,10 +178,8 @@ class CdrsControllerTest(@Autowired val mockMvc: MockMvc) {
         every { routingService.deleteProxyResource(requestVariables.urlPathVariables!!) } just Runs
 
         every { routingService.proxyPaginationHeaders(
-                responseHeaders = responseHeaders,
-                proxyEndpoint = "/ocpi/sender/2.2/cdrs/page",
-                sender = sender,
-                receiver = receiver) } returns httpHeaders
+                request = requestVariables,
+                responseHeaders = responseHeaders) } returns httpHeaders
 
         mockMvc.perform(get("/ocpi/sender/2.2/cdrs/page/${requestVariables.urlPathVariables}")
                 .header("Authorization", "Token token-c")

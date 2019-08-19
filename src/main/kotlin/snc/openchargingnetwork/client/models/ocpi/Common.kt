@@ -132,9 +132,9 @@ enum class ModuleID(val id: String) {
     TOKENS("tokens")
 }
 
-enum class InterfaceRole {
-    SENDER,
-    RECEIVER
+enum class InterfaceRole(val id: String) {
+    SENDER(id = "sender"),
+    RECEIVER(id = "receiver")
 }
 
 enum class Role {
