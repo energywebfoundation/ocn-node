@@ -57,7 +57,7 @@ class CommandsController(private val routingService: RoutingService,
         routingService.validateSender(authorization, sender)
 
         val requestVariables = OcpiRequestVariables(
-                module = ModuleID.Commands,
+                module = ModuleID.COMMANDS,
                 interfaceRole = InterfaceRole.SENDER,
                 method = HttpMethod.POST,
                 requestID = requestID,
@@ -118,7 +118,7 @@ class CommandsController(private val routingService: RoutingService,
         routingService.validateSender(authorization, sender)
 
         val requestVariables = OcpiRequestVariables(
-                module = ModuleID.Commands,
+                module = ModuleID.COMMANDS,
                 interfaceRole = InterfaceRole.RECEIVER,
                 method = HttpMethod.POST,
                 requestID = requestID,
@@ -182,7 +182,7 @@ class CommandsController(private val routingService: RoutingService,
         routingService.validateSender(authorization, sender)
 
         val requestVariables = OcpiRequestVariables(
-                module = ModuleID.Commands,
+                module = ModuleID.COMMANDS,
                 interfaceRole = InterfaceRole.RECEIVER,
                 method = HttpMethod.POST,
                 requestID = requestID,
@@ -246,7 +246,7 @@ class CommandsController(private val routingService: RoutingService,
         routingService.validateSender(authorization, sender)
 
         val requestVariables = OcpiRequestVariables(
-                module = ModuleID.Commands,
+                module = ModuleID.COMMANDS,
                 interfaceRole = InterfaceRole.RECEIVER,
                 method = HttpMethod.POST,
                 requestID = requestID,
@@ -310,7 +310,7 @@ class CommandsController(private val routingService: RoutingService,
         routingService.validateSender(authorization, sender)
 
         val requestVariables = OcpiRequestVariables(
-                module = ModuleID.Commands,
+                module = ModuleID.COMMANDS,
                 interfaceRole = InterfaceRole.RECEIVER,
                 method = HttpMethod.POST,
                 requestID = requestID,
@@ -374,7 +374,7 @@ class CommandsController(private val routingService: RoutingService,
         routingService.validateSender(authorization, sender)
 
         val requestVariables = OcpiRequestVariables(
-                module = ModuleID.Commands,
+                module = ModuleID.COMMANDS,
                 interfaceRole = InterfaceRole.RECEIVER,
                 method = HttpMethod.POST,
                 requestID = requestID,

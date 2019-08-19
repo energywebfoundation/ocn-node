@@ -44,7 +44,7 @@ class CommandsControllerTest(@Autowired val mockMvc: MockMvc) {
         val receiver = BasicRole("ZTP", "CH")
 
         val requestVariables = OcpiRequestVariables(
-                module = ModuleID.Commands,
+                module = ModuleID.COMMANDS,
                 interfaceRole = InterfaceRole.SENDER,
                 method = HttpMethod.POST,
                 requestID = generateUUIDv4Token(),
@@ -114,7 +114,7 @@ class CommandsControllerTest(@Autowired val mockMvc: MockMvc) {
         val receiver = BasicRole("ZTP", "CH")
 
         val requestVariables = OcpiRequestVariables(
-                module = ModuleID.Commands,
+                module = ModuleID.COMMANDS,
                 interfaceRole = InterfaceRole.RECEIVER,
                 method = HttpMethod.POST,
                 requestID = generateUUIDv4Token(),
@@ -193,7 +193,7 @@ class CommandsControllerTest(@Autowired val mockMvc: MockMvc) {
         val receiver = BasicRole("ZTP", "CH")
 
         val requestVariables = OcpiRequestVariables(
-                module = ModuleID.Commands,
+                module = ModuleID.COMMANDS,
                 interfaceRole = InterfaceRole.RECEIVER,
                 method = HttpMethod.POST,
                 requestID = generateUUIDv4Token(),
@@ -270,7 +270,7 @@ class CommandsControllerTest(@Autowired val mockMvc: MockMvc) {
         val receiver = BasicRole("ZTP", "CH")
 
         val requestVariables = OcpiRequestVariables(
-                module = ModuleID.Commands,
+                module = ModuleID.COMMANDS,
                 interfaceRole = InterfaceRole.RECEIVER,
                 method = HttpMethod.POST,
                 requestID = generateUUIDv4Token(),
@@ -346,7 +346,7 @@ class CommandsControllerTest(@Autowired val mockMvc: MockMvc) {
         val receiver = BasicRole("ZTP", "CH")
 
         val requestVariables = OcpiRequestVariables(
-                module = ModuleID.Commands,
+                module = ModuleID.COMMANDS,
                 interfaceRole = InterfaceRole.RECEIVER,
                 method = HttpMethod.POST,
                 requestID = generateUUIDv4Token(),
@@ -424,7 +424,7 @@ class CommandsControllerTest(@Autowired val mockMvc: MockMvc) {
         val receiver = BasicRole("ZTP", "CH")
 
         val requestVariables = OcpiRequestVariables(
-                module = ModuleID.Commands,
+                module = ModuleID.COMMANDS,
                 interfaceRole = InterfaceRole.RECEIVER,
                 method = HttpMethod.POST,
                 requestID = generateUUIDv4Token(),

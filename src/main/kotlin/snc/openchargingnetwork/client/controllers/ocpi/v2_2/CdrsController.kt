@@ -22,7 +22,6 @@ package snc.openchargingnetwork.client.controllers.ocpi.v2_2
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
 import org.springframework.http.ResponseEntity
-import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.bind.annotation.*
 import snc.openchargingnetwork.client.config.Properties
 import snc.openchargingnetwork.client.models.*
@@ -62,7 +61,7 @@ class CdrsController(val routingService: RoutingService,
         routingService.validateSender(authorization, sender)
 
         val requestVariables = OcpiRequestVariables(
-                module = ModuleID.Cdrs,
+                module = ModuleID.CDRS,
                 interfaceRole = InterfaceRole.SENDER,
                 method = HttpMethod.GET,
                 requestID = requestID,
@@ -127,7 +126,7 @@ class CdrsController(val routingService: RoutingService,
         routingService.validateSender(authorization, sender)
 
         val requestVariables = OcpiRequestVariables(
-                module = ModuleID.Cdrs,
+                module = ModuleID.CDRS,
                 interfaceRole = InterfaceRole.SENDER,
                 method = HttpMethod.GET,
                 requestID = requestID,
@@ -201,7 +200,7 @@ class CdrsController(val routingService: RoutingService,
         routingService.validateSender(authorization, sender)
 
         val requestVariables = OcpiRequestVariables(
-                module = ModuleID.Cdrs,
+                module = ModuleID.CDRS,
                 interfaceRole = InterfaceRole.RECEIVER,
                 method = HttpMethod.GET,
                 requestID = requestID,
@@ -254,7 +253,7 @@ class CdrsController(val routingService: RoutingService,
         routingService.validateSender(authorization, sender)
 
         val requestVariables = OcpiRequestVariables(
-                module = ModuleID.Cdrs,
+                module = ModuleID.CDRS,
                 interfaceRole = InterfaceRole.RECEIVER,
                 method = HttpMethod.POST,
                 requestID = requestID,

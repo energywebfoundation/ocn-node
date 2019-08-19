@@ -146,7 +146,7 @@ class RoutingService(private val platformRepo: PlatformRepository,
             ?: throw OcpiHubUnknownReceiverException("Could not find platform ID of $role")
 
     fun getPlatformEndpoint(platformID: Long?, module: ModuleID, interfaceRole: InterfaceRole)
-            = endpointRepo.findByPlatformIDAndIdentifierAndRole(platformID, module.value, interfaceRole)
+            = endpointRepo.findByPlatformIDAndIdentifierAndRole(platformID, module.id, interfaceRole)
             ?: throw OcpiClientInvalidParametersException("Receiver does not support the requested module")
 
     fun validateSender(authorization: String) {

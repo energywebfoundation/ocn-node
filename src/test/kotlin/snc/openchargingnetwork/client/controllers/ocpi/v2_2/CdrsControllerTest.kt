@@ -47,7 +47,7 @@ class CdrsControllerTest(@Autowired val mockMvc: MockMvc) {
         val receiver = BasicRole("ZTP", "CH")
 
         val requestVariables = OcpiRequestVariables(
-                module = ModuleID.Cdrs,
+                module = ModuleID.CDRS,
                 interfaceRole = InterfaceRole.SENDER,
                 method = HttpMethod.GET,
                 requestID = generateUUIDv4Token(),
@@ -73,7 +73,7 @@ class CdrsControllerTest(@Autowired val mockMvc: MockMvc) {
         every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, headers)
 
         val responseHeaders = mapOf(
-                "Link" to "https://some.emsp.com/actual/cdr/page/2; rel=\"next\"",
+                "Link" to "https://some.cpo.com/actual/cdr/page/2; rel=\"next\"",
                 "X-Limit" to "100")
 
         every {
@@ -130,7 +130,7 @@ class CdrsControllerTest(@Autowired val mockMvc: MockMvc) {
         val receiver = BasicRole("ZTP", "CH")
 
         val requestVariables = OcpiRequestVariables(
-                module = ModuleID.Cdrs,
+                module = ModuleID.CDRS,
                 interfaceRole = InterfaceRole.SENDER,
                 method = HttpMethod.GET,
                 requestID = generateUUIDv4Token(),
@@ -215,7 +215,7 @@ class CdrsControllerTest(@Autowired val mockMvc: MockMvc) {
         val receiver = BasicRole("EMY", "DE")
 
         val requestVariables = OcpiRequestVariables(
-                module = ModuleID.Cdrs,
+                module = ModuleID.CDRS,
                 interfaceRole = InterfaceRole.RECEIVER,
                 method = HttpMethod.GET,
                 requestID = generateUUIDv4Token(),
@@ -279,7 +279,7 @@ class CdrsControllerTest(@Autowired val mockMvc: MockMvc) {
         val receiver = BasicRole("EMY", "DE")
 
         val requestVariables = OcpiRequestVariables(
-                module = ModuleID.Cdrs,
+                module = ModuleID.CDRS,
                 interfaceRole = InterfaceRole.RECEIVER,
                 method = HttpMethod.POST,
                 requestID = generateUUIDv4Token(),

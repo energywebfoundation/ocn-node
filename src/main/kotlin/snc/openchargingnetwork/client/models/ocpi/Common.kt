@@ -120,16 +120,16 @@ enum class ConnectionStatus {
     SUSPENDED
 }
 
-enum class ModuleID(val value: String) {
-    Cdrs("cdrs"),
-    ChargingProfiles("chargingprofiles"),
-    Commands("commands"),
-    Credentials("credentials"),
-    HubClientInfo("hubclientinfo"),
-    Locations("locations"),
-    Sessions("sessions"),
-    Tariffs("tariffs"),
-    Tokens("tokens")
+enum class ModuleID(val id: String) {
+    CDRS("cdrs"),
+    CHARGING_PROFILES("chargingprofiles"),
+    COMMANDS("commands"),
+    CREDENTIALS("credentials"),
+    HUB_CLIENT_INFO("hubclientinfo"),
+    LOCATIONS("locations"),
+    SESSIONS("sessions"),
+    TARIFFS("tariffs"),
+    TOKENS("tokens")
 }
 
 enum class InterfaceRole {
