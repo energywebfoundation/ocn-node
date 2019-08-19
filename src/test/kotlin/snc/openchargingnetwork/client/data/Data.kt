@@ -117,6 +117,18 @@ val exampleCDR = CDR(
         lastUpdated = getTimestamp()
 )
 
+val exampleTariff = Tariff(
+        countryCode = "DE",
+        partyID = "BSE",
+        id = "xxx-1234",
+        currency = "EUR",
+        elements = listOf(TariffElement(listOf(PriceComponent(
+                type = TariffDimensionType.ENERGY,
+                price = 0.28F,
+                stepSize = 1000)))),
+        lastUpdated = getTimestamp()
+)
+
 val exampleToken = Token(
         countryCode = "DE",
         partyID = "ZUI",

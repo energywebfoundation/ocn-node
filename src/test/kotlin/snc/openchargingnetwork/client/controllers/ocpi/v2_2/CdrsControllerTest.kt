@@ -124,7 +124,7 @@ class CdrsControllerTest(@Autowired val mockMvc: MockMvc) {
 
 
     @Test
-    fun `When GET sender CDRs page should return proxied page`() {
+    fun `When GET sender CDRs page should return proxied cdrs list page`() {
 
         val sender = BasicRole("EMY", "DE")
         val receiver = BasicRole("ZTP", "CH")

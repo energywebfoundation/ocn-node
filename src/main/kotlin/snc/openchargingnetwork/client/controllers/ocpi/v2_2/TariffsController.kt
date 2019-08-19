@@ -19,77 +19,167 @@
 
 package snc.openchargingnetwork.client.controllers.ocpi.v2_2
 
+import org.springframework.http.HttpHeaders
+import org.springframework.http.HttpMethod
+import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
+import snc.openchargingnetwork.client.models.OcpiRequestParameters
+import snc.openchargingnetwork.client.models.OcpiRequestType
+import snc.openchargingnetwork.client.models.OcpiRequestVariables
+import snc.openchargingnetwork.client.models.OcpiResponseDataType
+import snc.openchargingnetwork.client.models.ocpi.*
+import snc.openchargingnetwork.client.services.HttpRequestService
 import snc.openchargingnetwork.client.services.RoutingService
+import snc.openchargingnetwork.client.tools.isOcpiSuccess
 
 @RestController
-class TariffsController(val routingService: RoutingService) {
+class TariffsController(private val routingService: RoutingService,
+                        private val httpService: HttpRequestService) {
+
 
     /**
      * SENDER INTERFACE
      */
 
-//    @GetMapping("/ocpi/sender/2.2/tariffs")
-//    fun getTariffsFromDataOwner(@RequestHeader("authorization") authorization: String,
-//                                @RequestHeader("X-Request-ID") requestID: String,
-//                                @RequestHeader("X-Correlation-ID") correlationID: String,
-//                                @RequestHeader("OCPI-from-country-code") fromCountryCode: String,
-//                                @RequestHeader("OCPI-from-party-id") fromPartyID: String,
-//                                @RequestHeader("OCPI-to-country-code") toCountryCode: String,
-//                                @RequestHeader("OCPI-to-party-id") toPartyID: String,
-//                                @RequestParam("date_from", required = false) dateFrom: String?,
-//                                @RequestParam("date_to", required = false) dateTo: String?,
-//                                @RequestParam("offset", required = false) offset: Int?,
-//                                @RequestParam("limit", required = false) limit: Int?): ResponseEntity<OcpiResponse<Array<Tariff>>> {
-//
-//        val sender = BasicRole(fromPartyID, fromCountryCode)
-//        val receiver = BasicRole(toPartyID, toCountryCode)
-//
-//        routingService.validateSender(authorization, sender)
-//
-//        val params = HubRequestParameters(dateFrom = dateFrom, dateTo = dateTo, offset = offset, limit = limit)
-//
-//        val response = if (routingService.isRoleKnown(receiver)) {
-//            val platformID = routingService.getPlatformID(receiver)
-//            val endpoint = routingService.getPlatformEndpoint(platformID, "tariffs", InterfaceRole.SENDER)
-//            val headers = routingService.makeHeaders(platformID, correlationID, sender, receiver)
-//            routingService.forwardRequest(
-//                    method = "GET",
-//                    url = endpoint.url,
-//                    headers = headers,
-//                    params = params.encode(),
-//                    expectedDataType = Array<Tariff>::class)
-//        } else {
-//            val url = routingService.findBrokerUrl(receiver)
-//            val headers = routingService.makeHeaders(requestID, correlationID, sender, receiver)
-//            val hubRequestBody = HubGenericRequest(
-//                    method = "GET",
-//                    module = "tariffs",
-//                    role = InterfaceRole.SENDER,
-//                    params = params,
-//                    headers = headers,
-//                    body = null,
-//                    expectedResponseType = HubRequestResponseType.TARIFF_ARRAY)
-//            routingService.forwardRequest(
-//                    method = "POST",
-//                    url = urlJoin(url, "/ocn/message"),
-//                    headers = mapOf(
-//                            "X-Request-ID" to generateUUIDv4Token(),
-//                            "OCN-Signature" to routingService.signRequest(hubRequestBody)),
-//                    body = hubRequestBody,
-//                    expectedDataType = Array<Tariff>::class)
-//        }
-//
-//        val headers = HttpHeaders()
-//        response.headers["Link"]?.let { headers.add("Link", "<RESPONSE_URL>; rel=\"next\"") }
-//        response.headers["X-Total-Count"]?.let { headers.add("X-Total-Count", it) }
-//        response.headers["X-Limit"]?.let { headers.add("X-Limit", it) }
-//
-//        return ResponseEntity
-//                .status(response.statusCode)
-//                .headers(headers)
-//                .body(response.body)
-//    }
+    @GetMapping("/ocpi/sender/2.2/tariffs")
+    fun getTariffsFromDataOwner(@RequestHeader("authorization") authorization: String,
+                                @RequestHeader("X-Request-ID") requestID: String,
+                                @RequestHeader("X-Correlation-ID") correlationID: String,
+                                @RequestHeader("OCPI-from-country-code") fromCountryCode: String,
+                                @RequestHeader("OCPI-from-party-id") fromPartyID: String,
+                                @RequestHeader("OCPI-to-country-code") toCountryCode: String,
+                                @RequestHeader("OCPI-to-party-id") toPartyID: String,
+                                @RequestParam("date_from", required = false) dateFrom: String?,
+                                @RequestParam("date_to", required = false) dateTo: String?,
+                                @RequestParam("offset", required = false) offset: Int?,
+                                @RequestParam("limit", required = false) limit: Int?): ResponseEntity<OcpiResponse<Array<Tariff>>> {
+
+        val sender = BasicRole(fromPartyID, fromCountryCode)
+        val receiver = BasicRole(toPartyID, toCountryCode)
+
+        routingService.validateSender(authorization, sender)
+
+        val requestVariables = OcpiRequestVariables(
+                module = ModuleID.TARIFFS,
+                interfaceRole = InterfaceRole.SENDER,
+                method = HttpMethod.GET,
+                requestID = requestID,
+                correlationID = correlationID,
+                sender = sender,
+                receiver = receiver,
+                urlEncodedParameters = OcpiRequestParameters(
+                        dateFrom = dateFrom,
+                        dateTo = dateTo,
+                        offset = offset,
+                        limit = limit),
+                expectedResponseType = OcpiResponseDataType.TARIFF_ARRAY)
+
+        val response = when (routingService.validateReceiver(receiver)) {
+
+            OcpiRequestType.LOCAL -> {
+
+                val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables)
+
+                httpService.makeRequest(
+                        method = requestVariables.method,
+                        url = url,
+                        headers = headers,
+                        params = requestVariables.urlEncodedParameters,
+                        expectedDataType = requestVariables.expectedResponseType)
+            }
+
+            OcpiRequestType.REMOTE -> {
+
+                val (url, headers, body) = routingService.prepareRemotePlatformRequest(requestVariables)
+
+                httpService.postClientMessage(url = url, headers = headers, body = body)
+            }
+
+        }
+
+        val headers = routingService.proxyPaginationHeaders(
+                responseHeaders = response.headers,
+                proxyEndpoint = "/ocpi/sender/2.2/tariffs/page",
+                sender = sender,
+                receiver = receiver)
+
+        return ResponseEntity
+                .status(response.statusCode)
+                .headers(headers)
+                .body(response.body)
+    }
+
+
+    @GetMapping("/ocpi/sender/2.2/tariffs/page/{uid}")
+    fun getTariffsPageFromDataOwner(@RequestHeader("authorization") authorization: String,
+                                    @RequestHeader("X-Request-ID") requestID: String,
+                                    @RequestHeader("X-Correlation-ID") correlationID: String,
+                                    @RequestHeader("OCPI-from-country-code") fromCountryCode: String,
+                                    @RequestHeader("OCPI-from-party-id") fromPartyID: String,
+                                    @RequestHeader("OCPI-to-country-code") toCountryCode: String,
+                                    @RequestHeader("OCPI-to-party-id") toPartyID: String,
+                                    @PathVariable uid: String): ResponseEntity<OcpiResponse<Array<Tariff>>> {
+
+        val sender = BasicRole(fromPartyID, fromCountryCode)
+        val receiver = BasicRole(toPartyID, toCountryCode)
+
+        routingService.validateSender(authorization, sender)
+
+        val requestVariables = OcpiRequestVariables(
+                module = ModuleID.TARIFFS,
+                interfaceRole = InterfaceRole.SENDER,
+                method = HttpMethod.GET,
+                requestID = requestID,
+                correlationID = correlationID,
+                sender = sender,
+                receiver = receiver,
+                urlPathVariables = uid,
+                expectedResponseType = OcpiResponseDataType.TARIFF_ARRAY)
+
+        val response = when (routingService.validateReceiver(receiver)) {
+
+            OcpiRequestType.LOCAL -> {
+
+                val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables, proxied = true)
+
+                httpService.makeRequest(
+                        method = requestVariables.method,
+                        url = url,
+                        headers = headers,
+                        expectedDataType = requestVariables.expectedResponseType)
+
+            }
+
+            OcpiRequestType.REMOTE -> {
+
+                val (url, headers, body) = routingService.prepareRemotePlatformRequest(requestVariables, proxied = true)
+
+                httpService.postClientMessage(url = url, headers = headers, body = body)
+
+            }
+
+        }
+
+        var headers = HttpHeaders()
+
+        if (isOcpiSuccess(response)) {
+
+            routingService.deleteProxyResource(uid)
+
+            headers = routingService.proxyPaginationHeaders(
+                    responseHeaders = response.headers,
+                    proxyEndpoint = "/ocpi/sender/2.2/tariffs/page",
+                    sender = sender,
+                    receiver = receiver)
+
+        }
+
+        return ResponseEntity
+                .status(response.statusCode)
+                .headers(headers)
+                .body(response.body)
+    }
+
 
     /**
      * RECEIVER INTERFACE

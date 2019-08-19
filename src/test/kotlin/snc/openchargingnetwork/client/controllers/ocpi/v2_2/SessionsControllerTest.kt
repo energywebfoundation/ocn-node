@@ -70,7 +70,7 @@ class SessionsControllerTest(@Autowired val mockMvc: MockMvc) {
         every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, headers)
 
         val responseHeaders = mapOf(
-                "Link" to "https://ocpi.cpo.com/locations/page/2?dateFrom=$dateFrom?limit=20?offset=20; rel=\"next\"",
+                "Link" to "https://ocpi.cpo.com/sessions/page/2?dateFrom=$dateFrom?limit=20?offset=20; rel=\"next\"",
                 "X-Limit" to "20",
                 "X-Total-Count" to "87")
 
@@ -125,7 +125,7 @@ class SessionsControllerTest(@Autowired val mockMvc: MockMvc) {
 
 
     @Test
-    fun `When GET sender Sessions page should return proxied page`() {
+    fun `When GET sender Sessions page should return proxied sessions list page`() {
 
         val sender = BasicRole("EMY", "DE")
         val receiver = BasicRole("EON", "DE")
@@ -141,7 +141,7 @@ class SessionsControllerTest(@Autowired val mockMvc: MockMvc) {
                 urlPathVariables = "2247",
                 expectedResponseType = OcpiResponseDataType.SESSION_ARRAY)
 
-        val url = "https://ocpi.cpo.com/locations/page/2?dateFrom=${getTimestamp()}?limit=20?offset=20"
+        val url = "https://ocpi.cpo.com/sessions/page/2?dateFrom=${getTimestamp()}?limit=20?offset=20"
 
         val headers = OcpiRequestHeaders(
                 authorization = "Token token-b",
@@ -157,7 +157,7 @@ class SessionsControllerTest(@Autowired val mockMvc: MockMvc) {
         every { routingService.prepareLocalPlatformRequest(requestVariables, proxied = true) } returns Pair(url, headers)
 
         val responseHeaders = mapOf(
-                "Link" to "https://some.emsp.com/actual/locations/page/3?limit=20&offset=40; rel=\"next\"",
+                "Link" to "https://some.emsp.com/actual/sessions/page/3?limit=20&offset=40; rel=\"next\"",
                 "X-Limit" to "20",
                 "X-Total-Count" to "87")
 
@@ -176,7 +176,7 @@ class SessionsControllerTest(@Autowired val mockMvc: MockMvc) {
                 body = OcpiResponse(statusCode = 1000, data = arrayOf(exampleSession)))
 
         val httpHeaders = HttpHeaders()
-        httpHeaders["Link"] = "https://client.ocn.co/ocpi/sender/2.2/locations/page/2248; rel=\"next\""
+        httpHeaders["Link"] = "https://client.ocn.co/ocpi/sender/2.2/sessions/page/2248; rel=\"next\""
         httpHeaders["X-Limit"] = responseHeaders["X-Limit"]
 
         every { routingService.deleteProxyResource(requestVariables.urlPathVariables!!) } just Runs
@@ -197,7 +197,7 @@ class SessionsControllerTest(@Autowired val mockMvc: MockMvc) {
                 .header("OCPI-to-party-id", requestVariables.receiver.id)
                 .param("limit", "100"))
                 .andExpect(status().isOk)
-                .andExpect(header().string("Link", "https://client.ocn.co/ocpi/sender/2.2/locations/page/2248; rel=\"next\""))
+                .andExpect(header().string("Link", "https://client.ocn.co/ocpi/sender/2.2/sessions/page/2248; rel=\"next\""))
                 .andExpect(header().string("X-Limit", "20"))
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
                 .andExpect(jsonPath("\$.status_code").value(1000))
@@ -230,7 +230,7 @@ class SessionsControllerTest(@Autowired val mockMvc: MockMvc) {
                 body = body,
                 expectedResponseType = OcpiResponseDataType.CHARGING_PREFERENCE_RESPONSE)
 
-        val url = "https://ocpi.cpo.com/locations/page/2?dateFrom=${getTimestamp()}?limit=20?offset=20"
+        val url = "https://ocpi.cpo.com/sessions/page/2?dateFrom=${getTimestamp()}?limit=20?offset=20"
 
         val headers = OcpiRequestHeaders(
                 authorization = "Token token-b",

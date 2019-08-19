@@ -127,7 +127,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
 
 
     @Test
-    fun `When GET sender Locations page should return proxied page`() {
+    fun `When GET sender Locations page should return proxied locations list page`() {
 
         val sender = BasicRole("EMY", "DE")
         val receiver = BasicRole("IGY", "DE")
