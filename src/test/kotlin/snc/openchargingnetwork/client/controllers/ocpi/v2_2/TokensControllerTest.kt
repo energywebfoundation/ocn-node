@@ -13,20 +13,17 @@ import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
 import org.springframework.http.MediaType
 import org.springframework.test.web.servlet.MockMvc
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
-import snc.openchargingnetwork.client.data.exampleSession
+import snc.openchargingnetwork.client.data.exampleToken
 import snc.openchargingnetwork.client.models.*
 import snc.openchargingnetwork.client.models.ocpi.*
 import snc.openchargingnetwork.client.services.HttpRequestService
 import snc.openchargingnetwork.client.services.RoutingService
 import snc.openchargingnetwork.client.tools.generateUUIDv4Token
-import snc.openchargingnetwork.client.tools.getTimestamp
 
-@WebMvcTest(SessionsController::class)
-class SessionsControllerTest(@Autowired val mockMvc: MockMvc) {
+@WebMvcTest(TokensController::class)
+class TokensControllerTest(@Autowired val mockMvc: MockMvc) {
 
     @MockkBean
     lateinit var routingService: RoutingService
@@ -36,25 +33,23 @@ class SessionsControllerTest(@Autowired val mockMvc: MockMvc) {
 
 
     @Test
-    fun `When GET sender Sessions return paginated session list`() {
-
-        val dateFrom = getTimestamp()
+    fun `When GET sender tokens return paginated tokens list`() {
 
         val sender = BasicRole("EMY", "DE")
-        val receiver = BasicRole("EON", "DE")
+        val receiver = BasicRole("MUN", "DE")
 
         val requestVariables = OcpiRequestVariables(
-                module = ModuleID.SESSIONS,
+                module = ModuleID.TOKENS,
                 interfaceRole = InterfaceRole.SENDER,
                 method = HttpMethod.GET,
                 requestID = generateUUIDv4Token(),
                 correlationID = generateUUIDv4Token(),
                 sender = sender,
                 receiver = receiver,
-                urlEncodedParameters = OcpiRequestParameters(dateFrom = dateFrom, limit = 20),
-                expectedResponseType = OcpiResponseDataType.SESSION_ARRAY)
+                urlEncodedParameters = OcpiRequestParameters(limit = 50),
+                expectedResponseType = OcpiResponseDataType.TOKEN_ARRAY)
 
-        val url = "https://ocpi.emsp.com/2.2/sessions"
+        val url = "https://ocpi.emsp.com/2.2/tokens"
 
         val headers = OcpiRequestHeaders(
                 authorization = "Token token-b",
@@ -70,9 +65,9 @@ class SessionsControllerTest(@Autowired val mockMvc: MockMvc) {
         every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, headers)
 
         val responseHeaders = mapOf(
-                "Link" to "https://ocpi.cpo.com/sessions/page/2?dateFrom=$dateFrom?limit=20?offset=20; rel=\"next\"",
-                "X-Limit" to "20",
-                "X-Total-Count" to "87")
+                "Link" to "https://ocpi.cpo.com/tokens?limit=10&offset=10; rel=\"next\"",
+                "X-Limit" to "50",
+                "X-Total-Count" to "10675")
 
         every {
 
@@ -86,10 +81,10 @@ class SessionsControllerTest(@Autowired val mockMvc: MockMvc) {
         } returns HttpResponse(
                 statusCode = 200,
                 headers = responseHeaders,
-                body = OcpiResponse(statusCode = 1000, data = arrayOf(exampleSession)))
+                body = OcpiResponse(statusCode = 1000, data = arrayOf(exampleToken)))
 
         val httpHeaders = HttpHeaders()
-        httpHeaders["Link"] = "https://client.ocn.co/ocpi/sender/2.2/sessions/page/2247; rel=\"next\""
+        httpHeaders["Link"] = "https://client.ocn.co/ocpi/sender/2.2/tariffs/page/935432; rel=\"next\""
         httpHeaders["X-Limit"] = responseHeaders["X-Limit"]
         httpHeaders["X-Total-Count"] = responseHeaders["X-Total-Count"]
 
@@ -98,7 +93,7 @@ class SessionsControllerTest(@Autowired val mockMvc: MockMvc) {
                     request = requestVariables,
                     responseHeaders = responseHeaders) } returns httpHeaders
 
-        mockMvc.perform(get("/ocpi/sender/2.2/sessions")
+        mockMvc.perform(get("/ocpi/sender/2.2/tokens")
                 .header("Authorization", "Token token-c")
                 .header("X-Request-ID", requestVariables.requestID)
                 .header("X-Correlation-ID", requestVariables.correlationID)
@@ -106,41 +101,40 @@ class SessionsControllerTest(@Autowired val mockMvc: MockMvc) {
                 .header("OCPI-from-party-id", sender.id)
                 .header("OCPI-to-country-code", receiver.country)
                 .header("OCPI-to-party-id", receiver.id)
-                .param("date_from", dateFrom)
-                .param("limit", "20"))
+                .param("limit", "50"))
                 .andExpect(status().isOk)
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
-                .andExpect(header().string("Link", "https://client.ocn.co/ocpi/sender/2.2/sessions/page/2247; rel=\"next\""))
-                .andExpect(header().string("X-Limit", "20"))
-                .andExpect(header().string("X-Total-Count", "87"))
+                .andExpect(header().string("Link", "https://client.ocn.co/ocpi/sender/2.2/tariffs/page/935432; rel=\"next\""))
+                .andExpect(header().string("X-Limit", "50"))
+                .andExpect(header().string("X-Total-Count", "10675"))
                 .andExpect(jsonPath("\$.status_code").value(OcpiStatus.SUCCESS.code))
                 .andExpect(jsonPath("\$.status_message").doesNotExist())
                 .andExpect(jsonPath("\$.timestamp").isString)
                 .andExpect(jsonPath("\$.data").isArray)
-                .andExpect(jsonPath("\$.data", Matchers.hasSize<Array<Session>>(1)))
-                .andExpect(jsonPath("\$.data[0].id").value(exampleSession.id))
-                .andExpect(jsonPath("\$.data[0].party_id").value(exampleSession.partyID))
+                .andExpect(jsonPath("\$.data", Matchers.hasSize<Array<Token>>(1)))
+                .andExpect(jsonPath("\$.data[0].uid").value(exampleToken.uid))
+                .andExpect(jsonPath("\$.data[0].party_id").value(exampleToken.partyID))
     }
 
 
     @Test
-    fun `When GET sender Sessions page should return proxied sessions list page`() {
+    fun `When GET sender Tokens page should return proxied tokens list`() {
 
         val sender = BasicRole("EMY", "DE")
-        val receiver = BasicRole("EON", "DE")
+        val receiver = BasicRole("MUN", "DE")
 
         val requestVariables = OcpiRequestVariables(
-                module = ModuleID.SESSIONS,
+                module = ModuleID.TOKENS,
                 interfaceRole = InterfaceRole.SENDER,
                 method = HttpMethod.GET,
                 requestID = generateUUIDv4Token(),
                 correlationID = generateUUIDv4Token(),
                 sender = sender,
                 receiver = receiver,
-                urlPathVariables = "2247",
-                expectedResponseType = OcpiResponseDataType.SESSION_ARRAY)
+                urlPathVariables = "935432",
+                expectedResponseType = OcpiResponseDataType.TOKEN_ARRAY)
 
-        val url = "https://ocpi.cpo.com/sessions/page/2?dateFrom=${getTimestamp()}?limit=20?offset=20"
+        val url = "https://ocpi.cpo.com/tokens?limit=50?offset=50"
 
         val headers = OcpiRequestHeaders(
                 authorization = "Token token-b",
@@ -156,9 +150,9 @@ class SessionsControllerTest(@Autowired val mockMvc: MockMvc) {
         every { routingService.prepareLocalPlatformRequest(requestVariables, proxied = true) } returns Pair(url, headers)
 
         val responseHeaders = mapOf(
-                "Link" to "https://some.emsp.com/actual/sessions/page/3?limit=20&offset=40; rel=\"next\"",
-                "X-Limit" to "20",
-                "X-Total-Count" to "87")
+                "Link" to "https://some.emsp.com/actual/tokens?limit=50&offset=50; rel=\"next\"",
+                "X-Limit" to "50",
+                "X-Total-Count" to "10675")
 
         every {
 
@@ -172,20 +166,19 @@ class SessionsControllerTest(@Autowired val mockMvc: MockMvc) {
         } returns HttpResponse(
                 statusCode = 200,
                 headers = responseHeaders,
-                body = OcpiResponse(statusCode = 1000, data = arrayOf(exampleSession)))
+                body = OcpiResponse(statusCode = 1000, data = arrayOf(exampleToken)))
 
         val httpHeaders = HttpHeaders()
-        httpHeaders["Link"] = "https://client.ocn.co/ocpi/sender/2.2/sessions/page/2248; rel=\"next\""
+        httpHeaders["Link"] = "https://client.ocn.co/ocpi/sender/2.2/tokens/page/935433; rel=\"next\""
         httpHeaders["X-Limit"] = responseHeaders["X-Limit"]
 
         every { routingService.deleteProxyResource(requestVariables.urlPathVariables!!) } just Runs
 
-        every {
-            routingService.proxyPaginationHeaders(
-                    request = requestVariables,
-                    responseHeaders = responseHeaders) } returns httpHeaders
+        every { routingService.proxyPaginationHeaders(
+                request = requestVariables,
+                responseHeaders = responseHeaders) } returns httpHeaders
 
-        mockMvc.perform(get("/ocpi/sender/2.2/sessions/page/${requestVariables.urlPathVariables}")
+        mockMvc.perform(get("/ocpi/sender/2.2/tokens/page/${requestVariables.urlPathVariables}")
                 .header("Authorization", "Token token-c")
                 .header("X-Request-ID", requestVariables.requestID)
                 .header("X-Correlation-ID", requestVariables.correlationID)
@@ -195,40 +188,41 @@ class SessionsControllerTest(@Autowired val mockMvc: MockMvc) {
                 .header("OCPI-to-party-id", requestVariables.receiver.id)
                 .param("limit", "100"))
                 .andExpect(status().isOk)
-                .andExpect(header().string("Link", "https://client.ocn.co/ocpi/sender/2.2/sessions/page/2248; rel=\"next\""))
-                .andExpect(header().string("X-Limit", "20"))
+                .andExpect(header().string("Link", "https://client.ocn.co/ocpi/sender/2.2/tokens/page/935433; rel=\"next\""))
+                .andExpect(header().string("X-Limit", "50"))
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
                 .andExpect(jsonPath("\$.status_code").value(1000))
                 .andExpect(jsonPath("\$.status_message").doesNotExist())
                 .andExpect(jsonPath("\$.data").isArray)
-                .andExpect(jsonPath("\$.data", Matchers.hasSize<Array<Session>>(1)))
-                .andExpect(jsonPath("\$.data[0].id").value(exampleSession.id))
-                .andExpect(jsonPath("\$.data[0].party_id").value(exampleSession.partyID))
+                .andExpect(jsonPath("\$.data", Matchers.hasSize<Array<Token>>(1)))
+                .andExpect(jsonPath("\$.data[0].uid").value(exampleToken.uid))
+                .andExpect(jsonPath("\$.data[0].party_id").value(exampleToken.partyID))
                 .andExpect(jsonPath("\$.timestamp").isString)
     }
 
 
     @Test
-    fun `When PUT charging_preferences return ChargingPreferencesResponse`() {
+    fun `When POST tokens authorize should return AuthorizationInfo`() {
 
-        val body = ChargingPreferences(profileType = ProfileType.GREEN)
+        val body = LocationReferences(locationID = "LOC99")
 
         val sender = BasicRole("EMY", "DE")
-        val receiver = BasicRole("EON", "DE")
+        val receiver = BasicRole("MUN", "DE")
 
         val requestVariables = OcpiRequestVariables(
-                module = ModuleID.SESSIONS,
+                module = ModuleID.TOKENS,
                 interfaceRole = InterfaceRole.SENDER,
-                method = HttpMethod.PUT,
+                method = HttpMethod.POST,
                 requestID = generateUUIDv4Token(),
                 correlationID = generateUUIDv4Token(),
                 sender = sender,
                 receiver = receiver,
-                urlPathVariables = "/2247/charging_preferences",
+                urlPathVariables = "1234567890/authorize",
+                urlEncodedParameters = OcpiRequestParameters(type = TokenType.RFID),
                 body = body,
-                expectedResponseType = OcpiResponseDataType.CHARGING_PREFERENCE_RESPONSE)
+                expectedResponseType = OcpiResponseDataType.AUTHORIZATION_INFO)
 
-        val url = "https://ocpi.cpo.com/sessions/2247/charging_preferences"
+        val url = "https://ocpi.cpo.com/tokens/1234567890/authorize"
 
         val headers = OcpiRequestHeaders(
                 authorization = "Token token-b",
@@ -249,15 +243,18 @@ class SessionsControllerTest(@Autowired val mockMvc: MockMvc) {
                     method = requestVariables.method,
                     url = url,
                     headers = headers,
+                    params = requestVariables.urlEncodedParameters,
                     body = body,
                     expectedDataType = requestVariables.expectedResponseType)
 
         } returns HttpResponse(
                 statusCode = 200,
                 headers = mapOf(),
-                body = OcpiResponse(statusCode = 1000, data = ChargingPreferencesResponse.NOT_POSSIBLE))
+                body = OcpiResponse(statusCode = 1000, data = AuthorizationInfo(
+                        allowed = Allowed.ALLOWED,
+                        token = exampleToken)))
 
-        mockMvc.perform(put("/ocpi/sender/2.2/sessions/2247/charging_preferences")
+        mockMvc.perform(post("/ocpi/sender/2.2/tokens/1234567890/authorize")
                 .header("Authorization", "Token token-c")
                 .header("X-Request-ID", requestVariables.requestID)
                 .header("X-Correlation-ID", requestVariables.correlationID)
@@ -265,37 +262,39 @@ class SessionsControllerTest(@Autowired val mockMvc: MockMvc) {
                 .header("OCPI-from-party-id", requestVariables.sender.id)
                 .header("OCPI-to-country-code", requestVariables.receiver.country)
                 .header("OCPI-to-party-id", requestVariables.receiver.id)
+                .param("limit", "100")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(jacksonObjectMapper().writeValueAsString(body)))
                 .andExpect(status().isOk)
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
                 .andExpect(jsonPath("\$.status_code").value(1000))
                 .andExpect(jsonPath("\$.status_message").doesNotExist())
-                .andExpect(jsonPath("\$.data").value(ChargingPreferencesResponse.NOT_POSSIBLE.toString()))
+                .andExpect(jsonPath("\$.data.allowed").value(Allowed.ALLOWED.toString()))
+                .andExpect(jsonPath("\$.data.token.uid").value(exampleToken.uid))
                 .andExpect(jsonPath("\$.timestamp").isString)
     }
 
-
     @Test
-    fun `When GET receiver Session return session object`() {
+    fun `When GET receiver Tokens return single token object`() {
 
-        val sessionID = "12345"
+        val tokenUID = "010203040506070809"
 
-        val sender = BasicRole("EON", "DE")
-        val receiver = BasicRole("EMY", "DE")
+        val sender = BasicRole("EMY", "DE")
+        val receiver = BasicRole("MUN", "DE")
 
         val requestVariables = OcpiRequestVariables(
-                module = ModuleID.SESSIONS,
+                module = ModuleID.TOKENS,
                 interfaceRole = InterfaceRole.RECEIVER,
                 method = HttpMethod.GET,
                 requestID = generateUUIDv4Token(),
                 correlationID = generateUUIDv4Token(),
                 sender = sender,
                 receiver = receiver,
-                urlPathVariables = "/${sender.country}/${sender.id}/$sessionID",
-                expectedResponseType = OcpiResponseDataType.SESSION)
+                urlPathVariables = "/${sender.country}/${sender.id}/$tokenUID",
+                urlEncodedParameters = OcpiRequestParameters(type = TokenType.RFID),
+                expectedResponseType = OcpiResponseDataType.TOKEN)
 
-        val url = "https://ocpi.cpo.com/2.2/sessions/${sender.country}/${sender.id}/$sessionID"
+        val url = "https://ocpi.cpo.com/2.2/tokens/${sender.country}/${sender.id}/$tokenUID"
 
         val headers = OcpiRequestHeaders(
                 authorization = "Token token-b",
@@ -316,14 +315,15 @@ class SessionsControllerTest(@Autowired val mockMvc: MockMvc) {
                     method = requestVariables.method,
                     url = url,
                     headers = headers,
+                    params = requestVariables.urlEncodedParameters,
                     expectedDataType = requestVariables.expectedResponseType)
 
         } returns HttpResponse(
                 statusCode = 200,
                 headers = mapOf(),
-                body = OcpiResponse(statusCode = 1000, data = exampleSession))
+                body = OcpiResponse(statusCode = 1000, data = exampleToken))
 
-        mockMvc.perform(get("/ocpi/receiver/2.2/sessions/${sender.country}/${sender.id}/$sessionID")
+        mockMvc.perform(get("/ocpi/receiver/2.2/tokens/${sender.country}/${sender.id}/$tokenUID")
                 .header("Authorization", "Token token-c")
                 .header("X-Request-ID", requestVariables.requestID)
                 .header("X-Correlation-ID", requestVariables.correlationID)
@@ -336,33 +336,33 @@ class SessionsControllerTest(@Autowired val mockMvc: MockMvc) {
                 .andExpect(jsonPath("\$.status_code").value(OcpiStatus.SUCCESS.code))
                 .andExpect(jsonPath("\$.status_message").doesNotExist())
                 .andExpect(jsonPath("\$.timestamp").isString)
-                .andExpect(jsonPath("\$.data.id").value(exampleSession.id))
-                .andExpect(jsonPath("\$.data.party_id").value(exampleSession.partyID))
+                .andExpect(jsonPath("\$.data.uid").value(exampleToken.uid))
+                .andExpect(jsonPath("\$.data.party_id").value(exampleToken.partyID))
     }
 
 
     @Test
-    fun `When PUT receiver Session return OCPI success`() {
+    fun `When PUT receiver Tokens return OCPI success`() {
 
-        val sessionID = "4567"
-        val body = exampleSession
+        val tokenUID = "0102030405"
 
-        val sender = BasicRole("EON", "DE")
-        val receiver = BasicRole("EMY", "DE")
+        val sender = BasicRole("EMY", "DE")
+        val receiver = BasicRole("MUN", "DE")
 
         val requestVariables = OcpiRequestVariables(
-                module = ModuleID.SESSIONS,
+                module = ModuleID.TOKENS,
                 interfaceRole = InterfaceRole.RECEIVER,
                 method = HttpMethod.PUT,
                 requestID = generateUUIDv4Token(),
                 correlationID = generateUUIDv4Token(),
                 sender = sender,
                 receiver = receiver,
-                urlPathVariables = "/${sender.country}/${sender.id}/$sessionID",
-                body = body,
+                urlPathVariables = "/${sender.country}/${sender.id}/$tokenUID",
+                urlEncodedParameters = OcpiRequestParameters(type = TokenType.APP_USER),
+                body = exampleToken,
                 expectedResponseType = OcpiResponseDataType.NOTHING)
 
-        val url = "https://ocpi.cpo.com/2.2/sessions/${sender.country}/${sender.id}/$sessionID"
+        val url = "https://ocpi.cpo.com/2.2/tokens/${sender.country}/${sender.id}/$tokenUID"
 
         val headers = OcpiRequestHeaders(
                 authorization = "Token token-b",
@@ -383,7 +383,8 @@ class SessionsControllerTest(@Autowired val mockMvc: MockMvc) {
                     method = requestVariables.method,
                     url = url,
                     headers = headers,
-                    body = body,
+                    params = requestVariables.urlEncodedParameters,
+                    body = exampleToken,
                     expectedDataType = requestVariables.expectedResponseType)
 
         } returns HttpResponse(
@@ -391,7 +392,7 @@ class SessionsControllerTest(@Autowired val mockMvc: MockMvc) {
                 headers = mapOf(),
                 body = OcpiResponse(statusCode = 1000))
 
-        mockMvc.perform(put("/ocpi/receiver/2.2/sessions/${sender.country}/${sender.id}/$sessionID")
+        mockMvc.perform(put("/ocpi/receiver/2.2/tokens/${sender.country}/${sender.id}/$tokenUID")
                 .header("Authorization", "Token token-c")
                 .header("X-Request-ID", requestVariables.requestID)
                 .header("X-Correlation-ID", requestVariables.correlationID)
@@ -399,8 +400,9 @@ class SessionsControllerTest(@Autowired val mockMvc: MockMvc) {
                 .header("OCPI-from-party-id", sender.id)
                 .header("OCPI-to-country-code", receiver.country)
                 .header("OCPI-to-party-id", receiver.id)
+                .param("type", TokenType.APP_USER.toString())
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(jacksonObjectMapper().writeValueAsString(body)))
+                .content(jacksonObjectMapper().writeValueAsString(exampleToken)))
                 .andExpect(status().isOk)
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
                 .andExpect(jsonPath("\$.status_code").value(OcpiStatus.SUCCESS.code))
@@ -411,27 +413,29 @@ class SessionsControllerTest(@Autowired val mockMvc: MockMvc) {
 
 
     @Test
-    fun `When PATCH receiver Session return OCPI success`() {
+    fun `When PATCH receiver Tokens return OCPI success`() {
 
-        val sessionID = "4567"
-        val body = mapOf("kwh" to 5.5)
+        val tokenUID = "0606060606"
 
-        val sender = BasicRole("EON", "DE")
-        val receiver = BasicRole("EMY", "DE")
+        val body = mapOf("valid" to WhitelistType.NEVER.toString())
+
+        val sender = BasicRole("EMY", "DE")
+        val receiver = BasicRole("MUN", "DE")
 
         val requestVariables = OcpiRequestVariables(
-                module = ModuleID.SESSIONS,
+                module = ModuleID.TOKENS,
                 interfaceRole = InterfaceRole.RECEIVER,
                 method = HttpMethod.PATCH,
                 requestID = generateUUIDv4Token(),
                 correlationID = generateUUIDv4Token(),
                 sender = sender,
                 receiver = receiver,
-                urlPathVariables = "/${sender.country}/${sender.id}/$sessionID",
+                urlPathVariables = "/${sender.country}/${sender.id}/$tokenUID",
+                urlEncodedParameters = OcpiRequestParameters(type = TokenType.APP_USER),
                 body = body,
                 expectedResponseType = OcpiResponseDataType.NOTHING)
 
-        val url = "https://ocpi.cpo.com/2.2/sessions/${sender.country}/${sender.id}/$sessionID"
+        val url = "https://ocpi.cpo.com/2.2/tokens/${sender.country}/${sender.id}/$tokenUID"
 
         val headers = OcpiRequestHeaders(
                 authorization = "Token token-b",
@@ -452,6 +456,7 @@ class SessionsControllerTest(@Autowired val mockMvc: MockMvc) {
                     method = requestVariables.method,
                     url = url,
                     headers = headers,
+                    params = requestVariables.urlEncodedParameters,
                     body = body,
                     expectedDataType = requestVariables.expectedResponseType)
 
@@ -460,7 +465,7 @@ class SessionsControllerTest(@Autowired val mockMvc: MockMvc) {
                 headers = mapOf(),
                 body = OcpiResponse(statusCode = 1000))
 
-        mockMvc.perform(patch("/ocpi/receiver/2.2/sessions/${sender.country}/${sender.id}/$sessionID")
+        mockMvc.perform(patch("/ocpi/receiver/2.2/tokens/${sender.country}/${sender.id}/$tokenUID")
                 .header("Authorization", "Token token-c")
                 .header("X-Request-ID", requestVariables.requestID)
                 .header("X-Correlation-ID", requestVariables.correlationID)
@@ -468,6 +473,7 @@ class SessionsControllerTest(@Autowired val mockMvc: MockMvc) {
                 .header("OCPI-from-party-id", sender.id)
                 .header("OCPI-to-country-code", receiver.country)
                 .header("OCPI-to-party-id", receiver.id)
+                .param("type", TokenType.APP_USER.toString())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(jacksonObjectMapper().writeValueAsString(body)))
                 .andExpect(status().isOk)
@@ -477,5 +483,6 @@ class SessionsControllerTest(@Autowired val mockMvc: MockMvc) {
                 .andExpect(jsonPath("\$.data").doesNotExist())
                 .andExpect(jsonPath("\$.timestamp").isString)
     }
+
 
 }

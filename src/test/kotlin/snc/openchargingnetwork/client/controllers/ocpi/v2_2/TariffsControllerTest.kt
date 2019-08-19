@@ -67,7 +67,7 @@ class TariffsControllerTest(@Autowired val mockMvc: MockMvc) {
         every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, headers)
 
         val responseHeaders = mapOf(
-                "Link" to "https://ocpi.cpo.com/locations?limit=10&offset=10; rel=\"next\"",
+                "Link" to "https://ocpi.cpo.com/tariffs?limit=10&offset=10; rel=\"next\"",
                 "X-Limit" to "10",
                 "X-Total-Count" to "23")
 

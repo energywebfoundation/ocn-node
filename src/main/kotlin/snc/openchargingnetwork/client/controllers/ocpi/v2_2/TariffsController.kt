@@ -234,39 +234,6 @@ class TariffsController(private val routingService: RoutingService,
         }
 
         return ResponseEntity.status(response.statusCode).body(response.body)
-
-
-//        val response = if (routingService.isRoleKnown(receiver)) {
-//            val platformID = routingService.getPlatformID(receiver)
-//            val endpoint = routingService.getPlatformEndpoint(platformID, "tariffs", InterfaceRole.RECEIVER)
-//            val headers = routingService.makeHeaders(platformID, correlationID, sender, receiver)
-//            routingService.forwardRequest(
-//                    method = "GET",
-//                    url = urlJoin(endpoint.url, "/$countryCode/$partyID/$tariffID"),
-//                    headers = headers,
-//                    expectedDataType = Tariff::class)
-//        } else {
-//            val url = routingService.findBrokerUrl(receiver)
-//            val headers = routingService.makeHeaders(requestID, correlationID, sender, receiver)
-//            val hubRequestBody = HubGenericRequest(
-//                    method = "GET",
-//                    module = "tariffs",
-//                    path = urlJoin(url, "/$countryCode/$partyID/$tariffID"),
-//                    headers = headers,
-//                    body = null,
-//                    role = InterfaceRole.RECEIVER,
-//                    expectedResponseType = HubRequestResponseType.TARIFF)
-//            routingService.forwardRequest(
-//                    method = "POST",
-//                    url = urlJoin(url, "/ocn/message"),
-//                    headers = mapOf(
-//                            "X-Request-ID" to generateUUIDv4Token(),
-//                            "OCN-Signature" to routingService.signRequest(hubRequestBody)),
-//                    body = hubRequestBody,
-//                    expectedDataType = Tariff::class)
-//        }
-//
-//        return ResponseEntity.status(response.statusCode).body(response.body)
     }
 
 
@@ -326,38 +293,6 @@ class TariffsController(private val routingService: RoutingService,
         }
 
         return ResponseEntity.status(response.statusCode).body(response.body)
-
-//        val response = if (routingService.isRoleKnown(receiver)) {
-//            val platformID = routingService.getPlatformID(receiver)
-//            val endpoint = routingService.getPlatformEndpoint(platformID, "tariffs", InterfaceRole.RECEIVER)
-//            val headers = routingService.makeHeaders(platformID, correlationID, sender, receiver)
-//            routingService.forwardRequest(
-//                    method = "PUT",
-//                    url = urlJoin(endpoint.url, "/$countryCode/$partyID/$tariffID"),
-//                    headers = headers,
-//                    body = body,
-//                    expectedDataType = Nothing::class)
-//        } else {
-//            val url = routingService.findBrokerUrl(receiver)
-//            val headers = routingService.makeHeaders(requestID, correlationID, sender, receiver)
-//            val hubRequestBody = HubGenericRequest(
-//                    method = "PUT",
-//                    module = "tariffs",
-//                    path = urlJoin(url, "/$countryCode/$partyID/$tariffID"),
-//                    headers = headers,
-//                    role = InterfaceRole.RECEIVER,
-//                    body = body)
-//            routingService.forwardRequest(
-//                    method = "POST",
-//                    url = urlJoin(url, "/ocn/message"),
-//                    headers = mapOf(
-//                            "X-Request-ID" to generateUUIDv4Token(),
-//                            "OCN-Signature" to routingService.signRequest(hubRequestBody)),
-//                    body = hubRequestBody,
-//                    expectedDataType = Nothing::class)
-//        }
-//
-//        return ResponseEntity.status(response.statusCode).body(response.body)
     }
 
 
@@ -414,37 +349,6 @@ class TariffsController(private val routingService: RoutingService,
         }
 
         return ResponseEntity.status(response.statusCode).body(response.body)
-
-//        val response = if (routingService.isRoleKnown(receiver)) {
-//            val platformID = routingService.getPlatformID(receiver)
-//            val endpoint = routingService.getPlatformEndpoint(platformID, "tariffs", InterfaceRole.RECEIVER)
-//            val headers = routingService.makeHeaders(platformID, correlationID, sender, receiver)
-//            routingService.forwardRequest(
-//                    method = "DELETE",
-//                    url = urlJoin(endpoint.url, "/$countryCode/$partyID/$tariffID"),
-//                    headers = headers,
-//                    expectedDataType = Nothing::class)
-//        } else {
-//            val url = routingService.findBrokerUrl(receiver)
-//            val headers = routingService.makeHeaders(requestID, correlationID, sender, receiver)
-//            val hubRequestBody = HubGenericRequest(
-//                    method = "DELETE",
-//                    module = "tariffs",
-//                    path = urlJoin(url, "/$countryCode/$partyID/$tariffID"),
-//                    headers = headers,
-//                    body = null,
-//                    role = InterfaceRole.RECEIVER)
-//            routingService.forwardRequest(
-//                    method = "POST",
-//                    url = urlJoin(url, "/ocn/message"),
-//                    headers = mapOf(
-//                            "X-Request-ID" to generateUUIDv4Token(),
-//                            "OCN-Signature" to routingService.signRequest(hubRequestBody)),
-//                    body = hubRequestBody,
-//                    expectedDataType = Nothing::class)
-//        }
-//
-//        return ResponseEntity.status(response.statusCode).body(response.body)
     }
 
 }
