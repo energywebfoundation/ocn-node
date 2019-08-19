@@ -5,7 +5,6 @@ import com.ninjasquad.springmockk.MockkBean
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
-import io.mockk.mockk
 import org.hamcrest.Matchers
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -15,21 +14,16 @@ import org.springframework.http.HttpMethod
 import org.springframework.http.MediaType
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
-import snc.openchargingnetwork.client.data.exampleLocation1
-import snc.openchargingnetwork.client.data.exampleLocation2
 import snc.openchargingnetwork.client.data.exampleSession
 import snc.openchargingnetwork.client.models.*
-import snc.openchargingnetwork.client.models.entities.Auth
-import snc.openchargingnetwork.client.models.entities.EndpointEntity
-import snc.openchargingnetwork.client.models.entities.PlatformEntity
 import snc.openchargingnetwork.client.models.ocpi.*
 import snc.openchargingnetwork.client.services.HttpRequestService
 import snc.openchargingnetwork.client.services.RoutingService
 import snc.openchargingnetwork.client.tools.generateUUIDv4Token
 import snc.openchargingnetwork.client.tools.getTimestamp
-import snc.openchargingnetwork.client.tools.urlJoin
 
 @WebMvcTest(SessionsController::class)
 class SessionsControllerTest(@Autowired val mockMvc: MockMvc) {
@@ -283,48 +277,207 @@ class SessionsControllerTest(@Autowired val mockMvc: MockMvc) {
                 .andExpect(jsonPath("\$.timestamp").isString)
     }
 
-//    @Test
-//    fun `When PUT receiver Session returns success`() {
 
-//        // sender
-//        val senderPlatform = PlatformEntity(id = 1L, auth = Auth(tokenC = "010203040506070809"))
-//        val senderRole = BasicRole("XYZ", "DE")
-//        // receiver
-//        val receiverRole = BasicRole("ABC", "DE")
-//        val receiverEndpoint = EndpointEntity(4L, "sessions", InterfaceRole.RECEIVER, "http://localhost:3000/sessions")
-//
-//        every { routingService.validateSender("Token ${senderPlatform.auth.tokenC}", senderRole, senderRole, senderRole) } returns mockk()
-//        every { routingService.isRoleKnown(receiverRole) } returns true
-//        every { routingService.getPlatformID(receiverRole) } returns 4L
-//        every { routingService.getPlatformEndpoint(4L, "sessions", InterfaceRole.RECEIVER) } returns receiverEndpoint
-//        every { routingService.makeHeaders(4L, "abc-123", senderRole, receiverRole) } returns mockk()
-//        every { routingService.forwardRequest(
-//                method = "PUT",
-//                url = urlJoin(receiverEndpoint.url, "/DE/XYZ/1234"),
-//                headers = any(),
-//                body = exampleSession,
-//                expectedDataType = Nothing::class)
-//        } returns HttpResponse(
-//                statusCode = 200,
-//                headers = mapOf(),
-//                body = OcpiResponse(1000, data = null))
-//
-//        mockMvc.perform(put("/ocpi/receiver/2.2/sessions/DE/XYZ/1234")
-//                .header("Authorization", "Token ${senderPlatform.auth.tokenC}")
-//                .header("X-Request-ID", "123")
-//                .header("X-Correlation-ID", "abc-123")
-//                .header("OCPI-from-country-code", senderRole.country)
-//                .header("OCPI-from-party-id", senderRole.id)
-//                .header("OCPI-to-country-code", receiverRole.country)
-//                .header("OCPI-to-party-id", receiverRole.id)
-//                .contentType(MediaType.APPLICATION_JSON)
-//                .content(jacksonObjectMapper().writeValueAsString(exampleSession)))
-//                .andExpect(status().isOk)
-//                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
-//                .andExpect(jsonPath("\$.status_code").value(OcpiStatus.SUCCESS.code))
-//                .andExpect(jsonPath("\$.status_message").doesNotExist())
-//                .andExpect(jsonPath("\$.data").doesNotExist())
-//                .andExpect(jsonPath("\$.timestamp").isString)
-//    }
+    @Test
+    fun `When GET receiver Session return session object`() {
+
+        val sessionID = "12345"
+
+        val sender = BasicRole("EON", "DE")
+        val receiver = BasicRole("EMY", "DE")
+
+        val requestVariables = OcpiRequestVariables(
+                module = ModuleID.SESSIONS,
+                interfaceRole = InterfaceRole.RECEIVER,
+                method = HttpMethod.GET,
+                requestID = generateUUIDv4Token(),
+                correlationID = generateUUIDv4Token(),
+                sender = sender,
+                receiver = receiver,
+                urlPathVariables = "/${sender.country}/${sender.id}/$sessionID",
+                expectedResponseType = OcpiResponseDataType.SESSION)
+
+        val url = "https://ocpi.cpo.com/2.2/sessions/${sender.country}/${sender.id}/$sessionID"
+
+        val headers = OcpiRequestHeaders(
+                authorization = "Token token-b",
+                requestID = generateUUIDv4Token(),
+                correlationID = requestVariables.correlationID,
+                ocpiFromCountryCode = sender.country,
+                ocpiFromPartyID = sender.id,
+                ocpiToCountryCode = receiver.country,
+                ocpiToPartyID = receiver.id)
+
+        every { routingService.validateSender("Token token-c", sender) } just Runs
+        every { routingService.validateReceiver(receiver) } returns OcpiRequestType.LOCAL
+        every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, headers)
+
+        every {
+
+            httpService.makeRequest(
+                    method = requestVariables.method,
+                    url = url,
+                    headers = headers,
+                    expectedDataType = requestVariables.expectedResponseType)
+
+        } returns HttpResponse(
+                statusCode = 200,
+                headers = mapOf(),
+                body = OcpiResponse(statusCode = 1000, data = exampleSession))
+
+        mockMvc.perform(get("/ocpi/receiver/2.2/sessions/${sender.country}/${sender.id}/$sessionID")
+                .header("Authorization", "Token token-c")
+                .header("X-Request-ID", requestVariables.requestID)
+                .header("X-Correlation-ID", requestVariables.correlationID)
+                .header("OCPI-from-country-code", sender.country)
+                .header("OCPI-from-party-id", sender.id)
+                .header("OCPI-to-country-code", receiver.country)
+                .header("OCPI-to-party-id", receiver.id))
+                .andExpect(status().isOk)
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
+                .andExpect(jsonPath("\$.status_code").value(OcpiStatus.SUCCESS.code))
+                .andExpect(jsonPath("\$.status_message").doesNotExist())
+                .andExpect(jsonPath("\$.timestamp").isString)
+                .andExpect(jsonPath("\$.data.id").value(exampleSession.id))
+                .andExpect(jsonPath("\$.data.party_id").value(exampleSession.partyID))
+    }
+
+
+    @Test
+    fun `When PUT receiver Session return OCPI success`() {
+
+        val sessionID = "4567"
+        val body = exampleSession
+
+        val sender = BasicRole("EON", "DE")
+        val receiver = BasicRole("EMY", "DE")
+
+        val requestVariables = OcpiRequestVariables(
+                module = ModuleID.SESSIONS,
+                interfaceRole = InterfaceRole.RECEIVER,
+                method = HttpMethod.PUT,
+                requestID = generateUUIDv4Token(),
+                correlationID = generateUUIDv4Token(),
+                sender = sender,
+                receiver = receiver,
+                urlPathVariables = "/${sender.country}/${sender.id}/$sessionID",
+                body = body,
+                expectedResponseType = OcpiResponseDataType.NOTHING)
+
+        val url = "https://ocpi.cpo.com/2.2/sessions/${sender.country}/${sender.id}/$sessionID"
+
+        val headers = OcpiRequestHeaders(
+                authorization = "Token token-b",
+                requestID = generateUUIDv4Token(),
+                correlationID = requestVariables.correlationID,
+                ocpiFromCountryCode = sender.country,
+                ocpiFromPartyID = sender.id,
+                ocpiToCountryCode = receiver.country,
+                ocpiToPartyID = receiver.id)
+
+        every { routingService.validateSender("Token token-c", sender) } just Runs
+        every { routingService.validateReceiver(receiver) } returns OcpiRequestType.LOCAL
+        every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, headers)
+
+        every {
+
+            httpService.makeRequest(
+                    method = requestVariables.method,
+                    url = url,
+                    headers = headers,
+                    body = body,
+                    expectedDataType = requestVariables.expectedResponseType)
+
+        } returns HttpResponse(
+                statusCode = 200,
+                headers = mapOf(),
+                body = OcpiResponse(statusCode = 1000))
+
+        mockMvc.perform(put("/ocpi/receiver/2.2/sessions/${sender.country}/${sender.id}/$sessionID")
+                .header("Authorization", "Token token-c")
+                .header("X-Request-ID", requestVariables.requestID)
+                .header("X-Correlation-ID", requestVariables.correlationID)
+                .header("OCPI-from-country-code", sender.country)
+                .header("OCPI-from-party-id", sender.id)
+                .header("OCPI-to-country-code", receiver.country)
+                .header("OCPI-to-party-id", receiver.id)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jacksonObjectMapper().writeValueAsString(body)))
+                .andExpect(status().isOk)
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
+                .andExpect(jsonPath("\$.status_code").value(OcpiStatus.SUCCESS.code))
+                .andExpect(jsonPath("\$.status_message").doesNotExist())
+                .andExpect(jsonPath("\$.data").doesNotExist())
+                .andExpect(jsonPath("\$.timestamp").isString)
+    }
+
+
+    @Test
+    fun `When PATCH receiver Session return OCPI success`() {
+
+        val sessionID = "4567"
+        val body = mapOf("kwh" to 5.5)
+
+        val sender = BasicRole("EON", "DE")
+        val receiver = BasicRole("EMY", "DE")
+
+        val requestVariables = OcpiRequestVariables(
+                module = ModuleID.SESSIONS,
+                interfaceRole = InterfaceRole.RECEIVER,
+                method = HttpMethod.PATCH,
+                requestID = generateUUIDv4Token(),
+                correlationID = generateUUIDv4Token(),
+                sender = sender,
+                receiver = receiver,
+                urlPathVariables = "/${sender.country}/${sender.id}/$sessionID",
+                body = body,
+                expectedResponseType = OcpiResponseDataType.NOTHING)
+
+        val url = "https://ocpi.cpo.com/2.2/sessions/${sender.country}/${sender.id}/$sessionID"
+
+        val headers = OcpiRequestHeaders(
+                authorization = "Token token-b",
+                requestID = generateUUIDv4Token(),
+                correlationID = requestVariables.correlationID,
+                ocpiFromCountryCode = sender.country,
+                ocpiFromPartyID = sender.id,
+                ocpiToCountryCode = receiver.country,
+                ocpiToPartyID = receiver.id)
+
+        every { routingService.validateSender("Token token-c", sender) } just Runs
+        every { routingService.validateReceiver(receiver) } returns OcpiRequestType.LOCAL
+        every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, headers)
+
+        every {
+
+            httpService.makeRequest(
+                    method = requestVariables.method,
+                    url = url,
+                    headers = headers,
+                    body = body,
+                    expectedDataType = requestVariables.expectedResponseType)
+
+        } returns HttpResponse(
+                statusCode = 200,
+                headers = mapOf(),
+                body = OcpiResponse(statusCode = 1000))
+
+        mockMvc.perform(patch("/ocpi/receiver/2.2/sessions/${sender.country}/${sender.id}/$sessionID")
+                .header("Authorization", "Token token-c")
+                .header("X-Request-ID", requestVariables.requestID)
+                .header("X-Correlation-ID", requestVariables.correlationID)
+                .header("OCPI-from-country-code", sender.country)
+                .header("OCPI-from-party-id", sender.id)
+                .header("OCPI-to-country-code", receiver.country)
+                .header("OCPI-to-party-id", receiver.id)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jacksonObjectMapper().writeValueAsString(body)))
+                .andExpect(status().isOk)
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
+                .andExpect(jsonPath("\$.status_code").value(OcpiStatus.SUCCESS.code))
+                .andExpect(jsonPath("\$.status_message").doesNotExist())
+                .andExpect(jsonPath("\$.data").doesNotExist())
+                .andExpect(jsonPath("\$.timestamp").isString)
+    }
 
 }
