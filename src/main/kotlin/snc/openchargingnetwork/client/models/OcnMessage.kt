@@ -8,7 +8,7 @@ import snc.openchargingnetwork.client.models.ocpi.InterfaceRole
 import snc.openchargingnetwork.client.models.ocpi.ModuleID
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-data class OcnMessageRequestBody<T: Any>(@JsonProperty("module_id") val module: ModuleID,
+data class OcnMessageRequestBody(@JsonProperty("module_id") val module: ModuleID,
                                          @JsonProperty("interface_role") val interfaceRole: InterfaceRole,
                                          @JsonProperty("http_method") val method: HttpMethod,
                                          @JsonProperty("headers") val headers: OcpiRequestHeaders,
@@ -16,11 +16,11 @@ data class OcnMessageRequestBody<T: Any>(@JsonProperty("module_id") val module: 
                                          @JsonProperty("url_encoded_parameters") val urlEncodedParameters: OcpiRequestParameters? = null,
                                          @JsonProperty("body") val body: Any? = null,
                                          @JsonProperty("proxy_resource") var proxyResource: String? = null,
-                                         @JsonProperty("expectedResponseType") val expectedResponseType: OcpiResponseDataType<T>)
+                                         @JsonProperty("expected_response_type") val expectedResponseType: OcpiResponseDataType)
 
-data class OcnMessageCommandRequestBody(@JsonProperty("type") val type: CommandType,
-                                        @JsonProperty("headers") val headers: OcpiRequestHeaders,
-                                        @JsonProperty("body") val body: String)
+//data class OcnMessageCommandRequestBody(@JsonProperty("type") val type: CommandType,
+//                                        @JsonProperty("headers") val headers: OcpiRequestHeaders,
+//                                        @JsonProperty("body") val body: String)
 
 data class OcnMessageHeaders(val requestID: String,
                              val signature: String) {

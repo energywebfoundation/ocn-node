@@ -46,7 +46,7 @@ class RoutingService(private val platformRepo: PlatformRepository,
                      private val properties: Properties) {
 
 
-    fun <T: Any> prepareLocalPlatformRequest(request: OcpiRequestVariables<T>, proxied: Boolean = false): Pair<String, OcpiRequestHeaders> {
+    fun prepareLocalPlatformRequest(request: OcpiRequestVariables, proxied: Boolean = false): Pair<String, OcpiRequestHeaders> {
 
         val platformID = getPlatformID(request.receiver)
 
@@ -71,10 +71,11 @@ class RoutingService(private val platformRepo: PlatformRepository,
     }
 
 
-    fun <T: Any> prepareRemotePlatformRequest(request: OcpiRequestVariables<T>, proxied: Boolean = false): Triple<String, OcnMessageHeaders, OcnMessageRequestBody<T>> {
+    fun prepareRemotePlatformRequest(request: OcpiRequestVariables, proxied: Boolean = false): Triple<String, OcnMessageHeaders, OcnMessageRequestBody> {
 
         val url = getRemoteClientUrl(request.receiver)
 
+        // TODO: reuse OcpiRequestVariables / with headers
         val body = OcnMessageRequestBody(
                 method = request.method,
                 interfaceRole = request.interfaceRole,
@@ -103,7 +104,7 @@ class RoutingService(private val platformRepo: PlatformRepository,
     }
 
 
-    fun <T: Any> proxyPaginationHeaders(request: OcpiRequestVariables<T>, responseHeaders: Map<String, String>): HttpHeaders {
+    fun proxyPaginationHeaders(request: OcpiRequestVariables, responseHeaders: Map<String, String>): HttpHeaders {
         val headers = HttpHeaders()
         responseHeaders["Link"]?.let {
             val id = setProxyResource(it, request.sender, request.receiver)

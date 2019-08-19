@@ -78,7 +78,7 @@ class CdrsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every {
 
-            httpService.makeRequest(
+            httpService.makeRequest<Array<CDR>>(
                 method = requestVariables.method,
                 url = url,
                 headers = headers,
@@ -159,7 +159,7 @@ class CdrsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every {
 
-            httpService.makeRequest(
+            httpService.makeRequest<Array<CDR>>(
                     method = requestVariables.method,
                     url = url,
                     headers = headers,
@@ -238,7 +238,7 @@ class CdrsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every {
 
-            httpService.makeRequest(
+            httpService.makeRequest<CDR>(
                     method = requestVariables.method,
                     url = url,
                     headers = headers,
@@ -304,7 +304,7 @@ class CdrsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every {
 
-            httpService.makeRequest(
+            httpService.makeRequest<Nothing>(
                     method = requestVariables.method,
                     url = url,
                     headers = headers,

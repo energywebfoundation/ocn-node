@@ -68,7 +68,7 @@ class CommandsController(private val routingService: RoutingService,
                 body = body,
                 expectedResponseType = OcpiResponseDataType.NOTHING)
 
-        val response = when (routingService.validateReceiver(receiver)) {
+        val response: HttpResponse<Nothing> = when (routingService.validateReceiver(receiver)) {
 
             OcpiRequestType.LOCAL -> {
 
@@ -129,7 +129,7 @@ class CommandsController(private val routingService: RoutingService,
                 body = body,
                 expectedResponseType = OcpiResponseDataType.COMMAND_RESPONSE)
 
-        val response = when (routingService.validateReceiver(receiver)) {
+        val response: HttpResponse<CommandResponse> = when (routingService.validateReceiver(receiver)) {
 
             OcpiRequestType.LOCAL -> {
 
@@ -193,7 +193,7 @@ class CommandsController(private val routingService: RoutingService,
                 body = body,
                 expectedResponseType = OcpiResponseDataType.COMMAND_RESPONSE)
 
-        val response = when (routingService.validateReceiver(receiver)) {
+        val response: HttpResponse<CommandResponse> = when (routingService.validateReceiver(receiver)) {
 
             OcpiRequestType.LOCAL -> {
 
@@ -257,7 +257,7 @@ class CommandsController(private val routingService: RoutingService,
                 body = body,
                 expectedResponseType = OcpiResponseDataType.COMMAND_RESPONSE)
 
-        val response = when (routingService.validateReceiver(receiver)) {
+        val response: HttpResponse<CommandResponse> = when (routingService.validateReceiver(receiver)) {
 
             OcpiRequestType.LOCAL -> {
 
@@ -321,7 +321,7 @@ class CommandsController(private val routingService: RoutingService,
                 body = body,
                 expectedResponseType = OcpiResponseDataType.COMMAND_RESPONSE)
 
-        val response = when (routingService.validateReceiver(receiver)) {
+        val response: HttpResponse<CommandResponse> = when (routingService.validateReceiver(receiver)) {
 
             OcpiRequestType.LOCAL -> {
 
@@ -385,7 +385,7 @@ class CommandsController(private val routingService: RoutingService,
                 body = body,
                 expectedResponseType = OcpiResponseDataType.COMMAND_RESPONSE)
 
-        val response = when (routingService.validateReceiver(receiver)) {
+        val response: HttpResponse<CommandResponse> = when (routingService.validateReceiver(receiver)) {
 
             OcpiRequestType.LOCAL -> {
 

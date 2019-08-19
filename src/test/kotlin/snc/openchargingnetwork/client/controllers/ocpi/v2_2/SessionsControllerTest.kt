@@ -76,7 +76,7 @@ class SessionsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every {
 
-            httpService.makeRequest(
+            httpService.makeRequest<Array<Session>>(
                     method = requestVariables.method,
                     url = url,
                     headers = headers,
@@ -162,7 +162,7 @@ class SessionsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every {
 
-            httpService.makeRequest(
+            httpService.makeRequest<Array<Session>>(
                     method = requestVariables.method,
                     url = url,
                     headers = headers,
@@ -245,7 +245,7 @@ class SessionsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every {
 
-            httpService.makeRequest(
+            httpService.makeRequest<ChargingPreferencesResponse>(
                     method = requestVariables.method,
                     url = url,
                     headers = headers,
@@ -312,7 +312,7 @@ class SessionsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every {
 
-            httpService.makeRequest(
+            httpService.makeRequest<Session>(
                     method = requestVariables.method,
                     url = url,
                     headers = headers,
@@ -379,7 +379,7 @@ class SessionsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every {
 
-            httpService.makeRequest(
+            httpService.makeRequest<Nothing>(
                     method = requestVariables.method,
                     url = url,
                     headers = headers,
@@ -448,7 +448,7 @@ class SessionsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every {
 
-            httpService.makeRequest(
+            httpService.makeRequest<Nothing>(
                     method = requestVariables.method,
                     url = url,
                     headers = headers,

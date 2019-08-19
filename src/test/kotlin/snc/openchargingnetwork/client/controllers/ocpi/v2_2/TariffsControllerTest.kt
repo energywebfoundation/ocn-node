@@ -73,7 +73,7 @@ class TariffsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every {
 
-            httpService.makeRequest(
+            httpService.makeRequest<Array<Tariff>>(
                     method = requestVariables.method,
                     url = url,
                     headers = headers,
@@ -158,7 +158,7 @@ class TariffsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every {
 
-            httpService.makeRequest(
+            httpService.makeRequest<Array<Tariff>>(
                     method = requestVariables.method,
                     url = url,
                     headers = headers,
@@ -239,7 +239,7 @@ class TariffsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every {
 
-            httpService.makeRequest(
+            httpService.makeRequest<Tariff>(
                     method = requestVariables.method,
                     url = url,
                     headers = headers,
@@ -305,7 +305,7 @@ class TariffsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every {
 
-            httpService.makeRequest(
+            httpService.makeRequest<Nothing>(
                     method = requestVariables.method,
                     url = url,
                     headers = headers,
@@ -372,7 +372,7 @@ class TariffsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every {
 
-            httpService.makeRequest(
+            httpService.makeRequest<Nothing>(
                     method = requestVariables.method,
                     url = url,
                     headers = headers,

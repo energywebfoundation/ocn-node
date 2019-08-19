@@ -75,7 +75,7 @@ class CdrsController(val routingService: RoutingService,
                         limit = limit),
                 expectedResponseType = OcpiResponseDataType.CDR_ARRAY)
 
-        val response = when (routingService.validateReceiver(receiver)) {
+        val response: HttpResponse<Array<CDR>> = when (routingService.validateReceiver(receiver)) {
 
             OcpiRequestType.LOCAL -> {
 
@@ -134,7 +134,7 @@ class CdrsController(val routingService: RoutingService,
                 urlPathVariables = uid,
                 expectedResponseType = OcpiResponseDataType.CDR_ARRAY)
 
-        val response = when (routingService.validateReceiver(receiver)) {
+        val response: HttpResponse<Array<CDR>> = when (routingService.validateReceiver(receiver)) {
 
             OcpiRequestType.LOCAL -> {
 
@@ -206,7 +206,7 @@ class CdrsController(val routingService: RoutingService,
                 urlPathVariables = cdrID,
                 expectedResponseType = OcpiResponseDataType.CDR)
 
-        val response = when (routingService.validateReceiver(receiver)) {
+        val response: HttpResponse<CDR> = when (routingService.validateReceiver(receiver)) {
 
             OcpiRequestType.LOCAL -> {
 
@@ -259,7 +259,7 @@ class CdrsController(val routingService: RoutingService,
                 body = body,
                 expectedResponseType = OcpiResponseDataType.NOTHING)
 
-        val response = when (routingService.validateReceiver(receiver)) {
+        val response: HttpResponse<Nothing> = when (routingService.validateReceiver(receiver)) {
 
             OcpiRequestType.LOCAL -> {
 

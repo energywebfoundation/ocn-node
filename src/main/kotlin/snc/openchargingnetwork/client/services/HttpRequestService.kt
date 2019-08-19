@@ -41,7 +41,7 @@ class HttpRequestService {
                              headers: OcpiRequestHeaders,
                              params: OcpiRequestParameters? = null,
                              body: Any? = null,
-                             expectedDataType: OcpiResponseDataType<T>): HttpResponse<T> {
+                             expectedDataType: OcpiResponseDataType): HttpResponse<T> {
 
         val headersMap = headers.encode()
 
@@ -106,7 +106,7 @@ class HttpRequestService {
 
     fun <T: Any> postClientMessage(url: String,
                                    headers: OcnMessageHeaders,
-                                   body: OcnMessageRequestBody<T>): HttpResponse<T> {
+                                   body: OcnMessageRequestBody): HttpResponse<T> {
 
         val headersMap = headers.encode()
 
@@ -118,7 +118,7 @@ class HttpRequestService {
                 headers = headersMap,
                 json = jsonBody)
 
-        val type = mapper.typeFactory.constructParametricType(OcpiResponse::class.java, body.expectedResponseType::class.java)
+        val type = mapper.typeFactory.constructParametricType(OcpiResponse::class.java, body.expectedResponseType.type.java)
         return HttpResponse(
                 statusCode = response.statusCode,
                 headers = response.headers,

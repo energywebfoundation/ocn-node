@@ -72,7 +72,7 @@ class CommandsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every {
 
-            httpService.makeRequest(
+            httpService.makeRequest<Nothing>(
                     method = requestVariables.method,
                     url = url,
                     headers = headers,
@@ -146,7 +146,7 @@ class CommandsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every {
 
-            httpService.makeRequest(
+            httpService.makeRequest<CommandResponse>(
                     method = requestVariables.method,
                     url = url,
                     headers = headers,
@@ -225,7 +225,7 @@ class CommandsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every {
 
-            httpService.makeRequest(
+            httpService.makeRequest<CommandResponse>(
                     method = requestVariables.method,
                     url = url,
                     headers = headers,
@@ -302,7 +302,7 @@ class CommandsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every {
 
-            httpService.makeRequest(
+            httpService.makeRequest<CommandResponse>(
                     method = requestVariables.method,
                     url = url,
                     headers = headers,
@@ -378,7 +378,7 @@ class CommandsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every {
 
-            httpService.makeRequest(
+            httpService.makeRequest<CommandResponse>(
                     method = requestVariables.method,
                     url = url,
                     headers = headers,
@@ -456,7 +456,7 @@ class CommandsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every {
 
-            httpService.makeRequest(
+            httpService.makeRequest<CommandResponse>(
                     method = requestVariables.method,
                     url = url,
                     headers = headers,

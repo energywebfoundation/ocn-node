@@ -71,7 +71,7 @@ class TokensControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every {
 
-            httpService.makeRequest(
+            httpService.makeRequest<Array<Token>>(
                     method = requestVariables.method,
                     url = url,
                     headers = headers,
@@ -156,7 +156,7 @@ class TokensControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every {
 
-            httpService.makeRequest(
+            httpService.makeRequest<Array<Token>>(
                     method = requestVariables.method,
                     url = url,
                     headers = headers,
@@ -239,7 +239,7 @@ class TokensControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every {
 
-            httpService.makeRequest(
+            httpService.makeRequest<AuthorizationInfo>(
                     method = requestVariables.method,
                     url = url,
                     headers = headers,
@@ -311,7 +311,7 @@ class TokensControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every {
 
-            httpService.makeRequest(
+            httpService.makeRequest<Token>(
                     method = requestVariables.method,
                     url = url,
                     headers = headers,
@@ -379,7 +379,7 @@ class TokensControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every {
 
-            httpService.makeRequest(
+            httpService.makeRequest<Nothing>(
                     method = requestVariables.method,
                     url = url,
                     headers = headers,
@@ -452,7 +452,7 @@ class TokensControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every {
 
-            httpService.makeRequest(
+            httpService.makeRequest<Nothing>(
                     method = requestVariables.method,
                     url = url,
                     headers = headers,

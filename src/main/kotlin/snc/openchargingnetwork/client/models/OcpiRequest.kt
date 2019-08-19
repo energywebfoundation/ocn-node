@@ -23,10 +23,9 @@ import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
 import org.springframework.http.HttpMethod
 import snc.openchargingnetwork.client.models.ocpi.*
-import snc.openchargingnetwork.client.models.ocpi.CDR as ChargeDetailRecord
 import kotlin.reflect.KClass
 
-data class OcpiRequestVariables<T: Any>(val module: ModuleID,
+data class OcpiRequestVariables(val module: ModuleID,
                                         val interfaceRole: InterfaceRole,
                                         val method: HttpMethod,
                                         val requestID: String,
@@ -37,7 +36,7 @@ data class OcpiRequestVariables<T: Any>(val module: ModuleID,
                                         val urlEncodedParameters: OcpiRequestParameters? = null,
                                         val body: Any? = null,
                                         val proxyResource: String? = null,
-                                        val expectedResponseType: OcpiResponseDataType<T>)
+                                        val expectedResponseType: OcpiResponseDataType)
 
 data class OcpiRequestHeaders(@JsonProperty("Authorization") val authorization: String? = null,
                               @JsonProperty("X-Request-ID") val requestID: String,
@@ -90,23 +89,23 @@ data class OcpiRequestParameters(@JsonProperty("type") val type: TokenType? = nu
     }
 }
 
-sealed class OcpiResponseDataType<T: Any>(val type: KClass<T>) {
-    object LOCATION: OcpiResponseDataType<Location>(Location::class)
-    object LOCATION_ARRAY: OcpiResponseDataType<Array<Location>>(Array<Location>::class)
-    object EVSE: OcpiResponseDataType<Evse>(Evse::class)
-    object CONNECTOR: OcpiResponseDataType<Connector>(Connector::class)
-    object SESSION: OcpiResponseDataType<Session>(Session::class)
-    object SESSION_ARRAY: OcpiResponseDataType<Array<Session>>(Array<Session>::class)
-    object CHARGING_PREFERENCE_RESPONSE: OcpiResponseDataType<ChargingPreferencesResponse>(ChargingPreferencesResponse::class)
-    object CDR: OcpiResponseDataType<ChargeDetailRecord>(ChargeDetailRecord::class)
-    object CDR_ARRAY: OcpiResponseDataType<Array<ChargeDetailRecord>>(Array<ChargeDetailRecord>::class)
-    object TARIFF: OcpiResponseDataType<Tariff>(Tariff::class)
-    object TARIFF_ARRAY: OcpiResponseDataType<Array<Tariff>>(Array<Tariff>::class)
-    object TOKEN: OcpiResponseDataType<Token>(Token::class)
-    object TOKEN_ARRAY: OcpiResponseDataType<Array<Token>>(Array<Token>::class)
-    object AUTHORIZATION_INFO: OcpiResponseDataType<AuthorizationInfo>(AuthorizationInfo::class)
-    object COMMAND_RESPONSE: OcpiResponseDataType<CommandResponse>(CommandResponse::class)
-    object NOTHING: OcpiResponseDataType<Nothing>(Nothing::class)
+enum class OcpiResponseDataType(val type: KClass<*>) {
+    LOCATION(Location::class),
+    LOCATION_ARRAY(Array<Location>::class),
+    EVSE(Evse::class),
+    CONNECTOR(Connector::class),
+    SESSION(Session::class),
+    SESSION_ARRAY(Array<Session>::class),
+    CHARGING_PREFERENCE_RESPONSE(ChargingPreferencesResponse::class),
+    CDR(snc.openchargingnetwork.client.models.ocpi.CDR::class),
+    CDR_ARRAY(Array<snc.openchargingnetwork.client.models.ocpi.CDR>::class),
+    TARIFF(Tariff::class),
+    TARIFF_ARRAY(Array<Tariff>::class),
+    TOKEN(Token::class),
+    TOKEN_ARRAY(Array<Token>::class),
+    AUTHORIZATION_INFO(AuthorizationInfo::class),
+    COMMAND_RESPONSE(CommandResponse::class),
+    NOTHING(Nothing::class),
 }
 
 enum class OcpiRequestType {

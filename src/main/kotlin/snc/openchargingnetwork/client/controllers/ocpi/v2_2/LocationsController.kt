@@ -23,10 +23,7 @@ import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
-import snc.openchargingnetwork.client.models.OcpiRequestParameters
-import snc.openchargingnetwork.client.models.OcpiRequestType
-import snc.openchargingnetwork.client.models.OcpiRequestVariables
-import snc.openchargingnetwork.client.models.OcpiResponseDataType
+import snc.openchargingnetwork.client.models.*
 import snc.openchargingnetwork.client.models.ocpi.*
 import snc.openchargingnetwork.client.services.HttpRequestService
 import snc.openchargingnetwork.client.services.RoutingService
@@ -74,7 +71,7 @@ class LocationsController(private val routingService: RoutingService,
                         limit = limit),
                 expectedResponseType = OcpiResponseDataType.LOCATION_ARRAY)
 
-        val response = when (routingService.validateReceiver(receiver)) {
+        val response: HttpResponse<Array<Location>> = when (routingService.validateReceiver(receiver)) {
 
             OcpiRequestType.LOCAL -> {
 
@@ -134,7 +131,7 @@ class LocationsController(private val routingService: RoutingService,
                 urlPathVariables = uid,
                 expectedResponseType = OcpiResponseDataType.LOCATION_ARRAY)
 
-        val response = when (routingService.validateReceiver(receiver)) {
+        val response: HttpResponse<Array<Location>> = when (routingService.validateReceiver(receiver)) {
 
             OcpiRequestType.LOCAL -> {
 
@@ -203,7 +200,7 @@ class LocationsController(private val routingService: RoutingService,
                 urlPathVariables = locationID,
                 expectedResponseType = OcpiResponseDataType.LOCATION)
 
-        val response = when (routingService.validateReceiver(receiver)) {
+        val response: HttpResponse<Location> = when (routingService.validateReceiver(receiver)) {
 
             OcpiRequestType.LOCAL -> {
 
@@ -256,7 +253,7 @@ class LocationsController(private val routingService: RoutingService,
                 urlPathVariables = "/$locationID/$evseUID",
                 expectedResponseType = OcpiResponseDataType.EVSE)
 
-        val response = when (routingService.validateReceiver(receiver)) {
+        val response: HttpResponse<Evse> = when (routingService.validateReceiver(receiver)) {
 
             OcpiRequestType.LOCAL -> {
 
@@ -310,7 +307,7 @@ class LocationsController(private val routingService: RoutingService,
                 urlPathVariables = "/$locationID/$evseUID/$connectorID",
                 expectedResponseType = OcpiResponseDataType.CONNECTOR)
 
-        val response = when (routingService.validateReceiver(receiver)) {
+        val response: HttpResponse<Connector> = when (routingService.validateReceiver(receiver)) {
 
             OcpiRequestType.LOCAL -> {
 
@@ -368,7 +365,7 @@ class LocationsController(private val routingService: RoutingService,
                 urlPathVariables = "/$countryCode/$partyID/$locationID",
                 expectedResponseType = OcpiResponseDataType.LOCATION)
 
-        val response = when (routingService.validateReceiver(receiver)) {
+        val response: HttpResponse<Location> = when (routingService.validateReceiver(receiver)) {
 
             OcpiRequestType.LOCAL -> {
 
@@ -423,7 +420,7 @@ class LocationsController(private val routingService: RoutingService,
                 urlPathVariables = "/$countryCode/$partyID/$locationID/$evseUID",
                 expectedResponseType = OcpiResponseDataType.EVSE)
 
-        val response = when (routingService.validateReceiver(receiver)) {
+        val response: HttpResponse<Evse> = when (routingService.validateReceiver(receiver)) {
 
             OcpiRequestType.LOCAL -> {
 
@@ -479,7 +476,7 @@ class LocationsController(private val routingService: RoutingService,
                 urlPathVariables = "/$countryCode/$partyID/$locationID/$evseUID/$connectorID",
                 expectedResponseType = OcpiResponseDataType.CONNECTOR)
 
-        val response = when (routingService.validateReceiver(receiver)) {
+        val response: HttpResponse<Connector> = when (routingService.validateReceiver(receiver)) {
 
             OcpiRequestType.LOCAL -> {
 
@@ -535,7 +532,7 @@ class LocationsController(private val routingService: RoutingService,
                 body = body,
                 expectedResponseType = OcpiResponseDataType.NOTHING)
 
-        val response = when (routingService.validateReceiver(receiver)) {
+        val response: HttpResponse<Nothing> = when (routingService.validateReceiver(receiver)) {
 
             OcpiRequestType.LOCAL -> {
 
@@ -593,7 +590,7 @@ class LocationsController(private val routingService: RoutingService,
                 body = body,
                 expectedResponseType = OcpiResponseDataType.NOTHING)
 
-        val response = when (routingService.validateReceiver(receiver)) {
+        val response: HttpResponse<Nothing> = when (routingService.validateReceiver(receiver)) {
 
             OcpiRequestType.LOCAL -> {
 
@@ -652,7 +649,7 @@ class LocationsController(private val routingService: RoutingService,
                 body = body,
                 expectedResponseType = OcpiResponseDataType.NOTHING)
 
-        val response = when (routingService.validateReceiver(receiver)) {
+        val response: HttpResponse<Nothing> = when (routingService.validateReceiver(receiver)) {
 
             OcpiRequestType.LOCAL -> {
 
@@ -709,7 +706,7 @@ class LocationsController(private val routingService: RoutingService,
                 body = body,
                 expectedResponseType = OcpiResponseDataType.NOTHING)
 
-        val response = when (routingService.validateReceiver(receiver)) {
+        val response: HttpResponse<Nothing> = when (routingService.validateReceiver(receiver)) {
 
             OcpiRequestType.LOCAL -> {
 
@@ -767,7 +764,7 @@ class LocationsController(private val routingService: RoutingService,
                 body = body,
                 expectedResponseType = OcpiResponseDataType.NOTHING)
 
-        val response = when (routingService.validateReceiver(receiver)) {
+        val response: HttpResponse<Nothing> = when (routingService.validateReceiver(receiver)) {
 
             OcpiRequestType.LOCAL -> {
 
@@ -826,7 +823,7 @@ class LocationsController(private val routingService: RoutingService,
                 body = body,
                 expectedResponseType = OcpiResponseDataType.NOTHING)
 
-        val response = when (routingService.validateReceiver(receiver)) {
+        val response: HttpResponse<Nothing> = when (routingService.validateReceiver(receiver)) {
 
             OcpiRequestType.LOCAL -> {
 
