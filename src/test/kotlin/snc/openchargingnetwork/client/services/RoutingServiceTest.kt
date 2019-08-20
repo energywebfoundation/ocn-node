@@ -6,13 +6,11 @@ import io.mockk.every
 import io.mockk.mockk
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpMethod
 import snc.openchargingnetwork.client.config.Properties
 import snc.openchargingnetwork.client.models.*
-import snc.openchargingnetwork.client.models.entities.Auth
-import snc.openchargingnetwork.client.models.entities.EndpointEntity
-import snc.openchargingnetwork.client.models.entities.PlatformEntity
-import snc.openchargingnetwork.client.models.entities.RoleEntity
+import snc.openchargingnetwork.client.models.entities.*
 import snc.openchargingnetwork.client.models.ocpi.*
 import snc.openchargingnetwork.client.repositories.*
 import snc.openchargingnetwork.client.tools.generateUUIDv4Token
@@ -226,6 +224,67 @@ class RoutingServiceTest {
 
 
     @Test
+    fun proxyPaginationHeaders() {
+        val request = OcpiRequestVariables(
+                module = ModuleID.TARIFFS,
+                method = HttpMethod.GET,
+                interfaceRole = InterfaceRole.SENDER,
+                requestID = generateUUIDv4Token(),
+                correlationID = generateUUIDv4Token(),
+                sender = BasicRole("SNC", "DE"),
+                receiver = BasicRole("ABC", "CH"),
+                urlEncodedParameters = OcpiRequestParameters(limit = 25),
+                expectedResponseType = OcpiResponseDataType.TARIFF_ARRAY)
+
+        val link = "https://some.link.com/ocpi/tariffs?limit=25&offset=25; rel=\"next\""
+
+        val responseHeaders = mapOf(
+                "Link" to link,
+                "X-Limit" to "25",
+                "X-Total-Count" to "148")
+
+        every { proxyResourceRepo.save<ProxyResourceEntity>(any())
+        } returns ProxyResourceEntity(
+                resource = link,
+                sender = request.sender,
+                receiver = request.receiver,
+                id = 74L)
+
+        every { properties.url } returns "https://some.client.ocn"
+
+        val proxyHeaders = routingService.proxyPaginationHeaders(request, responseHeaders)
+        assertThat(proxyHeaders.getFirst("Link")).isEqualTo("https://some.client.ocn/ocpi/sender/2.2/tariffs/page/74; rel=\"next\"")
+        assertThat(proxyHeaders.getFirst("X-Limit")).isEqualTo("25")
+        assertThat(proxyHeaders.getFirst("X-Total-Count")).isEqualTo("148")
+    }
+
+
+    @Test
+    fun getProxyResource() {
+        val id = "123"
+        val sender = BasicRole("SNC", "DE")
+        val receiver = BasicRole("DIY", "UK")
+        val resource = "https://some.co/ocpi/tokens?limit=10; rel=\"next\""
+        every { proxyResourceRepo.findByIdOrNull(123L)?.resource } returns resource
+        assertThat(routingService.getProxyResource(id, sender, receiver)).isEqualTo(resource)
+    }
+
+
+    @Test
+    fun setProxyResource() {
+        val resource = "https://some.co/ocpi/tokens?limit=10; rel=\"next\""
+        val sender = BasicRole("SNC", "DE")
+        val receiver = BasicRole("DIY", "UK")
+        every { proxyResourceRepo.save(any<ProxyResourceEntity>()) } returns ProxyResourceEntity(
+                resource = resource,
+                sender = sender,
+                receiver = receiver,
+                id = 55L)
+        assertThat(routingService.setProxyResource(resource, sender, receiver)).isEqualTo(55L)
+    }
+
+
+    @Test
     fun isRoleKnown() {
         val role = BasicRole("ABC", "FR")
         every { roleRepo.existsByCountryCodeAndPartyIDAllIgnoreCase(role.country, role.id) } returns true
@@ -248,15 +307,6 @@ class RoutingServiceTest {
         routingService.validateSender("Token 0102030405", role)
     }
 
-    @Test
-    fun `validateSender 2`() {
-        val role = BasicRole("YUT", "BE")
-        val objectOwner = BasicRole("yut", "be")
-        val platform = PlatformEntity(id = 3L)
-        every { platformRepo.findByAuth_TokenC("0102030405") } returns platform
-        every { roleRepo.existsByPlatformIDAndCountryCodeAndPartyIDAllIgnoreCase(3L, role.country, role.id) } returns true
-        routingService.validateSender("Token 0102030405", role, objectOwner)
-    }
 
 //    @Test
 //    fun makeHeaders() {
@@ -274,56 +324,7 @@ class RoutingServiceTest {
 //        assertThat(headers["OCPI-To-Party-ID"]).isEqualTo(receiver.id)
 //    }
 
-//    @Test
-//    fun `forwardRequest with GET`() {
-//        val url = "http://localhost:8090/locations"
-//        val headers = mapOf(
-//                "Authorization" to "Token 1234567",
-//                "X-Request-ID" to "123",
-//                "X-Correlation-ID" to "456",
-//                "OCPI-From-Country-Code" to "DE",
-//                "OCPI-From-Party-ID" to "XXX",
-//                "OCPI-To-Country-Code" to "DE",
-//                "OCPI-To-Party-ID" to "AAA")
-//        val params = mapOf("limit" to "100")
-//        every { httpRequestService.makeRequest("GET", url, headers, params, body = null, expectedDataType = Array<Location>::class) } returns HttpResponse(
-//                statusCode = 200,
-//                headers = mapOf(),
-//                body = OcpiResponse(
-//                    statusCode = 1000,
-//                    data = arrayOf(exampleLocation1, exampleLocation2)))
-//        val response = routingService.forwardRequest("GET", url, headers, params, null, Array<Location>::class)
-//        assertThat(response.statusCode).isEqualTo(200)
-//        assertThat(response.body.statusCode).isEqualTo(1000)
-//        assertThat(response.body.statusMessage).isNull()
-//        assertThat(response.body.data?.size).isEqualTo(2)
-//    }
 
-//    @Test
-//    fun `forwardRequest with POST`() {
-//        val url = "http://localhost:8090/locations/LOC1/1234"
-//        val headers = mapOf(
-//                "Authorization" to "Token 1234567",
-//                "X-Request-ID" to "123",
-//                "X-Correlation-ID" to "456",
-//                "OCPI-From-Country-Code" to "DE",
-//                "OCPI-From-Party-ID" to "XXX",
-//                "OCPI-To-Country-Code" to "DE",
-//                "OCPI-To-Party-ID" to "AAA")
-//
-//        val body: Map<String, Any>? = mapper.readValue(mapper.writeValueAsString(exampleLocation1))
-//        every { httpRequestService.mapper } returns mapper
-//        every { httpRequestService.makeRequest("POST", url, headers, body = body, expectedDataType = Nothing::class) } returns HttpResponse(
-//                statusCode = 200,
-//                headers = mapOf(),
-//                body = OcpiResponse(
-//                    statusCode = 1000,
-//                    data = null))
-//        val response = routingService.forwardRequest("POST", url, headers, null, exampleLocation1, Nothing::class)
-//        assertThat(response.statusCode).isEqualTo(200)
-//        assertThat(response.body.statusCode).isEqualTo(1000)
-//        assertThat(response.body.statusMessage).isNull()
-//    }
 
 //    @Test
 //    fun `signRequest returns concatenated signature`() {
