@@ -20,7 +20,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
 import snc.openchargingnetwork.client.data.exampleSession
 import snc.openchargingnetwork.client.models.*
 import snc.openchargingnetwork.client.models.ocpi.*
-import snc.openchargingnetwork.client.services.HttpRequestService
+import snc.openchargingnetwork.client.services.HttpService
 import snc.openchargingnetwork.client.services.RoutingService
 import snc.openchargingnetwork.client.tools.generateUUIDv4Token
 import snc.openchargingnetwork.client.tools.getTimestamp
@@ -32,7 +32,7 @@ class SessionsControllerTest(@Autowired val mockMvc: MockMvc) {
     lateinit var routingService: RoutingService
 
     @MockkBean
-    lateinit var httpService: HttpRequestService
+    lateinit var httpService: HttpService
 
 
     @Test
@@ -76,7 +76,7 @@ class SessionsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every {
 
-            httpService.makeRequest<Array<Session>>(
+            httpService.makeOcpiRequest<Array<Session>>(
                     method = requestVariables.method,
                     url = url,
                     headers = headers,
@@ -162,7 +162,7 @@ class SessionsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every {
 
-            httpService.makeRequest<Array<Session>>(
+            httpService.makeOcpiRequest<Array<Session>>(
                     method = requestVariables.method,
                     url = url,
                     headers = headers,
@@ -245,7 +245,7 @@ class SessionsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every {
 
-            httpService.makeRequest<ChargingPreferencesResponse>(
+            httpService.makeOcpiRequest<ChargingPreferencesResponse>(
                     method = requestVariables.method,
                     url = url,
                     headers = headers,
@@ -312,7 +312,7 @@ class SessionsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every {
 
-            httpService.makeRequest<Session>(
+            httpService.makeOcpiRequest<Session>(
                     method = requestVariables.method,
                     url = url,
                     headers = headers,
@@ -379,7 +379,7 @@ class SessionsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every {
 
-            httpService.makeRequest<Nothing>(
+            httpService.makeOcpiRequest<Nothing>(
                     method = requestVariables.method,
                     url = url,
                     headers = headers,
@@ -448,7 +448,7 @@ class SessionsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every {
 
-            httpService.makeRequest<Nothing>(
+            httpService.makeOcpiRequest<Nothing>(
                     method = requestVariables.method,
                     url = url,
                     headers = headers,

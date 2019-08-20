@@ -18,7 +18,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
 import snc.openchargingnetwork.client.data.exampleToken
 import snc.openchargingnetwork.client.models.*
 import snc.openchargingnetwork.client.models.ocpi.*
-import snc.openchargingnetwork.client.services.HttpRequestService
+import snc.openchargingnetwork.client.services.HttpService
 import snc.openchargingnetwork.client.services.RoutingService
 import snc.openchargingnetwork.client.tools.generateUUIDv4Token
 
@@ -29,7 +29,7 @@ class TokensControllerTest(@Autowired val mockMvc: MockMvc) {
     lateinit var routingService: RoutingService
 
     @MockkBean
-    lateinit var httpService: HttpRequestService
+    lateinit var httpService: HttpService
 
 
     @Test
@@ -71,7 +71,7 @@ class TokensControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every {
 
-            httpService.makeRequest<Array<Token>>(
+            httpService.makeOcpiRequest<Array<Token>>(
                     method = requestVariables.method,
                     url = url,
                     headers = headers,
@@ -156,7 +156,7 @@ class TokensControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every {
 
-            httpService.makeRequest<Array<Token>>(
+            httpService.makeOcpiRequest<Array<Token>>(
                     method = requestVariables.method,
                     url = url,
                     headers = headers,
@@ -239,7 +239,7 @@ class TokensControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every {
 
-            httpService.makeRequest<AuthorizationInfo>(
+            httpService.makeOcpiRequest<AuthorizationInfo>(
                     method = requestVariables.method,
                     url = url,
                     headers = headers,
@@ -311,7 +311,7 @@ class TokensControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every {
 
-            httpService.makeRequest<Token>(
+            httpService.makeOcpiRequest<Token>(
                     method = requestVariables.method,
                     url = url,
                     headers = headers,
@@ -379,7 +379,7 @@ class TokensControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every {
 
-            httpService.makeRequest<Nothing>(
+            httpService.makeOcpiRequest<Nothing>(
                     method = requestVariables.method,
                     url = url,
                     headers = headers,
@@ -452,7 +452,7 @@ class TokensControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every {
 
-            httpService.makeRequest<Nothing>(
+            httpService.makeOcpiRequest<Nothing>(
                     method = requestVariables.method,
                     url = url,
                     headers = headers,

@@ -20,7 +20,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
 import snc.openchargingnetwork.client.data.exampleTariff
 import snc.openchargingnetwork.client.models.*
 import snc.openchargingnetwork.client.models.ocpi.*
-import snc.openchargingnetwork.client.services.HttpRequestService
+import snc.openchargingnetwork.client.services.HttpService
 import snc.openchargingnetwork.client.services.RoutingService
 import snc.openchargingnetwork.client.tools.generateUUIDv4Token
 
@@ -31,7 +31,7 @@ class TariffsControllerTest(@Autowired val mockMvc: MockMvc) {
     lateinit var routingService: RoutingService
 
     @MockkBean
-    lateinit var httpService: HttpRequestService
+    lateinit var httpService: HttpService
 
 
     @Test
@@ -73,7 +73,7 @@ class TariffsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every {
 
-            httpService.makeRequest<Array<Tariff>>(
+            httpService.makeOcpiRequest<Array<Tariff>>(
                     method = requestVariables.method,
                     url = url,
                     headers = headers,
@@ -158,7 +158,7 @@ class TariffsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every {
 
-            httpService.makeRequest<Array<Tariff>>(
+            httpService.makeOcpiRequest<Array<Tariff>>(
                     method = requestVariables.method,
                     url = url,
                     headers = headers,
@@ -239,7 +239,7 @@ class TariffsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every {
 
-            httpService.makeRequest<Tariff>(
+            httpService.makeOcpiRequest<Tariff>(
                     method = requestVariables.method,
                     url = url,
                     headers = headers,
@@ -305,7 +305,7 @@ class TariffsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every {
 
-            httpService.makeRequest<Nothing>(
+            httpService.makeOcpiRequest<Nothing>(
                     method = requestVariables.method,
                     url = url,
                     headers = headers,
@@ -372,7 +372,7 @@ class TariffsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every {
 
-            httpService.makeRequest<Nothing>(
+            httpService.makeOcpiRequest<Nothing>(
                     method = requestVariables.method,
                     url = url,
                     headers = headers,

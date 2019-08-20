@@ -22,7 +22,7 @@ class RoutingServiceTest {
     private val roleRepo: RoleRepository = mockk()
     private val endpointRepo: EndpointRepository = mockk()
     private val proxyResourceRepo: ProxyResourceRepository = mockk()
-    private val httpRequestService: HttpRequestService = mockk()
+    private val httpService: HttpService = mockk()
     private val registry: RegistryFacade = mockk()
     private val credentialsService: CredentialsService = mockk()
     private val properties: Properties = mockk()
@@ -36,7 +36,7 @@ class RoutingServiceTest {
                 endpointRepo,
                 proxyResourceRepo,
                 registry,
-                httpRequestService,
+                httpService,
                 credentialsService,
                 properties)
     }
@@ -158,7 +158,7 @@ class RoutingServiceTest {
                 request.receiver.id.toByteArray()).sendAsync().get() } returns "https://ocn.client.net"
 
         val jsonString = jacksonObjectMapper().writeValueAsString(ocnBody)
-        every { httpRequestService.mapper.writeValueAsString(ocnBody) } returns jsonString
+        every { httpService.mapper.writeValueAsString(ocnBody) } returns jsonString
         every { credentialsService.sign(jsonString) } returns sig
 
         val (url, headers, body) = routingService.prepareRemotePlatformRequest(request)
@@ -211,7 +211,7 @@ class RoutingServiceTest {
                 "https://actual.cpo.com/ocpi/sender/2.2/sessions?limit=10&offset=50; rel =\"next\""
 
         val jsonString = jacksonObjectMapper().writeValueAsString(ocnBody)
-        every { httpRequestService.mapper.writeValueAsString(ocnBody) } returns jsonString
+        every { httpService.mapper.writeValueAsString(ocnBody) } returns jsonString
         every { credentialsService.sign(jsonString) } returns sig
 
         val (url, headers, body) = routingService.prepareRemotePlatformRequest(request, proxied = true)

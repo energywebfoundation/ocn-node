@@ -21,7 +21,7 @@ import snc.openchargingnetwork.client.data.exampleLocation1
 import snc.openchargingnetwork.client.data.exampleLocation2
 import snc.openchargingnetwork.client.models.*
 import snc.openchargingnetwork.client.models.ocpi.*
-import snc.openchargingnetwork.client.services.HttpRequestService
+import snc.openchargingnetwork.client.services.HttpService
 import snc.openchargingnetwork.client.services.RoutingService
 import snc.openchargingnetwork.client.tools.generateUUIDv4Token
 import snc.openchargingnetwork.client.tools.getTimestamp
@@ -33,7 +33,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
     lateinit var routingService: RoutingService
 
     @MockkBean
-    lateinit var httpService: HttpRequestService
+    lateinit var httpService: HttpService
 
 
     @Test
@@ -77,7 +77,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every {
 
-            httpService.makeRequest<Array<Location>>(
+            httpService.makeOcpiRequest<Array<Location>>(
                     method = requestVariables.method,
                     url = url,
                     headers = headers,
@@ -163,7 +163,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every {
 
-            httpService.makeRequest<Array<Location>>(
+            httpService.makeOcpiRequest<Array<Location>>(
                     method = requestVariables.method,
                     url = url,
                     headers = headers,
@@ -244,7 +244,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every {
 
-            httpService.makeRequest<Location>(
+            httpService.makeOcpiRequest<Location>(
                     method = requestVariables.method,
                     url = url,
                     headers = headers,
@@ -310,7 +310,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every {
 
-            httpService.makeRequest<Evse>(
+            httpService.makeOcpiRequest<Evse>(
                     method = requestVariables.method,
                     url = url,
                     headers = headers,
@@ -377,7 +377,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every {
 
-            httpService.makeRequest<Connector>(
+            httpService.makeOcpiRequest<Connector>(
                     method = requestVariables.method,
                     url = url,
                     headers = headers,
@@ -442,7 +442,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every {
 
-            httpService.makeRequest<Location>(
+            httpService.makeOcpiRequest<Location>(
                     method = requestVariables.method,
                     url = url,
                     headers = headers,
@@ -508,7 +508,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every {
 
-            httpService.makeRequest<Evse>(
+            httpService.makeOcpiRequest<Evse>(
                     method = requestVariables.method,
                     url = url,
                     headers = headers,
@@ -575,7 +575,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every {
 
-            httpService.makeRequest<Connector>(
+            httpService.makeOcpiRequest<Connector>(
                     method = requestVariables.method,
                     url = url,
                     headers = headers,
@@ -642,7 +642,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every {
 
-            httpService.makeRequest<Nothing>(
+            httpService.makeOcpiRequest<Nothing>(
                     method = requestVariables.method,
                     url = url,
                     headers = headers,
@@ -712,7 +712,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every {
 
-            httpService.makeRequest<Nothing>(
+            httpService.makeOcpiRequest<Nothing>(
                     method = requestVariables.method,
                     url = url,
                     headers = headers,
@@ -783,7 +783,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every {
 
-            httpService.makeRequest<Nothing>(
+            httpService.makeOcpiRequest<Nothing>(
                     method = requestVariables.method,
                     url = url,
                     headers = headers,
@@ -852,7 +852,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every {
 
-            httpService.makeRequest<Nothing>(
+            httpService.makeOcpiRequest<Nothing>(
                     method = requestVariables.method,
                     url = url,
                     headers = headers,
@@ -923,7 +923,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every {
 
-            httpService.makeRequest<Nothing>(
+            httpService.makeOcpiRequest<Nothing>(
                     method = requestVariables.method,
                     url = url,
                     headers = headers,
@@ -995,7 +995,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every {
 
-            httpService.makeRequest<Nothing>(
+            httpService.makeOcpiRequest<Nothing>(
                     method = requestVariables.method,
                     url = url,
                     headers = headers,

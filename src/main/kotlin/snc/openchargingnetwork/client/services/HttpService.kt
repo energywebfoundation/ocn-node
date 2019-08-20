@@ -32,7 +32,7 @@ import snc.openchargingnetwork.client.models.ocpi.Versions
 import snc.openchargingnetwork.client.tools.urlJoin
 
 @Service
-class HttpRequestService {
+class HttpService {
 
     val mapper = jacksonObjectMapper()
 
@@ -40,12 +40,12 @@ class HttpRequestService {
     /**
      * Generic HTTP request expecting a response of type OcpiResponse<T> as defined by the caller
      */
-    fun <T: Any> makeRequest(method: HttpMethod,
-                             url: String,
-                             headers: OcpiRequestHeaders,
-                             params: OcpiRequestParameters? = null,
-                             body: Any? = null,
-                             expectedDataType: OcpiResponseDataType): HttpResponse<T> {
+    fun <T: Any> makeOcpiRequest(method: HttpMethod,
+                                 url: String,
+                                 headers: OcpiRequestHeaders,
+                                 params: OcpiRequestParameters? = null,
+                                 body: Any? = null,
+                                 expectedDataType: OcpiResponseDataType): HttpResponse<T> {
 
         val headersMap = headers.encode()
 
@@ -122,9 +122,9 @@ class HttpRequestService {
      * Make a POST request to an OCN client which implements /ocn/message
      * Used to forward requests to OCPI platforms of which the OCN client does not share a local connection with
      */
-    fun <T: Any> postClientMessage(url: String,
-                                   headers: OcnMessageHeaders,
-                                   body: OcnMessageRequestBody): HttpResponse<T> {
+    fun <T: Any> postOcnMessage(url: String,
+                                headers: OcnMessageHeaders,
+                                body: OcnMessageRequestBody): HttpResponse<T> {
 
         val headersMap = headers.encode()
 

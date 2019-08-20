@@ -25,13 +25,13 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import snc.openchargingnetwork.client.models.*
 import snc.openchargingnetwork.client.models.ocpi.*
-import snc.openchargingnetwork.client.services.HttpRequestService
+import snc.openchargingnetwork.client.services.HttpService
 import snc.openchargingnetwork.client.services.RoutingService
 import snc.openchargingnetwork.client.tools.isOcpiSuccess
 
 @RestController
 class TokensController(private val routingService: RoutingService,
-                       private val httpService: HttpRequestService) {
+                       private val httpService: HttpService) {
 
 
     /**
@@ -77,7 +77,7 @@ class TokensController(private val routingService: RoutingService,
 
                 val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables)
 
-                httpService.makeRequest(
+                httpService.makeOcpiRequest(
                         method = requestVariables.method,
                         url = url,
                         headers = headers,
@@ -89,7 +89,7 @@ class TokensController(private val routingService: RoutingService,
 
                 val (url, headers, body) = routingService.prepareRemotePlatformRequest(requestVariables)
 
-                httpService.postClientMessage(url = url, headers = headers, body = body)
+                httpService.postOcnMessage(url = url, headers = headers, body = body)
             }
 
         }
@@ -137,7 +137,7 @@ class TokensController(private val routingService: RoutingService,
 
                 val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables, proxied = true)
 
-                httpService.makeRequest(
+                httpService.makeOcpiRequest(
                         method = requestVariables.method,
                         url = url,
                         headers = headers,
@@ -149,7 +149,7 @@ class TokensController(private val routingService: RoutingService,
 
                 val (url, headers, body) = routingService.prepareRemotePlatformRequest(requestVariables, proxied = true)
 
-                httpService.postClientMessage(url = url, headers = headers, body = body)
+                httpService.postOcnMessage(url = url, headers = headers, body = body)
 
             }
 
@@ -211,7 +211,7 @@ class TokensController(private val routingService: RoutingService,
 
                 val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables)
 
-                httpService.makeRequest(
+                httpService.makeOcpiRequest(
                         method = requestVariables.method,
                         url = url,
                         headers = headers,
@@ -225,7 +225,7 @@ class TokensController(private val routingService: RoutingService,
 
                 val (url, headers, ocnBody) = routingService.prepareRemotePlatformRequest(requestVariables)
 
-                httpService.postClientMessage(url = url, headers = headers, body = ocnBody)
+                httpService.postOcnMessage(url = url, headers = headers, body = ocnBody)
 
             }
 
@@ -275,7 +275,7 @@ class TokensController(private val routingService: RoutingService,
 
                 val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables)
 
-                httpService.makeRequest(
+                httpService.makeOcpiRequest(
                         method = requestVariables.method,
                         url = url,
                         headers = headers,
@@ -288,7 +288,7 @@ class TokensController(private val routingService: RoutingService,
 
                 val (url, headers, ocnBody) = routingService.prepareRemotePlatformRequest(requestVariables)
 
-                httpService.postClientMessage(url = url, headers = headers, body = ocnBody)
+                httpService.postOcnMessage(url = url, headers = headers, body = ocnBody)
 
             }
 
@@ -336,7 +336,7 @@ class TokensController(private val routingService: RoutingService,
 
                 val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables)
 
-                httpService.makeRequest(
+                httpService.makeOcpiRequest(
                         method = requestVariables.method,
                         url = url,
                         headers = headers,
@@ -350,7 +350,7 @@ class TokensController(private val routingService: RoutingService,
 
                 val (url, headers, ocnBody) = routingService.prepareRemotePlatformRequest(requestVariables)
 
-                httpService.postClientMessage(url = url, headers = headers, body = ocnBody)
+                httpService.postOcnMessage(url = url, headers = headers, body = ocnBody)
 
             }
 
@@ -398,7 +398,7 @@ class TokensController(private val routingService: RoutingService,
 
                 val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables)
 
-                httpService.makeRequest(
+                httpService.makeOcpiRequest(
                         method = requestVariables.method,
                         url = url,
                         headers = headers,
@@ -412,7 +412,7 @@ class TokensController(private val routingService: RoutingService,
 
                 val (url, headers, ocnBody) = routingService.prepareRemotePlatformRequest(requestVariables)
 
-                httpService.postClientMessage(url = url, headers = headers, body = ocnBody)
+                httpService.postOcnMessage(url = url, headers = headers, body = ocnBody)
 
             }
 

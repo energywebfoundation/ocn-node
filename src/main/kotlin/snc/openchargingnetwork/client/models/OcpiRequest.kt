@@ -26,17 +26,38 @@ import snc.openchargingnetwork.client.models.ocpi.*
 import kotlin.reflect.KClass
 
 data class OcpiRequestVariables(val module: ModuleID,
-                                        val interfaceRole: InterfaceRole,
-                                        val method: HttpMethod,
-                                        val requestID: String,
-                                        val correlationID: String,
-                                        val sender: BasicRole,
-                                        val receiver: BasicRole,
-                                        val urlPathVariables: String? = null,
-                                        val urlEncodedParameters: OcpiRequestParameters? = null,
-                                        val body: Any? = null,
-                                        val proxyResource: String? = null,
-                                        val expectedResponseType: OcpiResponseDataType)
+                                val interfaceRole: InterfaceRole,
+                                val method: HttpMethod,
+                                val requestID: String,
+                                val correlationID: String,
+                                val sender: BasicRole,
+                                val receiver: BasicRole,
+                                val urlPathVariables: String? = null,
+                                val urlEncodedParameters: OcpiRequestParameters? = null,
+                                val body: Any? = null,
+                                val proxyResource: String? = null,
+                                val expectedResponseType: OcpiResponseDataType) {
+
+    companion object {
+        // TODO: combine OcpiRequestVariables with OcnMessageRequestBody
+        fun fromOcnMessage(ocnMessage: OcnMessageRequestBody): OcpiRequestVariables {
+            return OcpiRequestVariables(
+                    module = ocnMessage.module,
+                    interfaceRole = ocnMessage.interfaceRole,
+                    method = ocnMessage.method,
+                    requestID = ocnMessage.headers.requestID,
+                    correlationID = ocnMessage.headers.correlationID,
+                    sender = BasicRole(ocnMessage.headers.ocpiFromPartyID, ocnMessage.headers.ocpiFromCountryCode),
+                    receiver = BasicRole(ocnMessage.headers.ocpiToPartyID, ocnMessage.headers.ocpiToCountryCode),
+                    urlPathVariables = ocnMessage.urlPathVariables,
+                    urlEncodedParameters = ocnMessage.urlEncodedParameters,
+                    body = ocnMessage.body,
+                    proxyResource = ocnMessage.proxyResource,
+                    expectedResponseType = ocnMessage.expectedResponseType)
+        }
+    }
+
+}
 
 data class OcpiRequestHeaders(@JsonProperty("Authorization") val authorization: String? = null,
                               @JsonProperty("X-Request-ID") val requestID: String,

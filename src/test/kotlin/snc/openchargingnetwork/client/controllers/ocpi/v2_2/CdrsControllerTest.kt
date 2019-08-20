@@ -25,7 +25,7 @@ import org.springframework.http.HttpHeaders
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import snc.openchargingnetwork.client.models.*
 import snc.openchargingnetwork.client.models.ocpi.*
-import snc.openchargingnetwork.client.services.HttpRequestService
+import snc.openchargingnetwork.client.services.HttpService
 
 @WebMvcTest(CdrsController::class)
 class CdrsControllerTest(@Autowired val mockMvc: MockMvc) {
@@ -34,7 +34,7 @@ class CdrsControllerTest(@Autowired val mockMvc: MockMvc) {
     lateinit var routingService: RoutingService
 
     @MockkBean
-    lateinit var httpService: HttpRequestService
+    lateinit var httpService: HttpService
 
     @MockkBean
     lateinit var properties: Properties
@@ -78,7 +78,7 @@ class CdrsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every {
 
-            httpService.makeRequest<Array<CDR>>(
+            httpService.makeOcpiRequest<Array<CDR>>(
                 method = requestVariables.method,
                 url = url,
                 headers = headers,
@@ -159,7 +159,7 @@ class CdrsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every {
 
-            httpService.makeRequest<Array<CDR>>(
+            httpService.makeOcpiRequest<Array<CDR>>(
                     method = requestVariables.method,
                     url = url,
                     headers = headers,
@@ -238,7 +238,7 @@ class CdrsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every {
 
-            httpService.makeRequest<CDR>(
+            httpService.makeOcpiRequest<CDR>(
                     method = requestVariables.method,
                     url = url,
                     headers = headers,
@@ -304,7 +304,7 @@ class CdrsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every {
 
-            httpService.makeRequest<Nothing>(
+            httpService.makeOcpiRequest<Nothing>(
                     method = requestVariables.method,
                     url = url,
                     headers = headers,
