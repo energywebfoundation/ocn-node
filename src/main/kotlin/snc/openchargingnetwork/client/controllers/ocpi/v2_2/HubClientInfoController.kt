@@ -21,11 +21,13 @@ package snc.openchargingnetwork.client.controllers.ocpi.v2_2
 
 import org.springframework.web.bind.annotation.*
 import snc.openchargingnetwork.client.models.ocpi.*
+import snc.openchargingnetwork.client.services.HubClientInfoService
 import snc.openchargingnetwork.client.services.RoutingService
 
 @RestController
 @RequestMapping("/ocpi/2.2/hubclientinfo")
-class HubClientInfoController(private val routingService: RoutingService) {
+class HubClientInfoController(private val routingService: RoutingService,
+                              private val hubClientInfoService: HubClientInfoService) {
 
     @GetMapping
     fun getHubClientInfo(@RequestHeader("authorization") authorization: String,
@@ -40,7 +42,7 @@ class HubClientInfoController(private val routingService: RoutingService) {
 
         // val params = PaginatedRequest(dateFrom, dateTo, offset, limit).encode()
 
-        return OcpiResponse(statusCode = 1000, data = routingService.findClientInfo())
+        return OcpiResponse(statusCode = 1000, data = hubClientInfoService.getLocalList())
     }
 
 

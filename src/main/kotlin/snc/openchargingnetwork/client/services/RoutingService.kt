@@ -48,6 +48,14 @@ class RoutingService(private val platformRepo: PlatformRepository,
 
 
     /**
+     * serialize a data class (with @JsonProperty annotations) as a JSON string
+     */
+    private fun stringify(body: Any): String {
+        return httpService.mapper.writeValueAsString(body)
+    }
+
+
+    /**
      * check database to see if basic role is connected to the client
      */
     fun isRoleKnown(role: BasicRole) = roleRepo.existsByCountryCodeAndPartyIDAllIgnoreCase(role.country, role.id)
@@ -191,7 +199,7 @@ class RoutingService(private val platformRepo: PlatformRepository,
 
         val headers = OcnMessageHeaders(
                 requestID = generateUUIDv4Token(),
-                signature = credentialsService.signRequest(stringify(body)))
+                signature = credentialsService.sign(stringify(body)))
 
         return Triple(url, headers, body)
     }
@@ -243,34 +251,10 @@ class RoutingService(private val platformRepo: PlatformRepository,
 
 
     /**
-     * Delete a resource once used
+     * Delete a resource once used (TODO: define what resource can/should be deleted)
      */
     fun deleteProxyResource(resourceID: String) {
         proxyResourceRepo.deleteById(resourceID.toLong())
-    }
-
-
-
-    fun stringify(body: Any): String {
-        return httpService.mapper.writeValueAsString(body)
-    }
-
-
-
-    // TODO: create client info service (polls status PUSH requests)
-    fun findClientInfo(): List<ClientInfo> {
-        val allClientInfo = mutableListOf<ClientInfo>()
-        for (platform in platformRepo.findAll()) {
-            for (role in roleRepo.findAllByPlatformID(platform.id)) {
-                allClientInfo.add(ClientInfo(
-                        partyID = role.partyID,
-                        countryCode = role.countryCode,
-                        role = role.role,
-                        status = platform.status,
-                        lastUpdated = platform.lastUpdated))
-            }
-        }
-        return allClientInfo
     }
 
 }

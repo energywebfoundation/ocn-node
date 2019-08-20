@@ -36,6 +36,10 @@ class HttpRequestService {
 
     val mapper = jacksonObjectMapper()
 
+
+    /**
+     * Generic HTTP request expecting a response of type OcpiResponse<T> as defined by the caller
+     */
     fun <T: Any> makeRequest(method: HttpMethod,
                              url: String,
                              headers: OcpiRequestHeaders,
@@ -72,6 +76,10 @@ class HttpRequestService {
                 body = mapper.readValue(response.text, type))
     }
 
+
+    /**
+     * Get OCPI versions during the Credentials registration handshake
+     */
     fun getVersions(url: String, authorization: String): Versions {
         try {
             val response = get(url = url, headers = mapOf("Authorization" to "Token $authorization"))
@@ -88,6 +96,11 @@ class HttpRequestService {
         }
     }
 
+
+    /**
+     * Get version details (using result of above getVersions request) during the Credentials registration handshake
+     * Will provide OCN Client with modules implemented by OCPI platform and their endpoints
+     */
     fun getVersionDetail(url: String, authorization: String): VersionDetail {
         try {
             val response = get(url = url, headers = mapOf("Authorization" to "Token $authorization"))
@@ -104,6 +117,11 @@ class HttpRequestService {
         }
     }
 
+
+    /**
+     * Make a POST request to an OCN client which implements /ocn/message
+     * Used to forward requests to OCPI platforms of which the OCN client does not share a local connection with
+     */
     fun <T: Any> postClientMessage(url: String,
                                    headers: OcnMessageHeaders,
                                    body: OcnMessageRequestBody): HttpResponse<T> {

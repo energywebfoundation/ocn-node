@@ -159,7 +159,7 @@ class RoutingServiceTest {
 
         val jsonString = jacksonObjectMapper().writeValueAsString(ocnBody)
         every { httpRequestService.mapper.writeValueAsString(ocnBody) } returns jsonString
-        every { credentialsService.signRequest(jsonString) } returns sig
+        every { credentialsService.sign(jsonString) } returns sig
 
         val (url, headers, body) = routingService.prepareRemotePlatformRequest(request)
 
@@ -212,7 +212,7 @@ class RoutingServiceTest {
 
         val jsonString = jacksonObjectMapper().writeValueAsString(ocnBody)
         every { httpRequestService.mapper.writeValueAsString(ocnBody) } returns jsonString
-        every { credentialsService.signRequest(jsonString) } returns sig
+        every { credentialsService.sign(jsonString) } returns sig
 
         val (url, headers, body) = routingService.prepareRemotePlatformRequest(request, proxied = true)
 
@@ -291,6 +291,15 @@ class RoutingServiceTest {
         assertThat(routingService.isRoleKnown(role)).isEqualTo(true)
     }
 
+
+    @Test
+    fun isRoleKnownOnNetwork() {
+        val role = BasicRole("XYZ", "US")
+        every { registry.clientURLOf(role.country.toByteArray(), role.id.toByteArray()).sendAsync().get() } returns ""
+        assertThat(routingService.isRoleKnownOnNetwork(role)).isEqualTo(false)
+    }
+
+
     @Test
     fun getPlatformID() {
         val role = RoleEntity(5L, Role.CPO, BusinessDetails("SENDER Co"), "SEN", "DE")
@@ -298,8 +307,39 @@ class RoutingServiceTest {
         assertThat(routingService.getPlatformID(BasicRole(role.partyID, role.countryCode))).isEqualTo(5L)
     }
 
+
     @Test
-    fun `validateSender 1`() {
+    fun getPlatformEndpoint() {
+        val endpoint = EndpointEntity(6L, "tokens", InterfaceRole.SENDER, "https://some.url.com")
+        every { endpointRepo.findByPlatformIDAndIdentifierAndRole(
+                platformID = endpoint.platformID,
+                identifier = endpoint.identifier,
+                Role = InterfaceRole.SENDER) } returns endpoint
+        assertThat(routingService.getPlatformEndpoint(
+                platformID = endpoint.platformID,
+                module = ModuleID.TOKENS,
+                interfaceRole = InterfaceRole.SENDER).url).isEqualTo(endpoint.url)
+    }
+
+
+    @Test
+    fun getRemoteClientURL() {
+        val role = BasicRole("XXX", "NL")
+        every { registry.clientURLOf(role.country.toByteArray(), role.id.toByteArray()).sendAsync().get() } returns "https://some.client.com"
+        assertThat(routingService.getRemoteClientUrl(role)).isEqualTo("https://some.client.com")
+    }
+
+
+    @Test
+    fun `validateSender with auth only`() {
+        val platform = PlatformEntity(id = 3L)
+        every { platformRepo.findByAuth_TokenC("0102030405") } returns platform
+        routingService.validateSender("Token 0102030405")
+    }
+
+
+    @Test
+    fun `validateSender with auth and role`() {
         val role = BasicRole("YUT", "BE")
         val platform = PlatformEntity(id = 3L)
         every { platformRepo.findByAuth_TokenC("0102030405") } returns platform
@@ -308,95 +348,20 @@ class RoutingServiceTest {
     }
 
 
-//    @Test
-//    fun makeHeaders() {
-//        val sender = BasicRole("IOU", "UK")
-//        val receiver = BasicRole("OII", "DE")
-//        val platform = PlatformEntity(id = 34L, auth = Auth(tokenB = "abcdefghijklmnop"))
-//        every { platformRepo.findById(34L).get() } returns platform
-//        val headers = routingService.makeHeaders(platform.id, "0987654321", sender, receiver)
-//        assertThat(headers["Authorization"]).isEqualTo("Token ${platform.auth.tokenB}")
-//        assertThat(headers["X-Request-ID"]?.length ?: throw IllegalStateException()).isEqualTo(generateUUIDv4Token().length)
-//        assertThat(headers["X-Correlation-ID"]).isEqualTo("0987654321")
-//        assertThat(headers["OCPI-From-Country-Code"]).isEqualTo(sender.country)
-//        assertThat(headers["OCPI-From-Party-ID"]).isEqualTo(sender.id)
-//        assertThat(headers["OCPI-To-Country-Code"]).isEqualTo(receiver.country)
-//        assertThat(headers["OCPI-To-Party-ID"]).isEqualTo(receiver.id)
-//    }
+    @Test
+    fun `validateReceiver should return LOCAL`() {
+        val role = BasicRole("SNC", "DE")
+        every { roleRepo.existsByCountryCodeAndPartyIDAllIgnoreCase(role.country, role.id) } returns true
+        assertThat(routingService.validateReceiver(role)).isEqualTo(OcpiRequestType.LOCAL)
+    }
 
 
-
-//    @Test
-//    fun `signRequest returns concatenated signature`() {
-//        val body = OcnMessageRequestBody(
-//                method = "GET",
-//                module = "sessions",
-//                interfaceRole = InterfaceRole.RECEIVER,
-//                headers = OcpiRequestHeaders(
-//                        requestID = "1",
-//                        correlationID = "1",
-//                        ocpiFromCountryCode = "DE",
-//                        ocpiFromPartyID = "XXX",
-//                        ocpiToCountryCode = "DE",
-//                        ocpiToPartyID = "AAA"),
-//                body = null,
-//                expectedResponseType = OcpiResponseDataType.SESSION_ARRAY)
-//        every { httpRequestService.mapper } returns mapper
-//        every { credentialsService.credentials } returns Credentials.create(generatePrivateKey())
-//        val sig = routingService.signRequest(body)
-//        assertThat(sig.length).isEqualTo(130)
-//    }
-
-//    @Test
-//    fun `verifyRequest silently succeeds`() {
-//        val privateKey = generatePrivateKey()
-//        val credentials = Credentials.create(privateKey)
-//        val body = OcnMessageRequestBody(
-//                method = "GET",
-//                module = "sessions",
-//                interfaceRole = InterfaceRole.RECEIVER,
-//                headers = OcpiRequestHeaders(
-//                        requestID = "1",
-//                        correlationID = "1",
-//                        ocpiFromCountryCode = "DE",
-//                        ocpiFromPartyID = "XXX",
-//                        ocpiToCountryCode = "DE",
-//                        ocpiToPartyID = "AAA"),
-//                body = null,
-//                expectedResponseType = OcpiResponseDataType.SESSION_ARRAY)
-//        every { httpRequestService.mapper } returns mapper
-//        every { credentialsService.credentials } returns credentials
-//        val sig = routingService.signRequest(body)
-//        every { registry.clientAddressOf("DE".toByteArray(), "XXX".toByteArray()).sendAsync().get() } returns credentials.address
-//        routingService.verifyRequest(body, sig, BasicRole("XXX", "DE"))
-//    }
-
-//    @Test
-//    fun `verifyRequest loudly fails`() {
-//        val credentials1 = Credentials.create(generatePrivateKey())
-//        val credentials2 = Credentials.create(generatePrivateKey())
-//        val body = OcnMessageRequestBody(
-//                method = "GET",
-//                module = "sessions",
-//                interfaceRole = InterfaceRole.RECEIVER,
-//                headers = OcpiRequestHeaders(
-//                        requestID = "1",
-//                        correlationID = "1",
-//                        ocpiFromCountryCode = "DE",
-//                        ocpiFromPartyID = "XXX",
-//                        ocpiToCountryCode = "DE",
-//                        ocpiToPartyID = "AAA"),
-//                body = null,
-//                expectedResponseType = OcpiResponseDataType.SESSION_ARRAY)
-//        every { httpRequestService.mapper } returns mapper
-//        every { credentialsService.credentials } returns credentials1
-//        val sig = routingService.signRequest(body)
-//        every { registry.clientAddressOf("DE".toByteArray(), "XXX".toByteArray()).sendAsync().get() } returns credentials2.address
-//        try {
-//            routingService.verifyRequest(body, sig, BasicRole("XXX", "DE"))
-//        } catch (e: OcpiHubConnectionProblemException) {
-//            assertThat(e.message).isEqualTo("Could not verify OCN-Signature of request")
-//        }
-//    }
+    @Test
+    fun `validateReceiver should return REMOTE`() {
+        val role = BasicRole("SNC", "DE")
+        every { roleRepo.existsByCountryCodeAndPartyIDAllIgnoreCase(role.country, role.id) } returns false
+        every { registry.clientURLOf(role.country.toByteArray(), role.id.toByteArray()).sendAsync().get() } returns "http://localhost:8080"
+        assertThat(routingService.validateReceiver(role)).isEqualTo(OcpiRequestType.REMOTE)
+    }
 
 }
