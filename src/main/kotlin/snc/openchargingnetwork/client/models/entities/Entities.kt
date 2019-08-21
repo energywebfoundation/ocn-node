@@ -88,7 +88,21 @@ class EndpointEntity(var platformID: Long,
  */
 @Entity
 @Table(name = "proxy_resources")
-class ProxyResourceEntity(@Embedded val sender: BasicRole,
-                          @Embedded val receiver: BasicRole,
-                          val resource: String,
-                          @Id @GeneratedValue var id: Long? = null)
+class ProxyResourceEntity(
+        @AttributeOverrides(
+                AttributeOverride(name = "id", column = Column(name ="sender_id")),
+                AttributeOverride(name = "country", column = Column(name ="sender_country"))
+        )
+        @Embedded
+        val sender: BasicRole,
+
+        @AttributeOverrides(
+                AttributeOverride(name = "id", column = Column(name = "receiver_id")),
+                AttributeOverride(name = "country", column = Column(name = "receiver_country"))
+        )
+        @Embedded
+        var receiver: BasicRole,
+
+        val resource: String,
+
+        @Id @GeneratedValue var id: Long? = null)

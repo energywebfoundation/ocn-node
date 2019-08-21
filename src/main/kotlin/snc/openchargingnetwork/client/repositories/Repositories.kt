@@ -21,12 +21,14 @@ package snc.openchargingnetwork.client.repositories
 
 import org.springframework.data.repository.CrudRepository
 import snc.openchargingnetwork.client.models.entities.*
+import snc.openchargingnetwork.client.models.ocpi.BasicRole
 import snc.openchargingnetwork.client.models.ocpi.InterfaceRole
 
 interface WalletRepository: CrudRepository<WalletEntity, Long> {}
 
 interface PlatformRepository: CrudRepository<PlatformEntity, Long> {
     fun existsByAuth_TokenA(tokenA: String?): Boolean
+    fun existsByAuth_TokenC(tokenC: String?): Boolean
     fun findByAuth_TokenA(tokenA: String?): PlatformEntity?
     fun findByAuth_TokenC(tokenC: String?): PlatformEntity?
 }
@@ -49,5 +51,5 @@ interface EndpointRepository: CrudRepository<EndpointEntity, Long> {
 }
 
 interface ProxyResourceRepository: CrudRepository<ProxyResourceEntity, Long> {
-    // TODO: findByIDAndSenderAndReceiver
+    fun findByIdAndSenderAndReceiver(id: Long?, sender: BasicRole, receiver: BasicRole): ProxyResourceEntity?
 }

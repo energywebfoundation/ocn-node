@@ -46,8 +46,6 @@ class Configuration(private val properties: Properties,
                             roleRepo: RoleRepository,
                             endpointRepo: EndpointRepository,
                             proxyResourceRepository: ProxyResourceRepository,
-//                            cdrRepo: CdrRepository,
-//                            cmdResponseRepo: CommandResponseUrlRepository,
                             walletRepo: WalletRepository) = ApplicationRunner {}
 
     @Bean
