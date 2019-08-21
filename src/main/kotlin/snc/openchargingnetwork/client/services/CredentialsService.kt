@@ -47,9 +47,9 @@ class CredentialsService(walletRepo: WalletRepository,
 
     init {
         credentials = try {
-            val wallet = walletRepo.findByIdOrNull(1L) ?: throw IllegalStateException("No wallet found")
+            val wallet = walletRepo.findByIdOrNull(1L) ?: throw NoSuchElementException("No wallet found")
             Credentials.create(wallet.privateKey)
-        } catch (e: IllegalStateException) {
+        } catch (e: NoSuchElementException) {
             val privateKey = generatePrivateKey()
             val walletEntity = WalletEntity(privateKey)
             walletRepo.save(walletEntity)
