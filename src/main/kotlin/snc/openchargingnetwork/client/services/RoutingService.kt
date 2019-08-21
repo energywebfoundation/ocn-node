@@ -43,7 +43,7 @@ class RoutingService(private val platformRepo: PlatformRepository,
                      private val proxyResourceRepo: ProxyResourceRepository,
                      private val registry: RegistryFacade,
                      private val httpService: HttpService,
-                     private val credentialsService: CredentialsService,
+                     private val walletService: WalletService,
                      private val properties: Properties) {
 
 
@@ -201,7 +201,7 @@ class RoutingService(private val platformRepo: PlatformRepository,
 
         val headers = OcnMessageHeaders(
                 requestID = generateUUIDv4Token(),
-                signature = credentialsService.sign(stringify(body)))
+                signature = walletService.sign(stringify(body)))
 
         return Triple(url, headers, body)
     }

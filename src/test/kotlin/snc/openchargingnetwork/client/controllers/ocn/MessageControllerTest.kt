@@ -18,7 +18,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import snc.openchargingnetwork.client.data.exampleLocation2
 import snc.openchargingnetwork.client.models.*
 import snc.openchargingnetwork.client.models.ocpi.*
-import snc.openchargingnetwork.client.services.CredentialsService
+import snc.openchargingnetwork.client.services.WalletService
 import snc.openchargingnetwork.client.services.HttpService
 import snc.openchargingnetwork.client.services.RoutingService
 
@@ -29,7 +29,7 @@ class MessageControllerTest(@Autowired val mockMvc: MockMvc) {
     lateinit var routingService: RoutingService
 
     @MockkBean
-    lateinit var credentialsService: CredentialsService
+    lateinit var walletService: WalletService
 
     @MockkBean
     lateinit var httpService: HttpService
@@ -57,7 +57,7 @@ class MessageControllerTest(@Autowired val mockMvc: MockMvc) {
 
         val jsonBodyString = "arbitrary_message"
         every { httpService.mapper.writeValueAsString(body) } returns jsonBodyString
-        every { credentialsService.verify(jsonBodyString, "0x1234", senderRole) } just Runs
+        every { walletService.verify(jsonBodyString, "0x1234", senderRole) } just Runs
 
         every { routingService.isRoleKnownOnNetwork(senderRole) } returns true
         every { routingService.isRoleKnown(receiverRole) } returns true

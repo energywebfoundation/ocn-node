@@ -1,17 +1,17 @@
 package snc.openchargingnetwork.client.config
 
 import org.springframework.stereotype.Component
-import snc.openchargingnetwork.client.services.CredentialsService
+import snc.openchargingnetwork.client.services.WalletService
 
 @Component
 class ClientInfoLogger(properties: Properties,
-                       credentialsService: CredentialsService) {
+                       walletService: WalletService) {
 
     init {
         println("\n====================================================\n" +
                 "ADMIN_APIKEY = ${properties.apikey}\n" +
                 "URL = ${properties.url}\n" +
-                "ADDRESS = ${credentialsService.credentials.address}" +
+                "ADDRESS = ${walletService.address}" +
                 "\n====================================================\n")
     }
 

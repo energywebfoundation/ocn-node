@@ -34,8 +34,8 @@ import snc.openchargingnetwork.contracts.RegistryFacade
 import java.nio.charset.StandardCharsets
 
 @Service
-class CredentialsService(walletRepo: WalletRepository,
-                         private val registry: RegistryFacade) {
+class WalletService(walletRepo: WalletRepository,
+                    private val registry: RegistryFacade) {
 
 
     /**
@@ -44,6 +44,8 @@ class CredentialsService(walletRepo: WalletRepository,
      * The OCN client's credentials are used to sign forwarded requests to other OCN clients.
      */
     final val credentials: Credentials
+
+    final val address: String
 
     init {
         credentials = try {
@@ -55,6 +57,7 @@ class CredentialsService(walletRepo: WalletRepository,
             walletRepo.save(walletEntity)
             Credentials.create(privateKey)
         }
+        address = credentials.address
     }
 
     /**

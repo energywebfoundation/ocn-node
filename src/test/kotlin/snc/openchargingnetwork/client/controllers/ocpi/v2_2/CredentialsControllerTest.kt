@@ -117,9 +117,9 @@ class CredentialsControllerTest(@Autowired val mockMvc: MockMvc) {
                 .andExpect(jsonPath("\$.data.url").value("http://my.broker.com/ocpi/versions"))
                 .andExpect(jsonPath("\$.data.roles", Matchers.hasSize<Array<CredentialsRole>>(1)))
                 .andExpect(jsonPath("\$.data.roles[0].role").value("HUB"))
-                .andExpect(jsonPath("\$.data.roles[0].party_id").value("SNC"))
+                .andExpect(jsonPath("\$.data.roles[0].party_id").value("OCN"))
                 .andExpect(jsonPath("\$.data.roles[0].country_code").value("DE"))
-                .andExpect(jsonPath("\$.data.roles[0].business_details.name").value("Share&Charge Message Broker"))
+                .andExpect(jsonPath("\$.data.roles[0].business_details.name").value("Open Charging Network Client"))
     }
 
     @Test
@@ -173,9 +173,9 @@ class CredentialsControllerTest(@Autowired val mockMvc: MockMvc) {
                 .andExpect(jsonPath("\$.data.url").value("http://my.broker.com/ocpi/versions"))
                 .andExpect(jsonPath("\$.data.roles", Matchers.hasSize<Array<CredentialsRole>>(1)))
                 .andExpect(jsonPath("\$.data.roles[0].role").value("HUB"))
-                .andExpect(jsonPath("\$.data.roles[0].party_id").value("SNC"))
+                .andExpect(jsonPath("\$.data.roles[0].party_id").value("OCN"))
                 .andExpect(jsonPath("\$.data.roles[0].country_code").value("DE"))
-                .andExpect(jsonPath("\$.data.roles[0].business_details.name").value("Share&Charge Message Broker"))
+                .andExpect(jsonPath("\$.data.roles[0].business_details.name").value("Open Charging Network Client"))
     }
 
     @Test

@@ -27,7 +27,7 @@ import snc.openchargingnetwork.client.models.OcpiRequestVariables
 import snc.openchargingnetwork.client.models.exceptions.OcpiHubUnknownReceiverException
 import snc.openchargingnetwork.client.models.ocpi.BasicRole
 import snc.openchargingnetwork.client.models.ocpi.OcpiResponse
-import snc.openchargingnetwork.client.services.CredentialsService
+import snc.openchargingnetwork.client.services.WalletService
 import snc.openchargingnetwork.client.services.HttpService
 import snc.openchargingnetwork.client.services.RoutingService
 
@@ -35,7 +35,7 @@ import snc.openchargingnetwork.client.services.RoutingService
 @RestController
 @RequestMapping("/ocn/message")
 class MessageController(private val routingService: RoutingService,
-                        private val credentialsService: CredentialsService,
+                        private val walletService: WalletService,
                         private val httpService: HttpService) {
 
     @PostMapping
@@ -48,7 +48,7 @@ class MessageController(private val routingService: RoutingService,
 
         // verify the signer of the request is authorized to forward messages on behalf of the sender
         val jsonBodyString = httpService.mapper.writeValueAsString(body)
-        credentialsService.verify(jsonBodyString, signature, sender)
+        walletService.verify(jsonBodyString, signature, sender)
 
         // check sender has been registered on network
         if (!routingService.isRoleKnownOnNetwork(sender)) {

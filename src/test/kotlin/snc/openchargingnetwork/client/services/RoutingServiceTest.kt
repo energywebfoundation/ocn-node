@@ -24,7 +24,7 @@ class RoutingServiceTest {
     private val proxyResourceRepo: ProxyResourceRepository = mockk()
     private val httpService: HttpService = mockk()
     private val registry: RegistryFacade = mockk()
-    private val credentialsService: CredentialsService = mockk()
+    private val walletService: WalletService = mockk()
     private val properties: Properties = mockk()
 
     private val routingService: RoutingService
@@ -37,7 +37,7 @@ class RoutingServiceTest {
                 proxyResourceRepo,
                 registry,
                 httpService,
-                credentialsService,
+                walletService,
                 properties)
     }
 
@@ -159,7 +159,7 @@ class RoutingServiceTest {
 
         val jsonString = jacksonObjectMapper().writeValueAsString(ocnBody)
         every { httpService.mapper.writeValueAsString(ocnBody) } returns jsonString
-        every { credentialsService.sign(jsonString) } returns sig
+        every { walletService.sign(jsonString) } returns sig
 
         val (url, headers, body) = routingService.prepareRemotePlatformRequest(request)
 
@@ -212,7 +212,7 @@ class RoutingServiceTest {
 
         val jsonString = jacksonObjectMapper().writeValueAsString(ocnBody)
         every { httpService.mapper.writeValueAsString(ocnBody) } returns jsonString
-        every { credentialsService.sign(jsonString) } returns sig
+        every { walletService.sign(jsonString) } returns sig
 
         val (url, headers, body) = routingService.prepareRemotePlatformRequest(request, proxied = true)
 
