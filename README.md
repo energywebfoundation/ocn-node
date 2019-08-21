@@ -54,7 +54,7 @@ Firstly, it is important to configure the application properties for the desired
 ```
 cd src/main/resources
 cp application.dev.properties application.local.properties
-vi application.local properties
+vi application.local.properties
 ```
 
 #### 1.1. Setting the Client Address

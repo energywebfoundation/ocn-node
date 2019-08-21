@@ -518,6 +518,56 @@
 				}
 			],
 			"description": "OCPI Tariffs example requests.\n\n"
+		},
+		{
+			"name": "OCN",
+			"item": [
+				{
+					"name": "Client Info",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/ocn/registry/client-info",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"ocn",
+								"registry",
+								"client-info"
+							]
+						},
+						"description": "Get Client Info on OCN."
+					},
+					"response": []
+				}
+			],
+			"description": "OCN specific requests (i.e. getting client information, getting registry information)",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "3b8ad01f-39cd-4931-adef-da013a0722e8",
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"id": "0e3ec999-9f50-451a-800f-0c2451727c7e",
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				}
+			]
 		}
 	]
 }
