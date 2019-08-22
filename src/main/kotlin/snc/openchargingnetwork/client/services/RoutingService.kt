@@ -31,6 +31,7 @@ import snc.openchargingnetwork.client.models.exceptions.OcpiClientUnknownLocatio
 import snc.openchargingnetwork.client.models.exceptions.OcpiHubUnknownReceiverException
 import snc.openchargingnetwork.client.models.ocpi.*
 import snc.openchargingnetwork.client.repositories.*
+import snc.openchargingnetwork.client.tools.extractNextLink
 import snc.openchargingnetwork.client.tools.extractToken
 import snc.openchargingnetwork.client.tools.generateUUIDv4Token
 import snc.openchargingnetwork.client.tools.urlJoin
@@ -215,10 +216,12 @@ class RoutingService(private val platformRepo: PlatformRepository,
     fun proxyPaginationHeaders(request: OcpiRequestVariables, responseHeaders: Map<String, String>): HttpHeaders {
         val headers = HttpHeaders()
         responseHeaders["Link"]?.let {
-            val id = setProxyResource(it, request.sender, request.receiver)
-            val proxyPaginationEndpoint = "/ocpi/${request.interfaceRole.id}/2.2/${request.module.id}/page"
-            val link = urlJoin(properties.url, proxyPaginationEndpoint, id.toString())
-            headers.set("Link", "$link; rel=\"next\"")
+            it.extractNextLink()?.let {next ->
+                val id = setProxyResource(next, request.sender, request.receiver)
+                val proxyPaginationEndpoint = "/ocpi/${request.interfaceRole.id}/2.2/${request.module.id}/page"
+                val link = urlJoin(properties.url, proxyPaginationEndpoint, id.toString())
+                headers.set("Link", "$link; rel=\"next\"")
+            }
         }
         responseHeaders["X-Total-Count"]?.let { headers.set("X-Total-Count", it) }
         responseHeaders["X-Limit"]?.let { headers.set("X-Limit", it) }
