@@ -48,8 +48,8 @@ class TariffsControllerTest(@Autowired val mockMvc: MockMvc) {
                 correlationID = generateUUIDv4Token(),
                 sender = sender,
                 receiver = receiver,
-                urlEncodedParameters = OcpiRequestParameters(limit = 10),
-                expectedResponseType = OcpiResponseDataType.TARIFF_ARRAY)
+                urlEncodedParams = OcpiRequestParameters(limit = 10),
+                expectedResponseType = OcpiType.TARIFF_ARRAY)
 
         val url = "https://ocpi.emsp.com/2.2/tariffs"
 
@@ -63,7 +63,7 @@ class TariffsControllerTest(@Autowired val mockMvc: MockMvc) {
                 ocpiToPartyID = receiver.id)
 
         every { routingService.validateSender("Token token-c", sender) } just Runs
-        every { routingService.validateReceiver(receiver) } returns OcpiRequestType.LOCAL
+        every { routingService.validateReceiver(receiver) } returns Recipient.LOCAL
         every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, headers)
 
         val responseHeaders = mapOf(
@@ -77,7 +77,7 @@ class TariffsControllerTest(@Autowired val mockMvc: MockMvc) {
                     method = requestVariables.method,
                     url = url,
                     headers = headers,
-                    params = requestVariables.urlEncodedParameters,
+                    params = requestVariables.urlEncodedParams,
                     expectedDataType = requestVariables.expectedResponseType)
 
         } returns HttpResponse(
@@ -134,7 +134,7 @@ class TariffsControllerTest(@Autowired val mockMvc: MockMvc) {
                 sender = sender,
                 receiver = receiver,
                 urlPathVariables = "39",
-                expectedResponseType = OcpiResponseDataType.TARIFF_ARRAY)
+                expectedResponseType = OcpiType.TARIFF_ARRAY)
 
         val url = "https://ocpi.cpo.com/tariffs?limit=10?offset=10"
 
@@ -148,7 +148,7 @@ class TariffsControllerTest(@Autowired val mockMvc: MockMvc) {
                 ocpiToPartyID = receiver.id)
 
         every { routingService.validateSender("Token token-c", sender) } just Runs
-        every { routingService.validateReceiver(receiver) } returns OcpiRequestType.LOCAL
+        every { routingService.validateReceiver(receiver) } returns Recipient.LOCAL
         every { routingService.prepareLocalPlatformRequest(requestVariables, proxied = true) } returns Pair(url, headers)
 
         val responseHeaders = mapOf(
@@ -162,7 +162,7 @@ class TariffsControllerTest(@Autowired val mockMvc: MockMvc) {
                     method = requestVariables.method,
                     url = url,
                     headers = headers,
-                    params = requestVariables.urlEncodedParameters,
+                    params = requestVariables.urlEncodedParams,
                     expectedDataType = requestVariables.expectedResponseType)
 
         } returns HttpResponse(
@@ -220,7 +220,7 @@ class TariffsControllerTest(@Autowired val mockMvc: MockMvc) {
                 sender = sender,
                 receiver = receiver,
                 urlPathVariables = "/${sender.country}/${sender.id}/$tariffID",
-                expectedResponseType = OcpiResponseDataType.TARIFF)
+                expectedResponseType = OcpiType.TARIFF)
 
         val url = "https://ocpi.cpo.com/2.2/tariffs/${sender.country}/${sender.id}/$tariffID"
 
@@ -234,7 +234,7 @@ class TariffsControllerTest(@Autowired val mockMvc: MockMvc) {
                 ocpiToPartyID = receiver.id)
 
         every { routingService.validateSender("Token token-c", sender) } just Runs
-        every { routingService.validateReceiver(receiver) } returns OcpiRequestType.LOCAL
+        every { routingService.validateReceiver(receiver) } returns Recipient.LOCAL
         every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, headers)
 
         every {
@@ -286,7 +286,7 @@ class TariffsControllerTest(@Autowired val mockMvc: MockMvc) {
                 receiver = receiver,
                 urlPathVariables = "/${sender.country}/${sender.id}/$tariffID",
                 body = exampleTariff,
-                expectedResponseType = OcpiResponseDataType.NOTHING)
+                expectedResponseType = OcpiType.NOTHING)
 
         val url = "https://ocpi.cpo.com/2.2/tariffs/${sender.country}/${sender.id}/$tariffID"
 
@@ -300,7 +300,7 @@ class TariffsControllerTest(@Autowired val mockMvc: MockMvc) {
                 ocpiToPartyID = receiver.id)
 
         every { routingService.validateSender("Token token-c", sender) } just Runs
-        every { routingService.validateReceiver(receiver) } returns OcpiRequestType.LOCAL
+        every { routingService.validateReceiver(receiver) } returns Recipient.LOCAL
         every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, headers)
 
         every {
@@ -353,7 +353,7 @@ class TariffsControllerTest(@Autowired val mockMvc: MockMvc) {
                 sender = sender,
                 receiver = receiver,
                 urlPathVariables = "/${sender.country}/${sender.id}/$tariffID",
-                expectedResponseType = OcpiResponseDataType.NOTHING)
+                expectedResponseType = OcpiType.NOTHING)
 
         val url = "https://ocpi.cpo.com/2.2/tariffs/${sender.country}/${sender.id}/$tariffID"
 
@@ -367,7 +367,7 @@ class TariffsControllerTest(@Autowired val mockMvc: MockMvc) {
                 ocpiToPartyID = receiver.id)
 
         every { routingService.validateSender("Token token-c", sender) } just Runs
-        every { routingService.validateReceiver(receiver) } returns OcpiRequestType.LOCAL
+        every { routingService.validateReceiver(receiver) } returns Recipient.LOCAL
         every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, headers)
 
         every {

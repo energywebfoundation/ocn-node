@@ -85,6 +85,7 @@ class WalletService(walletRepo: WalletRepository,
      * Sign an arbitrary string (used to sign the JSON body of a message sent over the network)
      */
     fun sign(request: String): String {
+        println("request: $request")
         val dataToSign = request.toByteArray(StandardCharsets.UTF_8)
         val signature = Sign.signPrefixedMessage(dataToSign, credentials.ecKeyPair)
         val r = toHexStringNoPrefix(signature.r)
@@ -98,6 +99,8 @@ class WalletService(walletRepo: WalletRepository,
      * Verify that a request (as JSON string) was signed by the sender using the provided OCN-Signature
      */
     fun verify(request: String, signature: String, sender: BasicRole) {
+        println("request: $request")
+        println("signature: $signature")
         val dataToVerify = request.toByteArray(StandardCharsets.UTF_8)
         val (r, s, v) = toByteArray(signature)
         val signingKey = Sign.signedPrefixedMessageToKey(dataToVerify, Sign.SignatureData(v, r, s))

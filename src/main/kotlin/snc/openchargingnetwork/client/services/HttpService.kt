@@ -26,9 +26,7 @@ import org.springframework.http.HttpMethod
 import org.springframework.stereotype.Service
 import snc.openchargingnetwork.client.models.*
 import snc.openchargingnetwork.client.models.exceptions.OcpiServerUnusableApiException
-import snc.openchargingnetwork.client.models.ocpi.OcpiResponse
-import snc.openchargingnetwork.client.models.ocpi.VersionDetail
-import snc.openchargingnetwork.client.models.ocpi.Versions
+import snc.openchargingnetwork.client.models.ocpi.*
 import snc.openchargingnetwork.client.tools.urlJoin
 
 @Service
@@ -43,9 +41,9 @@ class HttpService {
     fun <T: Any> makeOcpiRequest(method: HttpMethod,
                                  url: String,
                                  headers: OcpiRequestHeaders,
-                                 params: OcpiRequestParameters? = null,
+                                 urlEncodedParams: OcpiRequestParameters? = null,
                                  body: Any? = null,
-                                 expectedDataType: OcpiResponseDataType): HttpResponse<T> {
+                                 expectedResponse: OcpiType): HttpResponse<T> {
 
         val headersMap = headers.encode()
 
@@ -56,8 +54,8 @@ class HttpService {
         }
 
         var paramsMap: Map<String, String> = mapOf()
-        if (params != null) {
-            paramsMap = params.encode()
+        if (urlEncodedParams != null) {
+            paramsMap = urlEncodedParams.encode()
         }
 
         val response = when (method) {
@@ -69,7 +67,7 @@ class HttpService {
             else -> throw IllegalStateException("Invalid method: $method")
         }
 
-        val type = mapper.typeFactory.constructParametricType(OcpiResponse::class.java, expectedDataType.type.java)
+        val type = mapper.typeFactory.constructParametricType(OcpiResponse::class.java, expectedResponse.type.java)
         return HttpResponse(
                 statusCode = response.statusCode,
                 headers = response.headers,
@@ -124,7 +122,7 @@ class HttpService {
      */
     fun <T: Any> postOcnMessage(url: String,
                                 headers: OcnMessageHeaders,
-                                body: OcnMessageRequestBody): HttpResponse<T> {
+                                body: OcpiRequestVariables): HttpResponse<T> {
 
         val headersMap = headers.encode()
 
@@ -136,7 +134,7 @@ class HttpService {
                 headers = headersMap,
                 json = jsonBody)
 
-        val type = mapper.typeFactory.constructParametricType(OcpiResponse::class.java, body.expectedResponseType.type.java)
+        val type = mapper.typeFactory.constructParametricType(OcpiResponse::class.java, body.types.response.type.java)
         return HttpResponse(
                 statusCode = response.statusCode,
                 headers = response.headers,

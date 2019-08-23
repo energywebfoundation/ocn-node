@@ -64,16 +64,16 @@ class TariffsController(private val routingService: RoutingService,
                 correlationID = correlationID,
                 sender = sender,
                 receiver = receiver,
-                urlEncodedParameters = OcpiRequestParameters(
+                urlEncodedParams = OcpiRequestParameters(
                         dateFrom = dateFrom,
                         dateTo = dateTo,
                         offset = offset,
                         limit = limit),
-                expectedResponseType = OcpiResponseDataType.TARIFF_ARRAY)
+                expectedResponseType = OcpiType.TARIFF_ARRAY)
 
         val response: HttpResponse<Array<Tariff>> = when (routingService.validateReceiver(receiver)) {
 
-            OcpiRequestType.LOCAL -> {
+            Recipient.LOCAL -> {
 
                 val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables)
 
@@ -81,11 +81,11 @@ class TariffsController(private val routingService: RoutingService,
                         method = requestVariables.method,
                         url = url,
                         headers = headers,
-                        params = requestVariables.urlEncodedParameters,
+                        params = requestVariables.urlEncodedParams,
                         expectedDataType = requestVariables.expectedResponseType)
             }
 
-            OcpiRequestType.REMOTE -> {
+            Recipient.REMOTE -> {
 
                 val (url, headers, body) = routingService.prepareRemotePlatformRequest(requestVariables)
 
@@ -129,11 +129,11 @@ class TariffsController(private val routingService: RoutingService,
                 sender = sender,
                 receiver = receiver,
                 urlPathVariables = uid,
-                expectedResponseType = OcpiResponseDataType.TARIFF_ARRAY)
+                expectedResponseType = OcpiType.TARIFF_ARRAY)
 
         val response: HttpResponse<Array<Tariff>> = when (routingService.validateReceiver(receiver)) {
 
-            OcpiRequestType.LOCAL -> {
+            Recipient.LOCAL -> {
 
                 val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables, proxied = true)
 
@@ -145,7 +145,7 @@ class TariffsController(private val routingService: RoutingService,
 
             }
 
-            OcpiRequestType.REMOTE -> {
+            Recipient.REMOTE -> {
 
                 val (url, headers, body) = routingService.prepareRemotePlatformRequest(requestVariables, proxied = true)
 
@@ -204,11 +204,11 @@ class TariffsController(private val routingService: RoutingService,
                 sender = sender,
                 receiver = receiver,
                 urlPathVariables = "/$countryCode/$partyID/$tariffID",
-                expectedResponseType = OcpiResponseDataType.TARIFF)
+                expectedResponseType = OcpiType.TARIFF)
 
         val response: HttpResponse<Tariff> = when (routingService.validateReceiver(receiver)) {
 
-            OcpiRequestType.LOCAL -> {
+            Recipient.LOCAL -> {
 
                 val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables)
 
@@ -220,7 +220,7 @@ class TariffsController(private val routingService: RoutingService,
 
             }
 
-            OcpiRequestType.REMOTE -> {
+            Recipient.REMOTE -> {
 
                 val (url, headers, ocnBody) = routingService.prepareRemotePlatformRequest(requestVariables)
 
@@ -262,11 +262,11 @@ class TariffsController(private val routingService: RoutingService,
                 receiver = receiver,
                 urlPathVariables = "/$countryCode/$partyID/$tariffID",
                 body = body,
-                expectedResponseType = OcpiResponseDataType.NOTHING)
+                expectedResponseType = OcpiType.NOTHING)
 
         val response: HttpResponse<Nothing> = when (routingService.validateReceiver(receiver)) {
 
-            OcpiRequestType.LOCAL -> {
+            Recipient.LOCAL -> {
 
                 val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables)
 
@@ -279,7 +279,7 @@ class TariffsController(private val routingService: RoutingService,
 
             }
 
-            OcpiRequestType.REMOTE -> {
+            Recipient.REMOTE -> {
 
                 val (url, headers, ocnBody) = routingService.prepareRemotePlatformRequest(requestVariables)
 
@@ -319,11 +319,11 @@ class TariffsController(private val routingService: RoutingService,
                 sender = sender,
                 receiver = receiver,
                 urlPathVariables = "/$countryCode/$partyID/$tariffID",
-                expectedResponseType = OcpiResponseDataType.NOTHING)
+                expectedResponseType = OcpiType.NOTHING)
 
         val response: HttpResponse<Nothing> = when (routingService.validateReceiver(receiver)) {
 
-            OcpiRequestType.LOCAL -> {
+            Recipient.LOCAL -> {
 
                 val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables)
 
@@ -335,7 +335,7 @@ class TariffsController(private val routingService: RoutingService,
 
             }
 
-            OcpiRequestType.REMOTE -> {
+            Recipient.REMOTE -> {
 
                 val (url, headers, ocnBody) = routingService.prepareRemotePlatformRequest(requestVariables)
 

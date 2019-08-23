@@ -46,8 +46,8 @@ class TokensControllerTest(@Autowired val mockMvc: MockMvc) {
                 correlationID = generateUUIDv4Token(),
                 sender = sender,
                 receiver = receiver,
-                urlEncodedParameters = OcpiRequestParameters(limit = 50),
-                expectedResponseType = OcpiResponseDataType.TOKEN_ARRAY)
+                urlEncodedParams = OcpiRequestParameters(limit = 50),
+                expectedResponseType = OcpiType.TOKEN_ARRAY)
 
         val url = "https://ocpi.emsp.com/2.2/tokens"
 
@@ -61,7 +61,7 @@ class TokensControllerTest(@Autowired val mockMvc: MockMvc) {
                 ocpiToPartyID = receiver.id)
 
         every { routingService.validateSender("Token token-c", sender) } just Runs
-        every { routingService.validateReceiver(receiver) } returns OcpiRequestType.LOCAL
+        every { routingService.validateReceiver(receiver) } returns Recipient.LOCAL
         every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, headers)
 
         val responseHeaders = mapOf(
@@ -75,7 +75,7 @@ class TokensControllerTest(@Autowired val mockMvc: MockMvc) {
                     method = requestVariables.method,
                     url = url,
                     headers = headers,
-                    params = requestVariables.urlEncodedParameters,
+                    params = requestVariables.urlEncodedParams,
                     expectedDataType = requestVariables.expectedResponseType)
 
         } returns HttpResponse(
@@ -132,7 +132,7 @@ class TokensControllerTest(@Autowired val mockMvc: MockMvc) {
                 sender = sender,
                 receiver = receiver,
                 urlPathVariables = "935432",
-                expectedResponseType = OcpiResponseDataType.TOKEN_ARRAY)
+                expectedResponseType = OcpiType.TOKEN_ARRAY)
 
         val url = "https://ocpi.cpo.com/tokens?limit=50?offset=50"
 
@@ -146,7 +146,7 @@ class TokensControllerTest(@Autowired val mockMvc: MockMvc) {
                 ocpiToPartyID = receiver.id)
 
         every { routingService.validateSender("Token token-c", sender) } just Runs
-        every { routingService.validateReceiver(receiver) } returns OcpiRequestType.LOCAL
+        every { routingService.validateReceiver(receiver) } returns Recipient.LOCAL
         every { routingService.prepareLocalPlatformRequest(requestVariables, proxied = true) } returns Pair(url, headers)
 
         val responseHeaders = mapOf(
@@ -160,7 +160,7 @@ class TokensControllerTest(@Autowired val mockMvc: MockMvc) {
                     method = requestVariables.method,
                     url = url,
                     headers = headers,
-                    params = requestVariables.urlEncodedParameters,
+                    params = requestVariables.urlEncodedParams,
                     expectedDataType = requestVariables.expectedResponseType)
 
         } returns HttpResponse(
@@ -218,9 +218,9 @@ class TokensControllerTest(@Autowired val mockMvc: MockMvc) {
                 sender = sender,
                 receiver = receiver,
                 urlPathVariables = "1234567890/authorize",
-                urlEncodedParameters = OcpiRequestParameters(type = TokenType.RFID),
+                urlEncodedParams = OcpiRequestParameters(type = TokenType.RFID),
                 body = body,
-                expectedResponseType = OcpiResponseDataType.AUTHORIZATION_INFO)
+                expectedResponseType = OcpiType.AUTHORIZATION_INFO)
 
         val url = "https://ocpi.cpo.com/tokens/1234567890/authorize"
 
@@ -234,7 +234,7 @@ class TokensControllerTest(@Autowired val mockMvc: MockMvc) {
                 ocpiToPartyID = receiver.id)
 
         every { routingService.validateSender("Token token-c", sender) } just Runs
-        every { routingService.validateReceiver(receiver) } returns OcpiRequestType.LOCAL
+        every { routingService.validateReceiver(receiver) } returns Recipient.LOCAL
         every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, headers)
 
         every {
@@ -243,7 +243,7 @@ class TokensControllerTest(@Autowired val mockMvc: MockMvc) {
                     method = requestVariables.method,
                     url = url,
                     headers = headers,
-                    params = requestVariables.urlEncodedParameters,
+                    params = requestVariables.urlEncodedParams,
                     body = body,
                     expectedDataType = requestVariables.expectedResponseType)
 
@@ -291,8 +291,8 @@ class TokensControllerTest(@Autowired val mockMvc: MockMvc) {
                 sender = sender,
                 receiver = receiver,
                 urlPathVariables = "/${sender.country}/${sender.id}/$tokenUID",
-                urlEncodedParameters = OcpiRequestParameters(type = TokenType.RFID),
-                expectedResponseType = OcpiResponseDataType.TOKEN)
+                urlEncodedParams = OcpiRequestParameters(type = TokenType.RFID),
+                expectedResponseType = OcpiType.TOKEN)
 
         val url = "https://ocpi.cpo.com/2.2/tokens/${sender.country}/${sender.id}/$tokenUID"
 
@@ -306,7 +306,7 @@ class TokensControllerTest(@Autowired val mockMvc: MockMvc) {
                 ocpiToPartyID = receiver.id)
 
         every { routingService.validateSender("Token token-c", sender) } just Runs
-        every { routingService.validateReceiver(receiver) } returns OcpiRequestType.LOCAL
+        every { routingService.validateReceiver(receiver) } returns Recipient.LOCAL
         every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, headers)
 
         every {
@@ -315,7 +315,7 @@ class TokensControllerTest(@Autowired val mockMvc: MockMvc) {
                     method = requestVariables.method,
                     url = url,
                     headers = headers,
-                    params = requestVariables.urlEncodedParameters,
+                    params = requestVariables.urlEncodedParams,
                     expectedDataType = requestVariables.expectedResponseType)
 
         } returns HttpResponse(
@@ -358,9 +358,9 @@ class TokensControllerTest(@Autowired val mockMvc: MockMvc) {
                 sender = sender,
                 receiver = receiver,
                 urlPathVariables = "/${sender.country}/${sender.id}/$tokenUID",
-                urlEncodedParameters = OcpiRequestParameters(type = TokenType.APP_USER),
+                urlEncodedParams = OcpiRequestParameters(type = TokenType.APP_USER),
                 body = exampleToken,
-                expectedResponseType = OcpiResponseDataType.NOTHING)
+                expectedResponseType = OcpiType.NOTHING)
 
         val url = "https://ocpi.cpo.com/2.2/tokens/${sender.country}/${sender.id}/$tokenUID"
 
@@ -374,7 +374,7 @@ class TokensControllerTest(@Autowired val mockMvc: MockMvc) {
                 ocpiToPartyID = receiver.id)
 
         every { routingService.validateSender("Token token-c", sender) } just Runs
-        every { routingService.validateReceiver(receiver) } returns OcpiRequestType.LOCAL
+        every { routingService.validateReceiver(receiver) } returns Recipient.LOCAL
         every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, headers)
 
         every {
@@ -383,7 +383,7 @@ class TokensControllerTest(@Autowired val mockMvc: MockMvc) {
                     method = requestVariables.method,
                     url = url,
                     headers = headers,
-                    params = requestVariables.urlEncodedParameters,
+                    params = requestVariables.urlEncodedParams,
                     body = exampleToken,
                     expectedDataType = requestVariables.expectedResponseType)
 
@@ -431,9 +431,9 @@ class TokensControllerTest(@Autowired val mockMvc: MockMvc) {
                 sender = sender,
                 receiver = receiver,
                 urlPathVariables = "/${sender.country}/${sender.id}/$tokenUID",
-                urlEncodedParameters = OcpiRequestParameters(type = TokenType.APP_USER),
+                urlEncodedParams = OcpiRequestParameters(type = TokenType.APP_USER),
                 body = body,
-                expectedResponseType = OcpiResponseDataType.NOTHING)
+                expectedResponseType = OcpiType.NOTHING)
 
         val url = "https://ocpi.cpo.com/2.2/tokens/${sender.country}/${sender.id}/$tokenUID"
 
@@ -447,7 +447,7 @@ class TokensControllerTest(@Autowired val mockMvc: MockMvc) {
                 ocpiToPartyID = receiver.id)
 
         every { routingService.validateSender("Token token-c", sender) } just Runs
-        every { routingService.validateReceiver(receiver) } returns OcpiRequestType.LOCAL
+        every { routingService.validateReceiver(receiver) } returns Recipient.LOCAL
         every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, headers)
 
         every {
@@ -456,7 +456,7 @@ class TokensControllerTest(@Autowired val mockMvc: MockMvc) {
                     method = requestVariables.method,
                     url = url,
                     headers = headers,
-                    params = requestVariables.urlEncodedParameters,
+                    params = requestVariables.urlEncodedParams,
                     body = body,
                     expectedDataType = requestVariables.expectedResponseType)
 

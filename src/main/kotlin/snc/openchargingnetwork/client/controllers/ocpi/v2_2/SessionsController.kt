@@ -64,16 +64,16 @@ class SessionsController(private val routingService: RoutingService,
                 correlationID = correlationID,
                 sender = sender,
                 receiver = receiver,
-                urlEncodedParameters = OcpiRequestParameters(
+                urlEncodedParams = OcpiRequestParameters(
                         dateFrom = dateFrom,
                         dateTo = dateTo,
                         offset = offset,
                         limit = limit),
-                expectedResponseType = OcpiResponseDataType.SESSION_ARRAY)
+                expectedResponseType = OcpiType.SESSION_ARRAY)
 
         val response: HttpResponse<Array<Session>> = when (routingService.validateReceiver(receiver)) {
 
-            OcpiRequestType.LOCAL -> {
+            Recipient.LOCAL -> {
 
                 val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables)
 
@@ -81,11 +81,11 @@ class SessionsController(private val routingService: RoutingService,
                         method = requestVariables.method,
                         url = url,
                         headers = headers,
-                        params = requestVariables.urlEncodedParameters,
+                        params = requestVariables.urlEncodedParams,
                         expectedDataType = requestVariables.expectedResponseType)
             }
 
-            OcpiRequestType.REMOTE -> {
+            Recipient.REMOTE -> {
 
                 val (url, headers, body) = routingService.prepareRemotePlatformRequest(requestVariables)
 
@@ -129,11 +129,11 @@ class SessionsController(private val routingService: RoutingService,
                 sender = sender,
                 receiver = receiver,
                 urlPathVariables = uid,
-                expectedResponseType = OcpiResponseDataType.SESSION_ARRAY)
+                expectedResponseType = OcpiType.SESSION_ARRAY)
 
         val response: HttpResponse<Array<Session>> = when (routingService.validateReceiver(receiver)) {
 
-            OcpiRequestType.LOCAL -> {
+            Recipient.LOCAL -> {
 
                 val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables, proxied = true)
 
@@ -145,7 +145,7 @@ class SessionsController(private val routingService: RoutingService,
 
             }
 
-            OcpiRequestType.REMOTE -> {
+            Recipient.REMOTE -> {
 
                 val (url, headers, body) = routingService.prepareRemotePlatformRequest(requestVariables, proxied = true)
 
@@ -200,11 +200,11 @@ class SessionsController(private val routingService: RoutingService,
                 receiver = receiver,
                 urlPathVariables = "/$sessionID/charging_preferences",
                 body = body,
-                expectedResponseType = OcpiResponseDataType.CHARGING_PREFERENCE_RESPONSE)
+                expectedResponseType = OcpiType.CHARGING_PREFERENCE_RESPONSE)
 
         val response: HttpResponse<ChargingPreferencesResponse> = when (routingService.validateReceiver(receiver)) {
 
-            OcpiRequestType.LOCAL -> {
+            Recipient.LOCAL -> {
 
                 val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables)
 
@@ -217,7 +217,7 @@ class SessionsController(private val routingService: RoutingService,
 
             }
 
-            OcpiRequestType.REMOTE -> {
+            Recipient.REMOTE -> {
 
                 val (url, headers, ocnBody) = routingService.prepareRemotePlatformRequest(requestVariables)
 
@@ -261,11 +261,11 @@ class SessionsController(private val routingService: RoutingService,
                 sender = sender,
                 receiver = receiver,
                 urlPathVariables = "/$countryCode/$partyID/$sessionID",
-                expectedResponseType = OcpiResponseDataType.SESSION)
+                expectedResponseType = OcpiType.SESSION)
 
         val response: HttpResponse<Session> = when (routingService.validateReceiver(receiver)) {
 
-            OcpiRequestType.LOCAL -> {
+            Recipient.LOCAL -> {
 
                 val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables)
 
@@ -277,7 +277,7 @@ class SessionsController(private val routingService: RoutingService,
 
             }
 
-            OcpiRequestType.REMOTE -> {
+            Recipient.REMOTE -> {
 
                 val (url, headers, ocnBody) = routingService.prepareRemotePlatformRequest(requestVariables)
 
@@ -319,11 +319,11 @@ class SessionsController(private val routingService: RoutingService,
                 receiver = receiver,
                 urlPathVariables = "/$countryCode/$partyID/$sessionID",
                 body = body,
-                expectedResponseType = OcpiResponseDataType.NOTHING)
+                expectedResponseType = OcpiType.NOTHING)
 
         val response: HttpResponse<Nothing> = when (routingService.validateReceiver(receiver)) {
 
-            OcpiRequestType.LOCAL -> {
+            Recipient.LOCAL -> {
 
                 val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables)
 
@@ -336,7 +336,7 @@ class SessionsController(private val routingService: RoutingService,
 
             }
 
-            OcpiRequestType.REMOTE -> {
+            Recipient.REMOTE -> {
 
                 val (url, headers, ocnBody) = routingService.prepareRemotePlatformRequest(requestVariables)
 
@@ -378,11 +378,11 @@ class SessionsController(private val routingService: RoutingService,
                 receiver = receiver,
                 urlPathVariables = "/$countryCode/$partyID/$sessionID",
                 body = body,
-                expectedResponseType = OcpiResponseDataType.NOTHING)
+                expectedResponseType = OcpiType.NOTHING)
 
         val response: HttpResponse<Nothing> = when (routingService.validateReceiver(receiver)) {
 
-            OcpiRequestType.LOCAL -> {
+            Recipient.LOCAL -> {
 
                 val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables)
 
@@ -395,7 +395,7 @@ class SessionsController(private val routingService: RoutingService,
 
             }
 
-            OcpiRequestType.REMOTE -> {
+            Recipient.REMOTE -> {
 
                 val (url, headers, ocnBody) = routingService.prepareRemotePlatformRequest(requestVariables)
 

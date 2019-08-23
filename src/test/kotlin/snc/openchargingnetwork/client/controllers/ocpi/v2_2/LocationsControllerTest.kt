@@ -52,8 +52,8 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
                 correlationID = generateUUIDv4Token(),
                 sender = sender,
                 receiver = receiver,
-                urlEncodedParameters = OcpiRequestParameters(dateFrom = dateFrom),
-                expectedResponseType = OcpiResponseDataType.LOCATION_ARRAY)
+                urlEncodedParams = OcpiRequestParameters(dateFrom = dateFrom),
+                expectedResponseType = OcpiType.LOCATION_ARRAY)
 
         val url = "https://ocpi.emsp.com/2.2/locations"
 
@@ -67,7 +67,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
                 ocpiToPartyID = receiver.id)
 
         every { routingService.validateSender("Token token-c", sender) } just Runs
-        every { routingService.validateReceiver(receiver) } returns OcpiRequestType.LOCAL
+        every { routingService.validateReceiver(receiver) } returns Recipient.LOCAL
         every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, headers)
 
         val responseHeaders = mapOf(
@@ -81,7 +81,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
                     method = requestVariables.method,
                     url = url,
                     headers = headers,
-                    params = requestVariables.urlEncodedParameters,
+                    params = requestVariables.urlEncodedParams,
                     expectedDataType = requestVariables.expectedResponseType)
 
         } returns HttpResponse(
@@ -140,7 +140,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
                 sender = sender,
                 receiver = receiver,
                 urlPathVariables = "67",
-                expectedResponseType = OcpiResponseDataType.LOCATION_ARRAY)
+                expectedResponseType = OcpiType.LOCATION_ARRAY)
 
         val url = "https://some.emsp.com/actual/locations/page/2"
 
@@ -154,7 +154,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
                 ocpiToPartyID = receiver.id)
 
         every { routingService.validateSender("Token token-c", sender) } just Runs
-        every { routingService.validateReceiver(receiver) } returns OcpiRequestType.LOCAL
+        every { routingService.validateReceiver(receiver) } returns Recipient.LOCAL
         every { routingService.prepareLocalPlatformRequest(requestVariables, proxied = true) } returns Pair(url, headers)
 
         val responseHeaders = mapOf(
@@ -167,7 +167,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
                     method = requestVariables.method,
                     url = url,
                     headers = headers,
-                    params = requestVariables.urlEncodedParameters,
+                    params = requestVariables.urlEncodedParams,
                     expectedDataType = requestVariables.expectedResponseType)
 
         } returns HttpResponse(
@@ -225,7 +225,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
                 sender = sender,
                 receiver = receiver,
                 urlPathVariables = locationID,
-                expectedResponseType = OcpiResponseDataType.LOCATION)
+                expectedResponseType = OcpiType.LOCATION)
 
         val url = "https://ocpi.emsp.com/2.2/locations/$locationID"
 
@@ -239,7 +239,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
                 ocpiToPartyID = receiver.id)
 
         every { routingService.validateSender("Token token-c", sender) } just Runs
-        every { routingService.validateReceiver(receiver) } returns OcpiRequestType.LOCAL
+        every { routingService.validateReceiver(receiver) } returns Recipient.LOCAL
         every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, headers)
 
         every {
@@ -291,7 +291,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
                 sender = sender,
                 receiver = receiver,
                 urlPathVariables = "/$locationID/$evseUID",
-                expectedResponseType = OcpiResponseDataType.EVSE)
+                expectedResponseType = OcpiType.EVSE)
 
         val url = "https://ocpi.emsp.com/2.2/locations/$locationID/$evseUID"
 
@@ -305,7 +305,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
                 ocpiToPartyID = receiver.id)
 
         every { routingService.validateSender("Token token-c", sender) } just Runs
-        every { routingService.validateReceiver(receiver) } returns OcpiRequestType.LOCAL
+        every { routingService.validateReceiver(receiver) } returns Recipient.LOCAL
         every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, headers)
 
         every {
@@ -358,7 +358,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
                 sender = sender,
                 receiver = receiver,
                 urlPathVariables = "/$locationID/$evseUID/$connectorID",
-                expectedResponseType = OcpiResponseDataType.CONNECTOR)
+                expectedResponseType = OcpiType.CONNECTOR)
 
         val url = "https://ocpi.emsp.com/2.2/locations/$locationID/$evseUID/$connectorID"
 
@@ -372,7 +372,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
                 ocpiToPartyID = receiver.id)
 
         every { routingService.validateSender("Token token-c", sender) } just Runs
-        every { routingService.validateReceiver(receiver) } returns OcpiRequestType.LOCAL
+        every { routingService.validateReceiver(receiver) } returns Recipient.LOCAL
         every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, headers)
 
         every {
@@ -423,7 +423,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
                 sender = sender,
                 receiver = receiver,
                 urlPathVariables = "/${sender.country}/${sender.id}/$locationID",
-                expectedResponseType = OcpiResponseDataType.LOCATION)
+                expectedResponseType = OcpiType.LOCATION)
 
         val url = "https://ocpi.cpo.com/2.2/locations/${sender.country}/${sender.id}/$locationID"
 
@@ -437,7 +437,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
                 ocpiToPartyID = receiver.id)
 
         every { routingService.validateSender("Token token-c", sender) } just Runs
-        every { routingService.validateReceiver(receiver) } returns OcpiRequestType.LOCAL
+        every { routingService.validateReceiver(receiver) } returns Recipient.LOCAL
         every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, headers)
 
         every {
@@ -489,7 +489,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
                 sender = sender,
                 receiver = receiver,
                 urlPathVariables = "/${sender.country}/${sender.id}/$locationID/$evseUID",
-                expectedResponseType = OcpiResponseDataType.EVSE)
+                expectedResponseType = OcpiType.EVSE)
 
         val url = "https://ocpi.cpo.com/2.2/locations/${sender.country}/${sender.id}/$locationID/$evseUID"
 
@@ -503,7 +503,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
                 ocpiToPartyID = receiver.id)
 
         every { routingService.validateSender("Token token-c", sender) } just Runs
-        every { routingService.validateReceiver(receiver) } returns OcpiRequestType.LOCAL
+        every { routingService.validateReceiver(receiver) } returns Recipient.LOCAL
         every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, headers)
 
         every {
@@ -556,7 +556,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
                 sender = sender,
                 receiver = receiver,
                 urlPathVariables = "/${sender.country}/${sender.id}/$locationID/$evseUID/$connectorID",
-                expectedResponseType = OcpiResponseDataType.CONNECTOR)
+                expectedResponseType = OcpiType.CONNECTOR)
 
         val url = "https://ocpi.cpo.com/2.2/locations/${sender.country}/${sender.id}/$locationID/$evseUID/$connectorID"
 
@@ -570,7 +570,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
                 ocpiToPartyID = receiver.id)
 
         every { routingService.validateSender("Token token-c", sender) } just Runs
-        every { routingService.validateReceiver(receiver) } returns OcpiRequestType.LOCAL
+        every { routingService.validateReceiver(receiver) } returns Recipient.LOCAL
         every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, headers)
 
         every {
@@ -623,7 +623,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
                 receiver = receiver,
                 urlPathVariables = "/${sender.country}/${sender.id}/$locationID",
                 body = exampleLocation2,
-                expectedResponseType = OcpiResponseDataType.NOTHING)
+                expectedResponseType = OcpiType.NOTHING)
 
         val url = "https://ocpi.cpo.com/2.2/locations/${sender.country}/${sender.id}/$locationID"
 
@@ -637,7 +637,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
                 ocpiToPartyID = receiver.id)
 
         every { routingService.validateSender("Token token-c", sender) } just Runs
-        every { routingService.validateReceiver(receiver) } returns OcpiRequestType.LOCAL
+        every { routingService.validateReceiver(receiver) } returns Recipient.LOCAL
         every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, headers)
 
         every {
@@ -693,7 +693,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
                 receiver = receiver,
                 urlPathVariables = "/${sender.country}/${sender.id}/$locationID/$evseUID",
                 body = body,
-                expectedResponseType = OcpiResponseDataType.NOTHING)
+                expectedResponseType = OcpiType.NOTHING)
 
         val url = "https://ocpi.cpo.com/2.2/locations/${sender.country}/${sender.id}/$locationID/$evseUID"
 
@@ -707,7 +707,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
                 ocpiToPartyID = receiver.id)
 
         every { routingService.validateSender("Token token-c", sender) } just Runs
-        every { routingService.validateReceiver(receiver) } returns OcpiRequestType.LOCAL
+        every { routingService.validateReceiver(receiver) } returns Recipient.LOCAL
         every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, headers)
 
         every {
@@ -764,7 +764,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
                 receiver = receiver,
                 urlPathVariables = "/${sender.country}/${sender.id}/$locationID/$evseUID/$connectorID",
                 body = body,
-                expectedResponseType = OcpiResponseDataType.NOTHING)
+                expectedResponseType = OcpiType.NOTHING)
 
         val url = "https://ocpi.cpo.com/2.2/locations/${sender.country}/${sender.id}/$locationID/$evseUID/$connectorID"
 
@@ -778,7 +778,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
                 ocpiToPartyID = receiver.id)
 
         every { routingService.validateSender("Token token-c", sender) } just Runs
-        every { routingService.validateReceiver(receiver) } returns OcpiRequestType.LOCAL
+        every { routingService.validateReceiver(receiver) } returns Recipient.LOCAL
         every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, headers)
 
         every {
@@ -833,7 +833,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
                 receiver = receiver,
                 urlPathVariables = "/${sender.country}/${sender.id}/$locationID",
                 body = body,
-                expectedResponseType = OcpiResponseDataType.NOTHING)
+                expectedResponseType = OcpiType.NOTHING)
 
         val url = "https://ocpi.cpo.com/2.2/locations/${sender.country}/${sender.id}/$locationID"
 
@@ -847,7 +847,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
                 ocpiToPartyID = receiver.id)
 
         every { routingService.validateSender("Token token-c", sender) } just Runs
-        every { routingService.validateReceiver(receiver) } returns OcpiRequestType.LOCAL
+        every { routingService.validateReceiver(receiver) } returns Recipient.LOCAL
         every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, headers)
 
         every {
@@ -904,7 +904,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
                 receiver = receiver,
                 urlPathVariables = "/${sender.country}/${sender.id}/$locationID/$evseUID",
                 body = body,
-                expectedResponseType = OcpiResponseDataType.NOTHING)
+                expectedResponseType = OcpiType.NOTHING)
 
         val url = "https://ocpi.cpo.com/2.2/locations/${sender.country}/${sender.id}/$locationID/$evseUID"
 
@@ -918,7 +918,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
                 ocpiToPartyID = receiver.id)
 
         every { routingService.validateSender("Token token-c", sender) } just Runs
-        every { routingService.validateReceiver(receiver) } returns OcpiRequestType.LOCAL
+        every { routingService.validateReceiver(receiver) } returns Recipient.LOCAL
         every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, headers)
 
         every {
@@ -976,7 +976,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
                 receiver = receiver,
                 urlPathVariables = "/${sender.country}/${sender.id}/$locationID/$evseUID/$connectorID",
                 body = body,
-                expectedResponseType = OcpiResponseDataType.NOTHING)
+                expectedResponseType = OcpiType.NOTHING)
 
         val url = "https://ocpi.cpo.com/2.2/locations/${sender.country}/${sender.id}/$locationID/$evseUID/$connectorID"
 
@@ -990,7 +990,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
                 ocpiToPartyID = receiver.id)
 
         every { routingService.validateSender("Token token-c", sender) } just Runs
-        every { routingService.validateReceiver(receiver) } returns OcpiRequestType.LOCAL
+        every { routingService.validateReceiver(receiver) } returns Recipient.LOCAL
         every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, headers)
 
         every {

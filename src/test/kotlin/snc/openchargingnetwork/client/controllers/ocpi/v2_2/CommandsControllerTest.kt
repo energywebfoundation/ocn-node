@@ -53,7 +53,7 @@ class CommandsControllerTest(@Autowired val mockMvc: MockMvc) {
                 receiver = receiver,
                 urlPathVariables = uid,
                 body = body,
-                expectedResponseType = OcpiResponseDataType.NOTHING)
+                expectedResponseType = OcpiType.NOTHING)
 
         val url = "https://cool.cpo.com/ocpi/commands/START_SESSION/6"
 
@@ -67,7 +67,7 @@ class CommandsControllerTest(@Autowired val mockMvc: MockMvc) {
                 ocpiToPartyID = receiver.id)
 
         every { routingService.validateSender("Token token-c", sender) } just Runs
-        every { routingService.validateReceiver(receiver) } returns OcpiRequestType.LOCAL
+        every { routingService.validateReceiver(receiver) } returns Recipient.LOCAL
         every { routingService.prepareLocalPlatformRequest(requestVariables, proxied = true) } returns Pair(url, headers)
 
         every {
@@ -123,7 +123,7 @@ class CommandsControllerTest(@Autowired val mockMvc: MockMvc) {
                 receiver = receiver,
                 urlPathVariables = "CANCEL_RESERVATION",
                 body = body,
-                expectedResponseType = OcpiResponseDataType.COMMAND_RESPONSE)
+                expectedResponseType = OcpiType.COMMAND_RESPONSE)
 
         val url = "https://cool.emsp.co/ocpi/commands/CANCEL_RESERVATION/"
 
@@ -137,7 +137,7 @@ class CommandsControllerTest(@Autowired val mockMvc: MockMvc) {
                 ocpiToPartyID = receiver.id)
 
         every { routingService.validateSender("Token token-c", sender) } just Runs
-        every { routingService.validateReceiver(receiver) } returns OcpiRequestType.LOCAL
+        every { routingService.validateReceiver(receiver) } returns Recipient.LOCAL
 
         every { routingService.setProxyResource(body.responseURL, sender, receiver) } returns 6L
         every { properties.url } returns "https://client.ocn.org"
@@ -202,7 +202,7 @@ class CommandsControllerTest(@Autowired val mockMvc: MockMvc) {
                 receiver = receiver,
                 urlPathVariables = "RESERVE_NOW",
                 body = body,
-                expectedResponseType = OcpiResponseDataType.COMMAND_RESPONSE)
+                expectedResponseType = OcpiType.COMMAND_RESPONSE)
 
         val url = "https://cool.emsp.co/ocpi/commands/RESERVE_NOW/"
 
@@ -216,7 +216,7 @@ class CommandsControllerTest(@Autowired val mockMvc: MockMvc) {
                 ocpiToPartyID = receiver.id)
 
         every { routingService.validateSender("Token token-c", sender) } just Runs
-        every { routingService.validateReceiver(receiver) } returns OcpiRequestType.LOCAL
+        every { routingService.validateReceiver(receiver) } returns Recipient.LOCAL
 
         every { routingService.setProxyResource(body.responseURL, sender, receiver) } returns 6L
         every { properties.url } returns "https://client.ocn.org"
@@ -279,7 +279,7 @@ class CommandsControllerTest(@Autowired val mockMvc: MockMvc) {
                 receiver = receiver,
                 urlPathVariables = "START_SESSION",
                 body = body,
-                expectedResponseType = OcpiResponseDataType.COMMAND_RESPONSE)
+                expectedResponseType = OcpiType.COMMAND_RESPONSE)
 
         val url = "https://cool.emsp.co/ocpi/commands/START_SESSION/"
 
@@ -293,7 +293,7 @@ class CommandsControllerTest(@Autowired val mockMvc: MockMvc) {
                 ocpiToPartyID = receiver.id)
 
         every { routingService.validateSender("Token token-c", sender) } just Runs
-        every { routingService.validateReceiver(receiver) } returns OcpiRequestType.LOCAL
+        every { routingService.validateReceiver(receiver) } returns Recipient.LOCAL
 
         every { routingService.setProxyResource(body.responseURL, sender, receiver) } returns 6L
         every { properties.url } returns "https://client.ocn.org"
@@ -355,7 +355,7 @@ class CommandsControllerTest(@Autowired val mockMvc: MockMvc) {
                 receiver = receiver,
                 urlPathVariables = "STOP_SESSION",
                 body = body,
-                expectedResponseType = OcpiResponseDataType.COMMAND_RESPONSE)
+                expectedResponseType = OcpiType.COMMAND_RESPONSE)
 
         val url = "https://cool.emsp.co/ocpi/commands/STOP_SESSION/"
 
@@ -369,7 +369,7 @@ class CommandsControllerTest(@Autowired val mockMvc: MockMvc) {
                 ocpiToPartyID = receiver.id)
 
         every { routingService.validateSender("Token token-c", sender) } just Runs
-        every { routingService.validateReceiver(receiver) } returns OcpiRequestType.LOCAL
+        every { routingService.validateReceiver(receiver) } returns Recipient.LOCAL
 
         every { routingService.setProxyResource(body.responseURL, sender, receiver) } returns 6L
         every { properties.url } returns "https://client.ocn.org"
@@ -433,7 +433,7 @@ class CommandsControllerTest(@Autowired val mockMvc: MockMvc) {
                 receiver = receiver,
                 urlPathVariables = "UNLOCK_CONNECTOR",
                 body = body,
-                expectedResponseType = OcpiResponseDataType.COMMAND_RESPONSE)
+                expectedResponseType = OcpiType.COMMAND_RESPONSE)
 
         val url = "https://cool.emsp.co/ocpi/commands/UNLOCK_CONNECTOR/"
 
@@ -447,7 +447,7 @@ class CommandsControllerTest(@Autowired val mockMvc: MockMvc) {
                 ocpiToPartyID = receiver.id)
 
         every { routingService.validateSender("Token token-c", sender) } just Runs
-        every { routingService.validateReceiver(receiver) } returns OcpiRequestType.LOCAL
+        every { routingService.validateReceiver(receiver) } returns Recipient.LOCAL
 
         every { routingService.setProxyResource(body.responseURL, sender, receiver) } returns 6L
         every { properties.url } returns "https://client.ocn.org"

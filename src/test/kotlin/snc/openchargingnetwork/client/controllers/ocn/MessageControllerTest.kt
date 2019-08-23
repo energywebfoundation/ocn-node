@@ -53,7 +53,7 @@ class MessageControllerTest(@Autowired val mockMvc: MockMvc) {
                         ocpiFromPartyID = senderRole.id,
                         ocpiToCountryCode = receiverRole.country,
                         ocpiToPartyID = receiverRole.id),
-                expectedResponseType = OcpiResponseDataType.LOCATION)
+                expectedResponseType = OcpiType.LOCATION)
 
         val jsonBodyString = "arbitrary_message"
         every { httpService.mapper.writeValueAsString(body) } returns jsonBodyString
@@ -79,7 +79,7 @@ class MessageControllerTest(@Autowired val mockMvc: MockMvc) {
                 method = body.method,
                 url = url,
                 headers = headers,
-                expectedDataType = OcpiResponseDataType.LOCATION)
+                expectedDataType = OcpiType.LOCATION)
         } returns HttpResponse(
                 statusCode = 200,
                 headers = mapOf(),

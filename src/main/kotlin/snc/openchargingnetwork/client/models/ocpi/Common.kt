@@ -21,11 +21,14 @@ package snc.openchargingnetwork.client.models.ocpi
 
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
+import org.springframework.http.HttpMethod
 import snc.openchargingnetwork.client.models.exceptions.OcpiClientInvalidParametersException
 import java.time.Instant
 import java.time.format.DateTimeFormatter
 import javax.persistence.Embeddable
 import javax.persistence.Embedded
+import kotlin.reflect.KClass
+
 
 @Embeddable
 data class BasicRole(@JsonProperty("party_id") var id: String,
@@ -47,17 +50,65 @@ data class BasicRole(@JsonProperty("party_id") var id: String,
     }
 }
 
-data class RegistrationInfo(@JsonProperty("token") val token: String,
-                            @JsonProperty("versions") val versions: String)
 
-@JsonInclude(JsonInclude.Include.NON_NULL)
-data class PaginatedRequest(@JsonProperty("date_from") val dateFrom: String? = null,
-                            @JsonProperty("date_to") val dateTo: String? = null,
-                            @JsonProperty("offset") val offset: Int? = null,
-                            @JsonProperty("limit") val limit: Int? = null) {
+data class OcpiRequestVariables(val module: ModuleID,
+                                val interfaceRole: InterfaceRole,
+                                val method: HttpMethod,
+                                val headers: OcpiRequestHeaders,
+                                val urlPathVariables: String? = null,
+                                val urlEncodedParams: OcpiRequestParameters? = null,
+                                val proxiedResource: String? = null,
+                                val body: Any? = null,
+                                val types: TypePair)
+
+
+data class OcpiRequestHeaders(@JsonProperty("Authorization") val authorization: String? = null,
+                              @JsonProperty("X-Request-ID") val requestID: String,
+                              @JsonProperty("X-Correlation-ID") val correlationID: String,
+                              val sender: BasicRole,
+                              val receiver: BasicRole) {
+
+    @JsonProperty("OCPI-from-country-code")
+    val ocpiFromCountryCode = sender.country
+
+    @JsonProperty("OCPI-from-party-id")
+    val ocpiFromPartyID = sender.id
+
+    @JsonProperty("OCPI-to-country-code")
+    val ocpiToCountryCode = receiver.id
+
+    @JsonProperty("OCPI-to-party-id")
+    val ocpiToPartyID = receiver.country
+
 
     fun encode(): Map<String, String> {
         val map = mutableMapOf<String, String>()
+        if (authorization != null) {
+            map["Authorization"] = authorization
+        }
+        map["X-Request-ID"] = requestID
+        map["X-Correlation-ID"] = correlationID
+        map["OCPI-from-country-code"] = ocpiFromCountryCode
+        map["OCPI-from-party-id"] = ocpiFromPartyID
+        map["OCPI-to-country-code"] = ocpiToCountryCode
+        map["OCPI-to-party-id"] = ocpiToPartyID
+        return map
+    }
+}
+
+
+@JsonInclude(JsonInclude.Include.NON_NULL)
+data class OcpiRequestParameters(@JsonProperty("type") val type: TokenType? = null,
+                                 @JsonProperty("date_from") val dateFrom: String? = null,
+                                 @JsonProperty("date_to") val dateTo: String? = null,
+                                 @JsonProperty("offset") val offset: Int? = null,
+                                 @JsonProperty("limit") val limit: Int? = null) {
+
+    fun encode(): Map<String, String> {
+        val map = mutableMapOf<String, String>()
+        if (type != null) {
+            map["type"] = type.toString()
+        }
         if (dateFrom != null) {
             map["date_from"] = dateFrom
         }
@@ -74,17 +125,54 @@ data class PaginatedRequest(@JsonProperty("date_from") val dateFrom: String? = n
     }
 }
 
+
+enum class OcpiType(val type: KClass<*>) {
+    LOCATION(Location::class),
+    LOCATION_ARRAY(Array<Location>::class),
+    EVSE(Evse::class),
+    CONNECTOR(Connector::class),
+    SESSION(Session::class),
+    SESSION_ARRAY(Array<Session>::class),
+    CHARGING_PREFERENCE_RESPONSE(ChargingPreferencesResponse::class),
+    CDR(snc.openchargingnetwork.client.models.ocpi.CDR::class),
+    CDR_ARRAY(Array<snc.openchargingnetwork.client.models.ocpi.CDR>::class),
+    TARIFF(Tariff::class),
+    TARIFF_ARRAY(Array<Tariff>::class),
+    TOKEN(Token::class),
+    TOKEN_ARRAY(Array<Token>::class),
+    AUTHORIZATION_INFO(AuthorizationInfo::class),
+    CANCEL_RESERVATION(CancelReservation::class),
+    RESERVE_NOW(ReserveNow::class),
+    START_SESSION(StartSession::class),
+    STOP_SESSION(StopSession::class),
+    UNLOCK_CONNECTOR(UnlockConnector::class),
+    COMMAND_RESULT(CommandResult::class),
+    COMMAND_RESPONSE(CommandResponse::class),
+    NOTHING(Nothing::class),
+}
+
+
+data class TypePair(val request: OcpiType = OcpiType.NOTHING,
+                    val response: OcpiType = OcpiType.NOTHING)
+
+
+data class RegistrationInfo(@JsonProperty("token") val token: String,
+                            @JsonProperty("versions") val versions: String)
+
+
 @JsonInclude(JsonInclude.Include.NON_NULL)
 data class OcpiResponse<T>(@JsonProperty("status_code") val statusCode: Int,
                            @JsonProperty("status_message") val statusMessage: String? = null,
                            @JsonProperty("data") val data: T? = null,
                            @JsonProperty("timestamp") val timestamp: String = DateTimeFormatter.ISO_INSTANT.format(Instant.now()))
 
+
 @Embeddable
 @JsonInclude(JsonInclude.Include.NON_NULL)
 data class BusinessDetails(@JsonProperty("name") val name: String,
                            @JsonProperty("website") val website: String? = null,
                            @Embedded @JsonProperty("logo") val logo: Image? = null)
+
 
 @Embeddable
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -95,8 +183,10 @@ data class Image(@JsonProperty("url") val url: String,
                  @JsonProperty("width") val width: Int? = null,
                  @JsonProperty("height") val height: Int? = null)
 
+
 data class DisplayText(@JsonProperty("language") val language: String,
                        @JsonProperty("text") val text: String)
+
 
 enum class OcpiStatus(val code: Int, val message: String? = null) {
     SUCCESS(1000),
@@ -113,12 +203,14 @@ enum class OcpiStatus(val code: Int, val message: String? = null) {
     HUB_CONNECTION_PROBLEM(4003, "Connection problem")
 }
 
+
 enum class ConnectionStatus {
     CONNECTED,
     OFFLINE,
     PLANNED,
     SUSPENDED
 }
+
 
 enum class ModuleID(val id: String) {
     CDRS("cdrs"),
@@ -132,10 +224,12 @@ enum class ModuleID(val id: String) {
     TOKENS("tokens")
 }
 
+
 enum class InterfaceRole(val id: String) {
     SENDER(id = "sender"),
     RECEIVER(id = "receiver")
 }
+
 
 enum class Role {
     CPO,
@@ -146,6 +240,7 @@ enum class Role {
     SCSP
 }
 
+
 enum class ImageCategory {
     CHARGER,
     ENTRANCE,
@@ -155,6 +250,7 @@ enum class ImageCategory {
     OTHER,
     OWNER
 }
+
 
 enum class AuthMethod {
     AUTH_REQUEST,

@@ -51,8 +51,8 @@ class SessionsControllerTest(@Autowired val mockMvc: MockMvc) {
                 correlationID = generateUUIDv4Token(),
                 sender = sender,
                 receiver = receiver,
-                urlEncodedParameters = OcpiRequestParameters(dateFrom = dateFrom, limit = 20),
-                expectedResponseType = OcpiResponseDataType.SESSION_ARRAY)
+                urlEncodedParams = OcpiRequestParameters(dateFrom = dateFrom, limit = 20),
+                expectedResponseType = OcpiType.SESSION_ARRAY)
 
         val url = "https://ocpi.emsp.com/2.2/sessions"
 
@@ -66,7 +66,7 @@ class SessionsControllerTest(@Autowired val mockMvc: MockMvc) {
                 ocpiToPartyID = receiver.id)
 
         every { routingService.validateSender("Token token-c", sender) } just Runs
-        every { routingService.validateReceiver(receiver) } returns OcpiRequestType.LOCAL
+        every { routingService.validateReceiver(receiver) } returns Recipient.LOCAL
         every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, headers)
 
         val responseHeaders = mapOf(
@@ -80,7 +80,7 @@ class SessionsControllerTest(@Autowired val mockMvc: MockMvc) {
                     method = requestVariables.method,
                     url = url,
                     headers = headers,
-                    params = requestVariables.urlEncodedParameters,
+                    params = requestVariables.urlEncodedParams,
                     expectedDataType = requestVariables.expectedResponseType)
 
         } returns HttpResponse(
@@ -138,7 +138,7 @@ class SessionsControllerTest(@Autowired val mockMvc: MockMvc) {
                 sender = sender,
                 receiver = receiver,
                 urlPathVariables = "2247",
-                expectedResponseType = OcpiResponseDataType.SESSION_ARRAY)
+                expectedResponseType = OcpiType.SESSION_ARRAY)
 
         val url = "https://ocpi.cpo.com/sessions/page/2?dateFrom=${getTimestamp()}?limit=20?offset=20"
 
@@ -152,7 +152,7 @@ class SessionsControllerTest(@Autowired val mockMvc: MockMvc) {
                 ocpiToPartyID = receiver.id)
 
         every { routingService.validateSender("Token token-c", sender) } just Runs
-        every { routingService.validateReceiver(receiver) } returns OcpiRequestType.LOCAL
+        every { routingService.validateReceiver(receiver) } returns Recipient.LOCAL
         every { routingService.prepareLocalPlatformRequest(requestVariables, proxied = true) } returns Pair(url, headers)
 
         val responseHeaders = mapOf(
@@ -166,7 +166,7 @@ class SessionsControllerTest(@Autowired val mockMvc: MockMvc) {
                     method = requestVariables.method,
                     url = url,
                     headers = headers,
-                    params = requestVariables.urlEncodedParameters,
+                    params = requestVariables.urlEncodedParams,
                     expectedDataType = requestVariables.expectedResponseType)
 
         } returns HttpResponse(
@@ -226,7 +226,7 @@ class SessionsControllerTest(@Autowired val mockMvc: MockMvc) {
                 receiver = receiver,
                 urlPathVariables = "/2247/charging_preferences",
                 body = body,
-                expectedResponseType = OcpiResponseDataType.CHARGING_PREFERENCE_RESPONSE)
+                expectedResponseType = OcpiType.CHARGING_PREFERENCE_RESPONSE)
 
         val url = "https://ocpi.cpo.com/sessions/2247/charging_preferences"
 
@@ -240,7 +240,7 @@ class SessionsControllerTest(@Autowired val mockMvc: MockMvc) {
                 ocpiToPartyID = receiver.id)
 
         every { routingService.validateSender("Token token-c", sender) } just Runs
-        every { routingService.validateReceiver(receiver) } returns OcpiRequestType.LOCAL
+        every { routingService.validateReceiver(receiver) } returns Recipient.LOCAL
         every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, headers)
 
         every {
@@ -293,7 +293,7 @@ class SessionsControllerTest(@Autowired val mockMvc: MockMvc) {
                 sender = sender,
                 receiver = receiver,
                 urlPathVariables = "/${sender.country}/${sender.id}/$sessionID",
-                expectedResponseType = OcpiResponseDataType.SESSION)
+                expectedResponseType = OcpiType.SESSION)
 
         val url = "https://ocpi.cpo.com/2.2/sessions/${sender.country}/${sender.id}/$sessionID"
 
@@ -307,7 +307,7 @@ class SessionsControllerTest(@Autowired val mockMvc: MockMvc) {
                 ocpiToPartyID = receiver.id)
 
         every { routingService.validateSender("Token token-c", sender) } just Runs
-        every { routingService.validateReceiver(receiver) } returns OcpiRequestType.LOCAL
+        every { routingService.validateReceiver(receiver) } returns Recipient.LOCAL
         every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, headers)
 
         every {
@@ -360,7 +360,7 @@ class SessionsControllerTest(@Autowired val mockMvc: MockMvc) {
                 receiver = receiver,
                 urlPathVariables = "/${sender.country}/${sender.id}/$sessionID",
                 body = body,
-                expectedResponseType = OcpiResponseDataType.NOTHING)
+                expectedResponseType = OcpiType.NOTHING)
 
         val url = "https://ocpi.cpo.com/2.2/sessions/${sender.country}/${sender.id}/$sessionID"
 
@@ -374,7 +374,7 @@ class SessionsControllerTest(@Autowired val mockMvc: MockMvc) {
                 ocpiToPartyID = receiver.id)
 
         every { routingService.validateSender("Token token-c", sender) } just Runs
-        every { routingService.validateReceiver(receiver) } returns OcpiRequestType.LOCAL
+        every { routingService.validateReceiver(receiver) } returns Recipient.LOCAL
         every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, headers)
 
         every {
@@ -429,7 +429,7 @@ class SessionsControllerTest(@Autowired val mockMvc: MockMvc) {
                 receiver = receiver,
                 urlPathVariables = "/${sender.country}/${sender.id}/$sessionID",
                 body = body,
-                expectedResponseType = OcpiResponseDataType.NOTHING)
+                expectedResponseType = OcpiType.NOTHING)
 
         val url = "https://ocpi.cpo.com/2.2/sessions/${sender.country}/${sender.id}/$sessionID"
 
@@ -443,7 +443,7 @@ class SessionsControllerTest(@Autowired val mockMvc: MockMvc) {
                 ocpiToPartyID = receiver.id)
 
         every { routingService.validateSender("Token token-c", sender) } just Runs
-        every { routingService.validateReceiver(receiver) } returns OcpiRequestType.LOCAL
+        every { routingService.validateReceiver(receiver) } returns Recipient.LOCAL
         every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, headers)
 
         every {

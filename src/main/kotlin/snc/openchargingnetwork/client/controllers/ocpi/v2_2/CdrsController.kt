@@ -64,20 +64,21 @@ class CdrsController(val routingService: RoutingService,
                 module = ModuleID.CDRS,
                 interfaceRole = InterfaceRole.SENDER,
                 method = HttpMethod.GET,
-                requestID = requestID,
-                correlationID = correlationID,
-                sender = sender,
-                receiver = receiver,
-                urlEncodedParameters = OcpiRequestParameters(
+                headers = OcpiRequestHeaders(
+                        requestID = requestID,
+                        correlationID = correlationID,
+                        sender = sender,
+                        receiver = receiver),
+                urlEncodedParams = OcpiRequestParameters(
                         dateFrom = dateFrom,
                         dateTo = dateTo,
                         offset = offset,
                         limit = limit),
-                expectedResponseType = OcpiResponseDataType.CDR_ARRAY)
+                types = TypePair(response = OcpiType.CDR_ARRAY))
 
         val response: HttpResponse<Array<CDR>> = when (routingService.validateReceiver(receiver)) {
 
-            OcpiRequestType.LOCAL -> {
+            Recipient.LOCAL -> {
 
                 val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables)
 
@@ -85,11 +86,11 @@ class CdrsController(val routingService: RoutingService,
                         method = requestVariables.method,
                         url = url,
                         headers = headers,
-                        params = requestVariables.urlEncodedParameters,
-                        expectedDataType = requestVariables.expectedResponseType)
+                        urlEncodedParams = requestVariables.urlEncodedParams,
+                        expectedResponse = requestVariables.types.response)
             }
 
-            OcpiRequestType.REMOTE -> {
+            Recipient.REMOTE -> {
 
                 val (url, headers, body) = routingService.prepareRemotePlatformRequest(requestVariables)
 
@@ -127,16 +128,17 @@ class CdrsController(val routingService: RoutingService,
                 module = ModuleID.CDRS,
                 interfaceRole = InterfaceRole.SENDER,
                 method = HttpMethod.GET,
-                requestID = requestID,
-                correlationID = correlationID,
-                sender = sender,
-                receiver = receiver,
+                headers = OcpiRequestHeaders(
+                        requestID = requestID,
+                        correlationID = correlationID,
+                        sender = sender,
+                        receiver = receiver),
                 urlPathVariables = uid,
-                expectedResponseType = OcpiResponseDataType.CDR_ARRAY)
+                types = TypePair(response = OcpiType.CDR_ARRAY))
 
         val response: HttpResponse<Array<CDR>> = when (routingService.validateReceiver(receiver)) {
 
-            OcpiRequestType.LOCAL -> {
+            Recipient.LOCAL -> {
 
                 val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables, proxied = true)
 
@@ -144,11 +146,11 @@ class CdrsController(val routingService: RoutingService,
                         method = requestVariables.method,
                         url = url,
                         headers = headers,
-                        expectedDataType = requestVariables.expectedResponseType)
+                        expectedResponse = requestVariables.types.response)
 
             }
 
-            OcpiRequestType.REMOTE -> {
+            Recipient.REMOTE -> {
 
                 val (url, headers, body) = routingService.prepareRemotePlatformRequest(requestVariables, proxied = true)
 
@@ -199,16 +201,17 @@ class CdrsController(val routingService: RoutingService,
                 module = ModuleID.CDRS,
                 interfaceRole = InterfaceRole.RECEIVER,
                 method = HttpMethod.GET,
-                requestID = requestID,
-                correlationID = correlationID,
-                sender = sender,
-                receiver = receiver,
+                headers = OcpiRequestHeaders(
+                        requestID = requestID,
+                        correlationID = correlationID,
+                        sender = sender,
+                        receiver = receiver),
                 urlPathVariables = cdrID,
-                expectedResponseType = OcpiResponseDataType.CDR)
+                types = TypePair(response = OcpiType.CDR))
 
         val response: HttpResponse<CDR> = when (routingService.validateReceiver(receiver)) {
 
-            OcpiRequestType.LOCAL -> {
+            Recipient.LOCAL -> {
 
                 val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables, proxied = true)
 
@@ -216,10 +219,10 @@ class CdrsController(val routingService: RoutingService,
                         method = requestVariables.method,
                         url = url,
                         headers = headers,
-                        expectedDataType = requestVariables.expectedResponseType)
+                        expectedResponse = requestVariables.types.response)
             }
 
-            OcpiRequestType.REMOTE -> {
+            Recipient.REMOTE -> {
 
                 val (url, headers, body) = routingService.prepareRemotePlatformRequest(requestVariables, proxied = true)
 
@@ -252,16 +255,17 @@ class CdrsController(val routingService: RoutingService,
                 module = ModuleID.CDRS,
                 interfaceRole = InterfaceRole.RECEIVER,
                 method = HttpMethod.POST,
-                requestID = requestID,
-                correlationID = correlationID,
-                sender = sender,
-                receiver = receiver,
+                headers = OcpiRequestHeaders(
+                        requestID = requestID,
+                        correlationID = correlationID,
+                        sender = sender,
+                        receiver = receiver),
                 body = body,
-                expectedResponseType = OcpiResponseDataType.NOTHING)
+                types = TypePair(request = OcpiType.NOTHING))
 
         val response: HttpResponse<Nothing> = when (routingService.validateReceiver(receiver)) {
 
-            OcpiRequestType.LOCAL -> {
+            Recipient.LOCAL -> {
 
                 val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables)
 
@@ -269,10 +273,10 @@ class CdrsController(val routingService: RoutingService,
                         method = requestVariables.method,
                         url = url,
                         headers = headers,
-                        expectedDataType = requestVariables.expectedResponseType)
+                        expectedResponse = requestVariables.types.response)
             }
 
-            OcpiRequestType.REMOTE -> {
+            Recipient.REMOTE -> {
 
                 val (url, headers, ocnBody) = routingService.prepareRemotePlatformRequest(requestVariables)
 

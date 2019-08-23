@@ -25,7 +25,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import snc.openchargingnetwork.client.models.*
 import snc.openchargingnetwork.client.models.ocpi.*
-import snc.openchargingnetwork.client.services.HttpService
+import snc.openchargingnetwork.client.services.HttpServiceexpectedDataType
 import snc.openchargingnetwork.client.services.RoutingService
 import snc.openchargingnetwork.client.tools.isOcpiSuccess
 
@@ -64,16 +64,16 @@ class LocationsController(private val routingService: RoutingService,
                 correlationID = correlationID,
                 sender = sender,
                 receiver = receiver,
-                urlEncodedParameters = OcpiRequestParameters(
+                urlEncodedParams = OcpiRequestParameters(
                         dateFrom = dateFrom,
                         dateTo = dateTo,
                         offset = offset,
                         limit = limit),
-                expectedResponseType = OcpiResponseDataType.LOCATION_ARRAY)
+                expectedResponseType = OcpiType.LOCATION_ARRAY)
 
         val response: HttpResponse<Array<Location>> = when (routingService.validateReceiver(receiver)) {
 
-            OcpiRequestType.LOCAL -> {
+            Recipient.LOCAL -> {
 
                 val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables)
 
@@ -81,11 +81,11 @@ class LocationsController(private val routingService: RoutingService,
                         method = requestVariables.method,
                         url = url,
                         headers = headers,
-                        params = requestVariables.urlEncodedParameters,
+                        params = requestVariables.urlEncodedParams,
                         expectedDataType = requestVariables.expectedResponseType)
             }
 
-            OcpiRequestType.REMOTE -> {
+            Recipient.REMOTE -> {
 
                 val (url, headers, body) = routingService.prepareRemotePlatformRequest(requestVariables)
 
@@ -129,11 +129,11 @@ class LocationsController(private val routingService: RoutingService,
                 sender = sender,
                 receiver = receiver,
                 urlPathVariables = uid,
-                expectedResponseType = OcpiResponseDataType.LOCATION_ARRAY)
+                expectedResponseType = OcpiType.LOCATION_ARRAY)
 
         val response: HttpResponse<Array<Location>> = when (routingService.validateReceiver(receiver)) {
 
-            OcpiRequestType.LOCAL -> {
+            Recipient.LOCAL -> {
 
                 val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables, proxied = true)
 
@@ -145,7 +145,7 @@ class LocationsController(private val routingService: RoutingService,
 
             }
 
-            OcpiRequestType.REMOTE -> {
+            Recipient.REMOTE -> {
 
                 val (url, headers, body) = routingService.prepareRemotePlatformRequest(requestVariables, proxied = true)
 
@@ -198,11 +198,11 @@ class LocationsController(private val routingService: RoutingService,
                 sender = sender,
                 receiver = receiver,
                 urlPathVariables = locationID,
-                expectedResponseType = OcpiResponseDataType.LOCATION)
+                expectedResponseType = OcpiType.LOCATION)
 
         val response: HttpResponse<Location> = when (routingService.validateReceiver(receiver)) {
 
-            OcpiRequestType.LOCAL -> {
+            Recipient.LOCAL -> {
 
                 val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables)
 
@@ -213,7 +213,7 @@ class LocationsController(private val routingService: RoutingService,
                         expectedDataType = requestVariables.expectedResponseType)
             }
 
-            OcpiRequestType.REMOTE -> {
+            Recipient.REMOTE -> {
 
                 val (url, headers, body) = routingService.prepareRemotePlatformRequest(requestVariables)
 
@@ -251,11 +251,11 @@ class LocationsController(private val routingService: RoutingService,
                 sender = sender,
                 receiver = receiver,
                 urlPathVariables = "/$locationID/$evseUID",
-                expectedResponseType = OcpiResponseDataType.EVSE)
+                expectedResponseType = OcpiType.EVSE)
 
         val response: HttpResponse<Evse> = when (routingService.validateReceiver(receiver)) {
 
-            OcpiRequestType.LOCAL -> {
+            Recipient.LOCAL -> {
 
                 val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables)
 
@@ -266,7 +266,7 @@ class LocationsController(private val routingService: RoutingService,
                         expectedDataType = requestVariables.expectedResponseType)
             }
 
-            OcpiRequestType.REMOTE -> {
+            Recipient.REMOTE -> {
 
                 val (url, headers, body) = routingService.prepareRemotePlatformRequest(requestVariables)
 
@@ -305,11 +305,11 @@ class LocationsController(private val routingService: RoutingService,
                 sender = sender,
                 receiver = receiver,
                 urlPathVariables = "/$locationID/$evseUID/$connectorID",
-                expectedResponseType = OcpiResponseDataType.CONNECTOR)
+                expectedResponseType = OcpiType.CONNECTOR)
 
         val response: HttpResponse<Connector> = when (routingService.validateReceiver(receiver)) {
 
-            OcpiRequestType.LOCAL -> {
+            Recipient.LOCAL -> {
 
                 val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables)
 
@@ -320,7 +320,7 @@ class LocationsController(private val routingService: RoutingService,
                         expectedDataType = requestVariables.expectedResponseType)
             }
 
-            OcpiRequestType.REMOTE -> {
+            Recipient.REMOTE -> {
 
                 val (url, headers, body) = routingService.prepareRemotePlatformRequest(requestVariables)
 
@@ -363,11 +363,11 @@ class LocationsController(private val routingService: RoutingService,
                 sender = sender,
                 receiver = receiver,
                 urlPathVariables = "/$countryCode/$partyID/$locationID",
-                expectedResponseType = OcpiResponseDataType.LOCATION)
+                expectedResponseType = OcpiType.LOCATION)
 
         val response: HttpResponse<Location> = when (routingService.validateReceiver(receiver)) {
 
-            OcpiRequestType.LOCAL -> {
+            Recipient.LOCAL -> {
 
                 val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables)
 
@@ -378,7 +378,7 @@ class LocationsController(private val routingService: RoutingService,
                         expectedDataType = requestVariables.expectedResponseType)
             }
 
-            OcpiRequestType.REMOTE -> {
+            Recipient.REMOTE -> {
 
                 val (url, headers, body) = routingService.prepareRemotePlatformRequest(requestVariables)
 
@@ -418,11 +418,11 @@ class LocationsController(private val routingService: RoutingService,
                 sender = sender,
                 receiver = receiver,
                 urlPathVariables = "/$countryCode/$partyID/$locationID/$evseUID",
-                expectedResponseType = OcpiResponseDataType.EVSE)
+                expectedResponseType = OcpiType.EVSE)
 
         val response: HttpResponse<Evse> = when (routingService.validateReceiver(receiver)) {
 
-            OcpiRequestType.LOCAL -> {
+            Recipient.LOCAL -> {
 
                 val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables)
 
@@ -433,7 +433,7 @@ class LocationsController(private val routingService: RoutingService,
                         expectedDataType = requestVariables.expectedResponseType)
             }
 
-            OcpiRequestType.REMOTE -> {
+            Recipient.REMOTE -> {
 
                 val (url, headers, body) = routingService.prepareRemotePlatformRequest(requestVariables)
 
@@ -474,11 +474,11 @@ class LocationsController(private val routingService: RoutingService,
                 sender = sender,
                 receiver = receiver,
                 urlPathVariables = "/$countryCode/$partyID/$locationID/$evseUID/$connectorID",
-                expectedResponseType = OcpiResponseDataType.CONNECTOR)
+                expectedResponseType = OcpiType.CONNECTOR)
 
         val response: HttpResponse<Connector> = when (routingService.validateReceiver(receiver)) {
 
-            OcpiRequestType.LOCAL -> {
+            Recipient.LOCAL -> {
 
                 val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables)
 
@@ -489,7 +489,7 @@ class LocationsController(private val routingService: RoutingService,
                         expectedDataType = requestVariables.expectedResponseType)
             }
 
-            OcpiRequestType.REMOTE -> {
+            Recipient.REMOTE -> {
 
                 val (url, headers, body) = routingService.prepareRemotePlatformRequest(requestVariables)
 
@@ -530,11 +530,11 @@ class LocationsController(private val routingService: RoutingService,
                 receiver = receiver,
                 urlPathVariables = "/$countryCode/$partyID/$locationID",
                 body = body,
-                expectedResponseType = OcpiResponseDataType.NOTHING)
+                expectedResponseType = OcpiType.NOTHING)
 
         val response: HttpResponse<Nothing> = when (routingService.validateReceiver(receiver)) {
 
-            OcpiRequestType.LOCAL -> {
+            Recipient.LOCAL -> {
 
                 val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables)
 
@@ -546,7 +546,7 @@ class LocationsController(private val routingService: RoutingService,
                         expectedDataType = requestVariables.expectedResponseType)
             }
 
-            OcpiRequestType.REMOTE -> {
+            Recipient.REMOTE -> {
 
                 val (url, headers, ocnBody) = routingService.prepareRemotePlatformRequest(requestVariables)
 
@@ -588,11 +588,11 @@ class LocationsController(private val routingService: RoutingService,
                 receiver = receiver,
                 urlPathVariables = "/$countryCode/$partyID/$locationID/$evseUID",
                 body = body,
-                expectedResponseType = OcpiResponseDataType.NOTHING)
+                expectedResponseType = OcpiType.NOTHING)
 
         val response: HttpResponse<Nothing> = when (routingService.validateReceiver(receiver)) {
 
-            OcpiRequestType.LOCAL -> {
+            Recipient.LOCAL -> {
 
                 val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables)
 
@@ -604,7 +604,7 @@ class LocationsController(private val routingService: RoutingService,
                         expectedDataType = requestVariables.expectedResponseType)
             }
 
-            OcpiRequestType.REMOTE -> {
+            Recipient.REMOTE -> {
 
                 val (url, headers, ocnBody) = routingService.prepareRemotePlatformRequest(requestVariables)
 
@@ -647,11 +647,11 @@ class LocationsController(private val routingService: RoutingService,
                 receiver = receiver,
                 urlPathVariables = "/$countryCode/$partyID/$locationID/$evseUID/$connectorID",
                 body = body,
-                expectedResponseType = OcpiResponseDataType.NOTHING)
+                expectedResponseType = OcpiType.NOTHING)
 
         val response: HttpResponse<Nothing> = when (routingService.validateReceiver(receiver)) {
 
-            OcpiRequestType.LOCAL -> {
+            Recipient.LOCAL -> {
 
                 val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables)
 
@@ -663,7 +663,7 @@ class LocationsController(private val routingService: RoutingService,
                         expectedDataType = requestVariables.expectedResponseType)
             }
 
-            OcpiRequestType.REMOTE -> {
+            Recipient.REMOTE -> {
 
                 val (url, headers, ocnBody) = routingService.prepareRemotePlatformRequest(requestVariables)
 
@@ -704,11 +704,11 @@ class LocationsController(private val routingService: RoutingService,
                 receiver = receiver,
                 urlPathVariables = "/$countryCode/$partyID/$locationID",
                 body = body,
-                expectedResponseType = OcpiResponseDataType.NOTHING)
+                expectedResponseType = OcpiType.NOTHING)
 
         val response: HttpResponse<Nothing> = when (routingService.validateReceiver(receiver)) {
 
-            OcpiRequestType.LOCAL -> {
+            Recipient.LOCAL -> {
 
                 val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables)
 
@@ -720,7 +720,7 @@ class LocationsController(private val routingService: RoutingService,
                         expectedDataType = requestVariables.expectedResponseType)
             }
 
-            OcpiRequestType.REMOTE -> {
+            Recipient.REMOTE -> {
 
                 val (url, headers, ocnBody) = routingService.prepareRemotePlatformRequest(requestVariables)
 
@@ -762,11 +762,11 @@ class LocationsController(private val routingService: RoutingService,
                 receiver = receiver,
                 urlPathVariables = "/$countryCode/$partyID/$locationID/$evseUID",
                 body = body,
-                expectedResponseType = OcpiResponseDataType.NOTHING)
+                expectedResponseType = OcpiType.NOTHING)
 
         val response: HttpResponse<Nothing> = when (routingService.validateReceiver(receiver)) {
 
-            OcpiRequestType.LOCAL -> {
+            Recipient.LOCAL -> {
 
                 val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables)
 
@@ -778,7 +778,7 @@ class LocationsController(private val routingService: RoutingService,
                         expectedDataType = requestVariables.expectedResponseType)
             }
 
-            OcpiRequestType.REMOTE -> {
+            Recipient.REMOTE -> {
 
                 val (url, headers, ocnBody) = routingService.prepareRemotePlatformRequest(requestVariables)
 
@@ -821,11 +821,11 @@ class LocationsController(private val routingService: RoutingService,
                 receiver = receiver,
                 urlPathVariables = "/$countryCode/$partyID/$locationID/$evseUID/$connectorID",
                 body = body,
-                expectedResponseType = OcpiResponseDataType.NOTHING)
+                expectedResponseType = OcpiType.NOTHING)
 
         val response: HttpResponse<Nothing> = when (routingService.validateReceiver(receiver)) {
 
-            OcpiRequestType.LOCAL -> {
+            Recipient.LOCAL -> {
 
                 val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables)
 
@@ -837,7 +837,7 @@ class LocationsController(private val routingService: RoutingService,
                         expectedDataType = requestVariables.expectedResponseType)
             }
 
-            OcpiRequestType.REMOTE -> {
+            Recipient.REMOTE -> {
 
                 val (url, headers, ocnBody) = routingService.prepareRemotePlatformRequest(requestVariables)
 

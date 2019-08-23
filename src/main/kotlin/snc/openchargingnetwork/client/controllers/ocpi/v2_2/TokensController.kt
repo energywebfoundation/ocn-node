@@ -64,16 +64,16 @@ class TokensController(private val routingService: RoutingService,
                 correlationID = correlationID,
                 sender = sender,
                 receiver = receiver,
-                urlEncodedParameters = OcpiRequestParameters(
+                urlEncodedParams = OcpiRequestParameters(
                         dateFrom = dateFrom,
                         dateTo = dateTo,
                         offset = offset,
                         limit = limit),
-                expectedResponseType = OcpiResponseDataType.TOKEN_ARRAY)
+                expectedResponseType = OcpiType.TOKEN_ARRAY)
 
         val response: HttpResponse<Array<Token>> = when (routingService.validateReceiver(receiver)) {
 
-            OcpiRequestType.LOCAL -> {
+            Recipient.LOCAL -> {
 
                 val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables)
 
@@ -81,11 +81,11 @@ class TokensController(private val routingService: RoutingService,
                         method = requestVariables.method,
                         url = url,
                         headers = headers,
-                        params = requestVariables.urlEncodedParameters,
+                        params = requestVariables.urlEncodedParams,
                         expectedDataType = requestVariables.expectedResponseType)
             }
 
-            OcpiRequestType.REMOTE -> {
+            Recipient.REMOTE -> {
 
                 val (url, headers, body) = routingService.prepareRemotePlatformRequest(requestVariables)
 
@@ -129,11 +129,11 @@ class TokensController(private val routingService: RoutingService,
                 sender = sender,
                 receiver = receiver,
                 urlPathVariables = uid,
-                expectedResponseType = OcpiResponseDataType.TOKEN_ARRAY)
+                expectedResponseType = OcpiType.TOKEN_ARRAY)
 
         val response: HttpResponse<Array<Token>> = when (routingService.validateReceiver(receiver)) {
 
-            OcpiRequestType.LOCAL -> {
+            Recipient.LOCAL -> {
 
                 val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables, proxied = true)
 
@@ -145,7 +145,7 @@ class TokensController(private val routingService: RoutingService,
 
             }
 
-            OcpiRequestType.REMOTE -> {
+            Recipient.REMOTE -> {
 
                 val (url, headers, body) = routingService.prepareRemotePlatformRequest(requestVariables, proxied = true)
 
@@ -201,13 +201,14 @@ class TokensController(private val routingService: RoutingService,
                 sender = sender,
                 receiver = receiver,
                 urlPathVariables = "$tokenUID/authorize",
-                urlEncodedParameters = OcpiRequestParameters(type = type ?: TokenType.RFID),
+                urlEncodedParams = OcpiRequestParameters(type = type
+                        ?: TokenType.RFID),
                 body = body,
-                expectedResponseType = OcpiResponseDataType.AUTHORIZATION_INFO)
+                expectedResponseType = OcpiType.AUTHORIZATION_INFO)
 
         val response: HttpResponse<AuthorizationInfo> = when (routingService.validateReceiver(receiver)) {
 
-            OcpiRequestType.LOCAL -> {
+            Recipient.LOCAL -> {
 
                 val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables)
 
@@ -215,13 +216,13 @@ class TokensController(private val routingService: RoutingService,
                         method = requestVariables.method,
                         url = url,
                         headers = headers,
-                        params = requestVariables.urlEncodedParameters,
+                        params = requestVariables.urlEncodedParams,
                         body = body,
                         expectedDataType = requestVariables.expectedResponseType)
 
             }
 
-            OcpiRequestType.REMOTE -> {
+            Recipient.REMOTE -> {
 
                 val (url, headers, ocnBody) = routingService.prepareRemotePlatformRequest(requestVariables)
 
@@ -266,12 +267,13 @@ class TokensController(private val routingService: RoutingService,
                 sender = sender,
                 receiver = receiver,
                 urlPathVariables = "/$countryCode/$partyID/$tokenUID",
-                urlEncodedParameters = OcpiRequestParameters(type = type ?: TokenType.RFID),
-                expectedResponseType = OcpiResponseDataType.TOKEN)
+                urlEncodedParams = OcpiRequestParameters(type = type
+                        ?: TokenType.RFID),
+                expectedResponseType = OcpiType.TOKEN)
 
         val response: HttpResponse<Token> = when (routingService.validateReceiver(receiver)) {
 
-            OcpiRequestType.LOCAL -> {
+            Recipient.LOCAL -> {
 
                 val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables)
 
@@ -279,12 +281,12 @@ class TokensController(private val routingService: RoutingService,
                         method = requestVariables.method,
                         url = url,
                         headers = headers,
-                        params = requestVariables.urlEncodedParameters,
+                        params = requestVariables.urlEncodedParams,
                         expectedDataType = requestVariables.expectedResponseType)
 
             }
 
-            OcpiRequestType.REMOTE -> {
+            Recipient.REMOTE -> {
 
                 val (url, headers, ocnBody) = routingService.prepareRemotePlatformRequest(requestVariables)
 
@@ -326,13 +328,14 @@ class TokensController(private val routingService: RoutingService,
                 sender = sender,
                 receiver = receiver,
                 urlPathVariables = "/$countryCode/$partyID/$tokenUID",
-                urlEncodedParameters = OcpiRequestParameters(type = type ?: TokenType.RFID),
+                urlEncodedParams = OcpiRequestParameters(type = type
+                        ?: TokenType.RFID),
                 body = body,
-                expectedResponseType = OcpiResponseDataType.NOTHING)
+                expectedResponseType = OcpiType.NOTHING)
 
         val response: HttpResponse<Nothing> = when (routingService.validateReceiver(receiver)) {
 
-            OcpiRequestType.LOCAL -> {
+            Recipient.LOCAL -> {
 
                 val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables)
 
@@ -340,13 +343,13 @@ class TokensController(private val routingService: RoutingService,
                         method = requestVariables.method,
                         url = url,
                         headers = headers,
-                        params = requestVariables.urlEncodedParameters,
+                        params = requestVariables.urlEncodedParams,
                         body = body,
                         expectedDataType = requestVariables.expectedResponseType)
 
             }
 
-            OcpiRequestType.REMOTE -> {
+            Recipient.REMOTE -> {
 
                 val (url, headers, ocnBody) = routingService.prepareRemotePlatformRequest(requestVariables)
 
@@ -388,13 +391,14 @@ class TokensController(private val routingService: RoutingService,
                 sender = sender,
                 receiver = receiver,
                 urlPathVariables = "/$countryCode/$partyID/$tokenUID",
-                urlEncodedParameters = OcpiRequestParameters(type = type ?: TokenType.RFID),
+                urlEncodedParams = OcpiRequestParameters(type = type
+                        ?: TokenType.RFID),
                 body = body,
-                expectedResponseType = OcpiResponseDataType.NOTHING)
+                expectedResponseType = OcpiType.NOTHING)
 
         val response: HttpResponse<Nothing> = when (routingService.validateReceiver(receiver)) {
 
-            OcpiRequestType.LOCAL -> {
+            Recipient.LOCAL -> {
 
                 val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables)
 
@@ -402,13 +406,13 @@ class TokensController(private val routingService: RoutingService,
                         method = requestVariables.method,
                         url = url,
                         headers = headers,
-                        params = requestVariables.urlEncodedParameters,
+                        params = requestVariables.urlEncodedParams,
                         body = body,
                         expectedDataType = requestVariables.expectedResponseType)
 
             }
 
-            OcpiRequestType.REMOTE -> {
+            Recipient.REMOTE -> {
 
                 val (url, headers, ocnBody) = routingService.prepareRemotePlatformRequest(requestVariables)
 

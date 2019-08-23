@@ -54,8 +54,8 @@ class CdrsControllerTest(@Autowired val mockMvc: MockMvc) {
                 correlationID = generateUUIDv4Token(),
                 sender = sender,
                 receiver = receiver,
-                urlEncodedParameters = OcpiRequestParameters(limit = 100),
-                expectedResponseType = OcpiResponseDataType.CDR_ARRAY)
+                urlEncodedParams = OcpiRequestParameters(limit = 100),
+                expectedResponseType = OcpiType.CDR_ARRAY)
 
         val url = "https://some.emsp.com/ocpi/emsp/2.2/cdrs"
 
@@ -69,7 +69,7 @@ class CdrsControllerTest(@Autowired val mockMvc: MockMvc) {
                 ocpiToPartyID = receiver.id)
 
         every { routingService.validateSender("Token token-c", sender) } just Runs
-        every { routingService.validateReceiver(receiver) } returns OcpiRequestType.LOCAL
+        every { routingService.validateReceiver(receiver) } returns Recipient.LOCAL
         every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, headers)
 
         val responseHeaders = mapOf(
@@ -82,7 +82,7 @@ class CdrsControllerTest(@Autowired val mockMvc: MockMvc) {
                 method = requestVariables.method,
                 url = url,
                 headers = headers,
-                params = requestVariables.urlEncodedParameters,
+                params = requestVariables.urlEncodedParams,
                 expectedDataType = requestVariables.expectedResponseType)
 
         } returns HttpResponse(
@@ -136,7 +136,7 @@ class CdrsControllerTest(@Autowired val mockMvc: MockMvc) {
                 sender = sender,
                 receiver = receiver,
                 urlPathVariables = "67",
-                expectedResponseType = OcpiResponseDataType.CDR_ARRAY)
+                expectedResponseType = OcpiType.CDR_ARRAY)
 
         val url = "https://some.emsp.com/actual/cdr/page/2"
 
@@ -150,7 +150,7 @@ class CdrsControllerTest(@Autowired val mockMvc: MockMvc) {
                 ocpiToPartyID = receiver.id)
 
         every { routingService.validateSender("Token token-c", sender) } just Runs
-        every { routingService.validateReceiver(receiver) } returns OcpiRequestType.LOCAL
+        every { routingService.validateReceiver(receiver) } returns Recipient.LOCAL
         every { routingService.prepareLocalPlatformRequest(requestVariables, proxied = true) } returns Pair(url, headers)
 
         val responseHeaders = mapOf(
@@ -163,7 +163,7 @@ class CdrsControllerTest(@Autowired val mockMvc: MockMvc) {
                     method = requestVariables.method,
                     url = url,
                     headers = headers,
-                    params = requestVariables.urlEncodedParameters,
+                    params = requestVariables.urlEncodedParams,
                     expectedDataType = requestVariables.expectedResponseType)
 
         } returns HttpResponse(
@@ -219,7 +219,7 @@ class CdrsControllerTest(@Autowired val mockMvc: MockMvc) {
                 sender = sender,
                 receiver = receiver,
                 urlPathVariables = "6534",
-                expectedResponseType = OcpiResponseDataType.CDR)
+                expectedResponseType = OcpiType.CDR)
 
         val url = "https://some.cpo.com/ocpi/emsp/2.2/cdrs"
 
@@ -233,7 +233,7 @@ class CdrsControllerTest(@Autowired val mockMvc: MockMvc) {
                 ocpiToPartyID = receiver.id)
 
         every { routingService.validateSender("Token token-c", sender) } just Runs
-        every { routingService.validateReceiver(receiver) } returns OcpiRequestType.LOCAL
+        every { routingService.validateReceiver(receiver) } returns Recipient.LOCAL
         every { routingService.prepareLocalPlatformRequest(requestVariables, proxied = true) } returns Pair(url, headers)
 
         every {
@@ -242,7 +242,7 @@ class CdrsControllerTest(@Autowired val mockMvc: MockMvc) {
                     method = requestVariables.method,
                     url = url,
                     headers = headers,
-                    params = requestVariables.urlEncodedParameters,
+                    params = requestVariables.urlEncodedParams,
                     expectedDataType = requestVariables.expectedResponseType)
 
         } returns HttpResponse(
@@ -283,7 +283,7 @@ class CdrsControllerTest(@Autowired val mockMvc: MockMvc) {
                 sender = sender,
                 receiver = receiver,
                 body = exampleCDR,
-                expectedResponseType = OcpiResponseDataType.NOTHING)
+                expectedResponseType = OcpiType.NOTHING)
 
         val url = "https://some.cpo.com/ocpi/emsp/2.2/cdrs"
 
@@ -297,7 +297,7 @@ class CdrsControllerTest(@Autowired val mockMvc: MockMvc) {
                 ocpiToPartyID = receiver.id)
 
         every { routingService.validateSender("Token token-c", sender) } just Runs
-        every { routingService.validateReceiver(receiver) } returns OcpiRequestType.LOCAL
+        every { routingService.validateReceiver(receiver) } returns Recipient.LOCAL
         every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, headers)
 
         val locationHeader = "https://real.msp.net/path/to/location/1"
@@ -308,7 +308,7 @@ class CdrsControllerTest(@Autowired val mockMvc: MockMvc) {
                     method = requestVariables.method,
                     url = url,
                     headers = headers,
-                    params = requestVariables.urlEncodedParameters,
+                    params = requestVariables.urlEncodedParams,
                     expectedDataType = requestVariables.expectedResponseType)
 
         } returns HttpResponse(

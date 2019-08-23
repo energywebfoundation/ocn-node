@@ -52,8 +52,8 @@ class RoutingServiceTest {
                 sender = BasicRole("SNC", "DE"),
                 receiver = BasicRole("ABC", "CH"),
                 urlPathVariables = "DE/SNC/abc123",
-                urlEncodedParameters = OcpiRequestParameters(type = TokenType.APP_USER),
-                expectedResponseType = OcpiResponseDataType.TOKEN)
+                urlEncodedParams = OcpiRequestParameters(type = TokenType.APP_USER),
+                expectedResponseType = OcpiType.TOKEN)
 
         every { routingService.getPlatformID(request.receiver) } returns 6L
         every { routingService.getPlatformEndpoint(
@@ -94,7 +94,7 @@ class RoutingServiceTest {
                 sender = BasicRole("SNC", "DE"),
                 receiver = BasicRole("ABC", "CH"),
                 urlPathVariables = "67",
-                expectedResponseType = OcpiResponseDataType.CDR_ARRAY)
+                expectedResponseType = OcpiType.CDR_ARRAY)
 
         every { routingService.getPlatformID(request.receiver) } returns 126L
         every { routingService.getProxyResource(
@@ -131,8 +131,8 @@ class RoutingServiceTest {
                 sender = BasicRole("SNC", "DE"),
                 receiver = BasicRole("ABC", "CH"),
                 urlPathVariables = "DE/SNC/abc123",
-                urlEncodedParameters = OcpiRequestParameters(type = TokenType.APP_USER),
-                expectedResponseType = OcpiResponseDataType.TOKEN_ARRAY)
+                urlEncodedParams = OcpiRequestParameters(type = TokenType.APP_USER),
+                expectedResponseType = OcpiType.TOKEN_ARRAY)
 
         val sig = "0x9955af11969a2d2a7f860cb00e6a00cfa7c581f5df2dbe8ea16700b33f4b4b9" +
                 "b69f945012f7ea7d3febf11eb1b78e1adc2d1c14c2cf48b25000938cc1860c83e01"
@@ -149,7 +149,7 @@ class RoutingServiceTest {
                         ocpiToCountryCode = request.receiver.country,
                         ocpiToPartyID = request.receiver.id),
                 urlPathVariables = request.urlPathVariables,
-                urlEncodedParameters = request.urlEncodedParameters,
+                urlEncodedParameters = request.urlEncodedParams,
                 body = request.body,
                 expectedResponseType = request.expectedResponseType)
 
@@ -181,7 +181,7 @@ class RoutingServiceTest {
                 sender = BasicRole("SNC", "DE"),
                 receiver = BasicRole("ABC", "CH"),
                 urlPathVariables = "45",
-                expectedResponseType = OcpiResponseDataType.SESSION_ARRAY)
+                expectedResponseType = OcpiType.SESSION_ARRAY)
 
         val sig = "0x9955af11969a2d2a7f860cb00e6a00cfa7c581f5df2dbe8ea16700b33f4b4b9" +
                 "b69f945012f7ea7d3febf11eb1b78e1adc2d1c14c2cf48b25000938cc1860c83e01"
@@ -198,7 +198,7 @@ class RoutingServiceTest {
                         ocpiToCountryCode = request.receiver.country,
                         ocpiToPartyID = request.receiver.id),
                 urlPathVariables = request.urlPathVariables,
-                urlEncodedParameters = request.urlEncodedParameters,
+                urlEncodedParameters = request.urlEncodedParams,
                 body = request.body,
                 proxyResource = "https://actual.cpo.com/ocpi/sender/2.2/sessions?limit=10&offset=50; rel =\"next\"",
                 expectedResponseType = request.expectedResponseType)
@@ -233,8 +233,8 @@ class RoutingServiceTest {
                 correlationID = generateUUIDv4Token(),
                 sender = BasicRole("SNC", "DE"),
                 receiver = BasicRole("ABC", "CH"),
-                urlEncodedParameters = OcpiRequestParameters(limit = 25),
-                expectedResponseType = OcpiResponseDataType.TARIFF_ARRAY)
+                urlEncodedParams = OcpiRequestParameters(limit = 25),
+                expectedResponseType = OcpiType.TARIFF_ARRAY)
 
         val link = "https://some.link.com/ocpi/tariffs?limit=25&offset=25; rel=\"next\""
 
@@ -352,7 +352,7 @@ class RoutingServiceTest {
     fun `validateReceiver should return LOCAL`() {
         val role = BasicRole("SNC", "DE")
         every { roleRepo.existsByCountryCodeAndPartyIDAllIgnoreCase(role.country, role.id) } returns true
-        assertThat(routingService.validateReceiver(role)).isEqualTo(OcpiRequestType.LOCAL)
+        assertThat(routingService.validateReceiver(role)).isEqualTo(Recipient.LOCAL)
     }
 
 
@@ -361,7 +361,7 @@ class RoutingServiceTest {
         val role = BasicRole("SNC", "DE")
         every { roleRepo.existsByCountryCodeAndPartyIDAllIgnoreCase(role.country, role.id) } returns false
         every { registry.clientURLOf(role.country.toByteArray(), role.id.toByteArray()).sendAsync().get() } returns "http://localhost:8080"
-        assertThat(routingService.validateReceiver(role)).isEqualTo(OcpiRequestType.REMOTE)
+        assertThat(routingService.validateReceiver(role)).isEqualTo(Recipient.REMOTE)
     }
 
 }

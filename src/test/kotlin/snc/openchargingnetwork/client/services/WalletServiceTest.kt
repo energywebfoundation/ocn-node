@@ -10,8 +10,8 @@ import org.springframework.http.HttpMethod
 import org.web3j.crypto.Credentials
 import org.web3j.crypto.Sign
 import snc.openchargingnetwork.client.models.OcnMessageRequestBody
-import snc.openchargingnetwork.client.models.OcpiRequestHeaders
-import snc.openchargingnetwork.client.models.OcpiResponseDataType
+import snc.openchargingnetwork.client.models.ocpi.OcpiRequestHeaders
+import snc.openchargingnetwork.client.models.ocpi.OcpiType
 import snc.openchargingnetwork.client.models.entities.WalletEntity
 import snc.openchargingnetwork.client.models.exceptions.OcpiHubConnectionProblemException
 import snc.openchargingnetwork.client.models.ocpi.BasicRole
@@ -37,7 +37,7 @@ class WalletServiceTest {
                     ocpiFromPartyID = "XXX",
                     ocpiToCountryCode = "DE",
                     ocpiToPartyID = "AAA"),
-            expectedResponseType = OcpiResponseDataType.SESSION_ARRAY)
+            expectedResponseType = OcpiType.SESSION_ARRAY)
 
     private val walletRepo: WalletRepository = mockk()
     private val registry: RegistryFacade = mockk()

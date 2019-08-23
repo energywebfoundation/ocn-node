@@ -22,8 +22,7 @@ package snc.openchargingnetwork.client.controllers.ocn
 import org.springframework.http.HttpHeaders
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
-import snc.openchargingnetwork.client.models.OcnMessageRequestBody
-import snc.openchargingnetwork.client.models.OcpiRequestVariables
+import snc.openchargingnetwork.client.models.ocpi.OcpiRequestVariables
 import snc.openchargingnetwork.client.models.exceptions.OcpiHubUnknownReceiverException
 import snc.openchargingnetwork.client.models.ocpi.BasicRole
 import snc.openchargingnetwork.client.models.ocpi.OcpiResponse
@@ -41,7 +40,7 @@ class MessageController(private val routingService: RoutingService,
     @PostMapping
     fun postMessage(@RequestHeader("X-Request-ID") requestID: String,
                     @RequestHeader("OCN-Signature") signature: String,
-                    @RequestBody body: OcnMessageRequestBody): ResponseEntity<OcpiResponse<out Any>> {
+                    @RequestBody body: OcpiRequestVariables): ResponseEntity<OcpiResponse<out Any>> {
 
         val sender = BasicRole(body.headers.ocpiFromPartyID, body.headers.ocpiFromCountryCode)
         val receiver = BasicRole(body.headers.ocpiToPartyID, body.headers.ocpiToCountryCode)
@@ -60,10 +59,8 @@ class MessageController(private val routingService: RoutingService,
             throw OcpiHubUnknownReceiverException("Recipient unknown to OCN client entered in Registry")
         }
 
-        val requestVariables = OcpiRequestVariables.fromOcnMessage(body)
-
         // forward message
-        val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables)
+        val (url, headers) = routingService.prepareLocalPlatformRequest(body)
 
         // TODO: proxy async response URL, pagination headers etc.
 
@@ -71,9 +68,9 @@ class MessageController(private val routingService: RoutingService,
                 method = body.method,
                 url = url,
                 headers = headers,
-                params = body.urlEncodedParameters,
+                urlEncodedParams = body.urlEncodedParams,
                 body = body.body,
-                expectedDataType = body.expectedResponseType)
+                expectedResponse = body.types.response)
 
         val responseHeaders = HttpHeaders()
         response.headers["location"]?.let { responseHeaders.set("Location", it) }
