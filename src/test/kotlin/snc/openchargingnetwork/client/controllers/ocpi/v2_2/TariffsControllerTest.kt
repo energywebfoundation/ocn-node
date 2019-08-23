@@ -44,27 +44,22 @@ class TariffsControllerTest(@Autowired val mockMvc: MockMvc) {
                 module = ModuleID.TARIFFS,
                 interfaceRole = InterfaceRole.SENDER,
                 method = HttpMethod.GET,
-                requestID = generateUUIDv4Token(),
-                correlationID = generateUUIDv4Token(),
-                sender = sender,
-                receiver = receiver,
-                urlEncodedParams = OcpiRequestParameters(limit = 10),
-                expectedResponseType = OcpiType.TARIFF_ARRAY)
+                headers = OcpiRequestHeaders(
+                        requestID = generateUUIDv4Token(),
+                        correlationID = generateUUIDv4Token(),
+                        sender = sender,
+                        receiver = receiver),
+                urlEncodedParams = OcpiRequestParameters(limit = 10))
 
         val url = "https://ocpi.emsp.com/2.2/tariffs"
 
-        val headers = OcpiRequestHeaders(
+        val forwardedHeaders = requestVariables.headers.copy(
                 authorization = "Token token-b",
-                requestID = generateUUIDv4Token(),
-                correlationID = requestVariables.correlationID,
-                ocpiFromCountryCode = sender.country,
-                ocpiFromPartyID = sender.id,
-                ocpiToCountryCode = receiver.country,
-                ocpiToPartyID = receiver.id)
+                requestID = generateUUIDv4Token())
 
         every { routingService.validateSender("Token token-c", sender) } just Runs
         every { routingService.validateReceiver(receiver) } returns Recipient.LOCAL
-        every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, headers)
+        every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, forwardedHeaders)
 
         val responseHeaders = mapOf(
                 "Link" to "https://ocpi.cpo.com/tariffs?limit=10&offset=10; rel=\"next\"",
@@ -76,9 +71,8 @@ class TariffsControllerTest(@Autowired val mockMvc: MockMvc) {
             httpService.makeOcpiRequest<Array<Tariff>>(
                     method = requestVariables.method,
                     url = url,
-                    headers = headers,
-                    params = requestVariables.urlEncodedParams,
-                    expectedDataType = requestVariables.expectedResponseType)
+                    headers = forwardedHeaders,
+                    urlEncodedParams = requestVariables.urlEncodedParams)
 
         } returns HttpResponse(
                 statusCode = 200,
@@ -97,8 +91,8 @@ class TariffsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         mockMvc.perform(get("/ocpi/sender/2.2/tariffs")
                 .header("Authorization", "Token token-c")
-                .header("X-Request-ID", requestVariables.requestID)
-                .header("X-Correlation-ID", requestVariables.correlationID)
+                .header("X-Request-ID", requestVariables.headers.requestID)
+                .header("X-Correlation-ID", requestVariables.headers.correlationID)
                 .header("OCPI-from-country-code", sender.country)
                 .header("OCPI-from-party-id", sender.id)
                 .header("OCPI-to-country-code", receiver.country)
@@ -129,27 +123,22 @@ class TariffsControllerTest(@Autowired val mockMvc: MockMvc) {
                 module = ModuleID.TARIFFS,
                 interfaceRole = InterfaceRole.SENDER,
                 method = HttpMethod.GET,
-                requestID = generateUUIDv4Token(),
-                correlationID = generateUUIDv4Token(),
-                sender = sender,
-                receiver = receiver,
-                urlPathVariables = "39",
-                expectedResponseType = OcpiType.TARIFF_ARRAY)
+                headers = OcpiRequestHeaders(
+                        requestID = generateUUIDv4Token(),
+                        correlationID = generateUUIDv4Token(),
+                        sender = sender,
+                        receiver = receiver),
+                urlPathVariables = "39")
 
         val url = "https://ocpi.cpo.com/tariffs?limit=10?offset=10"
 
-        val headers = OcpiRequestHeaders(
+        val forwardedHeaders = requestVariables.headers.copy(
                 authorization = "Token token-b",
-                requestID = generateUUIDv4Token(),
-                correlationID = requestVariables.correlationID,
-                ocpiFromCountryCode = sender.country,
-                ocpiFromPartyID = sender.id,
-                ocpiToCountryCode = receiver.country,
-                ocpiToPartyID = receiver.id)
+                requestID = generateUUIDv4Token())
 
         every { routingService.validateSender("Token token-c", sender) } just Runs
         every { routingService.validateReceiver(receiver) } returns Recipient.LOCAL
-        every { routingService.prepareLocalPlatformRequest(requestVariables, proxied = true) } returns Pair(url, headers)
+        every { routingService.prepareLocalPlatformRequest(requestVariables, proxied = true) } returns Pair(url, forwardedHeaders)
 
         val responseHeaders = mapOf(
                 "Link" to "https://some.emsp.com/actual/tariffs?limit=10&offset=10; rel=\"next\"",
@@ -161,9 +150,8 @@ class TariffsControllerTest(@Autowired val mockMvc: MockMvc) {
             httpService.makeOcpiRequest<Array<Tariff>>(
                     method = requestVariables.method,
                     url = url,
-                    headers = headers,
-                    params = requestVariables.urlEncodedParams,
-                    expectedDataType = requestVariables.expectedResponseType)
+                    headers = forwardedHeaders,
+                    urlEncodedParams = requestVariables.urlEncodedParams)
 
         } returns HttpResponse(
                 statusCode = 200,
@@ -182,12 +170,12 @@ class TariffsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         mockMvc.perform(get("/ocpi/sender/2.2/tariffs/page/${requestVariables.urlPathVariables}")
                 .header("Authorization", "Token token-c")
-                .header("X-Request-ID", requestVariables.requestID)
-                .header("X-Correlation-ID", requestVariables.correlationID)
-                .header("OCPI-from-country-code", requestVariables.sender.country)
-                .header("OCPI-from-party-id", requestVariables.sender.id)
-                .header("OCPI-to-country-code", requestVariables.receiver.country)
-                .header("OCPI-to-party-id", requestVariables.receiver.id)
+                .header("X-Request-ID", requestVariables.headers.requestID)
+                .header("X-Correlation-ID", requestVariables.headers.correlationID)
+                .header("OCPI-from-country-code", requestVariables.headers.sender.country)
+                .header("OCPI-from-party-id", requestVariables.headers.sender.id)
+                .header("OCPI-to-country-code", requestVariables.headers.receiver.country)
+                .header("OCPI-to-party-id", requestVariables.headers.receiver.id)
                 .param("limit", "100"))
                 .andExpect(status().isOk)
                 .andExpect(header().string("Link", "https://client.ocn.co/ocpi/sender/2.2/tariffs/page/40; rel=\"next\""))
@@ -215,35 +203,29 @@ class TariffsControllerTest(@Autowired val mockMvc: MockMvc) {
                 module = ModuleID.TARIFFS,
                 interfaceRole = InterfaceRole.RECEIVER,
                 method = HttpMethod.GET,
-                requestID = generateUUIDv4Token(),
-                correlationID = generateUUIDv4Token(),
-                sender = sender,
-                receiver = receiver,
-                urlPathVariables = "/${sender.country}/${sender.id}/$tariffID",
-                expectedResponseType = OcpiType.TARIFF)
+                headers = OcpiRequestHeaders(
+                        requestID = generateUUIDv4Token(),
+                        correlationID = generateUUIDv4Token(),
+                        sender = sender,
+                        receiver = receiver),
+                urlPathVariables = "/${sender.country}/${sender.id}/$tariffID")
 
         val url = "https://ocpi.cpo.com/2.2/tariffs/${sender.country}/${sender.id}/$tariffID"
 
-        val headers = OcpiRequestHeaders(
+        val forwardedHeaders = requestVariables.headers.copy(
                 authorization = "Token token-b",
-                requestID = generateUUIDv4Token(),
-                correlationID = requestVariables.correlationID,
-                ocpiFromCountryCode = sender.country,
-                ocpiFromPartyID = sender.id,
-                ocpiToCountryCode = receiver.country,
-                ocpiToPartyID = receiver.id)
+                requestID = generateUUIDv4Token())
 
         every { routingService.validateSender("Token token-c", sender) } just Runs
         every { routingService.validateReceiver(receiver) } returns Recipient.LOCAL
-        every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, headers)
+        every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, forwardedHeaders)
 
         every {
 
             httpService.makeOcpiRequest<Tariff>(
                     method = requestVariables.method,
                     url = url,
-                    headers = headers,
-                    expectedDataType = requestVariables.expectedResponseType)
+                    headers = forwardedHeaders)
 
         } returns HttpResponse(
                 statusCode = 200,
@@ -252,8 +234,8 @@ class TariffsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         mockMvc.perform(get("/ocpi/receiver/2.2/tariffs/${sender.country}/${sender.id}/$tariffID")
                 .header("Authorization", "Token token-c")
-                .header("X-Request-ID", requestVariables.requestID)
-                .header("X-Correlation-ID", requestVariables.correlationID)
+                .header("X-Request-ID", requestVariables.headers.requestID)
+                .header("X-Correlation-ID", requestVariables.headers.correlationID)
                 .header("OCPI-from-country-code", sender.country)
                 .header("OCPI-from-party-id", sender.id)
                 .header("OCPI-to-country-code", receiver.country)
@@ -280,37 +262,31 @@ class TariffsControllerTest(@Autowired val mockMvc: MockMvc) {
                 module = ModuleID.TARIFFS,
                 interfaceRole = InterfaceRole.RECEIVER,
                 method = HttpMethod.PUT,
-                requestID = generateUUIDv4Token(),
-                correlationID = generateUUIDv4Token(),
-                sender = sender,
-                receiver = receiver,
+                headers = OcpiRequestHeaders(
+                        requestID = generateUUIDv4Token(),
+                        correlationID = generateUUIDv4Token(),
+                        sender = sender,
+                        receiver = receiver),
                 urlPathVariables = "/${sender.country}/${sender.id}/$tariffID",
-                body = exampleTariff,
-                expectedResponseType = OcpiType.NOTHING)
+                body = exampleTariff)
 
         val url = "https://ocpi.cpo.com/2.2/tariffs/${sender.country}/${sender.id}/$tariffID"
 
-        val headers = OcpiRequestHeaders(
+        val forwardedHeaders = requestVariables.headers.copy(
                 authorization = "Token token-b",
-                requestID = generateUUIDv4Token(),
-                correlationID = requestVariables.correlationID,
-                ocpiFromCountryCode = sender.country,
-                ocpiFromPartyID = sender.id,
-                ocpiToCountryCode = receiver.country,
-                ocpiToPartyID = receiver.id)
+                requestID = generateUUIDv4Token())
 
         every { routingService.validateSender("Token token-c", sender) } just Runs
         every { routingService.validateReceiver(receiver) } returns Recipient.LOCAL
-        every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, headers)
+        every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, forwardedHeaders)
 
         every {
 
-            httpService.makeOcpiRequest<Nothing>(
+            httpService.makeOcpiRequest<Unit>(
                     method = requestVariables.method,
                     url = url,
-                    headers = headers,
-                    body = exampleTariff,
-                    expectedDataType = requestVariables.expectedResponseType)
+                    headers = forwardedHeaders,
+                    body = exampleTariff)
 
         } returns HttpResponse(
                 statusCode = 200,
@@ -319,8 +295,8 @@ class TariffsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         mockMvc.perform(put("/ocpi/receiver/2.2/tariffs/${sender.country}/${sender.id}/$tariffID")
                 .header("Authorization", "Token token-c")
-                .header("X-Request-ID", requestVariables.requestID)
-                .header("X-Correlation-ID", requestVariables.correlationID)
+                .header("X-Request-ID", requestVariables.headers.requestID)
+                .header("X-Correlation-ID", requestVariables.headers.correlationID)
                 .header("OCPI-from-country-code", sender.country)
                 .header("OCPI-from-party-id", sender.id)
                 .header("OCPI-to-country-code", receiver.country)
@@ -348,35 +324,29 @@ class TariffsControllerTest(@Autowired val mockMvc: MockMvc) {
                 module = ModuleID.TARIFFS,
                 interfaceRole = InterfaceRole.RECEIVER,
                 method = HttpMethod.DELETE,
-                requestID = generateUUIDv4Token(),
-                correlationID = generateUUIDv4Token(),
-                sender = sender,
-                receiver = receiver,
-                urlPathVariables = "/${sender.country}/${sender.id}/$tariffID",
-                expectedResponseType = OcpiType.NOTHING)
+                headers = OcpiRequestHeaders(
+                        requestID = generateUUIDv4Token(),
+                        correlationID = generateUUIDv4Token(),
+                        sender = sender,
+                        receiver = receiver),
+                urlPathVariables = "/${sender.country}/${sender.id}/$tariffID")
 
         val url = "https://ocpi.cpo.com/2.2/tariffs/${sender.country}/${sender.id}/$tariffID"
 
-        val headers = OcpiRequestHeaders(
+        val forwardedHeaders = requestVariables.headers.copy(
                 authorization = "Token token-b",
-                requestID = generateUUIDv4Token(),
-                correlationID = requestVariables.correlationID,
-                ocpiFromCountryCode = sender.country,
-                ocpiFromPartyID = sender.id,
-                ocpiToCountryCode = receiver.country,
-                ocpiToPartyID = receiver.id)
+                requestID = generateUUIDv4Token())
 
         every { routingService.validateSender("Token token-c", sender) } just Runs
         every { routingService.validateReceiver(receiver) } returns Recipient.LOCAL
-        every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, headers)
+        every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, forwardedHeaders)
 
         every {
 
-            httpService.makeOcpiRequest<Nothing>(
+            httpService.makeOcpiRequest<Unit>(
                     method = requestVariables.method,
                     url = url,
-                    headers = headers,
-                    expectedDataType = requestVariables.expectedResponseType)
+                    headers = forwardedHeaders)
 
         } returns HttpResponse(
                 statusCode = 200,
@@ -385,8 +355,8 @@ class TariffsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         mockMvc.perform(delete("/ocpi/receiver/2.2/tariffs/${sender.country}/${sender.id}/$tariffID")
                 .header("Authorization", "Token token-c")
-                .header("X-Request-ID", requestVariables.requestID)
-                .header("X-Correlation-ID", requestVariables.correlationID)
+                .header("X-Request-ID", requestVariables.headers.requestID)
+                .header("X-Correlation-ID", requestVariables.headers.correlationID)
                 .header("OCPI-from-country-code", sender.country)
                 .header("OCPI-from-party-id", sender.id)
                 .header("OCPI-to-country-code", receiver.country)

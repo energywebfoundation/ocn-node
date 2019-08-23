@@ -60,16 +60,16 @@ class TariffsController(private val routingService: RoutingService,
                 module = ModuleID.TARIFFS,
                 interfaceRole = InterfaceRole.SENDER,
                 method = HttpMethod.GET,
-                requestID = requestID,
-                correlationID = correlationID,
-                sender = sender,
-                receiver = receiver,
+                headers = OcpiRequestHeaders(
+                        requestID = requestID,
+                        correlationID = correlationID,
+                        sender = sender,
+                        receiver = receiver),
                 urlEncodedParams = OcpiRequestParameters(
                         dateFrom = dateFrom,
                         dateTo = dateTo,
                         offset = offset,
-                        limit = limit),
-                expectedResponseType = OcpiType.TARIFF_ARRAY)
+                        limit = limit))
 
         val response: HttpResponse<Array<Tariff>> = when (routingService.validateReceiver(receiver)) {
 
@@ -81,8 +81,7 @@ class TariffsController(private val routingService: RoutingService,
                         method = requestVariables.method,
                         url = url,
                         headers = headers,
-                        params = requestVariables.urlEncodedParams,
-                        expectedDataType = requestVariables.expectedResponseType)
+                        urlEncodedParams = requestVariables.urlEncodedParams)
             }
 
             Recipient.REMOTE -> {
@@ -124,12 +123,12 @@ class TariffsController(private val routingService: RoutingService,
                 module = ModuleID.TARIFFS,
                 interfaceRole = InterfaceRole.SENDER,
                 method = HttpMethod.GET,
-                requestID = requestID,
-                correlationID = correlationID,
-                sender = sender,
-                receiver = receiver,
-                urlPathVariables = uid,
-                expectedResponseType = OcpiType.TARIFF_ARRAY)
+                headers = OcpiRequestHeaders(
+                        requestID = requestID,
+                        correlationID = correlationID,
+                        sender = sender,
+                        receiver = receiver),
+                urlPathVariables = uid)
 
         val response: HttpResponse<Array<Tariff>> = when (routingService.validateReceiver(receiver)) {
 
@@ -140,8 +139,7 @@ class TariffsController(private val routingService: RoutingService,
                 httpService.makeOcpiRequest(
                         method = requestVariables.method,
                         url = url,
-                        headers = headers,
-                        expectedDataType = requestVariables.expectedResponseType)
+                        headers = headers)
 
             }
 
@@ -199,12 +197,12 @@ class TariffsController(private val routingService: RoutingService,
                 module = ModuleID.TARIFFS,
                 interfaceRole = InterfaceRole.RECEIVER,
                 method = HttpMethod.GET,
-                requestID = requestID,
-                correlationID = correlationID,
-                sender = sender,
-                receiver = receiver,
-                urlPathVariables = "/$countryCode/$partyID/$tariffID",
-                expectedResponseType = OcpiType.TARIFF)
+                headers = OcpiRequestHeaders(
+                        requestID = requestID,
+                        correlationID = correlationID,
+                        sender = sender,
+                        receiver = receiver),
+                urlPathVariables = "/$countryCode/$partyID/$tariffID")
 
         val response: HttpResponse<Tariff> = when (routingService.validateReceiver(receiver)) {
 
@@ -215,8 +213,7 @@ class TariffsController(private val routingService: RoutingService,
                 httpService.makeOcpiRequest(
                         method = requestVariables.method,
                         url = url,
-                        headers = headers,
-                        expectedDataType = requestVariables.expectedResponseType)
+                        headers = headers)
 
             }
 
@@ -245,7 +242,7 @@ class TariffsController(private val routingService: RoutingService,
                              @PathVariable countryCode: String,
                              @PathVariable partyID: String,
                              @PathVariable tariffID: String,
-                             @RequestBody body: Tariff): ResponseEntity<OcpiResponse<Nothing>> {
+                             @RequestBody body: Tariff): ResponseEntity<OcpiResponse<Unit>> {
 
         val sender = BasicRole(fromPartyID, fromCountryCode)
         val receiver = BasicRole(toPartyID, toCountryCode)
@@ -256,15 +253,15 @@ class TariffsController(private val routingService: RoutingService,
                 module = ModuleID.TARIFFS,
                 interfaceRole = InterfaceRole.RECEIVER,
                 method = HttpMethod.PUT,
-                requestID = requestID,
-                correlationID = correlationID,
-                sender = sender,
-                receiver = receiver,
+                headers = OcpiRequestHeaders(
+                        requestID = requestID,
+                        correlationID = correlationID,
+                        sender = sender,
+                        receiver = receiver),
                 urlPathVariables = "/$countryCode/$partyID/$tariffID",
-                body = body,
-                expectedResponseType = OcpiType.NOTHING)
+                body = body)
 
-        val response: HttpResponse<Nothing> = when (routingService.validateReceiver(receiver)) {
+        val response: HttpResponse<Unit> = when (routingService.validateReceiver(receiver)) {
 
             Recipient.LOCAL -> {
 
@@ -274,8 +271,7 @@ class TariffsController(private val routingService: RoutingService,
                         method = requestVariables.method,
                         url = url,
                         headers = headers,
-                        body = body,
-                        expectedDataType = requestVariables.expectedResponseType)
+                        body = body)
 
             }
 
@@ -303,7 +299,7 @@ class TariffsController(private val routingService: RoutingService,
                                 @RequestHeader("OCPI-to-party-id") toPartyID: String,
                                 @PathVariable countryCode: String,
                                 @PathVariable partyID: String,
-                                @PathVariable tariffID: String): ResponseEntity<OcpiResponse<Nothing>> {
+                                @PathVariable tariffID: String): ResponseEntity<OcpiResponse<Unit>> {
 
         val sender = BasicRole(fromPartyID, fromCountryCode)
         val receiver = BasicRole(toPartyID, toCountryCode)
@@ -314,14 +310,14 @@ class TariffsController(private val routingService: RoutingService,
                 module = ModuleID.TARIFFS,
                 interfaceRole = InterfaceRole.RECEIVER,
                 method = HttpMethod.DELETE,
-                requestID = requestID,
-                correlationID = correlationID,
-                sender = sender,
-                receiver = receiver,
-                urlPathVariables = "/$countryCode/$partyID/$tariffID",
-                expectedResponseType = OcpiType.NOTHING)
+                headers = OcpiRequestHeaders(
+                        requestID = requestID,
+                        correlationID = correlationID,
+                        sender = sender,
+                        receiver = receiver),
+                urlPathVariables = "/$countryCode/$partyID/$tariffID")
 
-        val response: HttpResponse<Nothing> = when (routingService.validateReceiver(receiver)) {
+        val response: HttpResponse<Unit> = when (routingService.validateReceiver(receiver)) {
 
             Recipient.LOCAL -> {
 
@@ -330,8 +326,7 @@ class TariffsController(private val routingService: RoutingService,
                 httpService.makeOcpiRequest(
                         method = requestVariables.method,
                         url = url,
-                        headers = headers,
-                        expectedDataType = requestVariables.expectedResponseType)
+                        headers = headers)
 
             }
 

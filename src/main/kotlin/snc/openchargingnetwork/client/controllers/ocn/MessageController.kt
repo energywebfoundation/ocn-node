@@ -69,8 +69,7 @@ class MessageController(private val routingService: RoutingService,
                 url = url,
                 headers = headers,
                 urlEncodedParams = body.urlEncodedParams,
-                body = body.body,
-                expectedResponse = body.types.response)
+                body = body.body)
 
         val responseHeaders = HttpHeaders()
         response.headers["location"]?.let { responseHeaders.set("Location", it) }

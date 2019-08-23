@@ -49,7 +49,7 @@ class CommandsController(private val routingService: RoutingService,
                           @RequestHeader("OCPI-to-party-id") toPartyID: String,
                           @PathVariable("command") command: CommandType,
                           @PathVariable("uid") uid: String,
-                          @RequestBody body: CommandResult): ResponseEntity<OcpiResponse<Nothing>> {
+                          @RequestBody body: CommandResult): ResponseEntity<OcpiResponse<Unit>> {
 
         val sender = BasicRole(fromPartyID, fromCountryCode)
         val receiver = BasicRole(toPartyID, toCountryCode)
@@ -66,10 +66,9 @@ class CommandsController(private val routingService: RoutingService,
                         sender = sender,
                         receiver = receiver),
                 urlPathVariables = uid,
-                body = body,
-                types = TypePair(request = OcpiType.COMMAND_RESULT))
+                body = body)
 
-        val response: HttpResponse<Nothing> = when (routingService.validateReceiver(receiver)) {
+        val response: HttpResponse<Unit> = when (routingService.validateReceiver(receiver)) {
 
             Recipient.LOCAL -> {
 
@@ -79,8 +78,7 @@ class CommandsController(private val routingService: RoutingService,
                         method = requestVariables.method,
                         url = url,
                         headers = headers,
-                        body = body,
-                        expectedResponse = requestVariables.types.response)
+                        body = body)
 
             }
 
@@ -128,10 +126,7 @@ class CommandsController(private val routingService: RoutingService,
                         sender = sender,
                         receiver = receiver),
                 urlPathVariables = "CANCEL_RESERVATION",
-                body = body,
-                types = TypePair(
-                        request = OcpiType.CANCEL_RESERVATION,
-                        response = OcpiType.COMMAND_RESPONSE))
+                body = body)
 
         val response: HttpResponse<CommandResponse> = when (routingService.validateReceiver(receiver)) {
 
@@ -151,8 +146,7 @@ class CommandsController(private val routingService: RoutingService,
                         method = requestVariables.method,
                         url = url,
                         headers = headers,
-                        body = proxyBody,
-                        expectedResponse = requestVariables.types.response)
+                        body = proxyBody)
 
             }
 
@@ -195,10 +189,7 @@ class CommandsController(private val routingService: RoutingService,
                         sender = sender,
                         receiver = receiver),
                 urlPathVariables = "RESERVE_NOW",
-                body = body,
-                types = TypePair(
-                        request = OcpiType.RESERVE_NOW,
-                        response = OcpiType.COMMAND_RESPONSE))
+                body = body)
 
         val response: HttpResponse<CommandResponse> = when (routingService.validateReceiver(receiver)) {
 
@@ -218,8 +209,7 @@ class CommandsController(private val routingService: RoutingService,
                         method = requestVariables.method,
                         url = url,
                         headers = headers,
-                        body = proxyBody,
-                        expectedResponse = requestVariables.types.response)
+                        body = proxyBody)
 
             }
 
@@ -262,10 +252,7 @@ class CommandsController(private val routingService: RoutingService,
                         sender = sender,
                         receiver = receiver),
                 urlPathVariables = "START_SESSION",
-                body = body,
-                types = TypePair(
-                        request = OcpiType.START_SESSION,
-                        response = OcpiType.COMMAND_RESPONSE))
+                body = body)
 
         val response: HttpResponse<CommandResponse> = when (routingService.validateReceiver(receiver)) {
 
@@ -285,8 +272,7 @@ class CommandsController(private val routingService: RoutingService,
                         method = requestVariables.method,
                         url = url,
                         headers = headers,
-                        body = proxyBody,
-                        expectedResponse = requestVariables.types.response)
+                        body = proxyBody)
 
             }
 
@@ -329,10 +315,7 @@ class CommandsController(private val routingService: RoutingService,
                         sender = sender,
                         receiver = receiver),
                 urlPathVariables = "STOP_SESSION",
-                body = body,
-                types = TypePair(
-                        request = OcpiType.STOP_SESSION,
-                        response = OcpiType.COMMAND_RESPONSE))
+                body = body)
 
         val response: HttpResponse<CommandResponse> = when (routingService.validateReceiver(receiver)) {
 
@@ -352,8 +335,7 @@ class CommandsController(private val routingService: RoutingService,
                         method = requestVariables.method,
                         url = url,
                         headers = headers,
-                        body = proxyBody,
-                        expectedResponse = requestVariables.types.response)
+                        body = proxyBody)
 
             }
 
@@ -396,10 +378,7 @@ class CommandsController(private val routingService: RoutingService,
                         sender = sender,
                         receiver = receiver),
                 urlPathVariables = "UNLOCK_CONNECTOR",
-                body = body,
-                types = TypePair(
-                        request = OcpiType.UNLOCK_CONNECTOR,
-                        response = OcpiType.COMMAND_RESPONSE))
+                body = body)
 
         val response: HttpResponse<CommandResponse> = when (routingService.validateReceiver(receiver)) {
 
@@ -419,8 +398,7 @@ class CommandsController(private val routingService: RoutingService,
                         method = requestVariables.method,
                         url = url,
                         headers = headers,
-                        body = proxyBody,
-                        expectedResponse = requestVariables.types.response)
+                        body = proxyBody)
 
             }
 

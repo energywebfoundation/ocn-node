@@ -47,15 +47,16 @@ class RoutingServiceTest {
                 module = ModuleID.TOKENS,
                 method = HttpMethod.GET,
                 interfaceRole = InterfaceRole.RECEIVER,
-                requestID = generateUUIDv4Token(),
-                correlationID = generateUUIDv4Token(),
-                sender = BasicRole("SNC", "DE"),
-                receiver = BasicRole("ABC", "CH"),
+                headers = OcpiRequestHeaders(
+                        requestID = generateUUIDv4Token(),
+                        correlationID = generateUUIDv4Token(),
+                        sender = BasicRole("SNC", "DE"),
+                        receiver = BasicRole("ABC", "CH")
+                ),
                 urlPathVariables = "DE/SNC/abc123",
-                urlEncodedParams = OcpiRequestParameters(type = TokenType.APP_USER),
-                expectedResponseType = OcpiType.TOKEN)
+                urlEncodedParams = OcpiRequestParameters(type = TokenType.APP_USER))
 
-        every { routingService.getPlatformID(request.receiver) } returns 6L
+        every { routingService.getPlatformID(request.headers.receiver) } returns 6L
         every { routingService.getPlatformEndpoint(
                 platformID = 6L,
                 module = request.module,
@@ -75,11 +76,11 @@ class RoutingServiceTest {
         assertThat(url).isEqualTo("https://ocpi.cpo.com/2.2/tokens/DE/SNC/abc123")
         assertThat(headers.authorization).isEqualTo("Token 1234567890")
         assertThat(headers.requestID.length).isEqualTo(36)
-        assertThat(headers.correlationID).isEqualTo(request.correlationID)
-        assertThat(headers.ocpiFromCountryCode).isEqualTo(request.sender.country)
-        assertThat(headers.ocpiFromPartyID).isEqualTo(request.sender.id)
-        assertThat(headers.ocpiToCountryCode).isEqualTo(request.receiver.country)
-        assertThat(headers.ocpiToPartyID).isEqualTo(request.receiver.id)
+        assertThat(headers.correlationID).isEqualTo(request.headers.correlationID)
+        assertThat(headers.ocpiFromCountryCode).isEqualTo(request.headers.sender.country)
+        assertThat(headers.ocpiFromPartyID).isEqualTo(request.headers.sender.id)
+        assertThat(headers.ocpiToCountryCode).isEqualTo(request.headers.receiver.country)
+        assertThat(headers.ocpiToPartyID).isEqualTo(request.headers.receiver.id)
     }
 
 
@@ -89,18 +90,19 @@ class RoutingServiceTest {
                 module = ModuleID.CDRS,
                 method = HttpMethod.GET,
                 interfaceRole = InterfaceRole.SENDER,
-                requestID = generateUUIDv4Token(),
-                correlationID = generateUUIDv4Token(),
-                sender = BasicRole("SNC", "DE"),
-                receiver = BasicRole("ABC", "CH"),
-                urlPathVariables = "67",
-                expectedResponseType = OcpiType.CDR_ARRAY)
+                headers = OcpiRequestHeaders(
+                        requestID = generateUUIDv4Token(),
+                        correlationID = generateUUIDv4Token(),
+                        sender = BasicRole("SNC", "DE"),
+                        receiver = BasicRole("ABC", "CH")
+                ),
+                urlPathVariables = "67")
 
-        every { routingService.getPlatformID(request.receiver) } returns 126L
+        every { routingService.getPlatformID(request.headers.receiver) } returns 126L
         every { routingService.getProxyResource(
                 id = "67",
-                sender = request.sender,
-                receiver = request.receiver)
+                sender = request.headers.sender,
+                receiver = request.headers.receiver)
         } returns "https://cpo.com/cdrs?limit=20"
 
         every { platformRepo.findById(126L).get() } returns PlatformEntity(
@@ -112,11 +114,11 @@ class RoutingServiceTest {
         assertThat(url).isEqualTo("https://cpo.com/cdrs?limit=20")
         assertThat(headers.authorization).isEqualTo("Token 0102030405")
         assertThat(headers.requestID.length).isEqualTo(36)
-        assertThat(headers.correlationID).isEqualTo(request.correlationID)
-        assertThat(headers.ocpiFromCountryCode).isEqualTo(request.sender.country)
-        assertThat(headers.ocpiFromPartyID).isEqualTo(request.sender.id)
-        assertThat(headers.ocpiToCountryCode).isEqualTo(request.receiver.country)
-        assertThat(headers.ocpiToPartyID).isEqualTo(request.receiver.id)
+        assertThat(headers.correlationID).isEqualTo(request.headers.correlationID)
+        assertThat(headers.ocpiFromCountryCode).isEqualTo(request.headers.sender.country)
+        assertThat(headers.ocpiFromPartyID).isEqualTo(request.headers.sender.id)
+        assertThat(headers.ocpiToCountryCode).isEqualTo(request.headers.receiver.country)
+        assertThat(headers.ocpiToPartyID).isEqualTo(request.headers.receiver.id)
     }
 
 
@@ -126,39 +128,24 @@ class RoutingServiceTest {
                 module = ModuleID.TOKENS,
                 method = HttpMethod.GET,
                 interfaceRole = InterfaceRole.RECEIVER,
-                requestID = generateUUIDv4Token(),
-                correlationID = generateUUIDv4Token(),
-                sender = BasicRole("SNC", "DE"),
-                receiver = BasicRole("ABC", "CH"),
+                headers = OcpiRequestHeaders(
+                        requestID = generateUUIDv4Token(),
+                        correlationID = generateUUIDv4Token(),
+                        sender = BasicRole("SNC", "DE"),
+                        receiver = BasicRole("ABC", "CH")
+                ),
                 urlPathVariables = "DE/SNC/abc123",
-                urlEncodedParams = OcpiRequestParameters(type = TokenType.APP_USER),
-                expectedResponseType = OcpiType.TOKEN_ARRAY)
+                urlEncodedParams = OcpiRequestParameters(type = TokenType.APP_USER))
 
         val sig = "0x9955af11969a2d2a7f860cb00e6a00cfa7c581f5df2dbe8ea16700b33f4b4b9" +
                 "b69f945012f7ea7d3febf11eb1b78e1adc2d1c14c2cf48b25000938cc1860c83e01"
 
-        val ocnBody = OcnMessageRequestBody(
-                method = request.method,
-                interfaceRole = request.interfaceRole,
-                module = request.module,
-                headers = OcpiRequestHeaders(
-                        requestID = request.requestID,
-                        correlationID = request.correlationID,
-                        ocpiFromCountryCode = request.sender.country,
-                        ocpiFromPartyID = request.sender.id,
-                        ocpiToCountryCode = request.receiver.country,
-                        ocpiToPartyID = request.receiver.id),
-                urlPathVariables = request.urlPathVariables,
-                urlEncodedParameters = request.urlEncodedParams,
-                body = request.body,
-                expectedResponseType = request.expectedResponseType)
-
         every { registry.clientURLOf(
-                request.receiver.country.toByteArray(),
-                request.receiver.id.toByteArray()).sendAsync().get() } returns "https://ocn.client.net"
+                request.headers.receiver.country.toByteArray(),
+                request.headers.receiver.id.toByteArray()).sendAsync().get() } returns "https://ocn.client.net"
 
-        val jsonString = jacksonObjectMapper().writeValueAsString(ocnBody)
-        every { httpService.mapper.writeValueAsString(ocnBody) } returns jsonString
+        val jsonString = jacksonObjectMapper().writeValueAsString(request)
+        every { httpService.mapper.writeValueAsString(request) } returns jsonString
         every { walletService.sign(jsonString) } returns sig
 
         val (url, headers, body) = routingService.prepareRemotePlatformRequest(request)
@@ -166,7 +153,7 @@ class RoutingServiceTest {
         assertThat(url).isEqualTo("https://ocn.client.net")
         assertThat(headers.requestID.length).isEqualTo(36)
         assertThat(headers.signature).isEqualTo(sig)
-        assertThat(body).isEqualTo(ocnBody)
+        assertThat(body).isEqualTo(request)
     }
 
 
@@ -176,42 +163,28 @@ class RoutingServiceTest {
                 module = ModuleID.SESSIONS,
                 method = HttpMethod.GET,
                 interfaceRole = InterfaceRole.SENDER,
-                requestID = generateUUIDv4Token(),
-                correlationID = generateUUIDv4Token(),
-                sender = BasicRole("SNC", "DE"),
-                receiver = BasicRole("ABC", "CH"),
-                urlPathVariables = "45",
-                expectedResponseType = OcpiType.SESSION_ARRAY)
+                headers = OcpiRequestHeaders(
+                        requestID = generateUUIDv4Token(),
+                        correlationID = generateUUIDv4Token(),
+                        sender = BasicRole("SNC", "DE"),
+                        receiver = BasicRole("ABC", "CH")
+                ),
+                urlPathVariables = "45")
 
         val sig = "0x9955af11969a2d2a7f860cb00e6a00cfa7c581f5df2dbe8ea16700b33f4b4b9" +
                 "b69f945012f7ea7d3febf11eb1b78e1adc2d1c14c2cf48b25000938cc1860c83e01"
 
-        val ocnBody = OcnMessageRequestBody(
-                method = request.method,
-                interfaceRole = request.interfaceRole,
-                module = request.module,
-                headers = OcpiRequestHeaders(
-                        requestID = request.requestID,
-                        correlationID = request.correlationID,
-                        ocpiFromCountryCode = request.sender.country,
-                        ocpiFromPartyID = request.sender.id,
-                        ocpiToCountryCode = request.receiver.country,
-                        ocpiToPartyID = request.receiver.id),
-                urlPathVariables = request.urlPathVariables,
-                urlEncodedParameters = request.urlEncodedParams,
-                body = request.body,
-                proxyResource = "https://actual.cpo.com/ocpi/sender/2.2/sessions?limit=10&offset=50; rel =\"next\"",
-                expectedResponseType = request.expectedResponseType)
+        val modifiedRequest = request.copy(proxyResource = "https://actual.cpo.com/ocpi/sender/2.2/sessions?limit=10&offset=50; rel =\"next\"")
 
         every { registry.clientURLOf(
-                request.receiver.country.toByteArray(),
-                request.receiver.id.toByteArray()).sendAsync().get() } returns "https://ocn-client.provider.net"
+                request.headers.receiver.country.toByteArray(),
+                request.headers.receiver.id.toByteArray()).sendAsync().get() } returns "https://ocn-client.provider.net"
 
-        every { routingService.getProxyResource("45", request.sender, request.receiver) } returns
+        every { routingService.getProxyResource("45", request.headers.sender, request.headers.receiver) } returns
                 "https://actual.cpo.com/ocpi/sender/2.2/sessions?limit=10&offset=50; rel =\"next\""
 
-        val jsonString = jacksonObjectMapper().writeValueAsString(ocnBody)
-        every { httpService.mapper.writeValueAsString(ocnBody) } returns jsonString
+        val jsonString = jacksonObjectMapper().writeValueAsString(modifiedRequest)
+        every { httpService.mapper.writeValueAsString(modifiedRequest) } returns jsonString
         every { walletService.sign(jsonString) } returns sig
 
         val (url, headers, body) = routingService.prepareRemotePlatformRequest(request, proxied = true)
@@ -219,7 +192,7 @@ class RoutingServiceTest {
         assertThat(url).isEqualTo("https://ocn-client.provider.net")
         assertThat(headers.requestID.length).isEqualTo(36)
         assertThat(headers.signature).isEqualTo(sig)
-        assertThat(body).isEqualTo(ocnBody)
+        assertThat(body).isEqualTo(modifiedRequest)
     }
 
 
@@ -229,12 +202,13 @@ class RoutingServiceTest {
                 module = ModuleID.TARIFFS,
                 method = HttpMethod.GET,
                 interfaceRole = InterfaceRole.SENDER,
-                requestID = generateUUIDv4Token(),
-                correlationID = generateUUIDv4Token(),
-                sender = BasicRole("SNC", "DE"),
-                receiver = BasicRole("ABC", "CH"),
-                urlEncodedParams = OcpiRequestParameters(limit = 25),
-                expectedResponseType = OcpiType.TARIFF_ARRAY)
+                headers = OcpiRequestHeaders(
+                        requestID = generateUUIDv4Token(),
+                        correlationID = generateUUIDv4Token(),
+                        sender = BasicRole("SNC", "DE"),
+                        receiver = BasicRole("ABC", "CH")
+                ),
+                urlEncodedParams = OcpiRequestParameters(limit = 25))
 
         val link = "https://some.link.com/ocpi/tariffs?limit=25&offset=25; rel=\"next\""
 
@@ -246,8 +220,8 @@ class RoutingServiceTest {
         every { proxyResourceRepo.save<ProxyResourceEntity>(any())
         } returns ProxyResourceEntity(
                 resource = link,
-                sender = request.sender,
-                receiver = request.receiver,
+                sender = request.headers.sender,
+                receiver = request.headers.receiver,
                 id = 74L)
 
         every { properties.url } returns "https://some.client.ocn"

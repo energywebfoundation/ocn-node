@@ -60,16 +60,16 @@ class SessionsController(private val routingService: RoutingService,
                 module = ModuleID.SESSIONS,
                 interfaceRole = InterfaceRole.SENDER,
                 method = HttpMethod.GET,
-                requestID = requestID,
-                correlationID = correlationID,
-                sender = sender,
-                receiver = receiver,
+                headers = OcpiRequestHeaders(
+                        requestID = requestID,
+                        correlationID = correlationID,
+                        sender = sender,
+                        receiver = receiver),
                 urlEncodedParams = OcpiRequestParameters(
                         dateFrom = dateFrom,
                         dateTo = dateTo,
                         offset = offset,
-                        limit = limit),
-                expectedResponseType = OcpiType.SESSION_ARRAY)
+                        limit = limit))
 
         val response: HttpResponse<Array<Session>> = when (routingService.validateReceiver(receiver)) {
 
@@ -81,8 +81,7 @@ class SessionsController(private val routingService: RoutingService,
                         method = requestVariables.method,
                         url = url,
                         headers = headers,
-                        params = requestVariables.urlEncodedParams,
-                        expectedDataType = requestVariables.expectedResponseType)
+                        urlEncodedParams = requestVariables.urlEncodedParams)
             }
 
             Recipient.REMOTE -> {
@@ -124,12 +123,12 @@ class SessionsController(private val routingService: RoutingService,
                 module = ModuleID.SESSIONS,
                 interfaceRole = InterfaceRole.SENDER,
                 method = HttpMethod.GET,
-                requestID = requestID,
-                correlationID = correlationID,
-                sender = sender,
-                receiver = receiver,
-                urlPathVariables = uid,
-                expectedResponseType = OcpiType.SESSION_ARRAY)
+                headers = OcpiRequestHeaders(
+                        requestID = requestID,
+                        correlationID = correlationID,
+                        sender = sender,
+                        receiver = receiver),
+                urlPathVariables = uid)
 
         val response: HttpResponse<Array<Session>> = when (routingService.validateReceiver(receiver)) {
 
@@ -140,8 +139,7 @@ class SessionsController(private val routingService: RoutingService,
                 httpService.makeOcpiRequest(
                         method = requestVariables.method,
                         url = url,
-                        headers = headers,
-                        expectedDataType = requestVariables.expectedResponseType)
+                        headers = headers)
 
             }
 
@@ -194,13 +192,13 @@ class SessionsController(private val routingService: RoutingService,
                 module = ModuleID.SESSIONS,
                 interfaceRole = InterfaceRole.SENDER,
                 method = HttpMethod.PUT,
-                requestID = requestID,
-                correlationID = correlationID,
-                sender = sender,
-                receiver = receiver,
+                headers = OcpiRequestHeaders(
+                        requestID = requestID,
+                        correlationID = correlationID,
+                        sender = sender,
+                        receiver = receiver),
                 urlPathVariables = "/$sessionID/charging_preferences",
-                body = body,
-                expectedResponseType = OcpiType.CHARGING_PREFERENCE_RESPONSE)
+                body = body)
 
         val response: HttpResponse<ChargingPreferencesResponse> = when (routingService.validateReceiver(receiver)) {
 
@@ -212,8 +210,7 @@ class SessionsController(private val routingService: RoutingService,
                         method = requestVariables.method,
                         url = url,
                         headers = headers,
-                        body = body,
-                        expectedDataType = requestVariables.expectedResponseType)
+                        body = body)
 
             }
 
@@ -256,12 +253,12 @@ class SessionsController(private val routingService: RoutingService,
                 module = ModuleID.SESSIONS,
                 interfaceRole = InterfaceRole.RECEIVER,
                 method = HttpMethod.GET,
-                requestID = requestID,
-                correlationID = correlationID,
-                sender = sender,
-                receiver = receiver,
-                urlPathVariables = "/$countryCode/$partyID/$sessionID",
-                expectedResponseType = OcpiType.SESSION)
+                headers = OcpiRequestHeaders(
+                        requestID = requestID,
+                        correlationID = correlationID,
+                        sender = sender,
+                        receiver = receiver),
+                urlPathVariables = "/$countryCode/$partyID/$sessionID")
 
         val response: HttpResponse<Session> = when (routingService.validateReceiver(receiver)) {
 
@@ -272,8 +269,7 @@ class SessionsController(private val routingService: RoutingService,
                 httpService.makeOcpiRequest(
                         method = requestVariables.method,
                         url = url,
-                        headers = headers,
-                        expectedDataType = requestVariables.expectedResponseType)
+                        headers = headers)
 
             }
 
@@ -302,7 +298,7 @@ class SessionsController(private val routingService: RoutingService,
                               @PathVariable countryCode: String,
                               @PathVariable partyID: String,
                               @PathVariable sessionID: String,
-                              @RequestBody body: Session): ResponseEntity<OcpiResponse<Nothing>> {
+                              @RequestBody body: Session): ResponseEntity<OcpiResponse<Unit>> {
 
         val sender = BasicRole(fromPartyID, fromCountryCode)
         val receiver = BasicRole(toPartyID, toCountryCode)
@@ -313,15 +309,15 @@ class SessionsController(private val routingService: RoutingService,
                 module = ModuleID.SESSIONS,
                 interfaceRole = InterfaceRole.RECEIVER,
                 method = HttpMethod.PUT,
-                requestID = requestID,
-                correlationID = correlationID,
-                sender = sender,
-                receiver = receiver,
+                headers = OcpiRequestHeaders(
+                        requestID = requestID,
+                        correlationID = correlationID,
+                        sender = sender,
+                        receiver = receiver),
                 urlPathVariables = "/$countryCode/$partyID/$sessionID",
-                body = body,
-                expectedResponseType = OcpiType.NOTHING)
+                body = body)
 
-        val response: HttpResponse<Nothing> = when (routingService.validateReceiver(receiver)) {
+        val response: HttpResponse<Unit> = when (routingService.validateReceiver(receiver)) {
 
             Recipient.LOCAL -> {
 
@@ -331,8 +327,7 @@ class SessionsController(private val routingService: RoutingService,
                         method = requestVariables.method,
                         url = url,
                         headers = headers,
-                        body = body,
-                        expectedDataType = requestVariables.expectedResponseType)
+                        body = body)
 
             }
 
@@ -361,7 +356,7 @@ class SessionsController(private val routingService: RoutingService,
                                 @PathVariable countryCode: String,
                                 @PathVariable partyID: String,
                                 @PathVariable sessionID: String,
-                                @RequestBody body: Map<String, Any>): ResponseEntity<OcpiResponse<Nothing>> {
+                                @RequestBody body: Map<String, Any>): ResponseEntity<OcpiResponse<Unit>> {
 
         val sender = BasicRole(fromPartyID, fromCountryCode)
         val receiver = BasicRole(toPartyID, toCountryCode)
@@ -372,15 +367,15 @@ class SessionsController(private val routingService: RoutingService,
                 module = ModuleID.SESSIONS,
                 interfaceRole = InterfaceRole.RECEIVER,
                 method = HttpMethod.PATCH,
-                requestID = requestID,
-                correlationID = correlationID,
-                sender = sender,
-                receiver = receiver,
+                headers = OcpiRequestHeaders(
+                        requestID = requestID,
+                        correlationID = correlationID,
+                        sender = sender,
+                        receiver = receiver),
                 urlPathVariables = "/$countryCode/$partyID/$sessionID",
-                body = body,
-                expectedResponseType = OcpiType.NOTHING)
+                body = body)
 
-        val response: HttpResponse<Nothing> = when (routingService.validateReceiver(receiver)) {
+        val response: HttpResponse<Unit> = when (routingService.validateReceiver(receiver)) {
 
             Recipient.LOCAL -> {
 
@@ -390,8 +385,7 @@ class SessionsController(private val routingService: RoutingService,
                         method = requestVariables.method,
                         url = url,
                         headers = headers,
-                        body = body,
-                        expectedDataType = requestVariables.expectedResponseType)
+                        body = body)
 
             }
 

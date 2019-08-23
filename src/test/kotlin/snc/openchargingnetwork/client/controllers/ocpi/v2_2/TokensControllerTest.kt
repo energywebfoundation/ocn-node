@@ -42,27 +42,22 @@ class TokensControllerTest(@Autowired val mockMvc: MockMvc) {
                 module = ModuleID.TOKENS,
                 interfaceRole = InterfaceRole.SENDER,
                 method = HttpMethod.GET,
-                requestID = generateUUIDv4Token(),
-                correlationID = generateUUIDv4Token(),
-                sender = sender,
-                receiver = receiver,
-                urlEncodedParams = OcpiRequestParameters(limit = 50),
-                expectedResponseType = OcpiType.TOKEN_ARRAY)
+                headers = OcpiRequestHeaders(
+                        requestID = generateUUIDv4Token(),
+                        correlationID = generateUUIDv4Token(),
+                        sender = sender,
+                        receiver = receiver),
+                urlEncodedParams = OcpiRequestParameters(limit = 50))
 
         val url = "https://ocpi.emsp.com/2.2/tokens"
 
-        val headers = OcpiRequestHeaders(
+        val forwardingHeaders = requestVariables.headers.copy(
                 authorization = "Token token-b",
-                requestID = generateUUIDv4Token(),
-                correlationID = requestVariables.correlationID,
-                ocpiFromCountryCode = sender.country,
-                ocpiFromPartyID = sender.id,
-                ocpiToCountryCode = receiver.country,
-                ocpiToPartyID = receiver.id)
+                requestID = generateUUIDv4Token())
 
         every { routingService.validateSender("Token token-c", sender) } just Runs
         every { routingService.validateReceiver(receiver) } returns Recipient.LOCAL
-        every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, headers)
+        every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, forwardingHeaders)
 
         val responseHeaders = mapOf(
                 "Link" to "https://ocpi.cpo.com/tokens?limit=10&offset=10; rel=\"next\"",
@@ -74,9 +69,8 @@ class TokensControllerTest(@Autowired val mockMvc: MockMvc) {
             httpService.makeOcpiRequest<Array<Token>>(
                     method = requestVariables.method,
                     url = url,
-                    headers = headers,
-                    params = requestVariables.urlEncodedParams,
-                    expectedDataType = requestVariables.expectedResponseType)
+                    headers = forwardingHeaders,
+                    urlEncodedParams = requestVariables.urlEncodedParams)
 
         } returns HttpResponse(
                 statusCode = 200,
@@ -95,8 +89,8 @@ class TokensControllerTest(@Autowired val mockMvc: MockMvc) {
 
         mockMvc.perform(get("/ocpi/sender/2.2/tokens")
                 .header("Authorization", "Token token-c")
-                .header("X-Request-ID", requestVariables.requestID)
-                .header("X-Correlation-ID", requestVariables.correlationID)
+                .header("X-Request-ID", requestVariables.headers.requestID)
+                .header("X-Correlation-ID", requestVariables.headers.correlationID)
                 .header("OCPI-from-country-code", sender.country)
                 .header("OCPI-from-party-id", sender.id)
                 .header("OCPI-to-country-code", receiver.country)
@@ -127,27 +121,22 @@ class TokensControllerTest(@Autowired val mockMvc: MockMvc) {
                 module = ModuleID.TOKENS,
                 interfaceRole = InterfaceRole.SENDER,
                 method = HttpMethod.GET,
-                requestID = generateUUIDv4Token(),
-                correlationID = generateUUIDv4Token(),
-                sender = sender,
-                receiver = receiver,
-                urlPathVariables = "935432",
-                expectedResponseType = OcpiType.TOKEN_ARRAY)
+                headers = OcpiRequestHeaders(
+                        requestID = generateUUIDv4Token(),
+                        correlationID = generateUUIDv4Token(),
+                        sender = sender,
+                        receiver = receiver),
+                urlPathVariables = "935432")
 
         val url = "https://ocpi.cpo.com/tokens?limit=50?offset=50"
 
-        val headers = OcpiRequestHeaders(
+        val forwardingHeaders = requestVariables.headers.copy(
                 authorization = "Token token-b",
-                requestID = generateUUIDv4Token(),
-                correlationID = requestVariables.correlationID,
-                ocpiFromCountryCode = sender.country,
-                ocpiFromPartyID = sender.id,
-                ocpiToCountryCode = receiver.country,
-                ocpiToPartyID = receiver.id)
+                requestID = generateUUIDv4Token())
 
         every { routingService.validateSender("Token token-c", sender) } just Runs
         every { routingService.validateReceiver(receiver) } returns Recipient.LOCAL
-        every { routingService.prepareLocalPlatformRequest(requestVariables, proxied = true) } returns Pair(url, headers)
+        every { routingService.prepareLocalPlatformRequest(requestVariables, proxied = true) } returns Pair(url, forwardingHeaders)
 
         val responseHeaders = mapOf(
                 "Link" to "https://some.emsp.com/actual/tokens?limit=50&offset=50; rel=\"next\"",
@@ -159,9 +148,8 @@ class TokensControllerTest(@Autowired val mockMvc: MockMvc) {
             httpService.makeOcpiRequest<Array<Token>>(
                     method = requestVariables.method,
                     url = url,
-                    headers = headers,
-                    params = requestVariables.urlEncodedParams,
-                    expectedDataType = requestVariables.expectedResponseType)
+                    headers = forwardingHeaders,
+                    urlEncodedParams = requestVariables.urlEncodedParams)
 
         } returns HttpResponse(
                 statusCode = 200,
@@ -180,12 +168,12 @@ class TokensControllerTest(@Autowired val mockMvc: MockMvc) {
 
         mockMvc.perform(get("/ocpi/sender/2.2/tokens/page/${requestVariables.urlPathVariables}")
                 .header("Authorization", "Token token-c")
-                .header("X-Request-ID", requestVariables.requestID)
-                .header("X-Correlation-ID", requestVariables.correlationID)
-                .header("OCPI-from-country-code", requestVariables.sender.country)
-                .header("OCPI-from-party-id", requestVariables.sender.id)
-                .header("OCPI-to-country-code", requestVariables.receiver.country)
-                .header("OCPI-to-party-id", requestVariables.receiver.id)
+                .header("X-Request-ID", requestVariables.headers.requestID)
+                .header("X-Correlation-ID", requestVariables.headers.correlationID)
+                .header("OCPI-from-country-code", requestVariables.headers.sender.country)
+                .header("OCPI-from-party-id", requestVariables.headers.sender.id)
+                .header("OCPI-to-country-code", requestVariables.headers.receiver.country)
+                .header("OCPI-to-party-id", requestVariables.headers.receiver.id)
                 .param("limit", "100"))
                 .andExpect(status().isOk)
                 .andExpect(header().string("Link", "https://client.ocn.co/ocpi/sender/2.2/tokens/page/935433; rel=\"next\""))
@@ -213,39 +201,33 @@ class TokensControllerTest(@Autowired val mockMvc: MockMvc) {
                 module = ModuleID.TOKENS,
                 interfaceRole = InterfaceRole.SENDER,
                 method = HttpMethod.POST,
-                requestID = generateUUIDv4Token(),
-                correlationID = generateUUIDv4Token(),
-                sender = sender,
-                receiver = receiver,
+                headers = OcpiRequestHeaders(
+                        requestID = generateUUIDv4Token(),
+                        correlationID = generateUUIDv4Token(),
+                        sender = sender,
+                        receiver = receiver),
                 urlPathVariables = "1234567890/authorize",
                 urlEncodedParams = OcpiRequestParameters(type = TokenType.RFID),
-                body = body,
-                expectedResponseType = OcpiType.AUTHORIZATION_INFO)
+                body = body)
 
         val url = "https://ocpi.cpo.com/tokens/1234567890/authorize"
 
-        val headers = OcpiRequestHeaders(
+        val forwardingHeaders = requestVariables.headers.copy(
                 authorization = "Token token-b",
-                requestID = generateUUIDv4Token(),
-                correlationID = requestVariables.correlationID,
-                ocpiFromCountryCode = sender.country,
-                ocpiFromPartyID = sender.id,
-                ocpiToCountryCode = receiver.country,
-                ocpiToPartyID = receiver.id)
+                requestID = generateUUIDv4Token())
 
         every { routingService.validateSender("Token token-c", sender) } just Runs
         every { routingService.validateReceiver(receiver) } returns Recipient.LOCAL
-        every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, headers)
+        every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, forwardingHeaders)
 
         every {
 
             httpService.makeOcpiRequest<AuthorizationInfo>(
                     method = requestVariables.method,
                     url = url,
-                    headers = headers,
-                    params = requestVariables.urlEncodedParams,
-                    body = body,
-                    expectedDataType = requestVariables.expectedResponseType)
+                    headers = forwardingHeaders,
+                    urlEncodedParams = requestVariables.urlEncodedParams,
+                    body = body)
 
         } returns HttpResponse(
                 statusCode = 200,
@@ -256,12 +238,12 @@ class TokensControllerTest(@Autowired val mockMvc: MockMvc) {
 
         mockMvc.perform(post("/ocpi/sender/2.2/tokens/1234567890/authorize")
                 .header("Authorization", "Token token-c")
-                .header("X-Request-ID", requestVariables.requestID)
-                .header("X-Correlation-ID", requestVariables.correlationID)
-                .header("OCPI-from-country-code", requestVariables.sender.country)
-                .header("OCPI-from-party-id", requestVariables.sender.id)
-                .header("OCPI-to-country-code", requestVariables.receiver.country)
-                .header("OCPI-to-party-id", requestVariables.receiver.id)
+                .header("X-Request-ID", requestVariables.headers.requestID)
+                .header("X-Correlation-ID", requestVariables.headers.correlationID)
+                .header("OCPI-from-country-code", requestVariables.headers.sender.country)
+                .header("OCPI-from-party-id", requestVariables.headers.sender.id)
+                .header("OCPI-to-country-code", requestVariables.headers.receiver.country)
+                .header("OCPI-to-party-id", requestVariables.headers.receiver.id)
                 .param("limit", "100")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(jacksonObjectMapper().writeValueAsString(body)))
@@ -286,37 +268,31 @@ class TokensControllerTest(@Autowired val mockMvc: MockMvc) {
                 module = ModuleID.TOKENS,
                 interfaceRole = InterfaceRole.RECEIVER,
                 method = HttpMethod.GET,
-                requestID = generateUUIDv4Token(),
-                correlationID = generateUUIDv4Token(),
-                sender = sender,
-                receiver = receiver,
+                headers = OcpiRequestHeaders(
+                        requestID = generateUUIDv4Token(),
+                        correlationID = generateUUIDv4Token(),
+                        sender = sender,
+                        receiver = receiver),
                 urlPathVariables = "/${sender.country}/${sender.id}/$tokenUID",
-                urlEncodedParams = OcpiRequestParameters(type = TokenType.RFID),
-                expectedResponseType = OcpiType.TOKEN)
+                urlEncodedParams = OcpiRequestParameters(type = TokenType.RFID))
 
         val url = "https://ocpi.cpo.com/2.2/tokens/${sender.country}/${sender.id}/$tokenUID"
 
-        val headers = OcpiRequestHeaders(
+        val forwardingHeaders = requestVariables.headers.copy(
                 authorization = "Token token-b",
-                requestID = generateUUIDv4Token(),
-                correlationID = requestVariables.correlationID,
-                ocpiFromCountryCode = sender.country,
-                ocpiFromPartyID = sender.id,
-                ocpiToCountryCode = receiver.country,
-                ocpiToPartyID = receiver.id)
+                requestID = generateUUIDv4Token())
 
         every { routingService.validateSender("Token token-c", sender) } just Runs
         every { routingService.validateReceiver(receiver) } returns Recipient.LOCAL
-        every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, headers)
+        every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, forwardingHeaders)
 
         every {
 
             httpService.makeOcpiRequest<Token>(
                     method = requestVariables.method,
                     url = url,
-                    headers = headers,
-                    params = requestVariables.urlEncodedParams,
-                    expectedDataType = requestVariables.expectedResponseType)
+                    headers = forwardingHeaders,
+                    urlEncodedParams = requestVariables.urlEncodedParams)
 
         } returns HttpResponse(
                 statusCode = 200,
@@ -325,8 +301,8 @@ class TokensControllerTest(@Autowired val mockMvc: MockMvc) {
 
         mockMvc.perform(get("/ocpi/receiver/2.2/tokens/${sender.country}/${sender.id}/$tokenUID")
                 .header("Authorization", "Token token-c")
-                .header("X-Request-ID", requestVariables.requestID)
-                .header("X-Correlation-ID", requestVariables.correlationID)
+                .header("X-Request-ID", requestVariables.headers.requestID)
+                .header("X-Correlation-ID", requestVariables.headers.correlationID)
                 .header("OCPI-from-country-code", sender.country)
                 .header("OCPI-from-party-id", sender.id)
                 .header("OCPI-to-country-code", receiver.country)
@@ -353,39 +329,33 @@ class TokensControllerTest(@Autowired val mockMvc: MockMvc) {
                 module = ModuleID.TOKENS,
                 interfaceRole = InterfaceRole.RECEIVER,
                 method = HttpMethod.PUT,
-                requestID = generateUUIDv4Token(),
-                correlationID = generateUUIDv4Token(),
-                sender = sender,
-                receiver = receiver,
+                headers = OcpiRequestHeaders(
+                        requestID = generateUUIDv4Token(),
+                        correlationID = generateUUIDv4Token(),
+                        sender = sender,
+                        receiver = receiver),
                 urlPathVariables = "/${sender.country}/${sender.id}/$tokenUID",
                 urlEncodedParams = OcpiRequestParameters(type = TokenType.APP_USER),
-                body = exampleToken,
-                expectedResponseType = OcpiType.NOTHING)
+                body = exampleToken)
 
         val url = "https://ocpi.cpo.com/2.2/tokens/${sender.country}/${sender.id}/$tokenUID"
 
-        val headers = OcpiRequestHeaders(
+        val forwardingHeaders = requestVariables.headers.copy(
                 authorization = "Token token-b",
-                requestID = generateUUIDv4Token(),
-                correlationID = requestVariables.correlationID,
-                ocpiFromCountryCode = sender.country,
-                ocpiFromPartyID = sender.id,
-                ocpiToCountryCode = receiver.country,
-                ocpiToPartyID = receiver.id)
+                requestID = generateUUIDv4Token())
 
         every { routingService.validateSender("Token token-c", sender) } just Runs
         every { routingService.validateReceiver(receiver) } returns Recipient.LOCAL
-        every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, headers)
+        every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, forwardingHeaders)
 
         every {
 
-            httpService.makeOcpiRequest<Nothing>(
+            httpService.makeOcpiRequest<Unit>(
                     method = requestVariables.method,
                     url = url,
-                    headers = headers,
-                    params = requestVariables.urlEncodedParams,
-                    body = exampleToken,
-                    expectedDataType = requestVariables.expectedResponseType)
+                    headers = forwardingHeaders,
+                    urlEncodedParams = requestVariables.urlEncodedParams,
+                    body = exampleToken)
 
         } returns HttpResponse(
                 statusCode = 200,
@@ -394,8 +364,8 @@ class TokensControllerTest(@Autowired val mockMvc: MockMvc) {
 
         mockMvc.perform(put("/ocpi/receiver/2.2/tokens/${sender.country}/${sender.id}/$tokenUID")
                 .header("Authorization", "Token token-c")
-                .header("X-Request-ID", requestVariables.requestID)
-                .header("X-Correlation-ID", requestVariables.correlationID)
+                .header("X-Request-ID", requestVariables.headers.requestID)
+                .header("X-Correlation-ID", requestVariables.headers.correlationID)
                 .header("OCPI-from-country-code", sender.country)
                 .header("OCPI-from-party-id", sender.id)
                 .header("OCPI-to-country-code", receiver.country)
@@ -426,39 +396,33 @@ class TokensControllerTest(@Autowired val mockMvc: MockMvc) {
                 module = ModuleID.TOKENS,
                 interfaceRole = InterfaceRole.RECEIVER,
                 method = HttpMethod.PATCH,
-                requestID = generateUUIDv4Token(),
-                correlationID = generateUUIDv4Token(),
-                sender = sender,
-                receiver = receiver,
+                headers = OcpiRequestHeaders(
+                        requestID = generateUUIDv4Token(),
+                        correlationID = generateUUIDv4Token(),
+                        sender = sender,
+                        receiver = receiver),
                 urlPathVariables = "/${sender.country}/${sender.id}/$tokenUID",
                 urlEncodedParams = OcpiRequestParameters(type = TokenType.APP_USER),
-                body = body,
-                expectedResponseType = OcpiType.NOTHING)
+                body = body)
 
         val url = "https://ocpi.cpo.com/2.2/tokens/${sender.country}/${sender.id}/$tokenUID"
 
-        val headers = OcpiRequestHeaders(
+        val forwardingHeaders = requestVariables.headers.copy(
                 authorization = "Token token-b",
-                requestID = generateUUIDv4Token(),
-                correlationID = requestVariables.correlationID,
-                ocpiFromCountryCode = sender.country,
-                ocpiFromPartyID = sender.id,
-                ocpiToCountryCode = receiver.country,
-                ocpiToPartyID = receiver.id)
+                requestID = generateUUIDv4Token())
 
         every { routingService.validateSender("Token token-c", sender) } just Runs
         every { routingService.validateReceiver(receiver) } returns Recipient.LOCAL
-        every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, headers)
+        every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, forwardingHeaders)
 
         every {
 
-            httpService.makeOcpiRequest<Nothing>(
+            httpService.makeOcpiRequest<Unit>(
                     method = requestVariables.method,
                     url = url,
-                    headers = headers,
-                    params = requestVariables.urlEncodedParams,
-                    body = body,
-                    expectedDataType = requestVariables.expectedResponseType)
+                    headers = forwardingHeaders,
+                    urlEncodedParams = requestVariables.urlEncodedParams,
+                    body = body)
 
         } returns HttpResponse(
                 statusCode = 200,
@@ -467,8 +431,8 @@ class TokensControllerTest(@Autowired val mockMvc: MockMvc) {
 
         mockMvc.perform(patch("/ocpi/receiver/2.2/tokens/${sender.country}/${sender.id}/$tokenUID")
                 .header("Authorization", "Token token-c")
-                .header("X-Request-ID", requestVariables.requestID)
-                .header("X-Correlation-ID", requestVariables.correlationID)
+                .header("X-Request-ID", requestVariables.headers.requestID)
+                .header("X-Correlation-ID", requestVariables.headers.correlationID)
                 .header("OCPI-from-country-code", sender.country)
                 .header("OCPI-from-party-id", sender.id)
                 .header("OCPI-to-country-code", receiver.country)

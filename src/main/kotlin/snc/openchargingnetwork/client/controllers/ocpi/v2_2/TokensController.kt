@@ -60,16 +60,16 @@ class TokensController(private val routingService: RoutingService,
                 module = ModuleID.TOKENS,
                 interfaceRole = InterfaceRole.SENDER,
                 method = HttpMethod.GET,
-                requestID = requestID,
-                correlationID = correlationID,
-                sender = sender,
-                receiver = receiver,
+                headers = OcpiRequestHeaders(
+                        requestID = requestID,
+                        correlationID = correlationID,
+                        sender = sender,
+                        receiver = receiver),
                 urlEncodedParams = OcpiRequestParameters(
                         dateFrom = dateFrom,
                         dateTo = dateTo,
                         offset = offset,
-                        limit = limit),
-                expectedResponseType = OcpiType.TOKEN_ARRAY)
+                        limit = limit))
 
         val response: HttpResponse<Array<Token>> = when (routingService.validateReceiver(receiver)) {
 
@@ -81,8 +81,7 @@ class TokensController(private val routingService: RoutingService,
                         method = requestVariables.method,
                         url = url,
                         headers = headers,
-                        params = requestVariables.urlEncodedParams,
-                        expectedDataType = requestVariables.expectedResponseType)
+                        urlEncodedParams = requestVariables.urlEncodedParams)
             }
 
             Recipient.REMOTE -> {
@@ -124,12 +123,11 @@ class TokensController(private val routingService: RoutingService,
                 module = ModuleID.TOKENS,
                 interfaceRole = InterfaceRole.SENDER,
                 method = HttpMethod.GET,
-                requestID = requestID,
-                correlationID = correlationID,
-                sender = sender,
-                receiver = receiver,
-                urlPathVariables = uid,
-                expectedResponseType = OcpiType.TOKEN_ARRAY)
+                headers = OcpiRequestHeaders(
+                        requestID = requestID,
+                        correlationID = correlationID,
+                        sender = sender,
+                        receiver = receiver))
 
         val response: HttpResponse<Array<Token>> = when (routingService.validateReceiver(receiver)) {
 
@@ -140,8 +138,7 @@ class TokensController(private val routingService: RoutingService,
                 httpService.makeOcpiRequest(
                         method = requestVariables.method,
                         url = url,
-                        headers = headers,
-                        expectedDataType = requestVariables.expectedResponseType)
+                        headers = headers)
 
             }
 
@@ -196,15 +193,15 @@ class TokensController(private val routingService: RoutingService,
                 module = ModuleID.TOKENS,
                 interfaceRole = InterfaceRole.SENDER,
                 method = HttpMethod.POST,
-                requestID = requestID,
-                correlationID = correlationID,
-                sender = sender,
-                receiver = receiver,
+                headers = OcpiRequestHeaders(
+                        requestID = requestID,
+                        correlationID = correlationID,
+                        sender = sender,
+                        receiver = receiver),
                 urlPathVariables = "$tokenUID/authorize",
                 urlEncodedParams = OcpiRequestParameters(type = type
                         ?: TokenType.RFID),
-                body = body,
-                expectedResponseType = OcpiType.AUTHORIZATION_INFO)
+                body = body)
 
         val response: HttpResponse<AuthorizationInfo> = when (routingService.validateReceiver(receiver)) {
 
@@ -216,9 +213,8 @@ class TokensController(private val routingService: RoutingService,
                         method = requestVariables.method,
                         url = url,
                         headers = headers,
-                        params = requestVariables.urlEncodedParams,
-                        body = body,
-                        expectedDataType = requestVariables.expectedResponseType)
+                        urlEncodedParams = requestVariables.urlEncodedParams,
+                        body = body)
 
             }
 
@@ -262,14 +258,14 @@ class TokensController(private val routingService: RoutingService,
                 module = ModuleID.TOKENS,
                 interfaceRole = InterfaceRole.RECEIVER,
                 method = HttpMethod.GET,
-                requestID = requestID,
-                correlationID = correlationID,
-                sender = sender,
-                receiver = receiver,
+                headers = OcpiRequestHeaders(
+                        requestID = requestID,
+                        correlationID = correlationID,
+                        sender = sender,
+                        receiver = receiver),
                 urlPathVariables = "/$countryCode/$partyID/$tokenUID",
                 urlEncodedParams = OcpiRequestParameters(type = type
-                        ?: TokenType.RFID),
-                expectedResponseType = OcpiType.TOKEN)
+                        ?: TokenType.RFID))
 
         val response: HttpResponse<Token> = when (routingService.validateReceiver(receiver)) {
 
@@ -281,8 +277,7 @@ class TokensController(private val routingService: RoutingService,
                         method = requestVariables.method,
                         url = url,
                         headers = headers,
-                        params = requestVariables.urlEncodedParams,
-                        expectedDataType = requestVariables.expectedResponseType)
+                        urlEncodedParams = requestVariables.urlEncodedParams)
 
             }
 
@@ -312,7 +307,7 @@ class TokensController(private val routingService: RoutingService,
                             @PathVariable partyID: String,
                             @PathVariable tokenUID: String,
                             @RequestParam("type", required = false) type: TokenType? = null,
-                            @RequestBody body: Token): ResponseEntity<OcpiResponse<Nothing>> {
+                            @RequestBody body: Token): ResponseEntity<OcpiResponse<Unit>> {
 
         val sender = BasicRole(fromPartyID, fromCountryCode)
         val receiver = BasicRole(toPartyID, toCountryCode)
@@ -323,17 +318,17 @@ class TokensController(private val routingService: RoutingService,
                 module = ModuleID.TOKENS,
                 interfaceRole = InterfaceRole.RECEIVER,
                 method = HttpMethod.PUT,
-                requestID = requestID,
-                correlationID = correlationID,
-                sender = sender,
-                receiver = receiver,
+                headers = OcpiRequestHeaders(
+                        requestID = requestID,
+                        correlationID = correlationID,
+                        sender = sender,
+                        receiver = receiver),
                 urlPathVariables = "/$countryCode/$partyID/$tokenUID",
                 urlEncodedParams = OcpiRequestParameters(type = type
                         ?: TokenType.RFID),
-                body = body,
-                expectedResponseType = OcpiType.NOTHING)
+                body = body)
 
-        val response: HttpResponse<Nothing> = when (routingService.validateReceiver(receiver)) {
+        val response: HttpResponse<Unit> = when (routingService.validateReceiver(receiver)) {
 
             Recipient.LOCAL -> {
 
@@ -343,9 +338,8 @@ class TokensController(private val routingService: RoutingService,
                         method = requestVariables.method,
                         url = url,
                         headers = headers,
-                        params = requestVariables.urlEncodedParams,
-                        body = body,
-                        expectedDataType = requestVariables.expectedResponseType)
+                        urlEncodedParams = requestVariables.urlEncodedParams,
+                        body = body)
 
             }
 
@@ -375,7 +369,7 @@ class TokensController(private val routingService: RoutingService,
                                @PathVariable partyID: String,
                                @PathVariable tokenUID: String,
                                @RequestParam("type", required = false) type: TokenType? = null,
-                               @RequestBody body: Map<String, Any>): ResponseEntity<OcpiResponse<Nothing>> {
+                               @RequestBody body: Map<String, Any>): ResponseEntity<OcpiResponse<Unit>> {
 
         val sender = BasicRole(fromPartyID, fromCountryCode)
         val receiver = BasicRole(toPartyID, toCountryCode)
@@ -386,17 +380,17 @@ class TokensController(private val routingService: RoutingService,
                 module = ModuleID.TOKENS,
                 interfaceRole = InterfaceRole.RECEIVER,
                 method = HttpMethod.PATCH,
-                requestID = requestID,
-                correlationID = correlationID,
-                sender = sender,
-                receiver = receiver,
+                headers = OcpiRequestHeaders(
+                        requestID = requestID,
+                        correlationID = correlationID,
+                        sender = sender,
+                        receiver = receiver),
                 urlPathVariables = "/$countryCode/$partyID/$tokenUID",
                 urlEncodedParams = OcpiRequestParameters(type = type
                         ?: TokenType.RFID),
-                body = body,
-                expectedResponseType = OcpiType.NOTHING)
+                body = body)
 
-        val response: HttpResponse<Nothing> = when (routingService.validateReceiver(receiver)) {
+        val response: HttpResponse<Unit> = when (routingService.validateReceiver(receiver)) {
 
             Recipient.LOCAL -> {
 
@@ -406,9 +400,8 @@ class TokensController(private val routingService: RoutingService,
                         method = requestVariables.method,
                         url = url,
                         headers = headers,
-                        params = requestVariables.urlEncodedParams,
-                        body = body,
-                        expectedDataType = requestVariables.expectedResponseType)
+                        urlEncodedParams = requestVariables.urlEncodedParams,
+                        body = body)
 
             }
 

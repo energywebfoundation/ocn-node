@@ -38,12 +38,11 @@ class HttpService {
     /**
      * Generic HTTP request expecting a response of type OcpiResponse<T> as defined by the caller
      */
-    fun <T: Any> makeOcpiRequest(method: HttpMethod,
+    final inline fun <reified T: Any> makeOcpiRequest(method: HttpMethod,
                                  url: String,
                                  headers: OcpiRequestHeaders,
                                  urlEncodedParams: OcpiRequestParameters? = null,
-                                 body: Any? = null,
-                                 expectedResponse: OcpiType): HttpResponse<T> {
+                                 body: Any? = null): HttpResponse<T> {
 
         val headersMap = headers.encode()
 
@@ -67,7 +66,7 @@ class HttpService {
             else -> throw IllegalStateException("Invalid method: $method")
         }
 
-        val type = mapper.typeFactory.constructParametricType(OcpiResponse::class.java, expectedResponse.type.java)
+        val type = mapper.typeFactory.constructParametricType(OcpiResponse::class.java, T::class.java)
         return HttpResponse(
                 statusCode = response.statusCode,
                 headers = response.headers,
@@ -120,7 +119,7 @@ class HttpService {
      * Make a POST request to an OCN client which implements /ocn/message
      * Used to forward requests to OCPI platforms of which the OCN client does not share a local connection with
      */
-    fun <T: Any> postOcnMessage(url: String,
+    final inline fun <reified T: Any> postOcnMessage(url: String,
                                 headers: OcnMessageHeaders,
                                 body: OcpiRequestVariables): HttpResponse<T> {
 
@@ -134,7 +133,7 @@ class HttpService {
                 headers = headersMap,
                 json = jsonBody)
 
-        val type = mapper.typeFactory.constructParametricType(OcpiResponse::class.java, body.types.response.type.java)
+        val type = mapper.typeFactory.constructParametricType(OcpiResponse::class.java, T::class.java)
         return HttpResponse(
                 statusCode = response.statusCode,
                 headers = response.headers,

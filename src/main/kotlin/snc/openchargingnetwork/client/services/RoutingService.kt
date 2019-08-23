@@ -152,7 +152,7 @@ class RoutingService(private val platformRepo: PlatformRepository,
             // a proxied request requires the URL to be changed to the one set by the original recipient
             proxied -> getProxyResource(request.urlPathVariables, request.headers.sender, request.headers.receiver)
             // if the request contains a
-            request.proxiedResource != null -> request.proxiedResource
+            request.proxyResource != null -> request.proxyResource
             else -> {
                 val endpoint = getPlatformEndpoint(platformID, request.module, request.interfaceRole)
                 urlJoin(endpoint.url, request.urlPathVariables)
@@ -176,7 +176,7 @@ class RoutingService(private val platformRepo: PlatformRepository,
         val url = getRemoteClientUrl(request.headers.receiver)
 
         val body = when (proxied) {
-            true -> request.copy(proxiedResource = getProxyResource(request.urlPathVariables, request.headers.sender, request.headers.receiver))
+            true -> request.copy(proxyResource = getProxyResource(request.urlPathVariables, request.headers.sender, request.headers.receiver))
             false -> request
         }
 

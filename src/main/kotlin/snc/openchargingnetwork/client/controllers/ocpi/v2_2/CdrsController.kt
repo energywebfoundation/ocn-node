@@ -73,8 +73,7 @@ class CdrsController(val routingService: RoutingService,
                         dateFrom = dateFrom,
                         dateTo = dateTo,
                         offset = offset,
-                        limit = limit),
-                types = TypePair(response = OcpiType.CDR_ARRAY))
+                        limit = limit))
 
         val response: HttpResponse<Array<CDR>> = when (routingService.validateReceiver(receiver)) {
 
@@ -86,8 +85,7 @@ class CdrsController(val routingService: RoutingService,
                         method = requestVariables.method,
                         url = url,
                         headers = headers,
-                        urlEncodedParams = requestVariables.urlEncodedParams,
-                        expectedResponse = requestVariables.types.response)
+                        urlEncodedParams = requestVariables.urlEncodedParams)
             }
 
             Recipient.REMOTE -> {
@@ -133,8 +131,7 @@ class CdrsController(val routingService: RoutingService,
                         correlationID = correlationID,
                         sender = sender,
                         receiver = receiver),
-                urlPathVariables = uid,
-                types = TypePair(response = OcpiType.CDR_ARRAY))
+                urlPathVariables = uid)
 
         val response: HttpResponse<Array<CDR>> = when (routingService.validateReceiver(receiver)) {
 
@@ -145,8 +142,7 @@ class CdrsController(val routingService: RoutingService,
                 httpService.makeOcpiRequest(
                         method = requestVariables.method,
                         url = url,
-                        headers = headers,
-                        expectedResponse = requestVariables.types.response)
+                        headers = headers)
 
             }
 
@@ -206,8 +202,7 @@ class CdrsController(val routingService: RoutingService,
                         correlationID = correlationID,
                         sender = sender,
                         receiver = receiver),
-                urlPathVariables = cdrID,
-                types = TypePair(response = OcpiType.CDR))
+                urlPathVariables = cdrID)
 
         val response: HttpResponse<CDR> = when (routingService.validateReceiver(receiver)) {
 
@@ -218,8 +213,7 @@ class CdrsController(val routingService: RoutingService,
                 httpService.makeOcpiRequest(
                         method = requestVariables.method,
                         url = url,
-                        headers = headers,
-                        expectedResponse = requestVariables.types.response)
+                        headers = headers)
             }
 
             Recipient.REMOTE -> {
@@ -244,7 +238,7 @@ class CdrsController(val routingService: RoutingService,
                            @RequestHeader("OCPI-from-party-id") fromPartyID: String,
                            @RequestHeader("OCPI-to-country-code") toCountryCode: String,
                            @RequestHeader("OCPI-to-party-id") toPartyID: String,
-                           @RequestBody body: CDR): ResponseEntity<OcpiResponse<Nothing>> {
+                           @RequestBody body: CDR): ResponseEntity<OcpiResponse<Unit>> {
 
         val sender = BasicRole(fromPartyID, fromCountryCode)
         val receiver = BasicRole(toPartyID, toCountryCode)
@@ -260,10 +254,9 @@ class CdrsController(val routingService: RoutingService,
                         correlationID = correlationID,
                         sender = sender,
                         receiver = receiver),
-                body = body,
-                types = TypePair(request = OcpiType.NOTHING))
+                body = body)
 
-        val response: HttpResponse<Nothing> = when (routingService.validateReceiver(receiver)) {
+        val response: HttpResponse<Unit> = when (routingService.validateReceiver(receiver)) {
 
             Recipient.LOCAL -> {
 
@@ -272,8 +265,7 @@ class CdrsController(val routingService: RoutingService,
                 httpService.makeOcpiRequest(
                         method = requestVariables.method,
                         url = url,
-                        headers = headers,
-                        expectedResponse = requestVariables.types.response)
+                        headers = headers)
             }
 
             Recipient.REMOTE -> {

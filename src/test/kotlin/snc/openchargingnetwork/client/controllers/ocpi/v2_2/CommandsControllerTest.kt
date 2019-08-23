@@ -47,37 +47,31 @@ class CommandsControllerTest(@Autowired val mockMvc: MockMvc) {
                 module = ModuleID.COMMANDS,
                 interfaceRole = InterfaceRole.SENDER,
                 method = HttpMethod.POST,
-                requestID = generateUUIDv4Token(),
-                correlationID = generateUUIDv4Token(),
-                sender = sender,
-                receiver = receiver,
+                headers = OcpiRequestHeaders(
+                    requestID = generateUUIDv4Token(),
+                    correlationID = generateUUIDv4Token(),
+                    sender = sender,
+                    receiver = receiver),
                 urlPathVariables = uid,
-                body = body,
-                expectedResponseType = OcpiType.NOTHING)
+                body = body)
 
         val url = "https://cool.cpo.com/ocpi/commands/START_SESSION/6"
 
-        val headers = OcpiRequestHeaders(
+        val forwardingHeaders = requestVariables.headers.copy(
                 authorization = "Token token-b",
-                requestID = generateUUIDv4Token(),
-                correlationID = requestVariables.correlationID,
-                ocpiFromCountryCode = sender.country,
-                ocpiFromPartyID = sender.id,
-                ocpiToCountryCode = receiver.country,
-                ocpiToPartyID = receiver.id)
+                requestID = generateUUIDv4Token())
 
         every { routingService.validateSender("Token token-c", sender) } just Runs
         every { routingService.validateReceiver(receiver) } returns Recipient.LOCAL
-        every { routingService.prepareLocalPlatformRequest(requestVariables, proxied = true) } returns Pair(url, headers)
+        every { routingService.prepareLocalPlatformRequest(requestVariables, proxied = true) } returns Pair(url, forwardingHeaders)
 
         every {
 
-            httpService.makeOcpiRequest<Nothing>(
+            httpService.makeOcpiRequest<Unit>(
                     method = requestVariables.method,
                     url = url,
-                    headers = headers,
-                    body = body,
-                    expectedDataType = requestVariables.expectedResponseType)
+                    headers = forwardingHeaders,
+                    body = body)
 
         } returns HttpResponse(
                 statusCode = 200,
@@ -87,8 +81,8 @@ class CommandsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         mockMvc.perform(MockMvcRequestBuilders.post("/ocpi/sender/2.2/commands/START_SESSION/$uid")
                 .header("Authorization", "Token token-c")
-                .header("X-Request-ID", requestVariables.requestID)
-                .header("X-Correlation-ID", requestVariables.correlationID)
+                .header("X-Request-ID", requestVariables.headers.requestID)
+                .header("X-Correlation-ID", requestVariables.headers.correlationID)
                 .header("OCPI-from-country-code", sender.country)
                 .header("OCPI-from-party-id", sender.id)
                 .header("OCPI-to-country-code", receiver.country)
@@ -117,24 +111,19 @@ class CommandsControllerTest(@Autowired val mockMvc: MockMvc) {
                 module = ModuleID.COMMANDS,
                 interfaceRole = InterfaceRole.RECEIVER,
                 method = HttpMethod.POST,
-                requestID = generateUUIDv4Token(),
-                correlationID = generateUUIDv4Token(),
-                sender = sender,
-                receiver = receiver,
+                headers = OcpiRequestHeaders(
+                        requestID = generateUUIDv4Token(),
+                        correlationID = generateUUIDv4Token(),
+                        sender = sender,
+                        receiver = receiver),
                 urlPathVariables = "CANCEL_RESERVATION",
-                body = body,
-                expectedResponseType = OcpiType.COMMAND_RESPONSE)
+                body = body)
 
         val url = "https://cool.emsp.co/ocpi/commands/CANCEL_RESERVATION/"
 
-        val headers = OcpiRequestHeaders(
+        val forwardingHeaders = requestVariables.headers.copy(
                 authorization = "Token token-b",
-                requestID = generateUUIDv4Token(),
-                correlationID = requestVariables.correlationID,
-                ocpiFromCountryCode = sender.country,
-                ocpiFromPartyID = sender.id,
-                ocpiToCountryCode = receiver.country,
-                ocpiToPartyID = receiver.id)
+                requestID = generateUUIDv4Token())
 
         every { routingService.validateSender("Token token-c", sender) } just Runs
         every { routingService.validateReceiver(receiver) } returns Recipient.LOCAL
@@ -142,16 +131,15 @@ class CommandsControllerTest(@Autowired val mockMvc: MockMvc) {
         every { routingService.setProxyResource(body.responseURL, sender, receiver) } returns 6L
         every { properties.url } returns "https://client.ocn.org"
 
-        every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, headers)
+        every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, forwardingHeaders)
 
         every {
 
             httpService.makeOcpiRequest<CommandResponse>(
                     method = requestVariables.method,
                     url = url,
-                    headers = headers,
-                    body = proxyBody,
-                    expectedDataType = requestVariables.expectedResponseType)
+                    headers = forwardingHeaders,
+                    body = proxyBody)
 
         } returns HttpResponse(
                 statusCode = 200,
@@ -162,8 +150,8 @@ class CommandsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         mockMvc.perform(MockMvcRequestBuilders.post("/ocpi/receiver/2.2/commands/CANCEL_RESERVATION")
                 .header("Authorization", "Token token-c")
-                .header("X-Request-ID", requestVariables.requestID)
-                .header("X-Correlation-ID", requestVariables.correlationID)
+                .header("X-Request-ID", requestVariables.headers.requestID)
+                .header("X-Correlation-ID", requestVariables.headers.correlationID)
                 .header("OCPI-from-country-code", sender.country)
                 .header("OCPI-from-party-id", sender.id)
                 .header("OCPI-to-country-code", receiver.country)
@@ -196,24 +184,19 @@ class CommandsControllerTest(@Autowired val mockMvc: MockMvc) {
                 module = ModuleID.COMMANDS,
                 interfaceRole = InterfaceRole.RECEIVER,
                 method = HttpMethod.POST,
-                requestID = generateUUIDv4Token(),
-                correlationID = generateUUIDv4Token(),
-                sender = sender,
-                receiver = receiver,
+                headers = OcpiRequestHeaders(
+                        requestID = generateUUIDv4Token(),
+                        correlationID = generateUUIDv4Token(),
+                        sender = sender,
+                        receiver = receiver),
                 urlPathVariables = "RESERVE_NOW",
-                body = body,
-                expectedResponseType = OcpiType.COMMAND_RESPONSE)
+                body = body)
 
         val url = "https://cool.emsp.co/ocpi/commands/RESERVE_NOW/"
 
-        val headers = OcpiRequestHeaders(
+        val forwardingHeaders = requestVariables.headers.copy(
                 authorization = "Token token-b",
-                requestID = generateUUIDv4Token(),
-                correlationID = requestVariables.correlationID,
-                ocpiFromCountryCode = sender.country,
-                ocpiFromPartyID = sender.id,
-                ocpiToCountryCode = receiver.country,
-                ocpiToPartyID = receiver.id)
+                requestID = generateUUIDv4Token())
 
         every { routingService.validateSender("Token token-c", sender) } just Runs
         every { routingService.validateReceiver(receiver) } returns Recipient.LOCAL
@@ -221,16 +204,15 @@ class CommandsControllerTest(@Autowired val mockMvc: MockMvc) {
         every { routingService.setProxyResource(body.responseURL, sender, receiver) } returns 6L
         every { properties.url } returns "https://client.ocn.org"
 
-        every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, headers)
+        every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, forwardingHeaders)
 
         every {
 
             httpService.makeOcpiRequest<CommandResponse>(
                     method = requestVariables.method,
                     url = url,
-                    headers = headers,
-                    body = proxyBody,
-                    expectedDataType = requestVariables.expectedResponseType)
+                    headers = forwardingHeaders,
+                    body = proxyBody)
 
         } returns HttpResponse(
                 statusCode = 200,
@@ -241,8 +223,8 @@ class CommandsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         mockMvc.perform(MockMvcRequestBuilders.post("/ocpi/receiver/2.2/commands/RESERVE_NOW")
                 .header("Authorization", "Token token-c")
-                .header("X-Request-ID", requestVariables.requestID)
-                .header("X-Correlation-ID", requestVariables.correlationID)
+                .header("X-Request-ID", requestVariables.headers.requestID)
+                .header("X-Correlation-ID", requestVariables.headers.correlationID)
                 .header("OCPI-from-country-code", sender.country)
                 .header("OCPI-from-party-id", sender.id)
                 .header("OCPI-to-country-code", receiver.country)
@@ -273,24 +255,19 @@ class CommandsControllerTest(@Autowired val mockMvc: MockMvc) {
                 module = ModuleID.COMMANDS,
                 interfaceRole = InterfaceRole.RECEIVER,
                 method = HttpMethod.POST,
-                requestID = generateUUIDv4Token(),
-                correlationID = generateUUIDv4Token(),
-                sender = sender,
-                receiver = receiver,
+                headers = OcpiRequestHeaders(
+                        requestID = generateUUIDv4Token(),
+                        correlationID = generateUUIDv4Token(),
+                        sender = sender,
+                        receiver = receiver),
                 urlPathVariables = "START_SESSION",
-                body = body,
-                expectedResponseType = OcpiType.COMMAND_RESPONSE)
+                body = body)
 
         val url = "https://cool.emsp.co/ocpi/commands/START_SESSION/"
 
-        val headers = OcpiRequestHeaders(
+        val forwardingHeaders = requestVariables.headers.copy(
                 authorization = "Token token-b",
-                requestID = generateUUIDv4Token(),
-                correlationID = requestVariables.correlationID,
-                ocpiFromCountryCode = sender.country,
-                ocpiFromPartyID = sender.id,
-                ocpiToCountryCode = receiver.country,
-                ocpiToPartyID = receiver.id)
+                requestID = generateUUIDv4Token())
 
         every { routingService.validateSender("Token token-c", sender) } just Runs
         every { routingService.validateReceiver(receiver) } returns Recipient.LOCAL
@@ -298,16 +275,15 @@ class CommandsControllerTest(@Autowired val mockMvc: MockMvc) {
         every { routingService.setProxyResource(body.responseURL, sender, receiver) } returns 6L
         every { properties.url } returns "https://client.ocn.org"
 
-        every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, headers)
+        every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, forwardingHeaders)
 
         every {
 
             httpService.makeOcpiRequest<CommandResponse>(
                     method = requestVariables.method,
                     url = url,
-                    headers = headers,
-                    body = proxyBody,
-                    expectedDataType = requestVariables.expectedResponseType)
+                    headers = forwardingHeaders,
+                    body = proxyBody)
 
         } returns HttpResponse(
                 statusCode = 200,
@@ -318,8 +294,8 @@ class CommandsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         mockMvc.perform(MockMvcRequestBuilders.post("/ocpi/receiver/2.2/commands/START_SESSION")
                 .header("Authorization", "Token token-c")
-                .header("X-Request-ID", requestVariables.requestID)
-                .header("X-Correlation-ID", requestVariables.correlationID)
+                .header("X-Request-ID", requestVariables.headers.requestID)
+                .header("X-Correlation-ID", requestVariables.headers.correlationID)
                 .header("OCPI-from-country-code", sender.country)
                 .header("OCPI-from-party-id", sender.id)
                 .header("OCPI-to-country-code", receiver.country)
@@ -349,24 +325,19 @@ class CommandsControllerTest(@Autowired val mockMvc: MockMvc) {
                 module = ModuleID.COMMANDS,
                 interfaceRole = InterfaceRole.RECEIVER,
                 method = HttpMethod.POST,
-                requestID = generateUUIDv4Token(),
-                correlationID = generateUUIDv4Token(),
-                sender = sender,
-                receiver = receiver,
+                headers = OcpiRequestHeaders(
+                        requestID = generateUUIDv4Token(),
+                        correlationID = generateUUIDv4Token(),
+                        sender = sender,
+                        receiver = receiver),
                 urlPathVariables = "STOP_SESSION",
-                body = body,
-                expectedResponseType = OcpiType.COMMAND_RESPONSE)
+                body = body)
 
         val url = "https://cool.emsp.co/ocpi/commands/STOP_SESSION/"
 
-        val headers = OcpiRequestHeaders(
+        val forwardingHeaders = requestVariables.headers.copy(
                 authorization = "Token token-b",
-                requestID = generateUUIDv4Token(),
-                correlationID = requestVariables.correlationID,
-                ocpiFromCountryCode = sender.country,
-                ocpiFromPartyID = sender.id,
-                ocpiToCountryCode = receiver.country,
-                ocpiToPartyID = receiver.id)
+                requestID = generateUUIDv4Token())
 
         every { routingService.validateSender("Token token-c", sender) } just Runs
         every { routingService.validateReceiver(receiver) } returns Recipient.LOCAL
@@ -374,16 +345,15 @@ class CommandsControllerTest(@Autowired val mockMvc: MockMvc) {
         every { routingService.setProxyResource(body.responseURL, sender, receiver) } returns 6L
         every { properties.url } returns "https://client.ocn.org"
 
-        every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, headers)
+        every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, forwardingHeaders)
 
         every {
 
             httpService.makeOcpiRequest<CommandResponse>(
                     method = requestVariables.method,
                     url = url,
-                    headers = headers,
-                    body = proxyBody,
-                    expectedDataType = requestVariables.expectedResponseType)
+                    headers = forwardingHeaders,
+                    body = proxyBody)
 
         } returns HttpResponse(
                 statusCode = 200,
@@ -394,8 +364,8 @@ class CommandsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         mockMvc.perform(MockMvcRequestBuilders.post("/ocpi/receiver/2.2/commands/STOP_SESSION")
                 .header("Authorization", "Token token-c")
-                .header("X-Request-ID", requestVariables.requestID)
-                .header("X-Correlation-ID", requestVariables.correlationID)
+                .header("X-Request-ID", requestVariables.headers.requestID)
+                .header("X-Correlation-ID", requestVariables.headers.correlationID)
                 .header("OCPI-from-country-code", sender.country)
                 .header("OCPI-from-party-id", sender.id)
                 .header("OCPI-to-country-code", receiver.country)
@@ -427,24 +397,19 @@ class CommandsControllerTest(@Autowired val mockMvc: MockMvc) {
                 module = ModuleID.COMMANDS,
                 interfaceRole = InterfaceRole.RECEIVER,
                 method = HttpMethod.POST,
-                requestID = generateUUIDv4Token(),
-                correlationID = generateUUIDv4Token(),
-                sender = sender,
-                receiver = receiver,
+                headers = OcpiRequestHeaders(
+                        requestID = generateUUIDv4Token(),
+                        correlationID = generateUUIDv4Token(),
+                        sender = sender,
+                        receiver = receiver),
                 urlPathVariables = "UNLOCK_CONNECTOR",
-                body = body,
-                expectedResponseType = OcpiType.COMMAND_RESPONSE)
+                body = body)
 
         val url = "https://cool.emsp.co/ocpi/commands/UNLOCK_CONNECTOR/"
 
-        val headers = OcpiRequestHeaders(
+        val forwardingHeaders = requestVariables.headers.copy(
                 authorization = "Token token-b",
-                requestID = generateUUIDv4Token(),
-                correlationID = requestVariables.correlationID,
-                ocpiFromCountryCode = sender.country,
-                ocpiFromPartyID = sender.id,
-                ocpiToCountryCode = receiver.country,
-                ocpiToPartyID = receiver.id)
+                requestID = generateUUIDv4Token())
 
         every { routingService.validateSender("Token token-c", sender) } just Runs
         every { routingService.validateReceiver(receiver) } returns Recipient.LOCAL
@@ -452,16 +417,15 @@ class CommandsControllerTest(@Autowired val mockMvc: MockMvc) {
         every { routingService.setProxyResource(body.responseURL, sender, receiver) } returns 6L
         every { properties.url } returns "https://client.ocn.org"
 
-        every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, headers)
+        every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, forwardingHeaders)
 
         every {
 
             httpService.makeOcpiRequest<CommandResponse>(
                     method = requestVariables.method,
                     url = url,
-                    headers = headers,
-                    body = proxyBody,
-                    expectedDataType = requestVariables.expectedResponseType)
+                    headers = forwardingHeaders,
+                    body = proxyBody)
 
         } returns HttpResponse(
                 statusCode = 200,
@@ -472,8 +436,8 @@ class CommandsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         mockMvc.perform(MockMvcRequestBuilders.post("/ocpi/receiver/2.2/commands/UNLOCK_CONNECTOR")
                 .header("Authorization", "Token token-c")
-                .header("X-Request-ID", requestVariables.requestID)
-                .header("X-Correlation-ID", requestVariables.correlationID)
+                .header("X-Request-ID", requestVariables.headers.requestID)
+                .header("X-Correlation-ID", requestVariables.headers.correlationID)
                 .header("OCPI-from-country-code", sender.country)
                 .header("OCPI-from-party-id", sender.id)
                 .header("OCPI-to-country-code", receiver.country)

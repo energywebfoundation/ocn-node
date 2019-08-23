@@ -25,7 +25,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import snc.openchargingnetwork.client.models.*
 import snc.openchargingnetwork.client.models.ocpi.*
-import snc.openchargingnetwork.client.services.HttpServiceexpectedDataType
+import snc.openchargingnetwork.client.services.HttpService
 import snc.openchargingnetwork.client.services.RoutingService
 import snc.openchargingnetwork.client.tools.isOcpiSuccess
 
@@ -60,16 +60,16 @@ class LocationsController(private val routingService: RoutingService,
                 module = ModuleID.LOCATIONS,
                 interfaceRole = InterfaceRole.SENDER,
                 method = HttpMethod.GET,
-                requestID = requestID,
-                correlationID = correlationID,
-                sender = sender,
-                receiver = receiver,
+                headers = OcpiRequestHeaders(
+                        requestID = requestID,
+                        correlationID = correlationID,
+                        sender = sender,
+                        receiver = receiver),
                 urlEncodedParams = OcpiRequestParameters(
                         dateFrom = dateFrom,
                         dateTo = dateTo,
                         offset = offset,
-                        limit = limit),
-                expectedResponseType = OcpiType.LOCATION_ARRAY)
+                        limit = limit))
 
         val response: HttpResponse<Array<Location>> = when (routingService.validateReceiver(receiver)) {
 
@@ -81,8 +81,7 @@ class LocationsController(private val routingService: RoutingService,
                         method = requestVariables.method,
                         url = url,
                         headers = headers,
-                        params = requestVariables.urlEncodedParams,
-                        expectedDataType = requestVariables.expectedResponseType)
+                        urlEncodedParams = requestVariables.urlEncodedParams)
             }
 
             Recipient.REMOTE -> {
@@ -124,12 +123,12 @@ class LocationsController(private val routingService: RoutingService,
                 module = ModuleID.LOCATIONS,
                 interfaceRole = InterfaceRole.SENDER,
                 method = HttpMethod.GET,
-                requestID = requestID,
-                correlationID = correlationID,
-                sender = sender,
-                receiver = receiver,
-                urlPathVariables = uid,
-                expectedResponseType = OcpiType.LOCATION_ARRAY)
+                headers = OcpiRequestHeaders(
+                        requestID = requestID,
+                        correlationID = correlationID,
+                        sender = sender,
+                        receiver = receiver),
+                urlPathVariables = uid)
 
         val response: HttpResponse<Array<Location>> = when (routingService.validateReceiver(receiver)) {
 
@@ -140,8 +139,7 @@ class LocationsController(private val routingService: RoutingService,
                 httpService.makeOcpiRequest(
                         method = requestVariables.method,
                         url = url,
-                        headers = headers,
-                        expectedDataType = requestVariables.expectedResponseType)
+                        headers = headers)
 
             }
 
@@ -193,12 +191,12 @@ class LocationsController(private val routingService: RoutingService,
                 module = ModuleID.LOCATIONS,
                 interfaceRole = InterfaceRole.SENDER,
                 method = HttpMethod.GET,
-                requestID = requestID,
-                correlationID = correlationID,
-                sender = sender,
-                receiver = receiver,
-                urlPathVariables = locationID,
-                expectedResponseType = OcpiType.LOCATION)
+                headers = OcpiRequestHeaders(
+                        requestID = requestID,
+                        correlationID = correlationID,
+                        sender = sender,
+                        receiver = receiver),
+                urlPathVariables = locationID)
 
         val response: HttpResponse<Location> = when (routingService.validateReceiver(receiver)) {
 
@@ -209,8 +207,7 @@ class LocationsController(private val routingService: RoutingService,
                 httpService.makeOcpiRequest(
                         method = requestVariables.method,
                         url = url,
-                        headers = headers,
-                        expectedDataType = requestVariables.expectedResponseType)
+                        headers = headers)
             }
 
             Recipient.REMOTE -> {
@@ -246,12 +243,12 @@ class LocationsController(private val routingService: RoutingService,
                 module = ModuleID.LOCATIONS,
                 interfaceRole = InterfaceRole.SENDER,
                 method = HttpMethod.GET,
-                requestID = requestID,
-                correlationID = correlationID,
-                sender = sender,
-                receiver = receiver,
-                urlPathVariables = "/$locationID/$evseUID",
-                expectedResponseType = OcpiType.EVSE)
+                headers = OcpiRequestHeaders(
+                        requestID = requestID,
+                        correlationID = correlationID,
+                        sender = sender,
+                        receiver = receiver),
+                urlPathVariables = "/$locationID/$evseUID")
 
         val response: HttpResponse<Evse> = when (routingService.validateReceiver(receiver)) {
 
@@ -262,8 +259,7 @@ class LocationsController(private val routingService: RoutingService,
                 httpService.makeOcpiRequest(
                         method = requestVariables.method,
                         url = url,
-                        headers = headers,
-                        expectedDataType = requestVariables.expectedResponseType)
+                        headers = headers)
             }
 
             Recipient.REMOTE -> {
@@ -300,12 +296,12 @@ class LocationsController(private val routingService: RoutingService,
                 module = ModuleID.LOCATIONS,
                 interfaceRole = InterfaceRole.SENDER,
                 method = HttpMethod.GET,
-                requestID = requestID,
-                correlationID = correlationID,
-                sender = sender,
-                receiver = receiver,
-                urlPathVariables = "/$locationID/$evseUID/$connectorID",
-                expectedResponseType = OcpiType.CONNECTOR)
+                headers = OcpiRequestHeaders(
+                        requestID = requestID,
+                        correlationID = correlationID,
+                        sender = sender,
+                        receiver = receiver),
+                urlPathVariables = "/$locationID/$evseUID/$connectorID")
 
         val response: HttpResponse<Connector> = when (routingService.validateReceiver(receiver)) {
 
@@ -316,8 +312,7 @@ class LocationsController(private val routingService: RoutingService,
                 httpService.makeOcpiRequest(
                         method = requestVariables.method,
                         url = url,
-                        headers = headers,
-                        expectedDataType = requestVariables.expectedResponseType)
+                        headers = headers)
             }
 
             Recipient.REMOTE -> {
@@ -358,12 +353,12 @@ class LocationsController(private val routingService: RoutingService,
                 module = ModuleID.LOCATIONS,
                 interfaceRole = InterfaceRole.RECEIVER,
                 method = HttpMethod.GET,
-                requestID = requestID,
-                correlationID = correlationID,
-                sender = sender,
-                receiver = receiver,
-                urlPathVariables = "/$countryCode/$partyID/$locationID",
-                expectedResponseType = OcpiType.LOCATION)
+                headers = OcpiRequestHeaders(
+                        requestID = requestID,
+                        correlationID = correlationID,
+                        sender = sender,
+                        receiver = receiver),
+                urlPathVariables = "/$countryCode/$partyID/$locationID")
 
         val response: HttpResponse<Location> = when (routingService.validateReceiver(receiver)) {
 
@@ -374,8 +369,7 @@ class LocationsController(private val routingService: RoutingService,
                 httpService.makeOcpiRequest(
                         method = requestVariables.method,
                         url = url,
-                        headers = headers,
-                        expectedDataType = requestVariables.expectedResponseType)
+                        headers = headers)
             }
 
             Recipient.REMOTE -> {
@@ -413,12 +407,12 @@ class LocationsController(private val routingService: RoutingService,
                 module = ModuleID.LOCATIONS,
                 interfaceRole = InterfaceRole.RECEIVER,
                 method = HttpMethod.GET,
-                requestID = requestID,
-                correlationID = correlationID,
-                sender = sender,
-                receiver = receiver,
-                urlPathVariables = "/$countryCode/$partyID/$locationID/$evseUID",
-                expectedResponseType = OcpiType.EVSE)
+                headers = OcpiRequestHeaders(
+                        requestID = requestID,
+                        correlationID = correlationID,
+                        sender = sender,
+                        receiver = receiver),
+                urlPathVariables = "/$countryCode/$partyID/$locationID/$evseUID")
 
         val response: HttpResponse<Evse> = when (routingService.validateReceiver(receiver)) {
 
@@ -429,8 +423,7 @@ class LocationsController(private val routingService: RoutingService,
                 httpService.makeOcpiRequest(
                         method = requestVariables.method,
                         url = url,
-                        headers = headers,
-                        expectedDataType = requestVariables.expectedResponseType)
+                        headers = headers)
             }
 
             Recipient.REMOTE -> {
@@ -469,12 +462,12 @@ class LocationsController(private val routingService: RoutingService,
                 module = ModuleID.LOCATIONS,
                 interfaceRole = InterfaceRole.RECEIVER,
                 method = HttpMethod.GET,
-                requestID = requestID,
-                correlationID = correlationID,
-                sender = sender,
-                receiver = receiver,
-                urlPathVariables = "/$countryCode/$partyID/$locationID/$evseUID/$connectorID",
-                expectedResponseType = OcpiType.CONNECTOR)
+                headers = OcpiRequestHeaders(
+                        requestID = requestID,
+                        correlationID = correlationID,
+                        sender = sender,
+                        receiver = receiver),
+                urlPathVariables = "/$countryCode/$partyID/$locationID/$evseUID/$connectorID")
 
         val response: HttpResponse<Connector> = when (routingService.validateReceiver(receiver)) {
 
@@ -485,8 +478,7 @@ class LocationsController(private val routingService: RoutingService,
                 httpService.makeOcpiRequest(
                         method = requestVariables.method,
                         url = url,
-                        headers = headers,
-                        expectedDataType = requestVariables.expectedResponseType)
+                        headers = headers)
             }
 
             Recipient.REMOTE -> {
@@ -513,7 +505,7 @@ class LocationsController(private val routingService: RoutingService,
                                @PathVariable countryCode: String,
                                @PathVariable partyID: String,
                                @PathVariable locationID: String,
-                               @RequestBody body: Location): ResponseEntity<OcpiResponse<Nothing>> {
+                               @RequestBody body: Location): ResponseEntity<OcpiResponse<Unit>> {
 
         val sender = BasicRole(fromPartyID, fromCountryCode)
         val receiver = BasicRole(toPartyID, toCountryCode)
@@ -524,15 +516,15 @@ class LocationsController(private val routingService: RoutingService,
                 module = ModuleID.LOCATIONS,
                 interfaceRole = InterfaceRole.RECEIVER,
                 method = HttpMethod.PUT,
-                requestID = requestID,
-                correlationID = correlationID,
-                sender = sender,
-                receiver = receiver,
+                headers = OcpiRequestHeaders(
+                        requestID = requestID,
+                        correlationID = correlationID,
+                        sender = sender,
+                        receiver = receiver),
                 urlPathVariables = "/$countryCode/$partyID/$locationID",
-                body = body,
-                expectedResponseType = OcpiType.NOTHING)
+                body = body)
 
-        val response: HttpResponse<Nothing> = when (routingService.validateReceiver(receiver)) {
+        val response: HttpResponse<Unit> = when (routingService.validateReceiver(receiver)) {
 
             Recipient.LOCAL -> {
 
@@ -542,8 +534,7 @@ class LocationsController(private val routingService: RoutingService,
                         method = requestVariables.method,
                         url = url,
                         headers = headers,
-                        body = body,
-                        expectedDataType = requestVariables.expectedResponseType)
+                        body = body)
             }
 
             Recipient.REMOTE -> {
@@ -571,7 +562,7 @@ class LocationsController(private val routingService: RoutingService,
                            @PathVariable partyID: String,
                            @PathVariable locationID: String,
                            @PathVariable evseUID: String,
-                           @RequestBody body: Evse): ResponseEntity<OcpiResponse<Nothing>> {
+                           @RequestBody body: Evse): ResponseEntity<OcpiResponse<Unit>> {
 
         val sender = BasicRole(fromPartyID, fromCountryCode)
         val receiver = BasicRole(toPartyID, toCountryCode)
@@ -582,15 +573,15 @@ class LocationsController(private val routingService: RoutingService,
                 module = ModuleID.LOCATIONS,
                 interfaceRole = InterfaceRole.RECEIVER,
                 method = HttpMethod.PUT,
-                requestID = requestID,
-                correlationID = correlationID,
-                sender = sender,
-                receiver = receiver,
+                headers = OcpiRequestHeaders(
+                        requestID = requestID,
+                        correlationID = correlationID,
+                        sender = sender,
+                        receiver = receiver),
                 urlPathVariables = "/$countryCode/$partyID/$locationID/$evseUID",
-                body = body,
-                expectedResponseType = OcpiType.NOTHING)
+                body = body)
 
-        val response: HttpResponse<Nothing> = when (routingService.validateReceiver(receiver)) {
+        val response: HttpResponse<Unit> = when (routingService.validateReceiver(receiver)) {
 
             Recipient.LOCAL -> {
 
@@ -600,8 +591,7 @@ class LocationsController(private val routingService: RoutingService,
                         method = requestVariables.method,
                         url = url,
                         headers = headers,
-                        body = body,
-                        expectedDataType = requestVariables.expectedResponseType)
+                        body = body)
             }
 
             Recipient.REMOTE -> {
@@ -630,7 +620,7 @@ class LocationsController(private val routingService: RoutingService,
                                 @PathVariable locationID: String,
                                 @PathVariable evseUID: String,
                                 @PathVariable connectorID: String,
-                                @RequestBody body: Connector): ResponseEntity<OcpiResponse<Nothing>> {
+                                @RequestBody body: Connector): ResponseEntity<OcpiResponse<Unit>> {
 
         val sender = BasicRole(fromPartyID, fromCountryCode)
         val receiver = BasicRole(toPartyID, toCountryCode)
@@ -641,15 +631,15 @@ class LocationsController(private val routingService: RoutingService,
                 module = ModuleID.LOCATIONS,
                 interfaceRole = InterfaceRole.RECEIVER,
                 method = HttpMethod.PUT,
-                requestID = requestID,
-                correlationID = correlationID,
-                sender = sender,
-                receiver = receiver,
+                headers = OcpiRequestHeaders(
+                        requestID = requestID,
+                        correlationID = correlationID,
+                        sender = sender,
+                        receiver = receiver),
                 urlPathVariables = "/$countryCode/$partyID/$locationID/$evseUID/$connectorID",
-                body = body,
-                expectedResponseType = OcpiType.NOTHING)
+                body = body)
 
-        val response: HttpResponse<Nothing> = when (routingService.validateReceiver(receiver)) {
+        val response: HttpResponse<Unit> = when (routingService.validateReceiver(receiver)) {
 
             Recipient.LOCAL -> {
 
@@ -659,8 +649,7 @@ class LocationsController(private val routingService: RoutingService,
                         method = requestVariables.method,
                         url = url,
                         headers = headers,
-                        body = body,
-                        expectedDataType = requestVariables.expectedResponseType)
+                        body = body)
             }
 
             Recipient.REMOTE -> {
@@ -687,7 +676,7 @@ class LocationsController(private val routingService: RoutingService,
                                  @PathVariable countryCode: String,
                                  @PathVariable partyID: String,
                                  @PathVariable locationID: String,
-                                 @RequestBody body: Map<String, Any>): ResponseEntity<OcpiResponse<Nothing>> {
+                                 @RequestBody body: Map<String, Any>): ResponseEntity<OcpiResponse<Unit>> {
 
         val sender = BasicRole(fromPartyID, fromCountryCode)
         val receiver = BasicRole(toPartyID, toCountryCode)
@@ -698,15 +687,15 @@ class LocationsController(private val routingService: RoutingService,
                 module = ModuleID.LOCATIONS,
                 interfaceRole = InterfaceRole.RECEIVER,
                 method = HttpMethod.PATCH,
-                requestID = requestID,
-                correlationID = correlationID,
-                sender = sender,
-                receiver = receiver,
+                headers = OcpiRequestHeaders(
+                        requestID = requestID,
+                        correlationID = correlationID,
+                        sender = sender,
+                        receiver = receiver),
                 urlPathVariables = "/$countryCode/$partyID/$locationID",
-                body = body,
-                expectedResponseType = OcpiType.NOTHING)
+                body = body)
 
-        val response: HttpResponse<Nothing> = when (routingService.validateReceiver(receiver)) {
+        val response: HttpResponse<Unit> = when (routingService.validateReceiver(receiver)) {
 
             Recipient.LOCAL -> {
 
@@ -716,8 +705,7 @@ class LocationsController(private val routingService: RoutingService,
                         method = requestVariables.method,
                         url = url,
                         headers = headers,
-                        body = body,
-                        expectedDataType = requestVariables.expectedResponseType)
+                        body = body)
             }
 
             Recipient.REMOTE -> {
@@ -745,7 +733,7 @@ class LocationsController(private val routingService: RoutingService,
                              @PathVariable partyID: String,
                              @PathVariable locationID: String,
                              @PathVariable evseUID: String,
-                             @RequestBody body: Map<String, Any>): ResponseEntity<OcpiResponse<Nothing>> {
+                             @RequestBody body: Map<String, Any>): ResponseEntity<OcpiResponse<Unit>> {
 
         val sender = BasicRole(fromPartyID, fromCountryCode)
         val receiver = BasicRole(toPartyID, toCountryCode)
@@ -756,15 +744,15 @@ class LocationsController(private val routingService: RoutingService,
                 module = ModuleID.LOCATIONS,
                 interfaceRole = InterfaceRole.RECEIVER,
                 method = HttpMethod.PATCH,
-                requestID = requestID,
-                correlationID = correlationID,
-                sender = sender,
-                receiver = receiver,
+                headers = OcpiRequestHeaders(
+                        requestID = requestID,
+                        correlationID = correlationID,
+                        sender = sender,
+                        receiver = receiver),
                 urlPathVariables = "/$countryCode/$partyID/$locationID/$evseUID",
-                body = body,
-                expectedResponseType = OcpiType.NOTHING)
+                body = body)
 
-        val response: HttpResponse<Nothing> = when (routingService.validateReceiver(receiver)) {
+        val response: HttpResponse<Unit> = when (routingService.validateReceiver(receiver)) {
 
             Recipient.LOCAL -> {
 
@@ -774,8 +762,7 @@ class LocationsController(private val routingService: RoutingService,
                         method = requestVariables.method,
                         url = url,
                         headers = headers,
-                        body = body,
-                        expectedDataType = requestVariables.expectedResponseType)
+                        body = body)
             }
 
             Recipient.REMOTE -> {
@@ -804,7 +791,7 @@ class LocationsController(private val routingService: RoutingService,
                                   @PathVariable locationID: String,
                                   @PathVariable evseUID: String,
                                   @PathVariable connectorID: String,
-                                  @RequestBody body: Map<String, Any>): ResponseEntity<OcpiResponse<Nothing>> {
+                                  @RequestBody body: Map<String, Any>): ResponseEntity<OcpiResponse<Unit>> {
 
         val sender = BasicRole(fromPartyID, fromCountryCode)
         val receiver = BasicRole(toPartyID, toCountryCode)
@@ -815,15 +802,15 @@ class LocationsController(private val routingService: RoutingService,
                 module = ModuleID.LOCATIONS,
                 interfaceRole = InterfaceRole.RECEIVER,
                 method = HttpMethod.PATCH,
-                requestID = requestID,
-                correlationID = correlationID,
-                sender = sender,
-                receiver = receiver,
+                headers = OcpiRequestHeaders(
+                        requestID = requestID,
+                        correlationID = correlationID,
+                        sender = sender,
+                        receiver = receiver),
                 urlPathVariables = "/$countryCode/$partyID/$locationID/$evseUID/$connectorID",
-                body = body,
-                expectedResponseType = OcpiType.NOTHING)
+                body = body)
 
-        val response: HttpResponse<Nothing> = when (routingService.validateReceiver(receiver)) {
+        val response: HttpResponse<Unit> = when (routingService.validateReceiver(receiver)) {
 
             Recipient.LOCAL -> {
 
@@ -833,8 +820,7 @@ class LocationsController(private val routingService: RoutingService,
                         method = requestVariables.method,
                         url = url,
                         headers = headers,
-                        body = body,
-                        expectedDataType = requestVariables.expectedResponseType)
+                        body = body)
             }
 
             Recipient.REMOTE -> {

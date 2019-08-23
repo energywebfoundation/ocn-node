@@ -41,7 +41,7 @@ class MessageControllerTest(@Autowired val mockMvc: MockMvc) {
         val senderRole = BasicRole("ABC", "DE")
         val receiverRole = BasicRole("XYZ", "NL")
 
-        val body = OcnMessageRequestBody(
+        val body = OcpiRequestVariables(
                 method = HttpMethod.GET,
                 module = ModuleID.LOCATIONS,
                 interfaceRole = InterfaceRole.SENDER,
@@ -49,11 +49,8 @@ class MessageControllerTest(@Autowired val mockMvc: MockMvc) {
                 headers = OcpiRequestHeaders(
                         requestID = "123",
                         correlationID = "abc-123",
-                        ocpiFromCountryCode = senderRole.country,
-                        ocpiFromPartyID = senderRole.id,
-                        ocpiToCountryCode = receiverRole.country,
-                        ocpiToPartyID = receiverRole.id),
-                expectedResponseType = OcpiType.LOCATION)
+                        sender = senderRole,
+                        receiver = receiverRole))
 
         val jsonBodyString = "arbitrary_message"
         every { httpService.mapper.writeValueAsString(body) } returns jsonBodyString
@@ -64,22 +61,14 @@ class MessageControllerTest(@Autowired val mockMvc: MockMvc) {
 
         val (url, headers) = Pair(
                 "https://some.platform.net/locations/LOC2",
-                OcpiRequestHeaders(
-                        authorization = "Token 123",
-                        requestID = "789",
-                        correlationID = "456",
-                        ocpiFromCountryCode = "DE",
-                        ocpiFromPartyID = "SNC",
-                        ocpiToCountryCode = "NL",
-                        ocpiToPartyID = "ACD"))
+                body.headers.copy(authorization = "Token 123", requestID = "789"))
 
-        every { routingService.prepareLocalPlatformRequest(OcpiRequestVariables.fromOcnMessage(body)) } returns Pair(url, headers)
+        every { routingService.prepareLocalPlatformRequest(body) } returns Pair(url, headers)
 
         every { httpService.makeOcpiRequest<Location>(
                 method = body.method,
                 url = url,
-                headers = headers,
-                expectedDataType = OcpiType.LOCATION)
+                headers = headers)
         } returns HttpResponse(
                 statusCode = 200,
                 headers = mapOf(),

@@ -57,9 +57,8 @@ data class OcpiRequestVariables(val module: ModuleID,
                                 val headers: OcpiRequestHeaders,
                                 val urlPathVariables: String? = null,
                                 val urlEncodedParams: OcpiRequestParameters? = null,
-                                val proxiedResource: String? = null,
-                                val body: Any? = null,
-                                val types: TypePair)
+                                val proxyResource: String? = null,
+                                val body: Any? = null)
 
 
 data class OcpiRequestHeaders(@JsonProperty("Authorization") val authorization: String? = null,

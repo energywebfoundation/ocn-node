@@ -64,7 +64,7 @@ fun generatePrivateKey(): String {
     return keys.privateKey.toString(16)
 }
 
-fun <T> isOcpiSuccess(response: HttpResponse<T>): Boolean {
+fun <T: Any> isOcpiSuccess(response: HttpResponse<T>): Boolean {
     return response.statusCode == 200 && response.body.statusCode == 1000
 }
 
