@@ -9,14 +9,9 @@ import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpMethod
 import org.web3j.crypto.Credentials
 import org.web3j.crypto.Sign
-import snc.openchargingnetwork.client.models.OcnMessageRequestBody
-import snc.openchargingnetwork.client.models.ocpi.OcpiRequestHeaders
-import snc.openchargingnetwork.client.models.ocpi.OcpiType
 import snc.openchargingnetwork.client.models.entities.WalletEntity
 import snc.openchargingnetwork.client.models.exceptions.OcpiHubConnectionProblemException
-import snc.openchargingnetwork.client.models.ocpi.BasicRole
-import snc.openchargingnetwork.client.models.ocpi.InterfaceRole
-import snc.openchargingnetwork.client.models.ocpi.ModuleID
+import snc.openchargingnetwork.client.models.ocpi.*
 import snc.openchargingnetwork.client.repositories.WalletRepository
 import snc.openchargingnetwork.client.tools.generatePrivateKey
 import snc.openchargingnetwork.contracts.RegistryFacade
@@ -26,18 +21,15 @@ class WalletServiceTest {
     private val privateKey = "71eb44ccb94e00b6d462232618085daeea239daf76804acf040a7f037549598f"
     private val address = "0xF686dd2b1Cbf4c77079Ca48D176e157ddB744eeF"
 
-    private val body = OcnMessageRequestBody(
+    private val body = OcpiRequestVariables(
             method = HttpMethod.GET,
             module = ModuleID.SESSIONS,
             interfaceRole = InterfaceRole.RECEIVER,
             headers = OcpiRequestHeaders(
                     requestID = "1",
                     correlationID = "1",
-                    ocpiFromCountryCode = "DE",
-                    ocpiFromPartyID = "XXX",
-                    ocpiToCountryCode = "DE",
-                    ocpiToPartyID = "AAA"),
-            expectedResponseType = OcpiType.SESSION_ARRAY)
+                    sender = BasicRole("XXX", "DE"),
+                    receiver = BasicRole("AAA", "DE")))
 
     private val walletRepo: WalletRepository = mockk()
     private val registry: RegistryFacade = mockk()

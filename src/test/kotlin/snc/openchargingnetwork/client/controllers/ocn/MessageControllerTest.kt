@@ -5,6 +5,7 @@ import com.ninjasquad.springmockk.MockkBean
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
+import khttp.get as khttpGET
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
@@ -65,10 +66,7 @@ class MessageControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every { routingService.prepareLocalPlatformRequest(body) } returns Pair(url, headers)
 
-        every { httpService.makeOcpiRequest<Location>(
-                method = body.method,
-                url = url,
-                headers = headers)
+        every { httpService.makeOcpiRequest<Location> { khttpGET(url, headers.encode(), body.urlEncodedParams?.encode()!!) }
         } returns HttpResponse(
                 statusCode = 200,
                 headers = mapOf(),

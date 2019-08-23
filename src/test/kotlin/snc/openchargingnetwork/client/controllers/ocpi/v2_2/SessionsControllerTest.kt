@@ -7,6 +7,9 @@ import io.mockk.every
 import io.mockk.just
 import org.hamcrest.Matchers
 import org.junit.jupiter.api.Test
+import khttp.get as khttpGET
+import khttp.put as khttpPUT
+import khttp.patch as khttpPATCH
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
 import org.springframework.http.HttpHeaders
@@ -61,7 +64,7 @@ class SessionsControllerTest(@Autowired val mockMvc: MockMvc) {
                 requestID = generateUUIDv4Token())
 
         every { routingService.validateSender("Token token-c", sender) } just Runs
-        every { routingService.validateReceiver(receiver) } returns Recipient.LOCAL
+        every { routingService.validateReceiver(receiver) } returns Receiver.LOCAL
         every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, forwardingHeaders)
 
         val responseHeaders = mapOf(
@@ -71,11 +74,9 @@ class SessionsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every {
 
-            httpService.makeOcpiRequest<Array<Session>>(
-                    method = requestVariables.method,
-                    url = url,
-                    headers = forwardingHeaders,
-                    urlEncodedParams = requestVariables.urlEncodedParams)
+            httpService.makeOcpiRequest<Array<Session>> {
+                khttpGET(url, forwardingHeaders.encode(), requestVariables.urlEncodedParams?.encode()!!)
+            }
 
         } returns HttpResponse(
                 statusCode = 200,
@@ -141,7 +142,7 @@ class SessionsControllerTest(@Autowired val mockMvc: MockMvc) {
                 requestID = generateUUIDv4Token())
 
         every { routingService.validateSender("Token token-c", sender) } just Runs
-        every { routingService.validateReceiver(receiver) } returns Recipient.LOCAL
+        every { routingService.validateReceiver(receiver) } returns Receiver.LOCAL
         every { routingService.prepareLocalPlatformRequest(requestVariables, proxied = true) } returns Pair(url, forwardingHeaders)
 
         val responseHeaders = mapOf(
@@ -151,11 +152,7 @@ class SessionsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every {
 
-            httpService.makeOcpiRequest<Array<Session>>(
-                    method = requestVariables.method,
-                    url = url,
-                    headers = forwardingHeaders,
-                    urlEncodedParams = requestVariables.urlEncodedParams)
+            httpService.makeOcpiRequest<Array<Session>> { khttpGET(url, forwardingHeaders.encode()) }
 
         } returns HttpResponse(
                 statusCode = 200,
@@ -223,16 +220,12 @@ class SessionsControllerTest(@Autowired val mockMvc: MockMvc) {
                 requestID = generateUUIDv4Token())
 
         every { routingService.validateSender("Token token-c", sender) } just Runs
-        every { routingService.validateReceiver(receiver) } returns Recipient.LOCAL
+        every { routingService.validateReceiver(receiver) } returns Receiver.LOCAL
         every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, forwardingHeaders)
 
         every {
 
-            httpService.makeOcpiRequest<ChargingPreferencesResponse>(
-                    method = requestVariables.method,
-                    url = url,
-                    headers = forwardingHeaders,
-                    body = body)
+            httpService.makeOcpiRequest<ChargingPreferencesResponse> { khttpGET(url, forwardingHeaders.encode()) }
 
         } returns HttpResponse(
                 statusCode = 200,
@@ -284,15 +277,12 @@ class SessionsControllerTest(@Autowired val mockMvc: MockMvc) {
                 requestID = generateUUIDv4Token())
 
         every { routingService.validateSender("Token token-c", sender) } just Runs
-        every { routingService.validateReceiver(receiver) } returns Recipient.LOCAL
+        every { routingService.validateReceiver(receiver) } returns Receiver.LOCAL
         every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, forwardingHeaders)
 
         every {
 
-            httpService.makeOcpiRequest<Session>(
-                    method = requestVariables.method,
-                    url = url,
-                    headers = forwardingHeaders)
+            httpService.makeOcpiRequest<Session> { khttpGET(url, forwardingHeaders.encode()) }
 
         } returns HttpResponse(
                 statusCode = 200,
@@ -345,16 +335,12 @@ class SessionsControllerTest(@Autowired val mockMvc: MockMvc) {
                 requestID = generateUUIDv4Token())
 
         every { routingService.validateSender("Token token-c", sender) } just Runs
-        every { routingService.validateReceiver(receiver) } returns Recipient.LOCAL
+        every { routingService.validateReceiver(receiver) } returns Receiver.LOCAL
         every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, forwardingHeaders)
 
         every {
 
-            httpService.makeOcpiRequest<Unit>(
-                    method = requestVariables.method,
-                    url = url,
-                    headers = forwardingHeaders,
-                    body = body)
+            httpService.makeOcpiRequest<Unit> { khttpPUT(url, forwardingHeaders.encode()) }
 
         } returns HttpResponse(
                 statusCode = 200,
@@ -408,16 +394,13 @@ class SessionsControllerTest(@Autowired val mockMvc: MockMvc) {
                 requestID = generateUUIDv4Token())
 
         every { routingService.validateSender("Token token-c", sender) } just Runs
-        every { routingService.validateReceiver(receiver) } returns Recipient.LOCAL
+        every { routingService.validateReceiver(receiver) } returns Receiver.LOCAL
         every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, forwardingHeaders)
 
         every {
 
-            httpService.makeOcpiRequest<Unit>(
-                    method = requestVariables.method,
-                    url = url,
-                    headers = forwardingHeaders,
-                    body = body)
+            httpService.makeOcpiRequest<Session> { khttpPATCH(url, forwardingHeaders.encode()) }
+
 
         } returns HttpResponse(
                 statusCode = 200,

@@ -5,6 +5,8 @@ import com.ninjasquad.springmockk.MockkBean
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
+import khttp.get as khttpGET
+import khttp.post as khttpPOST
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
@@ -64,7 +66,7 @@ class CdrsControllerTest(@Autowired val mockMvc: MockMvc) {
                 requestID = generateUUIDv4Token())
 
         every { routingService.validateSender("Token token-c", sender) } just Runs
-        every { routingService.validateReceiver(receiver) } returns Recipient.LOCAL
+        every { routingService.validateReceiver(receiver) } returns Receiver.LOCAL
         every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, forwardingHeaders)
 
         val responseHeaders = mapOf(
@@ -72,13 +74,9 @@ class CdrsControllerTest(@Autowired val mockMvc: MockMvc) {
                 "X-Limit" to "100")
 
         every {
-
-            httpService.makeOcpiRequest<Array<CDR>>(
-                method = requestVariables.method,
-                url = url,
-                headers = forwardingHeaders,
-                urlEncodedParams = requestVariables.urlEncodedParams)
-
+            httpService.makeOcpiRequest<Array<CDR>> {
+                khttp.get(url, forwardingHeaders.encode(), requestVariables.urlEncodedParams?.encode()!!)
+            }
         } returns HttpResponse(
                 statusCode = 200,
                 headers = responseHeaders,
@@ -139,7 +137,7 @@ class CdrsControllerTest(@Autowired val mockMvc: MockMvc) {
                 requestID = generateUUIDv4Token())
 
         every { routingService.validateSender("Token token-c", sender) } just Runs
-        every { routingService.validateReceiver(receiver) } returns Recipient.LOCAL
+        every { routingService.validateReceiver(receiver) } returns Receiver.LOCAL
         every { routingService.prepareLocalPlatformRequest(requestVariables, proxied = true) } returns Pair(url, forwardingHeaders)
 
         val responseHeaders = mapOf(
@@ -147,13 +145,7 @@ class CdrsControllerTest(@Autowired val mockMvc: MockMvc) {
                 "X-Limit" to "100")
 
         every {
-
-            httpService.makeOcpiRequest<Array<CDR>>(
-                    method = requestVariables.method,
-                    url = url,
-                    headers = forwardingHeaders,
-                    urlEncodedParams = requestVariables.urlEncodedParams)
-
+            httpService.makeOcpiRequest<Array<CDR>> { khttpGET(url, forwardingHeaders.encode()) }
         } returns HttpResponse(
                 statusCode = 200,
                 headers = responseHeaders,
@@ -216,16 +208,12 @@ class CdrsControllerTest(@Autowired val mockMvc: MockMvc) {
                 requestID = generateUUIDv4Token())
 
         every { routingService.validateSender("Token token-c", sender) } just Runs
-        every { routingService.validateReceiver(receiver) } returns Recipient.LOCAL
+        every { routingService.validateReceiver(receiver) } returns Receiver.LOCAL
         every { routingService.prepareLocalPlatformRequest(requestVariables, proxied = true) } returns Pair(url, forwardingHeaders)
 
         every {
 
-            httpService.makeOcpiRequest<CDR>(
-                    method = requestVariables.method,
-                    url = url,
-                    headers = forwardingHeaders,
-                    urlEncodedParams = requestVariables.urlEncodedParams)
+            httpService.makeOcpiRequest<CDR> { khttpGET(url, forwardingHeaders.encode()) }
 
         } returns HttpResponse(
                 statusCode = 200,
@@ -274,23 +262,19 @@ class CdrsControllerTest(@Autowired val mockMvc: MockMvc) {
                 requestID = generateUUIDv4Token())
 
         every { routingService.validateSender("Token token-c", sender) } just Runs
-        every { routingService.validateReceiver(receiver) } returns Recipient.LOCAL
+        every { routingService.validateReceiver(receiver) } returns Receiver.LOCAL
         every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, forwardingHeaders)
 
         val locationHeader = "https://real.msp.net/path/to/location/1"
 
         every {
 
-            httpService.makeOcpiRequest<Unit>(
-                    method = requestVariables.method,
-                    url = url,
-                    headers = forwardingHeaders,
-                    urlEncodedParams = requestVariables.urlEncodedParams)
+            httpService.makeOcpiRequest<Unit> { khttpPOST(url, forwardingHeaders.encode(), json = requestVariables.body) }
 
         } returns HttpResponse(
                 statusCode = 200,
                 headers = mapOf("Location" to locationHeader),
-                body = OcpiResponse(statusCode = 1000, data = null))
+                body = OcpiResponse(statusCode = 1000))
 
         every { routingService.setProxyResource(locationHeader, sender, receiver) } returns 6545L
         every { properties.url } returns "https://super.hub.net"

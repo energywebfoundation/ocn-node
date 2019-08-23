@@ -5,6 +5,7 @@ import com.ninjasquad.springmockk.MockkBean
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
+import khttp.post as khttpPOST
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
@@ -62,16 +63,12 @@ class CommandsControllerTest(@Autowired val mockMvc: MockMvc) {
                 requestID = generateUUIDv4Token())
 
         every { routingService.validateSender("Token token-c", sender) } just Runs
-        every { routingService.validateReceiver(receiver) } returns Recipient.LOCAL
+        every { routingService.validateReceiver(receiver) } returns Receiver.LOCAL
         every { routingService.prepareLocalPlatformRequest(requestVariables, proxied = true) } returns Pair(url, forwardingHeaders)
 
         every {
 
-            httpService.makeOcpiRequest<Unit>(
-                    method = requestVariables.method,
-                    url = url,
-                    headers = forwardingHeaders,
-                    body = body)
+            httpService.makeOcpiRequest<Unit> { khttpPOST(url, forwardingHeaders.encode(), json = body) }
 
         } returns HttpResponse(
                 statusCode = 200,
@@ -126,7 +123,7 @@ class CommandsControllerTest(@Autowired val mockMvc: MockMvc) {
                 requestID = generateUUIDv4Token())
 
         every { routingService.validateSender("Token token-c", sender) } just Runs
-        every { routingService.validateReceiver(receiver) } returns Recipient.LOCAL
+        every { routingService.validateReceiver(receiver) } returns Receiver.LOCAL
 
         every { routingService.setProxyResource(body.responseURL, sender, receiver) } returns 6L
         every { properties.url } returns "https://client.ocn.org"
@@ -135,11 +132,7 @@ class CommandsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every {
 
-            httpService.makeOcpiRequest<CommandResponse>(
-                    method = requestVariables.method,
-                    url = url,
-                    headers = forwardingHeaders,
-                    body = proxyBody)
+            httpService.makeOcpiRequest<CommandResponse> { khttpPOST(url, forwardingHeaders.encode(), json = body) }
 
         } returns HttpResponse(
                 statusCode = 200,
@@ -199,7 +192,7 @@ class CommandsControllerTest(@Autowired val mockMvc: MockMvc) {
                 requestID = generateUUIDv4Token())
 
         every { routingService.validateSender("Token token-c", sender) } just Runs
-        every { routingService.validateReceiver(receiver) } returns Recipient.LOCAL
+        every { routingService.validateReceiver(receiver) } returns Receiver.LOCAL
 
         every { routingService.setProxyResource(body.responseURL, sender, receiver) } returns 6L
         every { properties.url } returns "https://client.ocn.org"
@@ -208,11 +201,7 @@ class CommandsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every {
 
-            httpService.makeOcpiRequest<CommandResponse>(
-                    method = requestVariables.method,
-                    url = url,
-                    headers = forwardingHeaders,
-                    body = proxyBody)
+            httpService.makeOcpiRequest<CommandResponse> { khttpPOST(url, forwardingHeaders.encode(), json = body) }
 
         } returns HttpResponse(
                 statusCode = 200,
@@ -270,7 +259,7 @@ class CommandsControllerTest(@Autowired val mockMvc: MockMvc) {
                 requestID = generateUUIDv4Token())
 
         every { routingService.validateSender("Token token-c", sender) } just Runs
-        every { routingService.validateReceiver(receiver) } returns Recipient.LOCAL
+        every { routingService.validateReceiver(receiver) } returns Receiver.LOCAL
 
         every { routingService.setProxyResource(body.responseURL, sender, receiver) } returns 6L
         every { properties.url } returns "https://client.ocn.org"
@@ -279,11 +268,7 @@ class CommandsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every {
 
-            httpService.makeOcpiRequest<CommandResponse>(
-                    method = requestVariables.method,
-                    url = url,
-                    headers = forwardingHeaders,
-                    body = proxyBody)
+            httpService.makeOcpiRequest<CommandResponse> { khttpPOST(url, forwardingHeaders.encode(), json = body) }
 
         } returns HttpResponse(
                 statusCode = 200,
@@ -340,7 +325,7 @@ class CommandsControllerTest(@Autowired val mockMvc: MockMvc) {
                 requestID = generateUUIDv4Token())
 
         every { routingService.validateSender("Token token-c", sender) } just Runs
-        every { routingService.validateReceiver(receiver) } returns Recipient.LOCAL
+        every { routingService.validateReceiver(receiver) } returns Receiver.LOCAL
 
         every { routingService.setProxyResource(body.responseURL, sender, receiver) } returns 6L
         every { properties.url } returns "https://client.ocn.org"
@@ -349,11 +334,7 @@ class CommandsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every {
 
-            httpService.makeOcpiRequest<CommandResponse>(
-                    method = requestVariables.method,
-                    url = url,
-                    headers = forwardingHeaders,
-                    body = proxyBody)
+            httpService.makeOcpiRequest<CommandResponse> { khttpPOST(url, forwardingHeaders.encode(), json = body) }
 
         } returns HttpResponse(
                 statusCode = 200,
@@ -412,7 +393,7 @@ class CommandsControllerTest(@Autowired val mockMvc: MockMvc) {
                 requestID = generateUUIDv4Token())
 
         every { routingService.validateSender("Token token-c", sender) } just Runs
-        every { routingService.validateReceiver(receiver) } returns Recipient.LOCAL
+        every { routingService.validateReceiver(receiver) } returns Receiver.LOCAL
 
         every { routingService.setProxyResource(body.responseURL, sender, receiver) } returns 6L
         every { properties.url } returns "https://client.ocn.org"
@@ -421,11 +402,7 @@ class CommandsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every {
 
-            httpService.makeOcpiRequest<CommandResponse>(
-                    method = requestVariables.method,
-                    url = url,
-                    headers = forwardingHeaders,
-                    body = proxyBody)
+            httpService.makeOcpiRequest<CommandResponse> { khttpPOST(url, forwardingHeaders.encode(), json = body) }
 
         } returns HttpResponse(
                 statusCode = 200,

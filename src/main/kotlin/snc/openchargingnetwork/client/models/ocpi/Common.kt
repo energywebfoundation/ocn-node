@@ -74,10 +74,10 @@ data class OcpiRequestHeaders(@JsonProperty("Authorization") val authorization: 
     val ocpiFromPartyID = sender.id
 
     @JsonProperty("OCPI-to-country-code")
-    val ocpiToCountryCode = receiver.id
+    val ocpiToCountryCode = receiver.country
 
     @JsonProperty("OCPI-to-party-id")
-    val ocpiToPartyID = receiver.country
+    val ocpiToPartyID = receiver.id
 
 
     fun encode(): Map<String, String> {

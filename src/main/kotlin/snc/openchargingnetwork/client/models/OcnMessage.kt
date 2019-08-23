@@ -52,7 +52,7 @@ data class OcnMessageHeaders(val requestID: String,
 
 }
 
-enum class Recipient {
+enum class Receiver {
     LOCAL,
     REMOTE,
 }

@@ -22,12 +22,14 @@ package snc.openchargingnetwork.client.services
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import khttp.*
+import khttp.responses.Response
 import org.springframework.http.HttpMethod
 import org.springframework.stereotype.Service
 import snc.openchargingnetwork.client.models.*
 import snc.openchargingnetwork.client.models.exceptions.OcpiServerUnusableApiException
 import snc.openchargingnetwork.client.models.ocpi.*
 import snc.openchargingnetwork.client.tools.urlJoin
+import kotlin.reflect.KClass
 
 @Service
 class HttpService {
@@ -38,39 +40,45 @@ class HttpService {
     /**
      * Generic HTTP request expecting a response of type OcpiResponse<T> as defined by the caller
      */
-    final inline fun <reified T: Any> makeOcpiRequest(method: HttpMethod,
-                                 url: String,
-                                 headers: OcpiRequestHeaders,
-                                 urlEncodedParams: OcpiRequestParameters? = null,
-                                 body: Any? = null): HttpResponse<T> {
+    fun <T: Any> makeOcpiRequest(request: () -> Response): HttpResponse<T> {
+        val response = request()
+//        val type = mapper.typeFactory.constructParametricType(OcpiResponse::class.java, responseType::class.java)
+//        val body: OcpiResponse<T> = mapper.readValue(response.text)
+        return HttpResponse(
+                statusCode = response.statusCode,
+                headers = response.headers,
+                body = mapper.readValue(response.text))
+    }
+
+
+    /**
+     * Generic HTTP request expecting a response of type OcpiResponse<T> as defined by the caller
+     */
+    final inline fun <reified T: Any> makeOcpiRequest(url: String,
+                                                      headers: OcpiRequestHeaders,
+                                                      requestVariables: OcpiRequestVariables): HttpResponse<T> {
 
         val headersMap = headers.encode()
 
         var jsonBody: Map<String,Any>? = null
-        if (body != null) {
-            val jsonString = mapper.writeValueAsString(body)
+        if (requestVariables.body != null) {
+            val jsonString = mapper.writeValueAsString(requestVariables.body)
             jsonBody = mapper.readValue(jsonString)
         }
 
         var paramsMap: Map<String, String> = mapOf()
-        if (urlEncodedParams != null) {
-            paramsMap = urlEncodedParams.encode()
+        if (requestVariables.urlEncodedParams != null) {
+            paramsMap = requestVariables.urlEncodedParams.encode()
         }
 
-        val response = when (method) {
-            HttpMethod.GET -> get(url = url, headers = headersMap, params = paramsMap)
-            HttpMethod.POST -> post(url = url, headers = headersMap, json = jsonBody, params = paramsMap)
-            HttpMethod.PUT -> put(url = url, headers = headersMap, json = jsonBody)
-            HttpMethod.PATCH -> patch(url = url, headers = headersMap, json = jsonBody)
-            HttpMethod.DELETE -> delete(url = url, headers = headersMap, json = jsonBody)
-            else -> throw IllegalStateException("Invalid method: $method")
+        return when (requestVariables.method) {
+            HttpMethod.GET -> makeOcpiRequest { get(url = url, headers = headersMap, params = paramsMap) }
+            HttpMethod.POST -> makeOcpiRequest { post(url = url, headers = headersMap, json = jsonBody, params = paramsMap) }
+            HttpMethod.PUT -> makeOcpiRequest { put(url = url, headers = headersMap, json = jsonBody) }
+            HttpMethod.PATCH -> makeOcpiRequest { patch(url = url, headers = headersMap, json = jsonBody) }
+            HttpMethod.DELETE -> makeOcpiRequest { delete(url = url, headers = headersMap, json = jsonBody) }
+            else -> throw IllegalStateException("Invalid method: ${requestVariables.method}")
         }
-
-        val type = mapper.typeFactory.constructParametricType(OcpiResponse::class.java, T::class.java)
-        return HttpResponse(
-                statusCode = response.statusCode,
-                headers = response.headers,
-                body = mapper.readValue(response.text, type))
     }
 
 
@@ -128,16 +136,9 @@ class HttpService {
         val jsonString = mapper.writeValueAsString(body)
         val jsonBody: Map<String,Any> = mapper.readValue(jsonString)
 
-        val response = post(
-                url = urlJoin(url, "/ocn/message"),
-                headers = headersMap,
-                json = jsonBody)
+        val fullURL = urlJoin(url, "/ocn/message")
 
-        val type = mapper.typeFactory.constructParametricType(OcpiResponse::class.java, T::class.java)
-        return HttpResponse(
-                statusCode = response.statusCode,
-                headers = response.headers,
-                body = mapper.readValue(response.text, type))
+        return makeOcpiRequest { post(url = fullURL, headers = headersMap, json = jsonBody) }
     }
 
 }

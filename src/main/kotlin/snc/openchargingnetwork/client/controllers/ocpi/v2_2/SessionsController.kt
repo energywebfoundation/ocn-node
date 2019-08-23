@@ -73,22 +73,18 @@ class SessionsController(private val routingService: RoutingService,
 
         val response: HttpResponse<Array<Session>> = when (routingService.validateReceiver(receiver)) {
 
-            Recipient.LOCAL -> {
+            Receiver.LOCAL -> {
 
                 val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables)
 
-                httpService.makeOcpiRequest(
-                        method = requestVariables.method,
-                        url = url,
-                        headers = headers,
-                        urlEncodedParams = requestVariables.urlEncodedParams)
+                httpService.makeOcpiRequest(url, headers, requestVariables)
             }
 
-            Recipient.REMOTE -> {
+            Receiver.REMOTE -> {
 
                 val (url, headers, body) = routingService.prepareRemotePlatformRequest(requestVariables)
 
-                httpService.postOcnMessage(url = url, headers = headers, body = body)
+                httpService.postOcnMessage(url, headers, body)
             }
 
         }
@@ -132,22 +128,19 @@ class SessionsController(private val routingService: RoutingService,
 
         val response: HttpResponse<Array<Session>> = when (routingService.validateReceiver(receiver)) {
 
-            Recipient.LOCAL -> {
+            Receiver.LOCAL -> {
 
                 val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables, proxied = true)
 
-                httpService.makeOcpiRequest(
-                        method = requestVariables.method,
-                        url = url,
-                        headers = headers)
+                httpService.makeOcpiRequest(url, headers, requestVariables)
 
             }
 
-            Recipient.REMOTE -> {
+            Receiver.REMOTE -> {
 
                 val (url, headers, body) = routingService.prepareRemotePlatformRequest(requestVariables, proxied = true)
 
-                httpService.postOcnMessage(url = url, headers = headers, body = body)
+                httpService.postOcnMessage(url, headers, body)
 
             }
 
@@ -202,23 +195,19 @@ class SessionsController(private val routingService: RoutingService,
 
         val response: HttpResponse<ChargingPreferencesResponse> = when (routingService.validateReceiver(receiver)) {
 
-            Recipient.LOCAL -> {
+            Receiver.LOCAL -> {
 
                 val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables)
 
-                httpService.makeOcpiRequest(
-                        method = requestVariables.method,
-                        url = url,
-                        headers = headers,
-                        body = body)
+                httpService.makeOcpiRequest(url, headers, requestVariables)
 
             }
 
-            Recipient.REMOTE -> {
+            Receiver.REMOTE -> {
 
                 val (url, headers, ocnBody) = routingService.prepareRemotePlatformRequest(requestVariables)
 
-                httpService.postOcnMessage(url = url, headers = headers, body = ocnBody)
+                httpService.postOcnMessage(url, headers, ocnBody)
 
             }
 
@@ -262,22 +251,19 @@ class SessionsController(private val routingService: RoutingService,
 
         val response: HttpResponse<Session> = when (routingService.validateReceiver(receiver)) {
 
-            Recipient.LOCAL -> {
+            Receiver.LOCAL -> {
 
                 val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables)
 
-                httpService.makeOcpiRequest(
-                        method = requestVariables.method,
-                        url = url,
-                        headers = headers)
+                httpService.makeOcpiRequest(url, headers, requestVariables)
 
             }
 
-            Recipient.REMOTE -> {
+            Receiver.REMOTE -> {
 
                 val (url, headers, ocnBody) = routingService.prepareRemotePlatformRequest(requestVariables)
 
-                httpService.postOcnMessage(url = url, headers = headers, body = ocnBody)
+                httpService.postOcnMessage(url, headers, ocnBody)
 
             }
 
@@ -319,23 +305,19 @@ class SessionsController(private val routingService: RoutingService,
 
         val response: HttpResponse<Unit> = when (routingService.validateReceiver(receiver)) {
 
-            Recipient.LOCAL -> {
+            Receiver.LOCAL -> {
 
                 val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables)
 
-                httpService.makeOcpiRequest(
-                        method = requestVariables.method,
-                        url = url,
-                        headers = headers,
-                        body = body)
+                httpService.makeOcpiRequest(url, headers, requestVariables)
 
             }
 
-            Recipient.REMOTE -> {
+            Receiver.REMOTE -> {
 
                 val (url, headers, ocnBody) = routingService.prepareRemotePlatformRequest(requestVariables)
 
-                httpService.postOcnMessage(url = url, headers = headers, body = ocnBody)
+                httpService.postOcnMessage(url, headers, ocnBody)
 
             }
 
@@ -377,23 +359,19 @@ class SessionsController(private val routingService: RoutingService,
 
         val response: HttpResponse<Unit> = when (routingService.validateReceiver(receiver)) {
 
-            Recipient.LOCAL -> {
+            Receiver.LOCAL -> {
 
                 val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables)
 
-                httpService.makeOcpiRequest(
-                        method = requestVariables.method,
-                        url = url,
-                        headers = headers,
-                        body = body)
+                httpService.makeOcpiRequest(url, headers, requestVariables)
 
             }
 
-            Recipient.REMOTE -> {
+            Receiver.REMOTE -> {
 
                 val (url, headers, ocnBody) = routingService.prepareRemotePlatformRequest(requestVariables)
 
-                httpService.postOcnMessage(url = url, headers = headers, body = ocnBody)
+                httpService.postOcnMessage(url, headers, ocnBody)
 
             }
 

@@ -70,23 +70,19 @@ class CommandsController(private val routingService: RoutingService,
 
         val response: HttpResponse<Unit> = when (routingService.validateReceiver(receiver)) {
 
-            Recipient.LOCAL -> {
+            Receiver.LOCAL -> {
 
                 val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables, proxied = true)
 
-                httpService.makeOcpiRequest(
-                        method = requestVariables.method,
-                        url = url,
-                        headers = headers,
-                        body = body)
+                httpService.makeOcpiRequest(url, headers, requestVariables)
 
             }
 
-            Recipient.REMOTE -> {
+            Receiver.REMOTE -> {
 
                 val (url, headers, ocnBody) = routingService.prepareRemotePlatformRequest(requestVariables, proxied = true)
 
-                httpService.postOcnMessage(url = url, headers = headers, body = ocnBody)
+                httpService.postOcnMessage(url, headers, ocnBody)
 
             }
 
@@ -130,7 +126,7 @@ class CommandsController(private val routingService: RoutingService,
 
         val response: HttpResponse<CommandResponse> = when (routingService.validateReceiver(receiver)) {
 
-            Recipient.LOCAL -> {
+            Receiver.LOCAL -> {
 
                 val resourceID = routingService.setProxyResource(body.responseURL, sender, receiver)
 
@@ -142,19 +138,15 @@ class CommandsController(private val routingService: RoutingService,
 
                 val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables)
 
-                httpService.makeOcpiRequest(
-                        method = requestVariables.method,
-                        url = url,
-                        headers = headers,
-                        body = proxyBody)
+                httpService.makeOcpiRequest(url, headers, requestVariables.copy(body = proxyBody))
 
             }
 
-            Recipient.REMOTE -> {
+            Receiver.REMOTE -> {
 
                 val (url, headers, ocnBody) = routingService.prepareRemotePlatformRequest(requestVariables)
 
-                httpService.postOcnMessage(url = url, headers = headers, body = ocnBody)
+                httpService.postOcnMessage(url, headers, ocnBody)
 
             }
 
@@ -193,7 +185,7 @@ class CommandsController(private val routingService: RoutingService,
 
         val response: HttpResponse<CommandResponse> = when (routingService.validateReceiver(receiver)) {
 
-            Recipient.LOCAL -> {
+            Receiver.LOCAL -> {
 
                 val resourceID = routingService.setProxyResource(body.responseURL, sender, receiver)
 
@@ -205,19 +197,15 @@ class CommandsController(private val routingService: RoutingService,
 
                 val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables)
 
-                httpService.makeOcpiRequest(
-                        method = requestVariables.method,
-                        url = url,
-                        headers = headers,
-                        body = proxyBody)
+                httpService.makeOcpiRequest(url, headers, requestVariables.copy(body = proxyBody))
 
             }
 
-            Recipient.REMOTE -> {
+            Receiver.REMOTE -> {
 
                 val (url, headers, ocnBody) = routingService.prepareRemotePlatformRequest(requestVariables)
 
-                httpService.postOcnMessage(url = url, headers = headers, body = ocnBody)
+                httpService.postOcnMessage(url, headers, ocnBody)
 
             }
 
@@ -256,7 +244,7 @@ class CommandsController(private val routingService: RoutingService,
 
         val response: HttpResponse<CommandResponse> = when (routingService.validateReceiver(receiver)) {
 
-            Recipient.LOCAL -> {
+            Receiver.LOCAL -> {
 
                 val resourceID = routingService.setProxyResource(body.responseURL, sender, receiver)
 
@@ -268,19 +256,15 @@ class CommandsController(private val routingService: RoutingService,
 
                 val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables)
 
-                httpService.makeOcpiRequest(
-                        method = requestVariables.method,
-                        url = url,
-                        headers = headers,
-                        body = proxyBody)
+                httpService.makeOcpiRequest(url, headers, requestVariables.copy(body = proxyBody))
 
             }
 
-            Recipient.REMOTE -> {
+            Receiver.REMOTE -> {
 
                 val (url, headers, ocnBody) = routingService.prepareRemotePlatformRequest(requestVariables)
 
-                httpService.postOcnMessage(url = url, headers = headers, body = ocnBody)
+                httpService.postOcnMessage(url, headers, ocnBody)
 
             }
 
@@ -319,7 +303,7 @@ class CommandsController(private val routingService: RoutingService,
 
         val response: HttpResponse<CommandResponse> = when (routingService.validateReceiver(receiver)) {
 
-            Recipient.LOCAL -> {
+            Receiver.LOCAL -> {
 
                 val resourceID = routingService.setProxyResource(body.responseURL, sender, receiver)
 
@@ -331,19 +315,15 @@ class CommandsController(private val routingService: RoutingService,
 
                 val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables)
 
-                httpService.makeOcpiRequest(
-                        method = requestVariables.method,
-                        url = url,
-                        headers = headers,
-                        body = proxyBody)
+                httpService.makeOcpiRequest(url, headers, requestVariables.copy(body = proxyBody))
 
             }
 
-            Recipient.REMOTE -> {
+            Receiver.REMOTE -> {
 
                 val (url, headers, ocnBody) = routingService.prepareRemotePlatformRequest(requestVariables)
 
-                httpService.postOcnMessage(url = url, headers = headers, body = ocnBody)
+                httpService.postOcnMessage(url, headers, ocnBody)
 
             }
 
@@ -382,7 +362,7 @@ class CommandsController(private val routingService: RoutingService,
 
         val response: HttpResponse<CommandResponse> = when (routingService.validateReceiver(receiver)) {
 
-            Recipient.LOCAL -> {
+            Receiver.LOCAL -> {
 
                 val resourceID = routingService.setProxyResource(body.responseURL, sender, receiver)
 
@@ -394,19 +374,15 @@ class CommandsController(private val routingService: RoutingService,
 
                 val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables)
 
-                httpService.makeOcpiRequest(
-                        method = requestVariables.method,
-                        url = url,
-                        headers = headers,
-                        body = proxyBody)
+                httpService.makeOcpiRequest(url, headers, requestVariables.copy(body = proxyBody))
 
             }
 
-            Recipient.REMOTE -> {
+            Receiver.REMOTE -> {
 
                 val (url, headers, ocnBody) = routingService.prepareRemotePlatformRequest(requestVariables)
 
-                httpService.postOcnMessage(url = url, headers = headers, body = ocnBody)
+                httpService.postOcnMessage(url, headers, ocnBody)
 
             }
 

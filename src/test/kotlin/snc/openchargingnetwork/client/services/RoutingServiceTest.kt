@@ -326,7 +326,7 @@ class RoutingServiceTest {
     fun `validateReceiver should return LOCAL`() {
         val role = BasicRole("SNC", "DE")
         every { roleRepo.existsByCountryCodeAndPartyIDAllIgnoreCase(role.country, role.id) } returns true
-        assertThat(routingService.validateReceiver(role)).isEqualTo(Recipient.LOCAL)
+        assertThat(routingService.validateReceiver(role)).isEqualTo(Receiver.LOCAL)
     }
 
 
@@ -335,7 +335,7 @@ class RoutingServiceTest {
         val role = BasicRole("SNC", "DE")
         every { roleRepo.existsByCountryCodeAndPartyIDAllIgnoreCase(role.country, role.id) } returns false
         every { registry.clientURLOf(role.country.toByteArray(), role.id.toByteArray()).sendAsync().get() } returns "http://localhost:8080"
-        assertThat(routingService.validateReceiver(role)).isEqualTo(Recipient.REMOTE)
+        assertThat(routingService.validateReceiver(role)).isEqualTo(Receiver.REMOTE)
     }
 
 }

@@ -19,12 +19,12 @@
 
 package snc.openchargingnetwork.client.controllers.ocn
 
+import com.fasterxml.jackson.module.kotlin.readValue
 import org.springframework.http.HttpHeaders
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import snc.openchargingnetwork.client.models.ocpi.OcpiRequestVariables
 import snc.openchargingnetwork.client.models.exceptions.OcpiHubUnknownReceiverException
-import snc.openchargingnetwork.client.models.ocpi.BasicRole
 import snc.openchargingnetwork.client.models.ocpi.OcpiResponse
 import snc.openchargingnetwork.client.services.WalletService
 import snc.openchargingnetwork.client.services.HttpService
@@ -40,14 +40,15 @@ class MessageController(private val routingService: RoutingService,
     @PostMapping
     fun postMessage(@RequestHeader("X-Request-ID") requestID: String,
                     @RequestHeader("OCN-Signature") signature: String,
-                    @RequestBody body: OcpiRequestVariables): ResponseEntity<OcpiResponse<out Any>> {
+                    @RequestBody body: String): ResponseEntity<OcpiResponse<out Any>> {
 
-        val sender = BasicRole(body.headers.ocpiFromPartyID, body.headers.ocpiFromCountryCode)
-        val receiver = BasicRole(body.headers.ocpiToPartyID, body.headers.ocpiToCountryCode)
+        val requestVariables: OcpiRequestVariables = httpService.mapper.readValue(body)
+
+        val sender = requestVariables.headers.sender
+        val receiver = requestVariables.headers.receiver
 
         // verify the signer of the request is authorized to forward messages on behalf of the sender
-        val jsonBodyString = httpService.mapper.writeValueAsString(body)
-        walletService.verify(jsonBodyString, signature, sender)
+        walletService.verify(body, signature, sender)
 
         // check sender has been registered on network
         if (!routingService.isRoleKnownOnNetwork(sender)) {
@@ -59,17 +60,11 @@ class MessageController(private val routingService: RoutingService,
             throw OcpiHubUnknownReceiverException("Recipient unknown to OCN client entered in Registry")
         }
 
-        // forward message
-        val (url, headers) = routingService.prepareLocalPlatformRequest(body)
+        val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables)
 
         // TODO: proxy async response URL, pagination headers etc.
 
-        val response = httpService.makeOcpiRequest<Any>(
-                method = body.method,
-                url = url,
-                headers = headers,
-                urlEncodedParams = body.urlEncodedParams,
-                body = body.body)
+        val response = httpService.makeOcpiRequest<Any>(url, headers, requestVariables)
 
         val responseHeaders = HttpHeaders()
         response.headers["location"]?.let { responseHeaders.set("Location", it) }

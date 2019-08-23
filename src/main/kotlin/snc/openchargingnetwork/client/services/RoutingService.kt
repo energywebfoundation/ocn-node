@@ -131,10 +131,10 @@ class RoutingService(private val platformRepo: PlatformRepository,
      * Check receiver is registered on the Open Charging Network / known locally via database
      * @return OcpiRequestType - defines the type of request the client should make
      */
-    fun validateReceiver(receiver: BasicRole): Recipient {
+    fun validateReceiver(receiver: BasicRole): Receiver {
         return when {
-            isRoleKnown(receiver) -> Recipient.LOCAL
-            isRoleKnownOnNetwork(receiver) -> Recipient.REMOTE
+            isRoleKnown(receiver) -> Receiver.LOCAL
+            isRoleKnownOnNetwork(receiver) -> Receiver.REMOTE
             else -> throw OcpiHubUnknownReceiverException("Receiver not registered on Open Charging Network")
         }
     }

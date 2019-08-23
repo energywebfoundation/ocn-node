@@ -5,6 +5,9 @@ import com.ninjasquad.springmockk.MockkBean
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
+import khttp.get as khttpGET
+import khttp.put as khttpPUT
+import khttp.delete as khttpDELETE
 import org.hamcrest.Matchers
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -53,13 +56,13 @@ class TariffsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         val url = "https://ocpi.emsp.com/2.2/tariffs"
 
-        val forwardedHeaders = requestVariables.headers.copy(
+        val forwardingHeaders = requestVariables.headers.copy(
                 authorization = "Token token-b",
                 requestID = generateUUIDv4Token())
 
         every { routingService.validateSender("Token token-c", sender) } just Runs
-        every { routingService.validateReceiver(receiver) } returns Recipient.LOCAL
-        every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, forwardedHeaders)
+        every { routingService.validateReceiver(receiver) } returns Receiver.LOCAL
+        every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, forwardingHeaders)
 
         val responseHeaders = mapOf(
                 "Link" to "https://ocpi.cpo.com/tariffs?limit=10&offset=10; rel=\"next\"",
@@ -68,11 +71,9 @@ class TariffsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every {
 
-            httpService.makeOcpiRequest<Array<Tariff>>(
-                    method = requestVariables.method,
-                    url = url,
-                    headers = forwardedHeaders,
-                    urlEncodedParams = requestVariables.urlEncodedParams)
+            httpService.makeOcpiRequest<Array<Tariff>> {
+                khttpGET(url, forwardingHeaders.encode(), requestVariables.urlEncodedParams?.encode()!!)
+            }
 
         } returns HttpResponse(
                 statusCode = 200,
@@ -132,13 +133,13 @@ class TariffsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         val url = "https://ocpi.cpo.com/tariffs?limit=10?offset=10"
 
-        val forwardedHeaders = requestVariables.headers.copy(
+        val forwardingHeaders = requestVariables.headers.copy(
                 authorization = "Token token-b",
                 requestID = generateUUIDv4Token())
 
         every { routingService.validateSender("Token token-c", sender) } just Runs
-        every { routingService.validateReceiver(receiver) } returns Recipient.LOCAL
-        every { routingService.prepareLocalPlatformRequest(requestVariables, proxied = true) } returns Pair(url, forwardedHeaders)
+        every { routingService.validateReceiver(receiver) } returns Receiver.LOCAL
+        every { routingService.prepareLocalPlatformRequest(requestVariables, proxied = true) } returns Pair(url, forwardingHeaders)
 
         val responseHeaders = mapOf(
                 "Link" to "https://some.emsp.com/actual/tariffs?limit=10&offset=10; rel=\"next\"",
@@ -147,11 +148,7 @@ class TariffsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every {
 
-            httpService.makeOcpiRequest<Array<Tariff>>(
-                    method = requestVariables.method,
-                    url = url,
-                    headers = forwardedHeaders,
-                    urlEncodedParams = requestVariables.urlEncodedParams)
+            httpService.makeOcpiRequest<Array<Tariff>> { khttpGET(url, forwardingHeaders.encode()) }
 
         } returns HttpResponse(
                 statusCode = 200,
@@ -212,20 +209,18 @@ class TariffsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         val url = "https://ocpi.cpo.com/2.2/tariffs/${sender.country}/${sender.id}/$tariffID"
 
-        val forwardedHeaders = requestVariables.headers.copy(
+        val forwardingHeaders = requestVariables.headers.copy(
                 authorization = "Token token-b",
                 requestID = generateUUIDv4Token())
 
         every { routingService.validateSender("Token token-c", sender) } just Runs
-        every { routingService.validateReceiver(receiver) } returns Recipient.LOCAL
-        every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, forwardedHeaders)
+        every { routingService.validateReceiver(receiver) } returns Receiver.LOCAL
+        every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, forwardingHeaders)
 
         every {
 
-            httpService.makeOcpiRequest<Tariff>(
-                    method = requestVariables.method,
-                    url = url,
-                    headers = forwardedHeaders)
+            httpService.makeOcpiRequest<Tariff> { khttpGET(url, forwardingHeaders.encode()) }
+
 
         } returns HttpResponse(
                 statusCode = 200,
@@ -272,21 +267,17 @@ class TariffsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         val url = "https://ocpi.cpo.com/2.2/tariffs/${sender.country}/${sender.id}/$tariffID"
 
-        val forwardedHeaders = requestVariables.headers.copy(
+        val forwardingHeaders = requestVariables.headers.copy(
                 authorization = "Token token-b",
                 requestID = generateUUIDv4Token())
 
         every { routingService.validateSender("Token token-c", sender) } just Runs
-        every { routingService.validateReceiver(receiver) } returns Recipient.LOCAL
-        every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, forwardedHeaders)
+        every { routingService.validateReceiver(receiver) } returns Receiver.LOCAL
+        every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, forwardingHeaders)
 
         every {
 
-            httpService.makeOcpiRequest<Unit>(
-                    method = requestVariables.method,
-                    url = url,
-                    headers = forwardedHeaders,
-                    body = exampleTariff)
+            httpService.makeOcpiRequest<Unit> { khttpPUT(url, forwardingHeaders.encode(), json = requestVariables.body) }
 
         } returns HttpResponse(
                 statusCode = 200,
@@ -333,20 +324,18 @@ class TariffsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         val url = "https://ocpi.cpo.com/2.2/tariffs/${sender.country}/${sender.id}/$tariffID"
 
-        val forwardedHeaders = requestVariables.headers.copy(
+        val forwardingHeaders = requestVariables.headers.copy(
                 authorization = "Token token-b",
                 requestID = generateUUIDv4Token())
 
         every { routingService.validateSender("Token token-c", sender) } just Runs
-        every { routingService.validateReceiver(receiver) } returns Recipient.LOCAL
-        every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, forwardedHeaders)
+        every { routingService.validateReceiver(receiver) } returns Receiver.LOCAL
+        every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, forwardingHeaders)
 
         every {
 
-            httpService.makeOcpiRequest<Unit>(
-                    method = requestVariables.method,
-                    url = url,
-                    headers = forwardedHeaders)
+            httpService.makeOcpiRequest<Unit> { khttpDELETE(url, forwardingHeaders.encode()) }
+
 
         } returns HttpResponse(
                 statusCode = 200,

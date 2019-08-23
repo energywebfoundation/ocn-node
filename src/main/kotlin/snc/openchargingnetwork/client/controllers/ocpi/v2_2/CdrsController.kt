@@ -77,22 +77,18 @@ class CdrsController(val routingService: RoutingService,
 
         val response: HttpResponse<Array<CDR>> = when (routingService.validateReceiver(receiver)) {
 
-            Recipient.LOCAL -> {
+            Receiver.LOCAL -> {
 
                 val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables)
 
-                httpService.makeOcpiRequest(
-                        method = requestVariables.method,
-                        url = url,
-                        headers = headers,
-                        urlEncodedParams = requestVariables.urlEncodedParams)
+                httpService.makeOcpiRequest(url, headers, requestVariables)
             }
 
-            Recipient.REMOTE -> {
+            Receiver.REMOTE -> {
 
                 val (url, headers, body) = routingService.prepareRemotePlatformRequest(requestVariables)
 
-                httpService.postOcnMessage(url = url, headers = headers, body = body)
+                httpService.postOcnMessage(url, headers, body)
             }
 
         }
@@ -135,22 +131,19 @@ class CdrsController(val routingService: RoutingService,
 
         val response: HttpResponse<Array<CDR>> = when (routingService.validateReceiver(receiver)) {
 
-            Recipient.LOCAL -> {
+            Receiver.LOCAL -> {
 
                 val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables, proxied = true)
 
-                httpService.makeOcpiRequest(
-                        method = requestVariables.method,
-                        url = url,
-                        headers = headers)
+                httpService.makeOcpiRequest(url, headers, requestVariables)
 
             }
 
-            Recipient.REMOTE -> {
+            Receiver.REMOTE -> {
 
                 val (url, headers, body) = routingService.prepareRemotePlatformRequest(requestVariables, proxied = true)
 
-                httpService.postOcnMessage(url = url, headers = headers, body = body)
+                httpService.postOcnMessage(url, headers, body)
 
             }
 
@@ -206,21 +199,18 @@ class CdrsController(val routingService: RoutingService,
 
         val response: HttpResponse<CDR> = when (routingService.validateReceiver(receiver)) {
 
-            Recipient.LOCAL -> {
+            Receiver.LOCAL -> {
 
                 val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables, proxied = true)
 
-                httpService.makeOcpiRequest(
-                        method = requestVariables.method,
-                        url = url,
-                        headers = headers)
+                httpService.makeOcpiRequest(url, headers, requestVariables)
             }
 
-            Recipient.REMOTE -> {
+            Receiver.REMOTE -> {
 
                 val (url, headers, body) = routingService.prepareRemotePlatformRequest(requestVariables, proxied = true)
 
-                httpService.postOcnMessage(url = url, headers = headers, body = body)
+                httpService.postOcnMessage(url, headers, body)
             }
 
         }
@@ -258,21 +248,18 @@ class CdrsController(val routingService: RoutingService,
 
         val response: HttpResponse<Unit> = when (routingService.validateReceiver(receiver)) {
 
-            Recipient.LOCAL -> {
+            Receiver.LOCAL -> {
 
                 val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables)
 
-                httpService.makeOcpiRequest(
-                        method = requestVariables.method,
-                        url = url,
-                        headers = headers)
+                httpService.makeOcpiRequest(url, headers, requestVariables)
             }
 
-            Recipient.REMOTE -> {
+            Receiver.REMOTE -> {
 
                 val (url, headers, ocnBody) = routingService.prepareRemotePlatformRequest(requestVariables)
 
-                httpService.postOcnMessage(url = url, headers = headers, body = ocnBody)
+                httpService.postOcnMessage(url, headers, ocnBody)
             }
 
         }
