@@ -1,15 +1,13 @@
 package snc.openchargingnetwork.client.controllers.ocpi.v2_2
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.ninjasquad.springmockk.MockkBean
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
-import khttp.get as khttpGET
-import khttp.post as khttpPOST
-import khttp.put as khttpPUT
-import khttp.patch as khttpPATCH
 import org.hamcrest.Matchers
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
@@ -34,6 +32,13 @@ class TokensControllerTest(@Autowired val mockMvc: MockMvc) {
 
     @MockkBean
     lateinit var httpService: HttpService
+
+    private val mapper = jacksonObjectMapper()
+
+    @BeforeEach
+    fun before() {
+        every { httpService.mapper } returns mapper
+    }
 
 
     @Test
@@ -61,6 +66,7 @@ class TokensControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every { routingService.validateSender("Token token-c", sender) } just Runs
         every { routingService.validateReceiver(receiver) } returns Receiver.LOCAL
+
         every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, forwardingHeaders)
 
         val responseHeaders = mapOf(
@@ -69,11 +75,7 @@ class TokensControllerTest(@Autowired val mockMvc: MockMvc) {
                 "X-Total-Count" to "10675")
 
         every {
-
-            httpService.makeOcpiRequest<Array<Token>> {
-                khttpGET(url, forwardingHeaders.encode(), requestVariables.urlEncodedParams?.encode()!!)
-            }
-
+            httpService.makeOcpiRequest<Array<Token>>(HttpMethod.GET, url, forwardingHeaders.encode(), requestVariables.urlEncodedParams?.encode()!!)
         } returns HttpResponse(
                 statusCode = 200,
                 headers = responseHeaders,
@@ -116,6 +118,8 @@ class TokensControllerTest(@Autowired val mockMvc: MockMvc) {
     @Test
     fun `When GET sender Tokens page should return proxied tokens list`() {
 
+        val uid = "666"
+
         val sender = BasicRole("EMY", "DE")
         val receiver = BasicRole("MUN", "DE")
 
@@ -127,8 +131,7 @@ class TokensControllerTest(@Autowired val mockMvc: MockMvc) {
                         requestID = generateUUIDv4Token(),
                         correlationID = generateUUIDv4Token(),
                         sender = sender,
-                        receiver = receiver),
-                urlPathVariables = "935432")
+                        receiver = receiver))
 
         val url = "https://ocpi.cpo.com/tokens?limit=50?offset=50"
 
@@ -146,8 +149,7 @@ class TokensControllerTest(@Autowired val mockMvc: MockMvc) {
                 "X-Total-Count" to "10675")
 
         every {
-
-            httpService.makeOcpiRequest<Array<Token>> { khttpGET(url, forwardingHeaders.encode()) }
+            httpService.makeOcpiRequest<Array<Token>>(HttpMethod.GET, url, forwardingHeaders.encode())
         } returns HttpResponse(
                 statusCode = 200,
                 headers = responseHeaders,
@@ -157,13 +159,13 @@ class TokensControllerTest(@Autowired val mockMvc: MockMvc) {
         httpHeaders["Link"] = "https://client.ocn.co/ocpi/sender/2.2/tokens/page/935433; rel=\"next\""
         httpHeaders["X-Limit"] = responseHeaders["X-Limit"]
 
-        every { routingService.deleteProxyResource(requestVariables.urlPathVariables!!) } just Runs
+        every { routingService.deleteProxyResource(uid) } just Runs
 
         every { routingService.proxyPaginationHeaders(
                 request = requestVariables,
                 responseHeaders = responseHeaders) } returns httpHeaders
 
-        mockMvc.perform(get("/ocpi/sender/2.2/tokens/page/${requestVariables.urlPathVariables}")
+        mockMvc.perform(get("/ocpi/sender/2.2/tokens/page/$uid")
                 .header("Authorization", "Token token-c")
                 .header("X-Request-ID", requestVariables.headers.requestID)
                 .header("X-Correlation-ID", requestVariables.headers.correlationID)
@@ -217,12 +219,10 @@ class TokensControllerTest(@Autowired val mockMvc: MockMvc) {
         every { routingService.validateReceiver(receiver) } returns Receiver.LOCAL
         every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, forwardingHeaders)
 
+        val bodyMap: Map<String, Any> = mapper.readValue(mapper.writeValueAsString(requestVariables.body))
+
         every {
-
-            httpService.makeOcpiRequest<AuthorizationInfo> {
-                khttpPOST(url, forwardingHeaders.encode(), requestVariables.urlEncodedParams?.encode()!!, json = body)
-            }
-
+            httpService.makeOcpiRequest<AuthorizationInfo>(HttpMethod.POST, url, forwardingHeaders.encode(), mapOf("type" to "RFID"), json = bodyMap)
         } returns HttpResponse(
                 statusCode = 200,
                 headers = mapOf(),
@@ -281,11 +281,7 @@ class TokensControllerTest(@Autowired val mockMvc: MockMvc) {
         every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, forwardingHeaders)
 
         every {
-
-            httpService.makeOcpiRequest<Token> {
-                khttpGET(url, forwardingHeaders.encode(), requestVariables.urlEncodedParams?.encode()!!)
-            }
-
+            httpService.makeOcpiRequest<Token>(HttpMethod.GET, url, forwardingHeaders.encode(), requestVariables.urlEncodedParams?.encode()!!)
         } returns HttpResponse(
                 statusCode = 200,
                 headers = mapOf(),
@@ -340,12 +336,10 @@ class TokensControllerTest(@Autowired val mockMvc: MockMvc) {
         every { routingService.validateReceiver(receiver) } returns Receiver.LOCAL
         every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, forwardingHeaders)
 
+        val bodyMap: Map<String, Any> = mapper.readValue(mapper.writeValueAsString(requestVariables.body))
+
         every {
-
-            httpService.makeOcpiRequest<Unit> {
-                khttpPUT(url, forwardingHeaders.encode(), requestVariables.urlEncodedParams?.encode()!!, json = requestVariables.body)
-            }
-
+            httpService.makeOcpiRequest<Unit>(HttpMethod.PUT, url, forwardingHeaders.encode(), requestVariables.urlEncodedParams?.encode()!!, json = bodyMap)
         } returns HttpResponse(
                 statusCode = 200,
                 headers = mapOf(),
@@ -404,12 +398,10 @@ class TokensControllerTest(@Autowired val mockMvc: MockMvc) {
         every { routingService.validateReceiver(receiver) } returns Receiver.LOCAL
         every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, forwardingHeaders)
 
+        val bodyMap: Map<String, Any> = mapper.readValue(mapper.writeValueAsString(requestVariables.body))
+
         every {
-
-            httpService.makeOcpiRequest<Unit> {
-                khttpPATCH(url, forwardingHeaders.encode(), requestVariables.urlEncodedParams?.encode()!!, json = requestVariables.body)
-            }
-
+            httpService.makeOcpiRequest<Unit>(HttpMethod.PATCH, url, forwardingHeaders.encode(), requestVariables.urlEncodedParams?.encode()!!, json = bodyMap)
         } returns HttpResponse(
                 statusCode = 200,
                 headers = mapOf(),

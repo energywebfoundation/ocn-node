@@ -21,27 +21,35 @@ package snc.openchargingnetwork.client.services
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import khttp.*
-import khttp.responses.Response
 import org.springframework.http.HttpMethod
 import org.springframework.stereotype.Service
 import snc.openchargingnetwork.client.models.*
 import snc.openchargingnetwork.client.models.exceptions.OcpiServerUnusableApiException
 import snc.openchargingnetwork.client.models.ocpi.*
 import snc.openchargingnetwork.client.tools.urlJoin
-import kotlin.reflect.KClass
+
 
 @Service
 class HttpService {
 
     val mapper = jacksonObjectMapper()
 
+    fun convertToRequestVariables(stringBody: String): OcpiRequestVariables = mapper.readValue(stringBody)
+
 
     /**
      * Generic HTTP request expecting a response of type OcpiResponse<T> as defined by the caller
      */
-    fun <T: Any> makeOcpiRequest(request: () -> Response): HttpResponse<T> {
-        val response = request()
+    fun <T: Any> makeOcpiRequest(method: HttpMethod, url: String, headers: Map<String, String>, params: Map<String, String> = mapOf(), json: Map<String, Any>? = null): HttpResponse<T> {
+        val response = when (method) {
+            HttpMethod.GET -> khttp.get(url, headers, params)
+            HttpMethod.POST -> khttp.post(url, headers, params, json = json)
+            HttpMethod.PUT -> khttp.put(url, headers, params, json = json)
+            HttpMethod.PATCH -> khttp.patch(url, headers, params, json = json)
+            HttpMethod.DELETE -> khttp.delete(url, headers)
+            else -> throw IllegalStateException("Invalid method: $method")
+        }
+
 //        val type = mapper.typeFactory.constructParametricType(OcpiResponse::class.java, responseType::class.java)
 //        val body: OcpiResponse<T> = mapper.readValue(response.text)
         return HttpResponse(
@@ -71,14 +79,12 @@ class HttpService {
             paramsMap = requestVariables.urlEncodedParams.encode()
         }
 
-        return when (requestVariables.method) {
-            HttpMethod.GET -> makeOcpiRequest { get(url = url, headers = headersMap, params = paramsMap) }
-            HttpMethod.POST -> makeOcpiRequest { post(url = url, headers = headersMap, json = jsonBody, params = paramsMap) }
-            HttpMethod.PUT -> makeOcpiRequest { put(url = url, headers = headersMap, json = jsonBody) }
-            HttpMethod.PATCH -> makeOcpiRequest { patch(url = url, headers = headersMap, json = jsonBody) }
-            HttpMethod.DELETE -> makeOcpiRequest { delete(url = url, headers = headersMap, json = jsonBody) }
-            else -> throw IllegalStateException("Invalid method: ${requestVariables.method}")
-        }
+        return makeOcpiRequest(
+                method = requestVariables.method,
+                url = url,
+                headers = headersMap,
+                params = paramsMap,
+                json = jsonBody)
     }
 
 
@@ -87,7 +93,7 @@ class HttpService {
      */
     fun getVersions(url: String, authorization: String): Versions {
         try {
-            val response = get(url = url, headers = mapOf("Authorization" to "Token $authorization"))
+            val response = khttp.get(url = url, headers = mapOf("Authorization" to "Token $authorization"))
             val body: OcpiResponse<Versions> = mapper.readValue(response.text)
 
             return if (response.statusCode == 200 && body.statusCode == 1000) {
@@ -108,7 +114,7 @@ class HttpService {
      */
     fun getVersionDetail(url: String, authorization: String): VersionDetail {
         try {
-            val response = get(url = url, headers = mapOf("Authorization" to "Token $authorization"))
+            val response = khttp.get(url = url, headers = mapOf("Authorization" to "Token $authorization"))
             val body: OcpiResponse<VersionDetail> = mapper.readValue(response.text)
 
             return if (response.statusCode == 200 && body.statusCode == 1000) {
@@ -138,7 +144,7 @@ class HttpService {
 
         val fullURL = urlJoin(url, "/ocn/message")
 
-        return makeOcpiRequest { post(url = fullURL, headers = headersMap, json = jsonBody) }
+        return makeOcpiRequest(HttpMethod.POST, fullURL, headersMap, json = jsonBody)
     }
 
 }

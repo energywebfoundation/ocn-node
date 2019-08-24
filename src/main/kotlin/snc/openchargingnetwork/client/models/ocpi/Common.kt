@@ -51,33 +51,35 @@ data class BasicRole(@JsonProperty("party_id") var id: String,
 }
 
 
-data class OcpiRequestVariables(val module: ModuleID,
-                                val interfaceRole: InterfaceRole,
-                                val method: HttpMethod,
-                                val headers: OcpiRequestHeaders,
-                                val urlPathVariables: String? = null,
-                                val urlEncodedParams: OcpiRequestParameters? = null,
-                                val proxyResource: String? = null,
-                                val body: Any? = null)
+@JsonInclude(JsonInclude.Include.NON_NULL)
+data class OcpiRequestVariables(@JsonProperty("module") val module: ModuleID,
+                                @JsonProperty("interface_role") val interfaceRole: InterfaceRole,
+                                @JsonProperty("method") val method: HttpMethod,
+                                @JsonProperty("headers") val headers: OcpiRequestHeaders,
+                                @JsonProperty("url_path_variables") val urlPathVariables: String? = null,
+                                @JsonProperty("url_encoded_params") val urlEncodedParams: OcpiRequestParameters? = null,
+                                @JsonProperty("proxy_resource") val proxyResource: String? = null,
+                                @JsonProperty("body") val body: Any? = null)
 
 
+@JsonInclude(JsonInclude.Include.NON_NULL)
 data class OcpiRequestHeaders(@JsonProperty("Authorization") val authorization: String? = null,
                               @JsonProperty("X-Request-ID") val requestID: String,
                               @JsonProperty("X-Correlation-ID") val correlationID: String,
                               val sender: BasicRole,
                               val receiver: BasicRole) {
 
-    @JsonProperty("OCPI-from-country-code")
-    val ocpiFromCountryCode = sender.country
-
-    @JsonProperty("OCPI-from-party-id")
-    val ocpiFromPartyID = sender.id
-
-    @JsonProperty("OCPI-to-country-code")
-    val ocpiToCountryCode = receiver.country
-
-    @JsonProperty("OCPI-to-party-id")
-    val ocpiToPartyID = receiver.id
+//    @JsonProperty("OCPI-from-country-code")
+//    val ocpiFromCountryCode = sender.country
+//
+//    @JsonProperty("OCPI-from-party-id")
+//    val ocpiFromPartyID = sender.id
+//
+//    @JsonProperty("OCPI-to-country-code")
+//    val ocpiToCountryCode = receiver.country
+//
+//    @JsonProperty("OCPI-to-party-id")
+//    val ocpiToPartyID = receiver.id
 
 
     fun encode(): Map<String, String> {
@@ -87,10 +89,10 @@ data class OcpiRequestHeaders(@JsonProperty("Authorization") val authorization: 
         }
         map["X-Request-ID"] = requestID
         map["X-Correlation-ID"] = correlationID
-        map["OCPI-from-country-code"] = ocpiFromCountryCode
-        map["OCPI-from-party-id"] = ocpiFromPartyID
-        map["OCPI-to-country-code"] = ocpiToCountryCode
-        map["OCPI-to-party-id"] = ocpiToPartyID
+        map["OCPI-from-country-code"] = sender.country
+        map["OCPI-from-party-id"] = sender.id
+        map["OCPI-to-country-code"] = receiver.country
+        map["OCPI-to-party-id"] = receiver.id
         return map
     }
 }

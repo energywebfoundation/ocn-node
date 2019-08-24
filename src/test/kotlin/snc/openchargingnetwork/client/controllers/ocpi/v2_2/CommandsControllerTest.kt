@@ -1,11 +1,12 @@
 package snc.openchargingnetwork.client.controllers.ocpi.v2_2
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.ninjasquad.springmockk.MockkBean
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
-import khttp.post as khttpPOST
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
@@ -34,6 +35,13 @@ class CommandsControllerTest(@Autowired val mockMvc: MockMvc) {
 
     @MockkBean
     lateinit var properties: Properties
+
+    private val mapper = jacksonObjectMapper()
+
+    @BeforeEach
+    fun before() {
+        every { httpService.mapper } returns mapper
+    }
 
     @Test
     fun `When POST sender Commands should return basic OCPI success response`() {
@@ -66,10 +74,10 @@ class CommandsControllerTest(@Autowired val mockMvc: MockMvc) {
         every { routingService.validateReceiver(receiver) } returns Receiver.LOCAL
         every { routingService.prepareLocalPlatformRequest(requestVariables, proxied = true) } returns Pair(url, forwardingHeaders)
 
+        val jsonBody: Map<String, Any> = mapper.readValue(mapper.writeValueAsString(requestVariables.body))
+
         every {
-
-            httpService.makeOcpiRequest<Unit> { khttpPOST(url, forwardingHeaders.encode(), json = body) }
-
+            httpService.makeOcpiRequest<Unit>(HttpMethod.POST, url, forwardingHeaders.encode(), json = jsonBody)
         } returns HttpResponse(
                 statusCode = 200,
                 headers = mapOf(),
@@ -130,10 +138,10 @@ class CommandsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, forwardingHeaders)
 
+        val jsonBody: Map<String, Any> = mapper.readValue(mapper.writeValueAsString(proxyBody))
+
         every {
-
-            httpService.makeOcpiRequest<CommandResponse> { khttpPOST(url, forwardingHeaders.encode(), json = body) }
-
+            httpService.makeOcpiRequest<CommandResponse>(HttpMethod.POST, url, forwardingHeaders.encode(), json = jsonBody)
         } returns HttpResponse(
                 statusCode = 200,
                 headers = mapOf(),
@@ -199,10 +207,10 @@ class CommandsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, forwardingHeaders)
 
+        val jsonBody: Map<String, Any> = mapper.readValue(mapper.writeValueAsString(proxyBody))
+
         every {
-
-            httpService.makeOcpiRequest<CommandResponse> { khttpPOST(url, forwardingHeaders.encode(), json = body) }
-
+            httpService.makeOcpiRequest<CommandResponse>(HttpMethod.POST, url, forwardingHeaders.encode(), json = jsonBody)
         } returns HttpResponse(
                 statusCode = 200,
                 headers = mapOf(),
@@ -266,10 +274,10 @@ class CommandsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, forwardingHeaders)
 
+        val jsonBody: Map<String, Any> = mapper.readValue(mapper.writeValueAsString(proxyBody))
+
         every {
-
-            httpService.makeOcpiRequest<CommandResponse> { khttpPOST(url, forwardingHeaders.encode(), json = body) }
-
+            httpService.makeOcpiRequest<CommandResponse>(HttpMethod.POST, url, forwardingHeaders.encode(), json = jsonBody)
         } returns HttpResponse(
                 statusCode = 200,
                 headers = mapOf(),
@@ -332,10 +340,10 @@ class CommandsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, forwardingHeaders)
 
+        val jsonBody: Map<String, Any> = mapper.readValue(mapper.writeValueAsString(proxyBody))
+
         every {
-
-            httpService.makeOcpiRequest<CommandResponse> { khttpPOST(url, forwardingHeaders.encode(), json = body) }
-
+            httpService.makeOcpiRequest<CommandResponse>(HttpMethod.POST, url, forwardingHeaders.encode(), json = jsonBody)
         } returns HttpResponse(
                 statusCode = 200,
                 headers = mapOf(),
@@ -400,10 +408,10 @@ class CommandsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, forwardingHeaders)
 
+        val jsonBody: Map<String, Any> = mapper.readValue(mapper.writeValueAsString(proxyBody))
+
         every {
-
-            httpService.makeOcpiRequest<CommandResponse> { khttpPOST(url, forwardingHeaders.encode(), json = body) }
-
+            httpService.makeOcpiRequest<CommandResponse>(HttpMethod.POST, url, forwardingHeaders.encode(), json = jsonBody)
         } returns HttpResponse(
                 statusCode = 200,
                 headers = mapOf(),

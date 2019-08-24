@@ -77,10 +77,10 @@ class RoutingServiceTest {
         assertThat(headers.authorization).isEqualTo("Token 1234567890")
         assertThat(headers.requestID.length).isEqualTo(36)
         assertThat(headers.correlationID).isEqualTo(request.headers.correlationID)
-        assertThat(headers.ocpiFromCountryCode).isEqualTo(request.headers.sender.country)
-        assertThat(headers.ocpiFromPartyID).isEqualTo(request.headers.sender.id)
-        assertThat(headers.ocpiToCountryCode).isEqualTo(request.headers.receiver.country)
-        assertThat(headers.ocpiToPartyID).isEqualTo(request.headers.receiver.id)
+        assertThat(headers.sender.country).isEqualTo(request.headers.sender.country)
+        assertThat(headers.sender.id).isEqualTo(request.headers.sender.id)
+        assertThat(headers.receiver.country).isEqualTo(request.headers.receiver.country)
+        assertThat(headers.receiver.id).isEqualTo(request.headers.receiver.id)
     }
 
 
@@ -115,10 +115,10 @@ class RoutingServiceTest {
         assertThat(headers.authorization).isEqualTo("Token 0102030405")
         assertThat(headers.requestID.length).isEqualTo(36)
         assertThat(headers.correlationID).isEqualTo(request.headers.correlationID)
-        assertThat(headers.ocpiFromCountryCode).isEqualTo(request.headers.sender.country)
-        assertThat(headers.ocpiFromPartyID).isEqualTo(request.headers.sender.id)
-        assertThat(headers.ocpiToCountryCode).isEqualTo(request.headers.receiver.country)
-        assertThat(headers.ocpiToPartyID).isEqualTo(request.headers.receiver.id)
+        assertThat(headers.sender.country).isEqualTo(request.headers.sender.country)
+        assertThat(headers.sender.id).isEqualTo(request.headers.sender.id)
+        assertThat(headers.receiver.country).isEqualTo(request.headers.receiver.country)
+        assertThat(headers.receiver.id).isEqualTo(request.headers.receiver.id)
     }
 
 

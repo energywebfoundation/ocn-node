@@ -1,14 +1,13 @@
 package snc.openchargingnetwork.client.controllers.ocpi.v2_2
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.ninjasquad.springmockk.MockkBean
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
-import khttp.get as khttpGET
-import khttp.put as khttpPUT
-import khttp.delete as khttpDELETE
 import org.hamcrest.Matchers
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
@@ -35,6 +34,13 @@ class TariffsControllerTest(@Autowired val mockMvc: MockMvc) {
 
     @MockkBean
     lateinit var httpService: HttpService
+
+    private val mapper = jacksonObjectMapper()
+
+    @BeforeEach
+    fun before() {
+        every { httpService.mapper } returns mapper
+    }
 
 
     @Test
@@ -70,11 +76,7 @@ class TariffsControllerTest(@Autowired val mockMvc: MockMvc) {
                 "X-Total-Count" to "23")
 
         every {
-
-            httpService.makeOcpiRequest<Array<Tariff>> {
-                khttpGET(url, forwardingHeaders.encode(), requestVariables.urlEncodedParams?.encode()!!)
-            }
-
+            httpService.makeOcpiRequest<Array<Tariff>>(HttpMethod.GET, url, forwardingHeaders.encode(), requestVariables.urlEncodedParams?.encode()!!)
         } returns HttpResponse(
                 statusCode = 200,
                 headers = responseHeaders,
@@ -147,9 +149,7 @@ class TariffsControllerTest(@Autowired val mockMvc: MockMvc) {
                 "X-Total-Count" to "23")
 
         every {
-
-            httpService.makeOcpiRequest<Array<Tariff>> { khttpGET(url, forwardingHeaders.encode()) }
-
+            httpService.makeOcpiRequest<Array<Tariff>>(HttpMethod.GET, url, forwardingHeaders.encode())
         } returns HttpResponse(
                 statusCode = 200,
                 headers = responseHeaders,
@@ -218,10 +218,7 @@ class TariffsControllerTest(@Autowired val mockMvc: MockMvc) {
         every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, forwardingHeaders)
 
         every {
-
-            httpService.makeOcpiRequest<Tariff> { khttpGET(url, forwardingHeaders.encode()) }
-
-
+            httpService.makeOcpiRequest<Tariff>(HttpMethod.GET, url, forwardingHeaders.encode())
         } returns HttpResponse(
                 statusCode = 200,
                 headers = mapOf(),
@@ -275,10 +272,10 @@ class TariffsControllerTest(@Autowired val mockMvc: MockMvc) {
         every { routingService.validateReceiver(receiver) } returns Receiver.LOCAL
         every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, forwardingHeaders)
 
+        val bodyMap: Map<String, Any> = mapper.readValue(mapper.writeValueAsString(requestVariables.body))
+
         every {
-
-            httpService.makeOcpiRequest<Unit> { khttpPUT(url, forwardingHeaders.encode(), json = requestVariables.body) }
-
+            httpService.makeOcpiRequest<Unit>(HttpMethod.PUT, url, forwardingHeaders.encode(), json = bodyMap)
         } returns HttpResponse(
                 statusCode = 200,
                 headers = mapOf(),
@@ -333,10 +330,7 @@ class TariffsControllerTest(@Autowired val mockMvc: MockMvc) {
         every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, forwardingHeaders)
 
         every {
-
-            httpService.makeOcpiRequest<Unit> { khttpDELETE(url, forwardingHeaders.encode()) }
-
-
+            httpService.makeOcpiRequest<Unit>(HttpMethod.DELETE, url, forwardingHeaders.encode())
         } returns HttpResponse(
                 statusCode = 200,
                 headers = mapOf(),

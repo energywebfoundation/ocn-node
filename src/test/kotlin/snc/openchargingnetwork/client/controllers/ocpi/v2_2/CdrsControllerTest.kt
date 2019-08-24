@@ -1,12 +1,9 @@
 package snc.openchargingnetwork.client.controllers.ocpi.v2_2
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.ninjasquad.springmockk.MockkBean
-import io.mockk.Runs
-import io.mockk.every
-import io.mockk.just
-import khttp.get as khttpGET
-import khttp.post as khttpPOST
+import io.mockk.*
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
@@ -41,6 +38,8 @@ class CdrsControllerTest(@Autowired val mockMvc: MockMvc) {
     @MockkBean
     lateinit var properties: Properties
 
+    private val mapper = jacksonObjectMapper()
+
 
     @Test
     fun `When GET sender CDRs should return paginated response`() {
@@ -74,13 +73,12 @@ class CdrsControllerTest(@Autowired val mockMvc: MockMvc) {
                 "X-Limit" to "100")
 
         every {
-            httpService.makeOcpiRequest<Array<CDR>> {
-                khttp.get(url, forwardingHeaders.encode(), requestVariables.urlEncodedParams?.encode()!!)
-            }
+            httpService.makeOcpiRequest<Array<CDR>>(HttpMethod.GET, url, forwardingHeaders.encode(), requestVariables.urlEncodedParams?.encode()!!)
         } returns HttpResponse(
-                statusCode = 200,
-                headers = responseHeaders,
-                body = OcpiResponse(statusCode = 1000, data = arrayOf(exampleCDR)))
+                    statusCode = 200,
+                    headers = responseHeaders,
+                    body = OcpiResponse(statusCode = 1000, data = arrayOf(exampleCDR)))
+
 
         val httpHeaders = HttpHeaders()
         httpHeaders["Link"] = "https://client.ocn.co/ocpi/sender/2.2/cdrs/page/43; rel=\"next\""
@@ -110,6 +108,7 @@ class CdrsControllerTest(@Autowired val mockMvc: MockMvc) {
                 .andExpect(jsonPath("\$.data[0].id").value(exampleCDR.id))
                 .andExpect(jsonPath("\$.data[0].party_id").value(exampleCDR.partyID))
                 .andExpect(jsonPath("\$.timestamp").isString)
+
     }
 
 
@@ -145,7 +144,7 @@ class CdrsControllerTest(@Autowired val mockMvc: MockMvc) {
                 "X-Limit" to "100")
 
         every {
-            httpService.makeOcpiRequest<Array<CDR>> { khttpGET(url, forwardingHeaders.encode()) }
+            httpService.makeOcpiRequest<Array<CDR>>(HttpMethod.GET, url, forwardingHeaders.encode())
         } returns HttpResponse(
                 statusCode = 200,
                 headers = responseHeaders,
@@ -212,9 +211,7 @@ class CdrsControllerTest(@Autowired val mockMvc: MockMvc) {
         every { routingService.prepareLocalPlatformRequest(requestVariables, proxied = true) } returns Pair(url, forwardingHeaders)
 
         every {
-
-            httpService.makeOcpiRequest<CDR> { khttpGET(url, forwardingHeaders.encode()) }
-
+            httpService.makeOcpiRequest<CDR>(HttpMethod.GET, url, forwardingHeaders.encode())
         } returns HttpResponse(
                 statusCode = 200,
                 headers = mapOf(),
@@ -267,10 +264,13 @@ class CdrsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         val locationHeader = "https://real.msp.net/path/to/location/1"
 
+        every { httpService.mapper } returns mapper
+
+        val bodyString = mapper.writeValueAsString(requestVariables.body)
+        val bodyMap: Map<String, Any> = mapper.readValue(bodyString)
+
         every {
-
-            httpService.makeOcpiRequest<Unit> { khttpPOST(url, forwardingHeaders.encode(), json = requestVariables.body) }
-
+            httpService.makeOcpiRequest<Unit>(HttpMethod.POST, url, forwardingHeaders.encode(), json = bodyMap)
         } returns HttpResponse(
                 statusCode = 200,
                 headers = mapOf("Location" to locationHeader),

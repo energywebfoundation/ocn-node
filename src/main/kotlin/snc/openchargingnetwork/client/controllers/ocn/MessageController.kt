@@ -37,12 +37,13 @@ class MessageController(private val routingService: RoutingService,
                         private val walletService: WalletService,
                         private val httpService: HttpService) {
 
+
     @PostMapping
     fun postMessage(@RequestHeader("X-Request-ID") requestID: String,
                     @RequestHeader("OCN-Signature") signature: String,
                     @RequestBody body: String): ResponseEntity<OcpiResponse<out Any>> {
 
-        val requestVariables: OcpiRequestVariables = httpService.mapper.readValue(body)
+        val requestVariables = httpService.convertToRequestVariables(body)
 
         val sender = requestVariables.headers.sender
         val receiver = requestVariables.headers.receiver
