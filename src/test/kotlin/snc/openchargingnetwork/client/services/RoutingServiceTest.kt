@@ -153,7 +153,7 @@ class RoutingServiceTest {
         assertThat(url).isEqualTo("https://ocn.client.net")
         assertThat(headers.requestID.length).isEqualTo(36)
         assertThat(headers.signature).isEqualTo(sig)
-        assertThat(body).isEqualTo(request)
+        assertThat(body).isEqualTo(jsonString)
     }
 
 
@@ -192,7 +192,7 @@ class RoutingServiceTest {
         assertThat(url).isEqualTo("https://ocn-client.provider.net")
         assertThat(headers.requestID.length).isEqualTo(36)
         assertThat(headers.signature).isEqualTo(sig)
-        assertThat(body).isEqualTo(modifiedRequest)
+        assertThat(body).isEqualTo(jsonString)
     }
 
 

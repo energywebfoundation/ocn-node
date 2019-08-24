@@ -171,7 +171,7 @@ class RoutingService(private val platformRepo: PlatformRepository,
      * Used after validating a receiver: find the remote recipient's OCN Client server address (url) and prepare
      * the OCN message body and headers (containing the new X-Request-ID and the signature of the OCN message body).
      */
-    fun prepareRemotePlatformRequest(request: OcpiRequestVariables, proxied: Boolean = false): Triple<String, OcnMessageHeaders, OcpiRequestVariables> {
+    fun prepareRemotePlatformRequest(request: OcpiRequestVariables, proxied: Boolean = false): Triple<String, OcnMessageHeaders, String> {
 
         val url = getRemoteClientUrl(request.headers.receiver)
 
@@ -180,11 +180,13 @@ class RoutingService(private val platformRepo: PlatformRepository,
             false -> request
         }
 
+        val jsonString = stringify(body)
+
         val headers = OcnMessageHeaders(
                 requestID = generateUUIDv4Token(),
-                signature = walletService.sign(stringify(body)))
+                signature = walletService.sign(jsonString))
 
-        return Triple(url, headers, body)
+        return Triple(url, headers, jsonString)
     }
 
 

@@ -135,16 +135,18 @@ class HttpService {
      */
     final inline fun <reified T: Any> postOcnMessage(url: String,
                                 headers: OcnMessageHeaders,
-                                body: OcpiRequestVariables): HttpResponse<T> {
+                                body: String): HttpResponse<T> {
 
         val headersMap = headers.encode()
 
-        val jsonString = mapper.writeValueAsString(body)
-        val jsonBody: Map<String,Any> = mapper.readValue(jsonString)
-
         val fullURL = urlJoin(url, "/ocn/message")
 
-        return makeOcpiRequest(HttpMethod.POST, fullURL, headersMap, json = jsonBody)
+        val response = khttp.post(fullURL, headersMap, data = body)
+
+        return HttpResponse(
+                statusCode = response.statusCode,
+                headers = response.headers,
+                body = mapper.readValue(response.text))
     }
 
 }
