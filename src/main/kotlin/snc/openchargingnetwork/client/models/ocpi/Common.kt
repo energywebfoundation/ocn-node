@@ -58,6 +58,7 @@ data class OcpiRequestVariables(@JsonProperty("module") val module: ModuleID,
                                 @JsonProperty("headers") val headers: OcpiRequestHeaders,
                                 @JsonProperty("url_path_variables") val urlPathVariables: String? = null,
                                 @JsonProperty("url_encoded_params") val urlEncodedParams: OcpiRequestParameters? = null,
+                                @JsonProperty("proxy_uid") val proxyUID: String? = null,
                                 @JsonProperty("proxy_resource") val proxyResource: String? = null,
                                 @JsonProperty("body") val body: Any? = null)
 
@@ -127,34 +128,34 @@ data class OcpiRequestParameters(@JsonProperty("type") val type: TokenType? = nu
 }
 
 
-enum class OcpiType(val type: KClass<*>) {
-    LOCATION(Location::class),
-    LOCATION_ARRAY(Array<Location>::class),
-    EVSE(Evse::class),
-    CONNECTOR(Connector::class),
-    SESSION(Session::class),
-    SESSION_ARRAY(Array<Session>::class),
-    CHARGING_PREFERENCE_RESPONSE(ChargingPreferencesResponse::class),
-    CDR(snc.openchargingnetwork.client.models.ocpi.CDR::class),
-    CDR_ARRAY(Array<snc.openchargingnetwork.client.models.ocpi.CDR>::class),
-    TARIFF(Tariff::class),
-    TARIFF_ARRAY(Array<Tariff>::class),
-    TOKEN(Token::class),
-    TOKEN_ARRAY(Array<Token>::class),
-    AUTHORIZATION_INFO(AuthorizationInfo::class),
-    CANCEL_RESERVATION(CancelReservation::class),
-    RESERVE_NOW(ReserveNow::class),
-    START_SESSION(StartSession::class),
-    STOP_SESSION(StopSession::class),
-    UNLOCK_CONNECTOR(UnlockConnector::class),
-    COMMAND_RESULT(CommandResult::class),
-    COMMAND_RESPONSE(CommandResponse::class),
-    NOTHING(Nothing::class),
-}
-
-
-data class TypePair(val request: OcpiType = OcpiType.NOTHING,
-                    val response: OcpiType = OcpiType.NOTHING)
+//enum class OcpiType(val type: KClass<*>) {
+//    LOCATION(Location::class),
+//    LOCATION_ARRAY(Array<Location>::class),
+//    EVSE(Evse::class),
+//    CONNECTOR(Connector::class),
+//    SESSION(Session::class),
+//    SESSION_ARRAY(Array<Session>::class),
+//    CHARGING_PREFERENCE_RESPONSE(ChargingPreferencesResponse::class),
+//    CDR(snc.openchargingnetwork.client.models.ocpi.CDR::class),
+//    CDR_ARRAY(Array<snc.openchargingnetwork.client.models.ocpi.CDR>::class),
+//    TARIFF(Tariff::class),
+//    TARIFF_ARRAY(Array<Tariff>::class),
+//    TOKEN(Token::class),
+//    TOKEN_ARRAY(Array<Token>::class),
+//    AUTHORIZATION_INFO(AuthorizationInfo::class),
+//    CANCEL_RESERVATION(CancelReservation::class),
+//    RESERVE_NOW(ReserveNow::class),
+//    START_SESSION(StartSession::class),
+//    STOP_SESSION(StopSession::class),
+//    UNLOCK_CONNECTOR(UnlockConnector::class),
+//    COMMAND_RESULT(CommandResult::class),
+//    COMMAND_RESPONSE(CommandResponse::class),
+//    NOTHING(Nothing::class),
+//}
+//
+//
+//data class TypePair(val request: OcpiType = OcpiType.NOTHING,
+//                    val response: OcpiType = OcpiType.NOTHING)
 
 
 data class RegistrationInfo(@JsonProperty("token") val token: String,

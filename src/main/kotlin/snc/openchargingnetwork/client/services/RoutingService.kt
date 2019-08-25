@@ -19,7 +19,6 @@
 
 package snc.openchargingnetwork.client.services
 
-import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpHeaders
 import org.springframework.stereotype.Service
 import snc.openchargingnetwork.client.config.Properties
@@ -149,14 +148,33 @@ class RoutingService(private val platformRepo: PlatformRepository,
         val platformID = getPlatformID(request.headers.receiver)
 
         val url = when {
-            // a proxied request requires the URL to be changed to the one set by the original recipient
+
+            // local sender is requesting a resource/url via a proxy
+            // returns the resource behind the proxy
             proxied -> getProxyResource(request.urlPathVariables, request.headers.sender, request.headers.receiver)
-            // if the request contains a
-            request.proxyResource != null -> request.proxyResource
+
+            // remote sender is requesting a resource/url via a proxy
+            // return the proxied resource as defined by the sender
+            request.proxyUID == null && request.proxyResource != null -> request.proxyResource
+
+            // remote sender has defined an identifiable resource to be proxied
+            // save the resource and return standard OCPI module URL of recipient
+            request.proxyUID != null && request.proxyResource != null -> {
+                proxyResourceRepo.save(ProxyResourceEntity(
+                        alternativeUID = request.proxyUID,
+                        resource = request.proxyResource,
+                        sender = request.headers.sender,
+                        receiver = request.headers.receiver))
+                val endpoint = getPlatformEndpoint(platformID, request.module, request.interfaceRole)
+                urlJoin(endpoint.url, request.urlPathVariables)
+            }
+
+            // return standard OCPI module URL of recipient
             else -> {
                 val endpoint = getPlatformEndpoint(platformID, request.module, request.interfaceRole)
                 urlJoin(endpoint.url, request.urlPathVariables)
             }
+
         }
 
         val tokenB = platformRepo.findById(platformID).get().auth.tokenB
@@ -171,7 +189,7 @@ class RoutingService(private val platformRepo: PlatformRepository,
      * Used after validating a receiver: find the remote recipient's OCN Client server address (url) and prepare
      * the OCN message body and headers (containing the new X-Request-ID and the signature of the OCN message body).
      */
-    fun prepareRemotePlatformRequest(request: OcpiRequestVariables, proxied: Boolean = false): Triple<String, OcnMessageHeaders, String> {
+    fun prepareRemotePlatformRequest(request: OcpiRequestVariables, proxied: Boolean = false, alterBody: ((url: String) -> OcpiRequestVariables)? = null): Triple<String, OcnMessageHeaders, String> {
 
         val url = getRemoteClientUrl(request.headers.receiver)
 
@@ -180,7 +198,12 @@ class RoutingService(private val platformRepo: PlatformRepository,
             false -> request
         }
 
-        val jsonString = stringify(body)
+        val jsonString = if (alterBody != null) {
+            val alteredBody = alterBody(url)
+            stringify(alteredBody)
+        } else {
+            stringify(body)
+        }
 
         val headers = OcnMessageHeaders(
                 requestID = generateUUIDv4Token(),
@@ -216,8 +239,9 @@ class RoutingService(private val platformRepo: PlatformRepository,
      */
     fun getProxyResource(id: String?, sender: BasicRole, receiver: BasicRole): String {
         id?.let {
-            // TODO: check by sender/receiver (roles are reversed)
-            return proxyResourceRepo.findByIdOrNull(id.toLong())?.resource
+            // first check by proxy UID (sender and receiver should be reversed in this case) then by ID
+            return proxyResourceRepo.findByAlternativeUIDAndSenderAndReceiver(it, receiver, sender)?.resource
+                    ?: proxyResourceRepo.findByIdAndSenderAndReceiver(it.toLong(), sender, receiver)?.resource
                     ?: throw OcpiClientUnknownLocationException("Proxied resource not found")
         }
         throw OcpiClientUnknownLocationException("Proxied resource not found")

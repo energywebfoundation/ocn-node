@@ -52,4 +52,5 @@ interface EndpointRepository: CrudRepository<EndpointEntity, Long> {
 
 interface ProxyResourceRepository: CrudRepository<ProxyResourceEntity, Long> {
     fun findByIdAndSenderAndReceiver(id: Long?, sender: BasicRole, receiver: BasicRole): ProxyResourceEntity?
+    fun findByAlternativeUIDAndSenderAndReceiver(alternativeUID: String, sender: BasicRole, receiver: BasicRole): ProxyResourceEntity?
 }

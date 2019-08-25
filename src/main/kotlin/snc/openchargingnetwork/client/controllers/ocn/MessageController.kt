@@ -63,8 +63,6 @@ class MessageController(private val routingService: RoutingService,
 
         val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables)
 
-        // TODO: proxy async response URL (could be done by sender?)
-
         val response = httpService.makeOcpiRequest<Any>(url, headers, requestVariables)
 
         val responseHeaders = HttpHeaders()

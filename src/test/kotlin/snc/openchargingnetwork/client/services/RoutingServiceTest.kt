@@ -6,7 +6,6 @@ import io.mockk.every
 import io.mockk.mockk
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpMethod
 import snc.openchargingnetwork.client.config.Properties
 import snc.openchargingnetwork.client.models.*
@@ -14,6 +13,7 @@ import snc.openchargingnetwork.client.models.entities.*
 import snc.openchargingnetwork.client.models.ocpi.*
 import snc.openchargingnetwork.client.repositories.*
 import snc.openchargingnetwork.client.tools.generateUUIDv4Token
+import snc.openchargingnetwork.client.tools.urlJoin
 import snc.openchargingnetwork.contracts.RegistryFacade
 
 class RoutingServiceTest {
@@ -197,6 +197,53 @@ class RoutingServiceTest {
 
 
     @Test
+    fun `prepareRemotePlatformRequest with altered body`() {
+        val body = CancelReservation(
+                responseURL = "https://some.emsp.com/async-response/12",
+                reservationID = "010203040506070809")
+
+        val request = OcpiRequestVariables(
+                module = ModuleID.COMMANDS,
+                interfaceRole = InterfaceRole.RECEIVER,
+                method = HttpMethod.POST,
+                headers = OcpiRequestHeaders(
+                        requestID = "123",
+                        correlationID = "456",
+                        sender = BasicRole("EMY", "DE"),
+                        receiver = BasicRole("ING", "DE")),
+                urlPathVariables = "CANCEL_RESERVATION",
+                proxyUID = "128",
+                proxyResource = body.responseURL,
+                body = body)
+
+        val sig = "0x9955af11969a2d2a7f860cb00e6a00cfa7c581f5df2dbe8ea16700b33f4b4b9" +
+                "b69f945012f7ea7d3febf11eb1b78e1adc2d1c14c2cf48b25000938cc1860c83e01"
+
+        every { registry.clientURLOf(
+                request.headers.receiver.country.toByteArray(),
+                request.headers.receiver.id.toByteArray()).sendAsync().get() } returns "https://ocn-client.provider.net"
+
+        val expectedAlteredBody = request.copy(body = body.copy(responseURL = "https://ocn-client.provider.net/commands/CANCEL_RESERVATION/128"))
+
+        val jsonString = jacksonObjectMapper().writeValueAsString(expectedAlteredBody)
+        every { httpService.mapper.writeValueAsString(expectedAlteredBody) } returns jsonString
+        every { walletService.sign(jsonString) } returns sig
+
+        val (url, headers, signedBody) = routingService.prepareRemotePlatformRequest(request) {
+            request.copy(
+                    body = body.copy(responseURL = urlJoin(it, "/commands/CANCEL_RESERVATION/${request.proxyUID}")))
+        }
+
+        assertThat(url).isEqualTo("https://ocn-client.provider.net")
+        assertThat(headers.requestID.length).isEqualTo(36)
+        assertThat(headers.signature).isEqualTo(sig)
+        assertThat(signedBody).isEqualTo(jsonString)
+        assertThat(signedBody.contains("\"response_url\":\"https://ocn-client.provider.net/commands/CANCEL_RESERVATION")).isEqualTo(true)
+        assertThat(signedBody.contains("\"proxy_uid\":\"128\"")).isEqualTo(true)
+    }
+
+
+    @Test
     fun proxyPaginationHeaders() {
         val request = OcpiRequestVariables(
                 module = ModuleID.TARIFFS,
@@ -239,7 +286,8 @@ class RoutingServiceTest {
         val sender = BasicRole("SNC", "DE")
         val receiver = BasicRole("DIY", "UK")
         val resource = "https://some.co/ocpi/tokens?limit=10; rel=\"next\""
-        every { proxyResourceRepo.findByIdOrNull(123L)?.resource } returns resource
+        every { proxyResourceRepo.findByAlternativeUIDAndSenderAndReceiver(id, receiver, sender) } returns null
+        every { proxyResourceRepo.findByIdAndSenderAndReceiver(123L, sender, receiver)?.resource } returns resource
         assertThat(routingService.getProxyResource(id, sender, receiver)).isEqualTo(resource)
     }
 

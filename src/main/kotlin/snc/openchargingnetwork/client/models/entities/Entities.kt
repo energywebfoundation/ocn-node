@@ -105,4 +105,6 @@ class ProxyResourceEntity(
 
         val resource: String,
 
+        val alternativeUID: String? = null,
+
         @Id @GeneratedValue var id: Long? = null)

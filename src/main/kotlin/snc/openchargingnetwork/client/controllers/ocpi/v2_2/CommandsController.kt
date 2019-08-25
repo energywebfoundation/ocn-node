@@ -27,6 +27,7 @@ import snc.openchargingnetwork.client.models.*
 import snc.openchargingnetwork.client.models.ocpi.*
 import snc.openchargingnetwork.client.services.HttpService
 import snc.openchargingnetwork.client.services.RoutingService
+import snc.openchargingnetwork.client.tools.generateUUIDv4Token
 import snc.openchargingnetwork.client.tools.urlJoin
 
 @RestController
@@ -124,17 +125,15 @@ class CommandsController(private val routingService: RoutingService,
                 urlPathVariables = "CANCEL_RESERVATION",
                 body = body)
 
+        val proxyPath = "/ocpi/sender/2.2/commands/${requestVariables.urlPathVariables!!}"
+
         val response: HttpResponse<CommandResponse> = when (routingService.validateReceiver(receiver)) {
 
             Receiver.LOCAL -> {
 
                 val resourceID = routingService.setProxyResource(body.responseURL, sender, receiver)
 
-                val proxyBody = body.copy(responseURL = urlJoin(
-                        properties.url,
-                        "/ocpi/sender/2.2/commands",
-                        requestVariables.urlPathVariables!!,
-                        resourceID.toString()))
+                val proxyBody = body.copy(responseURL = urlJoin(properties.url, proxyPath, resourceID.toString()))
 
                 val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables)
 
@@ -144,7 +143,16 @@ class CommandsController(private val routingService: RoutingService,
 
             Receiver.REMOTE -> {
 
-                val (url, headers, ocnBody) = routingService.prepareRemotePlatformRequest(requestVariables)
+                val (url, headers, ocnBody) = routingService.prepareRemotePlatformRequest(requestVariables) {
+
+                    val proxyUID = generateUUIDv4Token()
+
+                    requestVariables.copy(
+                            proxyUID = proxyUID,
+                            proxyResource = body.responseURL,
+                            body = body.copy(responseURL = urlJoin(it, proxyPath, proxyUID)))
+
+                }
 
                 httpService.postOcnMessage(url, headers, ocnBody)
 
@@ -183,17 +191,15 @@ class CommandsController(private val routingService: RoutingService,
                 urlPathVariables = "RESERVE_NOW",
                 body = body)
 
+        val proxyPath = "/ocpi/sender/2.2/commands/${requestVariables.urlPathVariables!!}"
+
         val response: HttpResponse<CommandResponse> = when (routingService.validateReceiver(receiver)) {
 
             Receiver.LOCAL -> {
 
                 val resourceID = routingService.setProxyResource(body.responseURL, sender, receiver)
 
-                val proxyBody = body.copy(responseURL = urlJoin(
-                        properties.url,
-                        "/ocpi/sender/2.2/commands",
-                        requestVariables.urlPathVariables!!,
-                        resourceID.toString()))
+                val proxyBody = body.copy(responseURL = urlJoin(properties.url, proxyPath, resourceID.toString()))
 
                 val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables)
 
@@ -203,7 +209,16 @@ class CommandsController(private val routingService: RoutingService,
 
             Receiver.REMOTE -> {
 
-                val (url, headers, ocnBody) = routingService.prepareRemotePlatformRequest(requestVariables)
+                val (url, headers, ocnBody) = routingService.prepareRemotePlatformRequest(requestVariables) {
+
+                    val proxyUID = generateUUIDv4Token()
+
+                    requestVariables.copy(
+                            proxyUID = proxyUID,
+                            proxyResource = body.responseURL,
+                            body = body.copy(responseURL = urlJoin(it, proxyPath, proxyUID)))
+
+                }
 
                 httpService.postOcnMessage(url, headers, ocnBody)
 
@@ -242,17 +257,15 @@ class CommandsController(private val routingService: RoutingService,
                 urlPathVariables = "START_SESSION",
                 body = body)
 
+        val proxyPath = "/ocpi/sender/2.2/commands/${requestVariables.urlPathVariables!!}"
+
         val response: HttpResponse<CommandResponse> = when (routingService.validateReceiver(receiver)) {
 
             Receiver.LOCAL -> {
 
                 val resourceID = routingService.setProxyResource(body.responseURL, sender, receiver)
 
-                val proxyBody = body.copy(responseURL = urlJoin(
-                        properties.url,
-                        "/ocpi/sender/2.2/commands",
-                        requestVariables.urlPathVariables!!,
-                        resourceID.toString()))
+                val proxyBody = body.copy(responseURL = urlJoin(properties.url, proxyPath, resourceID.toString()))
 
                 val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables)
 
@@ -262,7 +275,16 @@ class CommandsController(private val routingService: RoutingService,
 
             Receiver.REMOTE -> {
 
-                val (url, headers, ocnBody) = routingService.prepareRemotePlatformRequest(requestVariables)
+                val (url, headers, ocnBody) = routingService.prepareRemotePlatformRequest(requestVariables) {
+
+                    val proxyUID = generateUUIDv4Token()
+
+                    requestVariables.copy(
+                            proxyUID = proxyUID,
+                            proxyResource = body.responseURL,
+                            body = body.copy(responseURL = urlJoin(it, proxyPath, proxyUID)))
+
+                }
 
                 httpService.postOcnMessage(url, headers, ocnBody)
 
@@ -301,17 +323,15 @@ class CommandsController(private val routingService: RoutingService,
                 urlPathVariables = "STOP_SESSION",
                 body = body)
 
+        val proxyPath = "/ocpi/sender/2.2/commands/${requestVariables.urlPathVariables!!}"
+
         val response: HttpResponse<CommandResponse> = when (routingService.validateReceiver(receiver)) {
 
             Receiver.LOCAL -> {
 
                 val resourceID = routingService.setProxyResource(body.responseURL, sender, receiver)
 
-                val proxyBody = body.copy(responseURL = urlJoin(
-                        properties.url,
-                        "/ocpi/sender/2.2/commands",
-                        requestVariables.urlPathVariables!!,
-                        resourceID.toString()))
+                val proxyBody = body.copy(responseURL = urlJoin(properties.url, proxyPath, resourceID.toString()))
 
                 val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables)
 
@@ -321,7 +341,16 @@ class CommandsController(private val routingService: RoutingService,
 
             Receiver.REMOTE -> {
 
-                val (url, headers, ocnBody) = routingService.prepareRemotePlatformRequest(requestVariables)
+                val (url, headers, ocnBody) = routingService.prepareRemotePlatformRequest(requestVariables) {
+
+                    val proxyUID = generateUUIDv4Token()
+
+                    requestVariables.copy(
+                            proxyUID = proxyUID,
+                            proxyResource = body.responseURL,
+                            body = body.copy(responseURL = urlJoin(it, proxyPath, proxyUID)))
+
+                }
 
                 httpService.postOcnMessage(url, headers, ocnBody)
 
@@ -360,17 +389,15 @@ class CommandsController(private val routingService: RoutingService,
                 urlPathVariables = "UNLOCK_CONNECTOR",
                 body = body)
 
+        val proxyPath = "/ocpi/sender/2.2/commands/${requestVariables.urlPathVariables!!}"
+
         val response: HttpResponse<CommandResponse> = when (routingService.validateReceiver(receiver)) {
 
             Receiver.LOCAL -> {
 
                 val resourceID = routingService.setProxyResource(body.responseURL, sender, receiver)
 
-                val proxyBody = body.copy(responseURL = urlJoin(
-                        properties.url,
-                        "/ocpi/sender/2.2/commands",
-                        requestVariables.urlPathVariables!!,
-                        resourceID.toString()))
+                val proxyBody = body.copy(responseURL = urlJoin(properties.url, proxyPath, resourceID.toString()))
 
                 val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables)
 
@@ -380,7 +407,16 @@ class CommandsController(private val routingService: RoutingService,
 
             Receiver.REMOTE -> {
 
-                val (url, headers, ocnBody) = routingService.prepareRemotePlatformRequest(requestVariables)
+                val (url, headers, ocnBody) = routingService.prepareRemotePlatformRequest(requestVariables) {
+
+                    val proxyUID = generateUUIDv4Token()
+
+                    requestVariables.copy(
+                            proxyUID = proxyUID,
+                            proxyResource = body.responseURL,
+                            body = body.copy(responseURL = urlJoin(it, proxyPath, proxyUID)))
+
+                }
 
                 httpService.postOcnMessage(url, headers, ocnBody)
 

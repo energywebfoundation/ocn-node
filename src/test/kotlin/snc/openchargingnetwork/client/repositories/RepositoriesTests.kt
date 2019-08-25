@@ -10,6 +10,7 @@ import snc.openchargingnetwork.client.models.ocpi.Role
 import snc.openchargingnetwork.client.models.entities.*
 import snc.openchargingnetwork.client.models.ocpi.BasicRole
 import snc.openchargingnetwork.client.models.ocpi.BusinessDetails
+import snc.openchargingnetwork.client.tools.generateUUIDv4Token
 
 @DataJpaTest
 class RepositoriesTests @Autowired constructor(
@@ -172,6 +173,17 @@ class RepositoriesTests @Autowired constructor(
         val id = entityManager.persistAndGetId(proxyResource)
         entityManager.flush()
         val foundResource = proxyResourceRepository.findByIdAndSenderAndReceiver(id.toString().toLong(), sender, receiver)
+        assertThat(foundResource?.resource).isEqualTo(proxyResource.resource)
+    }
+
+    @Test
+    fun proxyResourceRepository_findByAlternativeUIDAndSenderAndReceiver() {
+        val sender = BasicRole("SNC", "DE")
+        val receiver = BasicRole("ABC", "PL")
+        val uid = generateUUIDv4Token()
+        val proxyResource = ProxyResourceEntity(sender, receiver, "https://resource.io", uid)
+        entityManager.persistAndFlush(proxyResource)
+        val foundResource = proxyResourceRepository.findByAlternativeUIDAndSenderAndReceiver(uid, sender, receiver)
         assertThat(foundResource?.resource).isEqualTo(proxyResource.resource)
     }
 
