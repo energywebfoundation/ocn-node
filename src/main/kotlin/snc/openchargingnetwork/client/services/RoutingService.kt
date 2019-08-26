@@ -242,7 +242,6 @@ class RoutingService(private val platformRepo: PlatformRepository,
         try {
             id?.let {
                 // first check by proxy UID (sender and receiver should be reversed in this case) then by ID
-                println("id=$id; sender=$sender; receiver: $receiver")
                 return proxyResourceRepo.findByAlternativeUIDAndSenderAndReceiver(it, sender, receiver)?.resource
                         ?: proxyResourceRepo.findByIdAndSenderAndReceiver(it.toLong(), sender, receiver)?.resource
                         ?: throw Exception()
