@@ -198,8 +198,7 @@ class CredentialsController(private val platformRepo: PlatformRepository,
                     url = endpoint.url))
         }
 
-        // return Broker's platform connection information and role credentials
-        // TODO: set roles information (name, party_id, country_code) in application.properties
+        // return OCN client's platform connection information and role credentials (same for all clients)
         return OcpiResponse(
                 statusCode = OcpiStatus.SUCCESS.code,
                 data = Credentials(
