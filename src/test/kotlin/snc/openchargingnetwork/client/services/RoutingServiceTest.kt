@@ -286,7 +286,7 @@ class RoutingServiceTest {
         val sender = BasicRole("SNC", "DE")
         val receiver = BasicRole("DIY", "UK")
         val resource = "https://some.co/ocpi/tokens?limit=10; rel=\"next\""
-        every { proxyResourceRepo.findByAlternativeUIDAndSenderAndReceiver(id, receiver, sender) } returns null
+        every { proxyResourceRepo.findByAlternativeUIDAndSenderAndReceiver(id, sender, receiver) } returns null
         every { proxyResourceRepo.findByIdAndSenderAndReceiver(123L, sender, receiver)?.resource } returns resource
         assertThat(routingService.getProxyResource(id, sender, receiver)).isEqualTo(resource)
     }
@@ -302,7 +302,7 @@ class RoutingServiceTest {
                 sender = sender,
                 receiver = receiver,
                 id = 55L)
-        assertThat(routingService.setProxyResource(resource, sender, receiver)).isEqualTo(55L)
+        assertThat(routingService.setProxyResource(resource, sender, receiver)).isEqualTo("55")
     }
 
 

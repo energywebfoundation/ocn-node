@@ -35,6 +35,7 @@ import snc.openchargingnetwork.client.tools.extractToken
 import snc.openchargingnetwork.client.tools.generateUUIDv4Token
 import snc.openchargingnetwork.client.tools.urlJoin
 import snc.openchargingnetwork.contracts.RegistryFacade
+import java.lang.Exception
 
 @Service
 class RoutingService(private val platformRepo: PlatformRepository,
@@ -160,11 +161,11 @@ class RoutingService(private val platformRepo: PlatformRepository,
             // remote sender has defined an identifiable resource to be proxied
             // save the resource and return standard OCPI module URL of recipient
             request.proxyUID != null && request.proxyResource != null -> {
-                proxyResourceRepo.save(ProxyResourceEntity(
-                        alternativeUID = request.proxyUID,
+                setProxyResource(
                         resource = request.proxyResource,
-                        sender = request.headers.sender,
-                        receiver = request.headers.receiver))
+                        sender = request.headers.receiver,
+                        receiver = request.headers.sender,
+                        alternativeUID = request.proxyUID)
                 val endpoint = getPlatformEndpoint(platformID, request.module, request.interfaceRole)
                 urlJoin(endpoint.url, request.urlPathVariables)
             }
@@ -224,7 +225,7 @@ class RoutingService(private val platformRepo: PlatformRepository,
             it.extractNextLink()?.let {next ->
                 val id = setProxyResource(next, request.headers.sender, request.headers.receiver)
                 val proxyPaginationEndpoint = "/ocpi/${request.interfaceRole.id}/2.2/${request.module.id}/page"
-                val link = urlJoin(properties.url, proxyPaginationEndpoint, id.toString())
+                val link = urlJoin(properties.url, proxyPaginationEndpoint, id)
                 headers.set("Link", "$link; rel=\"next\"")
             }
         }
@@ -238,26 +239,32 @@ class RoutingService(private val platformRepo: PlatformRepository,
      * Get a generic proxy resource by its ID
      */
     fun getProxyResource(id: String?, sender: BasicRole, receiver: BasicRole): String {
-        id?.let {
-            // first check by proxy UID (sender and receiver should be reversed in this case) then by ID
-            return proxyResourceRepo.findByAlternativeUIDAndSenderAndReceiver(it, receiver, sender)?.resource
-                    ?: proxyResourceRepo.findByIdAndSenderAndReceiver(it.toLong(), sender, receiver)?.resource
-                    ?: throw OcpiClientUnknownLocationException("Proxied resource not found")
+        try {
+            id?.let {
+                // first check by proxy UID (sender and receiver should be reversed in this case) then by ID
+                println("id=$id; sender=$sender; receiver: $receiver")
+                return proxyResourceRepo.findByAlternativeUIDAndSenderAndReceiver(it, sender, receiver)?.resource
+                        ?: proxyResourceRepo.findByIdAndSenderAndReceiver(it.toLong(), sender, receiver)?.resource
+                        ?: throw Exception()
+            }
+            throw Exception()
+        } catch (_: Exception) {
+            throw OcpiClientUnknownLocationException("Proxied resource not found")
         }
-        throw OcpiClientUnknownLocationException("Proxied resource not found")
     }
 
 
     /**
      * Save a given resource in order to proxy it (identified by the entity's generated ID).
      */
-    fun setProxyResource(resource: String, sender: BasicRole, receiver: BasicRole): Long {
+    fun setProxyResource(resource: String, sender: BasicRole, receiver: BasicRole, alternativeUID: String? = null): String {
         val proxyResource = ProxyResourceEntity(
                 resource = resource,
                 sender = sender,
-                receiver = receiver)
+                receiver = receiver,
+                alternativeUID = alternativeUID)
         val savedEntity = proxyResourceRepo.save(proxyResource)
-        return savedEntity.id!!
+        return alternativeUID ?: savedEntity.id!!.toString()
     }
 
 

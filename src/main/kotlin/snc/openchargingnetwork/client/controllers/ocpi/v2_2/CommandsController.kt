@@ -131,9 +131,9 @@ class CommandsController(private val routingService: RoutingService,
 
             Receiver.LOCAL -> {
 
-                val resourceID = routingService.setProxyResource(body.responseURL, sender, receiver)
+                val resourceID = routingService.setProxyResource(body.responseURL, receiver, sender)
 
-                val proxyBody = body.copy(responseURL = urlJoin(properties.url, proxyPath, resourceID.toString()))
+                val proxyBody = body.copy(responseURL = urlJoin(properties.url, proxyPath, resourceID))
 
                 val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables)
 
@@ -197,9 +197,9 @@ class CommandsController(private val routingService: RoutingService,
 
             Receiver.LOCAL -> {
 
-                val resourceID = routingService.setProxyResource(body.responseURL, sender, receiver)
+                val resourceID = routingService.setProxyResource(body.responseURL, receiver, sender)
 
-                val proxyBody = body.copy(responseURL = urlJoin(properties.url, proxyPath, resourceID.toString()))
+                val proxyBody = body.copy(responseURL = urlJoin(properties.url, proxyPath, resourceID))
 
                 val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables)
 
@@ -263,9 +263,9 @@ class CommandsController(private val routingService: RoutingService,
 
             Receiver.LOCAL -> {
 
-                val resourceID = routingService.setProxyResource(body.responseURL, sender, receiver)
+                val resourceID = routingService.setProxyResource(body.responseURL, receiver, sender)
 
-                val proxyBody = body.copy(responseURL = urlJoin(properties.url, proxyPath, resourceID.toString()))
+                val proxyBody = body.copy(responseURL = urlJoin(properties.url, proxyPath, resourceID))
 
                 val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables)
 
@@ -329,9 +329,9 @@ class CommandsController(private val routingService: RoutingService,
 
             Receiver.LOCAL -> {
 
-                val resourceID = routingService.setProxyResource(body.responseURL, sender, receiver)
+                val resourceID = routingService.setProxyResource(body.responseURL, receiver, sender)
 
-                val proxyBody = body.copy(responseURL = urlJoin(properties.url, proxyPath, resourceID.toString()))
+                val proxyBody = body.copy(responseURL = urlJoin(properties.url, proxyPath, resourceID))
 
                 val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables)
 
@@ -395,9 +395,9 @@ class CommandsController(private val routingService: RoutingService,
 
             Receiver.LOCAL -> {
 
-                val resourceID = routingService.setProxyResource(body.responseURL, sender, receiver)
+                val resourceID = routingService.setProxyResource(body.responseURL, receiver, sender)
 
-                val proxyBody = body.copy(responseURL = urlJoin(properties.url, proxyPath, resourceID.toString()))
+                val proxyBody = body.copy(responseURL = urlJoin(properties.url, proxyPath, resourceID))
 
                 val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables)
 

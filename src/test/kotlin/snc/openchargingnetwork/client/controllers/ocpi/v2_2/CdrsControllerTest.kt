@@ -276,7 +276,7 @@ class CdrsControllerTest(@Autowired val mockMvc: MockMvc) {
                 headers = mapOf("Location" to locationHeader),
                 body = OcpiResponse(statusCode = 1000))
 
-        every { routingService.setProxyResource(locationHeader, sender, receiver) } returns 6545L
+        every { routingService.setProxyResource(locationHeader, sender, receiver) } returns "6545"
         every { properties.url } returns "https://super.hub.net"
 
         mockMvc.perform(post("/ocpi/receiver/2.2/cdrs")

@@ -133,7 +133,7 @@ class CommandsControllerTest(@Autowired val mockMvc: MockMvc) {
         every { routingService.validateSender("Token token-c", sender) } just Runs
         every { routingService.validateReceiver(receiver) } returns Receiver.LOCAL
 
-        every { routingService.setProxyResource(body.responseURL, sender, receiver) } returns 6L
+        every { routingService.setProxyResource(body.responseURL, receiver, sender) } returns "6"
         every { properties.url } returns "https://client.ocn.org"
 
         every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, forwardingHeaders)
@@ -202,7 +202,7 @@ class CommandsControllerTest(@Autowired val mockMvc: MockMvc) {
         every { routingService.validateSender("Token token-c", sender) } just Runs
         every { routingService.validateReceiver(receiver) } returns Receiver.LOCAL
 
-        every { routingService.setProxyResource(body.responseURL, sender, receiver) } returns 6L
+        every { routingService.setProxyResource(body.responseURL, receiver, sender) } returns "6"
         every { properties.url } returns "https://client.ocn.org"
 
         every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, forwardingHeaders)
@@ -269,7 +269,7 @@ class CommandsControllerTest(@Autowired val mockMvc: MockMvc) {
         every { routingService.validateSender("Token token-c", sender) } just Runs
         every { routingService.validateReceiver(receiver) } returns Receiver.LOCAL
 
-        every { routingService.setProxyResource(body.responseURL, sender, receiver) } returns 6L
+        every { routingService.setProxyResource(body.responseURL, receiver, sender) } returns "6"
         every { properties.url } returns "https://client.ocn.org"
 
         every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, forwardingHeaders)
@@ -335,7 +335,7 @@ class CommandsControllerTest(@Autowired val mockMvc: MockMvc) {
         every { routingService.validateSender("Token token-c", sender) } just Runs
         every { routingService.validateReceiver(receiver) } returns Receiver.LOCAL
 
-        every { routingService.setProxyResource(body.responseURL, sender, receiver) } returns 6L
+        every { routingService.setProxyResource(body.responseURL, receiver, sender) } returns "6"
         every { properties.url } returns "https://client.ocn.org"
 
         every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, forwardingHeaders)
@@ -403,7 +403,7 @@ class CommandsControllerTest(@Autowired val mockMvc: MockMvc) {
         every { routingService.validateSender("Token token-c", sender) } just Runs
         every { routingService.validateReceiver(receiver) } returns Receiver.LOCAL
 
-        every { routingService.setProxyResource(body.responseURL, sender, receiver) } returns 6L
+        every { routingService.setProxyResource(body.responseURL, receiver, sender) } returns "6"
         every { properties.url } returns "https://client.ocn.org"
 
         every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, forwardingHeaders)
