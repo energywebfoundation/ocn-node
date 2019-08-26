@@ -1,0 +1,62 @@
+= Open Charging Network (OCN) Client Documentation
+
+The following documentation provides usage details, with examples, for administrators and users of
+an OCN client. It assumes that the client has already been set up according to instructions provided in the
+https://bitbucket.org/shareandcharge/ocn-client/src/develop/[repository].
+
+== Health
+
+The health endpoint can be used to ensure that the message broker is reachable via HTTP.
+
+=== Request
+
+include::{snippets}/health/http-request.adoc[]
+
+=== Response
+
+include::{snippets}/health/http-response.adoc[]
+
+
+== Admin
+
+The admin API allows administrators to manage their OCN client. This can be used to generate new Open Charge Point
+Interface (OCPI) registration tokens for interested platforms.
+
+=== Request
+
+include::{snippets}/admin/http-request.adoc[]
+
+The Authorization header should be set in the format `Token ${api_key}`. The admin can find this in stdout when
+the application runs (a new key will be generated each time).
+
+==== Body
+
+include::{snippets}/admin/request-body.adoc[]
+
+The request body is a list of a platforms' roles, containing their `party_id`
+and `country_code`. This allows a platform with multiple OCPI roles (i.e. EMSP and CPO) to register on the
+same OCPI connection.
+
+=== Response
+
+include::{snippets}/admin/http-response.adoc[]
+
+The response contains the OCPI `TOKEN_A` and the message broker's versions endpoint, both of which are needed to
+start the registration process.
+
+
+== Open Charge Point Interface
+
+The Open Charge Point Interface enables eMobility platforms to connect to one another. The Open Charging Network
+uses this as it's primary means of connecting such parties. It is important to have developed an OCPI version 2.2
+API beforehand, in order to connect to and use an OCN client. Documentation for version 2.2 can be found on
+https://github.com/ocpi/ocpi/tree/develop[OCPI @ *GitHub*].
+
+The client strives to provide all the functionality of OCPI. As this software is in alpha stage, there are currently
+some features of OCPI missing:
+
+- Paginated requests
+- Proxied Location header returned from a `POST cdrs` request when made *across clients*
+- The `chargingprofiles` module
+- `hubclientinfo` PUSH requests
+- Hub-specific features such as broadcast push and intelligent routing

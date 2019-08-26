@@ -1,62 +1,97 @@
+import org.asciidoctor.gradle.AsciidoctorTask
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import org.springframework.boot.gradle.tasks.bundling.BootJar
 
 plugins {
-	kotlin("plugin.jpa") version "1.3.31"
-	id("org.springframework.boot") version "2.1.5.RELEASE"
-	id("io.spring.dependency-management") version "1.0.7.RELEASE"
-	kotlin("jvm") version "1.3.31"
-	kotlin("plugin.spring") version "1.3.31"
-	kotlin("plugin.allopen") version "1.3.31"
-	kotlin("kapt") version "1.3.31"
+    kotlin("plugin.jpa") version "1.3.41"
+    id("org.springframework.boot") version "2.1.7.RELEASE"
+    id("io.spring.dependency-management") version "1.0.8.RELEASE"
+    kotlin("jvm") version "1.3.41"
+    kotlin("plugin.spring") version "1.3.41"
+    kotlin("plugin.allopen") version "1.3.41"
+    kotlin("kapt") version "1.3.41"
+    id("org.asciidoctor.convert") version "1.5.9.2"
 }
 
-group = "snc.connect"
-version = "0.0.1-SNAPSHOT"
+group = "snc.openchargingnetwork.client"
+version = "0.1.0-SNAPSHOT"
 java.sourceCompatibility = JavaVersion.VERSION_1_8
+
+val snippetsDir = "build/generated-snippets"
 
 val developmentOnly by configurations.creating
 configurations {
-	runtimeClasspath {
-		extendsFrom(developmentOnly)
-	}
+    runtimeClasspath {
+        extendsFrom(developmentOnly)
+    }
 }
 
 repositories {
-	mavenCentral()
+    mavenCentral()
 }
 
 dependencies {
-	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
-	implementation("org.springframework.boot:spring-boot-starter-mustache")
-	implementation("org.springframework.boot:spring-boot-starter-web")
-	implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
-	implementation("org.jetbrains.kotlin:kotlin-reflect")
-	implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
-	developmentOnly("org.springframework.boot:spring-boot-devtools")
-	runtimeOnly("com.h2database:h2")
-	testImplementation("org.springframework.boot:spring-boot-starter-test") {
-		exclude(module = "junit")
-		exclude(module = "mockito-core")
-	}
-	testImplementation("org.junit.jupiter:junit-jupiter-api")
-	testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
-	testImplementation("com.ninja-squad:springmockk:1.1.2")
-	kapt("org.springframework.boot:spring-boot-configuration-processor")
+    implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+//    implementation("org.springframework.boot:spring-boot-starter-mustache")
+    implementation("org.springframework.boot:spring-boot-starter-web")
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
+    implementation("org.jetbrains.kotlin:kotlin-reflect")
+    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
+    developmentOnly("org.springframework.boot:spring-boot-devtools")
+    runtimeOnly("com.h2database:h2")
+    testImplementation("org.springframework.boot:spring-boot-starter-test") {
+        exclude(module = "junit")
+        exclude(module = "mockito-core")
+        exclude(module = "android-json")
+    }
+    testImplementation("org.junit.jupiter:junit-jupiter-api")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
+    testImplementation("com.ninja-squad:springmockk:1.1.2")
+    kapt("org.springframework.boot:spring-boot-configuration-processor")
+    asciidoctor("org.springframework.restdocs:spring-restdocs-asciidoctor:2.0.3.RELEASE")
+    testCompile("org.springframework.restdocs:spring-restdocs-mockmvc:2.0.3.RELEASE")
+    compile("khttp:khttp:1.0.0")
+    compile("org.web3j:core:4.4.0")
+    implementation("org.postgresql:postgresql:42.2.6")
 }
 
 allOpen {
-	annotation("javax.persistence.Entity")
-	annotation("javax.persistence.Embeddable")
-	annotation("javax.persistence.MappedSuperClass")
+    annotation("javax.persistence.Entity")
+    annotation("javax.persistence.Embeddable")
+    annotation("javax.persistence.MappedSuperClass")
 }
 
 tasks.withType<KotlinCompile> {
-	kotlinOptions {
-		freeCompilerArgs = listOf("-Xjsr305=strict")
-		jvmTarget = "1.8"
-	}
+    kotlinOptions {
+        freeCompilerArgs = listOf("-Xjsr305=strict")
+        jvmTarget = "1.8"
+    }
 }
 
-tasks.withType<Test> {
-	useJUnitPlatform()
+val test: Test by tasks
+test.apply {
+    useJUnitPlatform()
+    outputs.dir(snippetsDir)
+}
+
+val asciidoctor by tasks.getting(AsciidoctorTask::class) {
+    inputs.dir(snippetsDir)
+    dependsOn(test)
+}
+
+tasks {
+    "bootJar"(BootJar::class) {
+        dependsOn(asciidoctor)
+        from("${asciidoctor.get().outputDir}/html5") {
+            into("static/docs")
+        }
+    }
+}
+
+(tasks.getByName("processResources") as ProcessResources).apply {
+    val profile: String by project
+    include("**/application.$profile.properties")
+    rename {
+        "application.properties"
+    }
 }
