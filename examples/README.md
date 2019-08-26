@@ -85,9 +85,8 @@ cd ocn-demo
 npm install
 ```
 
-Currently, only the demo only contains one Charge Point Operator (CPO) and one eMobility Service Provider (EMSP). 
-Starting the demo will start the respective backends and register the CPO to the Open Charging Network that was
-previously set up:
+The demo contains two Charge Point Operators (CPOs) and one eMobility Service Provider (EMSP). Starting the demo will 
+start the respective backends and register the CPOs to the Open Charging Network that was previously set up:
 
 ```
 npm start
@@ -107,9 +106,9 @@ import the JSON collection file provided in this directory and you are ready to 
 
 ## Tutorial
 
-In this tutorial, we will create an OCPI 2.2 connection with the OCN Client at [http:localhost:8080](http://localhost:8080). The CPO in our
-demo has already registered to the other OCN Client at [http://localhost:8081](http://localhost:8081), which gives us
-a chance to make requests across the network.
+In this tutorial, we will create an OCPI 2.2 connection with the OCN Client at [http:localhost:8080](http://localhost:8080). If you completed the
+above step, there should be one CPO already registered with our OCN Client and another at [http://localhost:8081](http://localhost:8081), which gives us
+a chance to make different requests across the network.
 
 ### 1. Adding an entry to the OCN Registry
 
@@ -220,12 +219,12 @@ requested and stored your OCPI module endpoints for future use.
 
 This now completes the registration to the OCN client.
 
-### 5. Making OCPI requests to the CPO
+### 5. Making OCPI requests to a CPO
 
-Now that we have registered to our OCN client, we can send requests to the CPO. In this request, we wish to fetch a 
-list of the CPO's locations (i.e. charging stations under OCPI terminology). To do so, navigate to the `GET locations
-list` request in the locations directory of the Postman collection. Substitute the `CREDENTIALS_TOKEN_C` in the
-Authorization header and make the request.
+Now that we have registered to our OCN client, we can send requests to one of the registered CPOs on the OCN. In this 
+request, we wish to fetch a list of the CPO's locations (i.e. charging stations under OCPI terminology). To do so, 
+navigate to the `GET locations list` request in the locations directory of the Postman collection. Substitute the 
+`CREDENTIALS_TOKEN_C` in the Authorization header and make the request.
 
 The result should look like the following:
 ```
@@ -234,7 +233,7 @@ The result should look like the following:
     "data": [
                     {
                         "country_code": "DE",
-                        "party_id": "MSP",
+                        "party_id": "CPO",
                         "id": "LOC1",
                         "type": "ON_STREET",
                         "address": "somestreet 1",
@@ -296,12 +295,65 @@ type follows a hierarchy of `location` -> `evse` -> `connector`. We can make als
 location, or a specific EVSE or connector. Take a look at the other requests in the locations directory to see how they
 work. 
 
-Notice how on the Connector object there is a `tariff_ids` array. What does this mean? 
+The headers prefixed with `OCPI-` describe the desired routing of the message. The `OCPI-from-country-code` and 
+`OCPI-from-party-id` describe the OCPI party on the platform which is making the request (in our case we only have one
+party per platform, but it could be the case that a CPO and EMSP role share the same platform connection with an OCN
+client). Likewise, the `OCPI-to-country-code` and `OCPI-to-party-id` headers describe the recipient of the request. In
+our case we are making requests to a CPO with country code `DE` and party ID `CPO`. This CPO is registered to the same
+OCN client as our EMSP, but what if we want to contact a "remote" party connected to a different OCN client? We can
+try this out by changing the request headers to the following:
 
-Let's find out. Navigate to the tariffs directory and send the `GET tariffs` request. This is an example of a dependency
-between OCPI modules. However, all OCPI modules aside from `credentials` are optional. It is up to the EMSP/CPO (or any 
-other role) to implement the modules themselves. Therefore if we try to make, for instance, a `sessions` request to the 
-CPO, we might receive a message telling us that the CPO has not implemented the module (yet). 
+```
+OCPI-to-country-code: NL
+OCPI-to-party-id: CPX
+```
+
+The mock CPOs featured in this demonstration are in fact identical, so all requests can be sent to either of them. Note
+that requests made to "remote" OCPI parties in are considered more experimental than those between two parties sharing 
+the same OCN client.
+
+Let's check out the other request types we can make now. Notice how on the Connector object there is a `tariff_ids` array. 
+What does this mean? 
+
+Navigate to the tariffs directory and send the `GET tariffs` request. You should see in the response's body an array of
+tariffs provided by the CPO, with IDs matching those found on the Connector object. This is an example of a dependency
+between OCPI modules. 
+
+However, all OCPI modules aside from `credentials` are optional (for the purpose of the demo the
+EMSP and CPOs have not implemented the `credentials` interface, but it is important to do so, as the OCN client could
+need to update its credentials on your system). It is up to the EMSP/CPO (or any other role) to implement the modules
+themselves. Therefore if we try to make, for instance, a `sessions` request to the CPO, we might receive a message 
+telling us that the CPO has not implemented the module (yet).
+
+Our EMSP has actually implemented two OCPI modules: `commands` and `cdrs`. The first of which is the `SENDER` interface
+which allows the CPO to asynchronously notify the EMSP of a command result, i.e. a session has been started by a charge
+point. The second allows the CPO to push Charge Detail Records (CDRs), containing the final price of a charging session, 
+to the EMSP. This reduces the load on the CPO backend as the EMSP doesn't need to poll for new CDRs.
+
+We can see this first hand by sending the requests in the commands directory. The first, `POST START_SESSION`, will 
+send a start session request on behalf of a driver on the EMSP system. For this request, we can also monitor the output
+of our demo servers. The initial response from our Postman request contains only an acknowledgement of the request.
+After 5 seconds the CPO will send the async command result (the response from the charge point):
+
+```
+CPO [DE CPO] sending async STOP_SESSION response
+EMSP [DE MSP] received async command response: {"result":"ACCEPTED"}
+EMSP [DE MSP] -- POST /ocpi/emsp/2.2/commands/STOP_SESSION/2 200 59 - 0.734 ms
+```
+
+Likewise, when we make a `POST STOP_SESSION` request, we see the following a further 5 seconds after the async response
+has been sent to the EMSP:
+
+```
+CPO [DE CPO] sending cdr after session end
+EMSP [DE MSP] -- POST /ocpi/emsp/2.2/cdrs 200 59 - 0.487 ms
+EMSP [DE MSP] -- GET /ocpi/emsp/2.2/cdrs/1 200 1124 - 0.784 ms
+CPO [DE CPO] acknowledges cdr correctly stored on EMSP system
+```
+
+In this case, the CPO has sent a POST `cdrs` request to the EMSP, the response of which will contain a `Location` header
+set by the EMSP describing where the CPO can find this charge detail record on the EMSP system. The CPO can then make
+a GET request to this location to verify that the CDR was stored correctly by the EMSP. 
 
 That marks the end of this tutorial. More examples and use cases will be added to this tutorial in the future, but for 
 now this should be enough to get started on creating an OCPI 2.2 platform that is ready to join the Open Charging Network.
