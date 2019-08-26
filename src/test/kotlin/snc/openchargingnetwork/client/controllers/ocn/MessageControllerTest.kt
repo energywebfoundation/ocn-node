@@ -1,23 +1,28 @@
 package snc.openchargingnetwork.client.controllers.ocn
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.ninjasquad.springmockk.MockkBean
+import io.mockk.Runs
 import io.mockk.every
-import io.mockk.mockk
+import io.mockk.just
+import org.junit.jupiter.api.BeforeEach
+import khttp.get as khttpGET
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
+import org.springframework.http.HttpMethod
 import org.springframework.http.MediaType
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers.content
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import snc.openchargingnetwork.client.data.exampleLocation2
-import snc.openchargingnetwork.client.models.HttpResponse
-import snc.openchargingnetwork.client.models.HubGenericRequest
-import snc.openchargingnetwork.client.models.HubRequestHeaders
-import snc.openchargingnetwork.client.models.HubRequestResponseType
-import snc.openchargingnetwork.client.models.entities.EndpointEntity
+import snc.openchargingnetwork.client.models.*
 import snc.openchargingnetwork.client.models.ocpi.*
+import snc.openchargingnetwork.client.services.WalletService
+import snc.openchargingnetwork.client.services.HttpService
 import snc.openchargingnetwork.client.services.RoutingService
 
 @WebMvcTest(MessageController::class)
@@ -26,42 +31,52 @@ class MessageControllerTest(@Autowired val mockMvc: MockMvc) {
     @MockkBean
     lateinit var routingService: RoutingService
 
+    @MockkBean
+    lateinit var walletService: WalletService
+
+    @MockkBean
+    lateinit var httpService: HttpService
+
+    private val mapper = jacksonObjectMapper()
+
+    @BeforeEach
+    fun before() {
+        every { httpService.mapper } returns mapper
+    }
+
+
     @Test
-    fun `When POST message should forward request and return ocpi response`() {
+    fun `When POST OCN message should forward the request to local recipient and return their OCPI response`() {
 
         val senderRole = BasicRole("ABC", "DE")
         val receiverRole = BasicRole("XYZ", "NL")
 
-        val receiverEndpoint = EndpointEntity(8L, "locations", InterfaceRole.SENDER, "http://client.net/locations")
-
-        val body = HubGenericRequest(
-                method = "GET",
-                module = "locations",
-                role = InterfaceRole.SENDER,
-                path = "/LOC2",
-                headers = HubRequestHeaders(
+        val body = OcpiRequestVariables(
+                method = HttpMethod.GET,
+                module = ModuleID.LOCATIONS,
+                interfaceRole = InterfaceRole.SENDER,
+                urlPathVariables = "LOC2",
+                headers = OcpiRequestHeaders(
                         requestID = "123",
                         correlationID = "abc-123",
-                        ocpiFromCountryCode = senderRole.country,
-                        ocpiFromPartyID = senderRole.id,
-                        ocpiToCountryCode = receiverRole.country,
-                        ocpiToPartyID = receiverRole.id),
-                body = null,
-                expectedResponseType = HubRequestResponseType.LOCATION)
+                        sender = senderRole,
+                        receiver = receiverRole))
 
-        every { routingService.verifyRequest(any(), "0x1234", senderRole) } returns Unit
+        val jsonBodyString = mapper.writeValueAsString(body)
+
+        every { httpService.convertToRequestVariables(jsonBodyString) } returns body
+        every { walletService.verify(jsonBodyString, "0x1234", senderRole) } just Runs
+
         every { routingService.isRoleKnownOnNetwork(senderRole, belongsToMe = false) } returns true
         every { routingService.isRoleKnown(receiverRole) } returns true
-        every { routingService.getPlatformID(receiverRole) } returns 8L
-        every { routingService.getPlatformEndpoint(8L, "locations", InterfaceRole.SENDER) } returns receiverEndpoint
-        every { routingService.makeHeaders(8L, "abc-123", any(), any()) } returns mockk()
-        every { routingService.forwardRequest(
-                method = "GET",
-                url = "http://client.net/locations/LOC2",
-                headers = any(),
-                params = null,
-                body = null,
-                expectedDataType = Location::class)
+
+        val (url, headers) = Pair(
+                "https://some.platform.net/locations/LOC2",
+                body.headers.copy(authorization = "Token 123", requestID = "789"))
+
+        every { routingService.prepareLocalPlatformRequest(body) } returns Pair(url, headers)
+
+        every { httpService.makeOcpiRequest<Location>(HttpMethod.GET, url, headers.encode())
         } returns HttpResponse(
                 statusCode = 200,
                 headers = mapOf(),
@@ -71,12 +86,12 @@ class MessageControllerTest(@Autowired val mockMvc: MockMvc) {
                 .contentType(MediaType.APPLICATION_JSON)
                 .header("X-Request-ID", "xyz")
                 .header("OCN-Signature", "0x1234")
-                .content(jacksonObjectMapper().writeValueAsString(body)))
-                .andExpect(MockMvcResultMatchers.status().isOk)
-                .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_UTF8))
-                .andExpect(MockMvcResultMatchers.jsonPath("\$.status_code").value(OcpiStatus.SUCCESS.code))
-                .andExpect(MockMvcResultMatchers.jsonPath("\$.status_message").doesNotExist())
-                .andExpect(MockMvcResultMatchers.jsonPath("\$.timestamp").isString)
-                .andExpect(MockMvcResultMatchers.jsonPath("\$.data.id").value(exampleLocation2.id))
+                .content(jsonBodyString))
+                .andExpect(status().isOk)
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
+                .andExpect(jsonPath("\$.status_code").value(OcpiStatus.SUCCESS.code))
+                .andExpect(jsonPath("\$.status_message").doesNotExist())
+                .andExpect(jsonPath("\$.timestamp").isString)
+                .andExpect(jsonPath("\$.data.id").value(exampleLocation2.id))
     }
 }

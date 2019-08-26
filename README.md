@@ -4,11 +4,6 @@ The Open Charging Network (OCN) Client with Open Charge Point Interface (OCPI) v
 
 **This software is in alpha**. 
 
-Starting from end of July, a testing period will be run to aid and inform development. 
-If you want to run a client on that test network, switch to the [`open-testing`](https://bitbucket.org/shareandcharge/ocn-client/src/open-testing/) branch.
-A second test network will soon be setup, using clients from the `develop` branch. Therefore,
-it is recommended to stay on this branch.
-
 As the aim is for this to be a community project, contributions are always welcome in the form of comments, pull 
 requests and raised issues. Questions may also be asked on Stack Overflow using the tag `ShareAndCharge`.
 
@@ -54,7 +49,7 @@ Firstly, it is important to configure the application properties for the desired
 ```
 cd src/main/resources
 cp application.dev.properties application.local.properties
-vi application.local properties
+vi application.local.properties
 ```
 
 #### 1.1. Setting the Client Address

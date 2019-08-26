@@ -8,21 +8,25 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager
 import snc.openchargingnetwork.client.models.ocpi.InterfaceRole
 import snc.openchargingnetwork.client.models.ocpi.Role
 import snc.openchargingnetwork.client.models.entities.*
+import snc.openchargingnetwork.client.models.ocpi.BasicRole
 import snc.openchargingnetwork.client.models.ocpi.BusinessDetails
+import snc.openchargingnetwork.client.tools.generateUUIDv4Token
 
 @DataJpaTest
 class RepositoriesTests @Autowired constructor(
         val entityManager: TestEntityManager,
         val platformRepository: PlatformRepository,
         val roleRepository: RoleRepository,
-        val endpointRepository: EndpointRepository) {
+        val endpointRepository: EndpointRepository,
+        val proxyResourceRepository: ProxyResourceRepository) {
+
 
     /**
      *   PlatformRepository Tests
      */
 
     @Test
-    fun `When existsByAuth_TokenA then return true`() {
+    fun platformRepository_existsByAuth_TokenA() {
         val platform1 = PlatformEntity()
         val platform2 = PlatformEntity()
         entityManager.persist(platform1)
@@ -33,7 +37,17 @@ class RepositoriesTests @Autowired constructor(
     }
 
     @Test
-    fun `When findByAuth_TokenA then return organization`() {
+    fun platformRepository_existsByAuth_TokenC() {
+        val exists1 = platformRepository.existsByAuth_TokenC("secret")
+        assertThat(exists1).isEqualTo(false)
+        val platform = PlatformEntity(auth = Auth(tokenC = "secret"))
+        entityManager.persistAndFlush(platform)
+        val exists2 = platformRepository.existsByAuth_TokenC("secret")
+        assertThat(exists2).isEqualTo(true)
+    }
+
+    @Test
+    fun platformRepository_findByAuth_TokenA() {
         val platform1 = PlatformEntity()
         val platform2 = PlatformEntity()
         entityManager.persist(platform1)
@@ -44,7 +58,7 @@ class RepositoriesTests @Autowired constructor(
     }
 
     @Test
-    fun `When findByAuth_TokenC then return organization`() {
+    fun platformRepository_findByAuth_TokenC() {
         val platform1 = PlatformEntity()
         val platform2 = PlatformEntity(auth = Auth(tokenA = null, tokenB = "123", tokenC = "456"))
         entityManager.persist(platform1)
@@ -54,12 +68,13 @@ class RepositoriesTests @Autowired constructor(
         assertThat(found).isEqualTo(platform2)
     }
 
+
     /**
      *   RoleRepository Tests
      */
 
     @Test
-    fun `When existsByCountryCodeAndPartyIDAllIgnoreCase then return true`() {
+    fun roleRepository_existsByCountryCodeAndPartyIDAllIgnoreCase() {
         val role = RoleEntity(1L, Role.CPO, BusinessDetails("S&C"), "SNC", "DE")
         entityManager.persistAndFlush(role)
         // find by exact case as entered (uppercase)
@@ -73,7 +88,7 @@ class RepositoriesTests @Autowired constructor(
     }
 
     @Test
-    fun `When findByCountryCodeAndPartyIDAllIgnoreCase then return platform`() {
+    fun roleRepository_findByCountryCodeAndPartyIDAllIgnoreCase() {
         val role = RoleEntity(1L, Role.CPO, BusinessDetails("S&C"), "SNC", "DE")
         entityManager.persistAndFlush(role)
         // find by exact case as entered (uppercase)
@@ -85,7 +100,7 @@ class RepositoriesTests @Autowired constructor(
     }
 
     @Test
-    fun platformRepository_deleteByOrgID() {
+    fun roleRepository_deleteByOrgID() {
         val role1 = RoleEntity(1L, Role.CPO, BusinessDetails("S&C"), "SNC", "DE")
         val role2 = RoleEntity(1L, Role.EMSP, BusinessDetails("eMobilify"), "EMO", "DE")
         val role3 = RoleEntity(5L, Role.NSP, BusinessDetails("NSP"), "NSP", "DE")
@@ -98,12 +113,13 @@ class RepositoriesTests @Autowired constructor(
         assertThat(roleRepository.findAll()).isEqualTo(listOf(role3))
     }
 
+
     /**
      *   EndpointRepository Tests
      */
 
     @Test
-    fun `When findByOrgID then return endpoints`() {
+    fun endpointRepository_findByOrgID() {
         val endpoint1 = EndpointEntity(2L, "commands", InterfaceRole.SENDER, "http://localhost:3000/commands")
         val endpoint2 = EndpointEntity(2L, "cdrs", InterfaceRole.SENDER, "http://localhost:3000/cdrs")
         val endpoint3 = EndpointEntity(2L, "locations", InterfaceRole.SENDER, "http://localhost:3000/locations")
@@ -120,7 +136,7 @@ class RepositoriesTests @Autowired constructor(
     }
 
     @Test
-    fun `When findByOrgIDAndIdentifierAndRole return endpoint`() {
+    fun endpointRepository_findByOrgIDAndIdentifierAndRole() {
         val endpoint1 = EndpointEntity(2L, "commands", InterfaceRole.SENDER, "http://localhost:3000/commands")
         val endpoint2 = EndpointEntity(2L, "cdrs", InterfaceRole.SENDER, "http://localhost:3000/cdrs")
         entityManager.persist(endpoint1)
@@ -142,6 +158,33 @@ class RepositoriesTests @Autowired constructor(
         assertThat(endpointRepository.findByPlatformID(2L)).isEqualTo(listOf(endpoints1, endpoints2, endpoints3))
         endpointRepository.deleteByPlatformID(2L)
         assertThat(endpointRepository.findByPlatformID(2L)).isEqualTo(listOf<EndpointEntity>())
+    }
+
+
+    /**
+     * ProxyResourceRepository Tests
+     */
+
+    @Test
+    fun proxyResourceRepository_findByIdAndSenderAndReceiver() {
+        val sender = BasicRole("SNC", "DE")
+        val receiver = BasicRole("ABC", "PL")
+        val proxyResource = ProxyResourceEntity(sender = sender, receiver = receiver, resource = "https://resource.io")
+        val id = entityManager.persistAndGetId(proxyResource)
+        entityManager.flush()
+        val foundResource = proxyResourceRepository.findByIdAndSenderAndReceiver(id.toString().toLong(), sender, receiver)
+        assertThat(foundResource?.resource).isEqualTo(proxyResource.resource)
+    }
+
+    @Test
+    fun proxyResourceRepository_findByAlternativeUIDAndSenderAndReceiver() {
+        val sender = BasicRole("SNC", "DE")
+        val receiver = BasicRole("ABC", "PL")
+        val uid = generateUUIDv4Token()
+        val proxyResource = ProxyResourceEntity(sender, receiver, "https://resource.io", uid)
+        entityManager.persistAndFlush(proxyResource)
+        val foundResource = proxyResourceRepository.findByAlternativeUIDAndSenderAndReceiver(uid, sender, receiver)
+        assertThat(foundResource?.resource).isEqualTo(proxyResource.resource)
     }
 
 }

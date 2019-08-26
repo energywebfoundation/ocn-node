@@ -20,6 +20,9 @@
 package snc.openchargingnetwork.client.tools
 
 import org.web3j.crypto.Keys
+import snc.openchargingnetwork.client.models.HttpResponse
+import snc.openchargingnetwork.client.models.ocpi.CommandResponse
+import snc.openchargingnetwork.client.models.ocpi.CommandResponseType
 import java.time.Instant
 import java.time.format.DateTimeFormatter
 import java.util.UUID
@@ -28,13 +31,16 @@ fun generateUUIDv4Token(): String {
     return UUID.randomUUID().toString()
 }
 
-fun urlJoin(base: String, vararg paths: String): String {
+fun urlJoin(base: String, vararg paths: String?): String {
     var url = if (base.endsWith("/")) {
         base.dropLast(1)
     } else {
         base
     }
     for (path in paths) {
+        if (path == null) {
+            continue
+        }
         val sanitizedPath: String = if (path.startsWith("/") && !path.endsWith("/")) {
             path
         } else if (path.startsWith("/") && path.endsWith("/")) {
@@ -56,4 +62,17 @@ fun getTimestamp(): String {
 fun generatePrivateKey(): String {
     val keys = Keys.createEcKeyPair()
     return keys.privateKey.toString(16)
+}
+
+fun <T: Any> isOcpiSuccess(response: HttpResponse<T>): Boolean {
+    return response.statusCode == 200 && response.body.statusCode == 1000
+}
+
+fun isCommandResponseAccepted(response: HttpResponse<CommandResponse>): Boolean {
+    if (response.body.data == null) {
+        return false
+    }
+    return response.statusCode == 200
+            && response.body.statusCode == 1000
+            && response.body.data.result == CommandResponseType.ACCEPTED
 }

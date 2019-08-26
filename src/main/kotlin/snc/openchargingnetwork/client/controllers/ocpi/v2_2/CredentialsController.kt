@@ -32,7 +32,7 @@ import snc.openchargingnetwork.client.models.entities.RoleEntity
 import snc.openchargingnetwork.client.models.exceptions.OcpiClientInvalidParametersException
 import snc.openchargingnetwork.client.models.exceptions.OcpiServerNoMatchingEndpointsException
 import snc.openchargingnetwork.client.models.ocpi.*
-import snc.openchargingnetwork.client.services.HttpRequestService
+import snc.openchargingnetwork.client.services.HttpService
 import snc.openchargingnetwork.client.services.RoutingService
 import snc.openchargingnetwork.client.tools.*
 
@@ -43,7 +43,7 @@ class CredentialsController(private val platformRepo: PlatformRepository,
                             private val endpointRepo: EndpointRepository,
                             private val properties: Properties,
                             private val routingService: RoutingService,
-                            private val httpRequestService: HttpRequestService) {
+                            private val httpService: HttpService) {
 
     @GetMapping
     fun getCredentials(@RequestHeader("Authorization") authorization: String): OcpiResponse<Credentials> {
@@ -76,14 +76,14 @@ class CredentialsController(private val platformRepo: PlatformRepository,
                 ?: throw OcpiClientInvalidParametersException("Invalid CREDENTIALS_TOKEN_A")
 
         // GET versions information endpoint with TOKEN_B (both provided in request body)
-        val versionsInfo = httpRequestService.getVersions(body.url, body.token)
+        val versionsInfo = httpService.getVersions(body.url, body.token)
 
         // try to match version 2.2
         val correctVersion = versionsInfo.versions.firstOrNull { it.version == "2.2" }
                 ?: throw OcpiServerNoMatchingEndpointsException("Expected version 2.2 from $versionsInfo")
 
         // GET 2.2 version details
-        val versionDetail = httpRequestService.getVersionDetail(correctVersion.url, body.token)
+        val versionDetail = httpService.getVersionDetail(correctVersion.url, body.token)
 
         // ensure each role does not already exist
         for (role in body.roles) {
@@ -95,7 +95,6 @@ class CredentialsController(private val platformRepo: PlatformRepository,
                 throw OcpiClientInvalidParametersException("Role with party_id=${basicRole.id} and country_code=${basicRole.country} already connected to this client!")
             }
         }
-
 
         // generate TOKEN_C
         val tokenC = generateUUIDv4Token()
@@ -139,8 +138,8 @@ class CredentialsController(private val platformRepo: PlatformRepository,
                         url = urlJoin(properties.url, "/ocpi/versions"),
                         roles = listOf(CredentialsRole(
                                 role = Role.HUB,
-                                businessDetails = BusinessDetails(name = "Share&Charge Message Broker"),
-                                partyID = "SNC",
+                                businessDetails = BusinessDetails(name = "Open Charging Network Client"),
+                                partyID = "OCN",
                                 countryCode = "DE"))))
     }
 
@@ -154,14 +153,14 @@ class CredentialsController(private val platformRepo: PlatformRepository,
                 ?: throw OcpiClientInvalidParametersException("Invalid CREDENTIALS_TOKEN_C")
 
         // GET versions information endpoint with TOKEN_B (both provided in request body)
-        val versionsInfo: Versions = httpRequestService.getVersions(body.url, body.token)
+        val versionsInfo: Versions = httpService.getVersions(body.url, body.token)
 
         // try to match version 2.2
         val correctVersion = versionsInfo.versions.firstOrNull { it.version == "2.2" }
                 ?: throw OcpiClientInvalidParametersException("Expected version 2.2 from ${body.url}")
 
         // GET 2.2 version details
-        val versionDetail = httpRequestService.getVersionDetail(correctVersion.url, body.token)
+        val versionDetail = httpService.getVersionDetail(correctVersion.url, body.token)
 
         // generate TOKEN_C
         val tokenC = generateUUIDv4Token()
@@ -208,8 +207,8 @@ class CredentialsController(private val platformRepo: PlatformRepository,
                         url = urlJoin(properties.url, "/ocpi/versions"),
                         roles = listOf(CredentialsRole(
                                 role = Role.HUB,
-                                businessDetails = BusinessDetails(name = "Share&Charge Message Broker"),
-                                partyID = "SNC",
+                                businessDetails = BusinessDetails(name = "Open Charging Network Client"),
+                                partyID = "OCN",
                                 countryCode = "DE"))))
     }
 

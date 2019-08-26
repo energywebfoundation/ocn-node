@@ -65,18 +65,18 @@ class VersionsController(private val repository: PlatformRepository,
             val endpoints = mutableListOf<Endpoint>()
 
             // prepare EMSP and SENDER interfaces for each module
-            for (id in ModuleID.values()) {
+            for (module in ModuleID.values()) {
 
                 // these modules have only SENDER endpoint (the broker/hub)
-                if (id.value == "credentials" || id.value == "hubclientinfo") {
+                if (module.id == "credentials" || module.id == "hubclientinfo") {
 
                     endpoints.add(Endpoint(
-                            identifier = id.value,
+                            identifier = module.id,
                             role = InterfaceRole.SENDER,
-                            url = urlJoin(properties.url, "/ocpi/2.2/${id.value}")))
+                            url = urlJoin(properties.url, "/ocpi/2.2/${module.id}")))
 
                 // not yet implemented
-                } else if (id.value == "chargingprofiles") {
+                } else if (module.id == "chargingprofiles") {
 
                     continue
 
@@ -85,13 +85,13 @@ class VersionsController(private val repository: PlatformRepository,
 
                     endpoints.addAll(listOf(
                             Endpoint(
-                                    identifier = id.value,
+                                    identifier = module.id,
                                     role = InterfaceRole.SENDER,
-                                    url = urlJoin(properties.url, "/ocpi/sender/2.2/${id.value}")),
+                                    url = urlJoin(properties.url, "/ocpi/sender/2.2/${module.id}")),
                             Endpoint(
-                                    identifier = id.value,
+                                    identifier = module.id,
                                     role = InterfaceRole.RECEIVER,
-                                    url = urlJoin(properties.url, "/ocpi/receiver/2.2/${id.value}"))))
+                                    url = urlJoin(properties.url, "/ocpi/receiver/2.2/${module.id}"))))
                 }
 
             }

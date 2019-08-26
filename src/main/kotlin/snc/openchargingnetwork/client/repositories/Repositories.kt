@@ -21,13 +21,14 @@ package snc.openchargingnetwork.client.repositories
 
 import org.springframework.data.repository.CrudRepository
 import snc.openchargingnetwork.client.models.entities.*
-import snc.openchargingnetwork.client.models.ocpi.CommandType
+import snc.openchargingnetwork.client.models.ocpi.BasicRole
 import snc.openchargingnetwork.client.models.ocpi.InterfaceRole
 
 interface WalletRepository: CrudRepository<WalletEntity, Long> {}
 
 interface PlatformRepository: CrudRepository<PlatformEntity, Long> {
     fun existsByAuth_TokenA(tokenA: String?): Boolean
+    fun existsByAuth_TokenC(tokenC: String?): Boolean
     fun findByAuth_TokenA(tokenA: String?): PlatformEntity?
     fun findByAuth_TokenC(tokenC: String?): PlatformEntity?
 }
@@ -49,19 +50,7 @@ interface EndpointRepository: CrudRepository<EndpointEntity, Long> {
     fun deleteByPlatformID(platformID: Long?)
 }
 
-interface CdrRepository: CrudRepository<CdrEntity, Long> {
-    fun findByCdrIDAndOwnerIDAndOwnerCountryAndCreatorIDAndCreatorCountryAllIgnoreCase(cdrID: String,
-                                                                                       ownerID: String,
-                                                                                       ownerCountry: String,
-                                                                                       creatorID: String,
-                                                                                       creatorCountry: String): CdrEntity?
-}
-
-interface CommandResponseUrlRepository: CrudRepository<CommandResponseUrlEntity, Long> {
-    fun findByUidAndTypeAndSenderIDAndSenderCountryAndReceiverIDAndReceiverCountryAllIgnoreCase(uid: String,
-                                                                                                type: CommandType,
-                                                                                                senderID: String,
-                                                                                                senderCountry: String,
-                                                                                                receiverID: String,
-                                                                                                receiverCountry: String): CommandResponseUrlEntity?
+interface ProxyResourceRepository: CrudRepository<ProxyResourceEntity, Long> {
+    fun findByIdAndSenderAndReceiver(id: Long?, sender: BasicRole, receiver: BasicRole): ProxyResourceEntity?
+    fun findByAlternativeUIDAndSenderAndReceiver(alternativeUID: String, sender: BasicRole, receiver: BasicRole): ProxyResourceEntity?
 }

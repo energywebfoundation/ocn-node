@@ -19,20 +19,22 @@
 
 package snc.openchargingnetwork.client.controllers.ocpi.v2_2
 
+import org.springframework.http.HttpMethod
 import org.springframework.http.ResponseEntity
-import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.bind.annotation.*
 import snc.openchargingnetwork.client.config.Properties
-import snc.openchargingnetwork.client.models.HubCommandsRequest
-import snc.openchargingnetwork.client.models.HubGenericRequest
+import snc.openchargingnetwork.client.models.*
 import snc.openchargingnetwork.client.models.ocpi.*
+import snc.openchargingnetwork.client.services.HttpService
 import snc.openchargingnetwork.client.services.RoutingService
 import snc.openchargingnetwork.client.tools.generateUUIDv4Token
 import snc.openchargingnetwork.client.tools.urlJoin
 
 @RestController
 class CommandsController(private val routingService: RoutingService,
+                         private val httpService: HttpService,
                          private val properties: Properties) {
+
 
     /**
      * SENDER INTERFACE
@@ -48,52 +50,54 @@ class CommandsController(private val routingService: RoutingService,
                           @RequestHeader("OCPI-to-party-id") toPartyID: String,
                           @PathVariable("command") command: CommandType,
                           @PathVariable("uid") uid: String,
-                          @RequestBody body: CommandResult): ResponseEntity<OcpiResponse<Nothing>> {
+                          @RequestBody body: CommandResult): ResponseEntity<OcpiResponse<Unit>> {
 
         val sender = BasicRole(fromPartyID, fromCountryCode)
         val receiver = BasicRole(toPartyID, toCountryCode)
 
         routingService.validateSender(authorization, sender)
 
-        val response = if (routingService.isRoleKnown(receiver)) {
-            val platformID = routingService.getPlatformID(receiver)
-            val headers = routingService.makeHeaders(platformID, correlationID, sender, receiver)
-            val responseURL = routingService.findResponseURL(command, uid, sender, receiver)
-            routingService.forwardRequest(
-                    method = "POST",
-                    url = responseURL,
-                    headers = headers,
-                    body = body,
-                    expectedDataType = Nothing::class)
-        } else {
-            val url = routingService.findBrokerUrl(receiver)
-            val headers = routingService.makeHeaders(requestID, correlationID, sender, receiver)
-            val hubRequestBody = HubGenericRequest(
-                    method = "POST",
-                    module = "commands",
-                    path = "/$command",
-                    headers = headers,
-                    body = body,
-                    role = InterfaceRole.SENDER)
-            routingService.forwardRequest(
-                    method = "POST",
-                    url = urlJoin(url, "/ocn/message"),
-                    headers = mapOf(
-                            "X-Request-ID" to generateUUIDv4Token(),
-                            "OCN-Signature" to routingService.signRequest(hubRequestBody)),
-                    body = hubRequestBody,
-                    expectedDataType = Nothing::class)
+        val requestVariables = OcpiRequestVariables(
+                module = ModuleID.COMMANDS,
+                interfaceRole = InterfaceRole.SENDER,
+                method = HttpMethod.POST,
+                headers = OcpiRequestHeaders(
+                        requestID = requestID,
+                        correlationID = correlationID,
+                        sender = sender,
+                        receiver = receiver),
+                urlPathVariables = uid,
+                body = body)
+
+        val response: HttpResponse<Unit> = when (routingService.validateReceiver(receiver)) {
+
+            Receiver.LOCAL -> {
+
+                val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables, proxied = true)
+
+                httpService.makeOcpiRequest(url, headers, requestVariables)
+
+            }
+
+            Receiver.REMOTE -> {
+
+                val (url, headers, ocnBody) = routingService.prepareRemotePlatformRequest(requestVariables, proxied = true)
+
+                httpService.postOcnMessage(url, headers, ocnBody)
+
+            }
+
         }
 
         return ResponseEntity.status(response.statusCode).body(response.body)
-
     }
+
 
     /**
      * RECEIVER INTERFACE
      */
 
-    @Transactional
+//    @Transactional
     @PostMapping("/ocpi/receiver/2.2/commands/CANCEL_RESERVATION")
     fun postCancelReservation(@RequestHeader("authorization") authorization: String,
                               @RequestHeader("X-Request-ID") requestID: String,
@@ -109,40 +113,56 @@ class CommandsController(private val routingService: RoutingService,
 
         routingService.validateSender(authorization, sender)
 
-        val response = if (routingService.isRoleKnown(receiver)) {
-            val platformID = routingService.getPlatformID(receiver)
-            val endpoint = routingService.getPlatformEndpoint(platformID, "commands", InterfaceRole.RECEIVER)
-            val headers = routingService.makeHeaders(platformID, correlationID, sender, receiver)
+        val requestVariables = OcpiRequestVariables(
+                module = ModuleID.COMMANDS,
+                interfaceRole = InterfaceRole.RECEIVER,
+                method = HttpMethod.POST,
+                headers = OcpiRequestHeaders(
+                        requestID = requestID,
+                        correlationID = correlationID,
+                        sender = sender,
+                        receiver = receiver),
+                urlPathVariables = "CANCEL_RESERVATION",
+                body = body)
 
-            // intercept response_url and replace with broker-readable URL (async post mapping above)
-            val uid = routingService.saveResponseURL(body.responseURL, CommandType.CANCEL_RESERVATION, sender, receiver)
-            body.responseURL = urlJoin(properties.url, "/ocpi/sender/2.2/commands/CANCEL_RESERVATION/$uid")
+        val proxyPath = "/ocpi/sender/2.2/commands/${requestVariables.urlPathVariables!!}"
 
-            routingService.forwardRequest(
-                    method = "POST",
-                    url = urlJoin(endpoint.url, "/CANCEL_RESERVATION"),
-                    headers = headers,
-                    body = body,
-                    expectedDataType = CommandResponse::class)
-        } else {
-            val url = routingService.findBrokerUrl(receiver)
-            val headers = routingService.makeHeaders(requestID, correlationID, sender, receiver)
-            val hubCommandsRequestBody = HubCommandsRequest(
-                    type = CommandType.CANCEL_RESERVATION,
-                    headers = headers,
-                    body = routingService.stringify(body))
-            routingService.forwardRequest(
-                    method = "POST",
-                    url = urlJoin(url, "/ocn/message/command"),
-                    headers = mapOf(
-                            "X-Request-ID" to generateUUIDv4Token(),
-                            "OCN-Signature" to routingService.signRequest(hubCommandsRequestBody)),
-                    body = hubCommandsRequestBody,
-                    expectedDataType = CommandResponse::class)
+        val response: HttpResponse<CommandResponse> = when (routingService.validateReceiver(receiver)) {
+
+            Receiver.LOCAL -> {
+
+                val resourceID = routingService.setProxyResource(body.responseURL, receiver, sender)
+
+                val proxyBody = body.copy(responseURL = urlJoin(properties.url, proxyPath, resourceID))
+
+                val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables)
+
+                httpService.makeOcpiRequest(url, headers, requestVariables.copy(body = proxyBody))
+
+            }
+
+            Receiver.REMOTE -> {
+
+                val (url, headers, ocnBody) = routingService.prepareRemotePlatformRequest(requestVariables) {
+
+                    val proxyUID = generateUUIDv4Token()
+
+                    requestVariables.copy(
+                            proxyUID = proxyUID,
+                            proxyResource = body.responseURL,
+                            body = body.copy(responseURL = urlJoin(it, proxyPath, proxyUID)))
+
+                }
+
+                httpService.postOcnMessage(url, headers, ocnBody)
+
+            }
+
         }
 
         return ResponseEntity.status(response.statusCode).body(response.body)
     }
+
 
     @PostMapping("/ocpi/receiver/2.2/commands/RESERVE_NOW")
     fun postReserveNow(@RequestHeader("authorization") authorization: String,
@@ -159,42 +179,56 @@ class CommandsController(private val routingService: RoutingService,
 
         routingService.validateSender(authorization, sender)
 
-        val response = if (routingService.isRoleKnown(receiver)) {
-            val platformID = routingService.getPlatformID(receiver)
-            val endpoint = routingService.getPlatformEndpoint(platformID, "commands", InterfaceRole.RECEIVER)
-            val headers = routingService.makeHeaders(platformID, correlationID, sender, receiver)
+        val requestVariables = OcpiRequestVariables(
+                module = ModuleID.COMMANDS,
+                interfaceRole = InterfaceRole.RECEIVER,
+                method = HttpMethod.POST,
+                headers = OcpiRequestHeaders(
+                        requestID = requestID,
+                        correlationID = correlationID,
+                        sender = sender,
+                        receiver = receiver),
+                urlPathVariables = "RESERVE_NOW",
+                body = body)
 
-            // intercept response_url and replace with broker-readable URL (async post mapping above)
-            val uid = routingService.saveResponseURL(body.responseURL, CommandType.RESERVE_NOW, sender, receiver)
-            body.responseURL = urlJoin(properties.url, "/ocpi/sender/2.2/commands/RESERVE_NOW/$uid")
+        val proxyPath = "/ocpi/sender/2.2/commands/${requestVariables.urlPathVariables!!}"
 
-            routingService.forwardRequest(
-                    method = "POST",
-                    url = urlJoin(endpoint.url, "/RESERVE_NOW"),
-                    headers = headers,
-                    body = body,
-                    expectedDataType = CommandResponse::class)
-        } else {
-            val url = routingService.findBrokerUrl(receiver)
-            val headers = routingService.makeHeaders(requestID, correlationID, sender, receiver)
-            val hubCommandsRequestBody = HubCommandsRequest(
-                    type = CommandType.RESERVE_NOW,
-                    headers = headers,
-                    body = routingService.stringify(body))
-            routingService.forwardRequest(
-                    method = "POST",
-                    url = urlJoin(url, "/ocn/message"),
-                    headers = mapOf(
-                            "X-Request-ID" to generateUUIDv4Token(),
-                            "OCN-Signature" to routingService.signRequest(hubCommandsRequestBody)),
-                    body = hubCommandsRequestBody,
-                    expectedDataType = CommandResponse::class)
+        val response: HttpResponse<CommandResponse> = when (routingService.validateReceiver(receiver)) {
+
+            Receiver.LOCAL -> {
+
+                val resourceID = routingService.setProxyResource(body.responseURL, receiver, sender)
+
+                val proxyBody = body.copy(responseURL = urlJoin(properties.url, proxyPath, resourceID))
+
+                val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables)
+
+                httpService.makeOcpiRequest(url, headers, requestVariables.copy(body = proxyBody))
+
+            }
+
+            Receiver.REMOTE -> {
+
+                val (url, headers, ocnBody) = routingService.prepareRemotePlatformRequest(requestVariables) {
+
+                    val proxyUID = generateUUIDv4Token()
+
+                    requestVariables.copy(
+                            proxyUID = proxyUID,
+                            proxyResource = body.responseURL,
+                            body = body.copy(responseURL = urlJoin(it, proxyPath, proxyUID)))
+
+                }
+
+                httpService.postOcnMessage(url, headers, ocnBody)
+
+            }
+
         }
 
         return ResponseEntity.status(response.statusCode).body(response.body)
-
-
     }
+
 
     @PostMapping("/ocpi/receiver/2.2/commands/START_SESSION")
     fun postStartSession(@RequestHeader("authorization") authorization: String,
@@ -211,40 +245,56 @@ class CommandsController(private val routingService: RoutingService,
 
         routingService.validateSender(authorization, sender)
 
-        val response = if (routingService.isRoleKnown(receiver)) {
-            val platformID = routingService.getPlatformID(receiver)
-            val endpoint = routingService.getPlatformEndpoint(platformID, "commands", InterfaceRole.RECEIVER)
-            val headers = routingService.makeHeaders(platformID, correlationID, sender, receiver)
+        val requestVariables = OcpiRequestVariables(
+                module = ModuleID.COMMANDS,
+                interfaceRole = InterfaceRole.RECEIVER,
+                method = HttpMethod.POST,
+                headers = OcpiRequestHeaders(
+                        requestID = requestID,
+                        correlationID = correlationID,
+                        sender = sender,
+                        receiver = receiver),
+                urlPathVariables = "START_SESSION",
+                body = body)
 
-            // intercept response_url and replace with broker-readable URL (async post mapping above)
-            val uid = routingService.saveResponseURL(body.responseURL, CommandType.START_SESSION, sender, receiver)
-            body.responseURL = urlJoin(properties.url, "/ocpi/sender/2.2/commands/START_SESSION/$uid")
+        val proxyPath = "/ocpi/sender/2.2/commands/${requestVariables.urlPathVariables!!}"
 
-            routingService.forwardRequest(
-                    method = "POST",
-                    url = urlJoin(endpoint.url, "/START_SESSION"),
-                    headers = headers,
-                    body = body,
-                    expectedDataType = CommandResponse::class)
-        } else {
-            val url = routingService.findBrokerUrl(receiver)
-            val headers = routingService.makeHeaders(requestID, correlationID, sender, receiver)
-            val hubCommandsRequestBody = HubCommandsRequest(
-                    type = CommandType.START_SESSION,
-                    headers = headers,
-                    body = routingService.stringify(body))
-            routingService.forwardRequest(
-                    method = "POST",
-                    url = urlJoin(url, "/ocn/message"),
-                    headers = mapOf(
-                            "X-Request-ID" to generateUUIDv4Token(),
-                            "OCN-Signature" to routingService.signRequest(hubCommandsRequestBody)),
-                    body = hubCommandsRequestBody,
-                    expectedDataType = CommandResponse::class)
+        val response: HttpResponse<CommandResponse> = when (routingService.validateReceiver(receiver)) {
+
+            Receiver.LOCAL -> {
+
+                val resourceID = routingService.setProxyResource(body.responseURL, receiver, sender)
+
+                val proxyBody = body.copy(responseURL = urlJoin(properties.url, proxyPath, resourceID))
+
+                val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables)
+
+                httpService.makeOcpiRequest(url, headers, requestVariables.copy(body = proxyBody))
+
+            }
+
+            Receiver.REMOTE -> {
+
+                val (url, headers, ocnBody) = routingService.prepareRemotePlatformRequest(requestVariables) {
+
+                    val proxyUID = generateUUIDv4Token()
+
+                    requestVariables.copy(
+                            proxyUID = proxyUID,
+                            proxyResource = body.responseURL,
+                            body = body.copy(responseURL = urlJoin(it, proxyPath, proxyUID)))
+
+                }
+
+                httpService.postOcnMessage(url, headers, ocnBody)
+
+            }
+
         }
 
         return ResponseEntity.status(response.statusCode).body(response.body)
     }
+
 
     @PostMapping("/ocpi/receiver/2.2/commands/STOP_SESSION")
     fun postStopSession(@RequestHeader("authorization") authorization: String,
@@ -261,40 +311,56 @@ class CommandsController(private val routingService: RoutingService,
 
         routingService.validateSender(authorization, sender)
 
-        val response = if (routingService.isRoleKnown(receiver)) {
-            val platformID = routingService.getPlatformID(receiver)
-            val endpoint = routingService.getPlatformEndpoint(platformID, "commands", InterfaceRole.RECEIVER)
-            val headers = routingService.makeHeaders(platformID, correlationID, sender, receiver)
+        val requestVariables = OcpiRequestVariables(
+                module = ModuleID.COMMANDS,
+                interfaceRole = InterfaceRole.RECEIVER,
+                method = HttpMethod.POST,
+                headers = OcpiRequestHeaders(
+                        requestID = requestID,
+                        correlationID = correlationID,
+                        sender = sender,
+                        receiver = receiver),
+                urlPathVariables = "STOP_SESSION",
+                body = body)
 
-            // intercept response_url and replace with broker-readable URL (async post mapping above)
-            val uid = routingService.saveResponseURL(body.responseURL, CommandType.STOP_SESSION, sender, receiver)
-            body.responseURL = urlJoin(properties.url, "/ocpi/sender/2.2/commands/STOP_SESSION/$uid")
+        val proxyPath = "/ocpi/sender/2.2/commands/${requestVariables.urlPathVariables!!}"
 
-            routingService.forwardRequest(
-                    method = "POST",
-                    url = urlJoin(endpoint.url, "/STOP_SESSION"),
-                    headers = headers,
-                    body = body,
-                    expectedDataType = CommandResponse::class)
-        } else {
-            val url = routingService.findBrokerUrl(receiver)
-            val headers = routingService.makeHeaders(requestID, correlationID, sender, receiver)
-            val hubCommandsRequestBody = HubCommandsRequest(
-                    type = CommandType.STOP_SESSION,
-                    headers = headers,
-                    body = routingService.stringify(body))
-            routingService.forwardRequest(
-                    method = "POST",
-                    url = urlJoin(url, "/ocn/message"),
-                    headers = mapOf(
-                            "X-Request-ID" to generateUUIDv4Token(),
-                            "OCN-Signature" to routingService.signRequest(hubCommandsRequestBody)),
-                    body = hubCommandsRequestBody,
-                    expectedDataType = CommandResponse::class)
+        val response: HttpResponse<CommandResponse> = when (routingService.validateReceiver(receiver)) {
+
+            Receiver.LOCAL -> {
+
+                val resourceID = routingService.setProxyResource(body.responseURL, receiver, sender)
+
+                val proxyBody = body.copy(responseURL = urlJoin(properties.url, proxyPath, resourceID))
+
+                val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables)
+
+                httpService.makeOcpiRequest(url, headers, requestVariables.copy(body = proxyBody))
+
+            }
+
+            Receiver.REMOTE -> {
+
+                val (url, headers, ocnBody) = routingService.prepareRemotePlatformRequest(requestVariables) {
+
+                    val proxyUID = generateUUIDv4Token()
+
+                    requestVariables.copy(
+                            proxyUID = proxyUID,
+                            proxyResource = body.responseURL,
+                            body = body.copy(responseURL = urlJoin(it, proxyPath, proxyUID)))
+
+                }
+
+                httpService.postOcnMessage(url, headers, ocnBody)
+
+            }
+
         }
 
         return ResponseEntity.status(response.statusCode).body(response.body)
     }
+
 
     @PostMapping("/ocpi/receiver/2.2/commands/UNLOCK_CONNECTOR")
     fun postUnlockConnector(@RequestHeader("authorization") authorization: String,
@@ -311,41 +377,54 @@ class CommandsController(private val routingService: RoutingService,
 
         routingService.validateSender(authorization, sender)
 
-        val response = if (routingService.isRoleKnown(receiver)) {
-            val platformID = routingService.getPlatformID(receiver)
-            val endpoint = routingService.getPlatformEndpoint(platformID, "commands", InterfaceRole.RECEIVER)
-            val headers = routingService.makeHeaders(platformID, correlationID, sender, receiver)
+        val requestVariables = OcpiRequestVariables(
+                module = ModuleID.COMMANDS,
+                interfaceRole = InterfaceRole.RECEIVER,
+                method = HttpMethod.POST,
+                headers = OcpiRequestHeaders(
+                        requestID = requestID,
+                        correlationID = correlationID,
+                        sender = sender,
+                        receiver = receiver),
+                urlPathVariables = "UNLOCK_CONNECTOR",
+                body = body)
 
-            // intercept response_url and replace with broker-readable URL (async post mapping above)
-            val uid = routingService.saveResponseURL(body.responseURL, CommandType.UNLOCK_CONNECTOR, sender, receiver)
-            body.responseURL = urlJoin(properties.url, "/ocpi/sender/2.2/commands/UNLOCK_CONNECTOR/$uid")
+        val proxyPath = "/ocpi/sender/2.2/commands/${requestVariables.urlPathVariables!!}"
 
-            routingService.forwardRequest(
-                    method = "POST",
-                    url = urlJoin(endpoint.url, "/UNLOCK_CONNECTOR"),
-                    headers = headers,
-                    body = body,
-                    expectedDataType = CommandResponse::class)
-        } else {
-            val url = routingService.findBrokerUrl(receiver)
-            val headers = routingService.makeHeaders(requestID, correlationID, sender, receiver)
-            val hubCommandsRequestBody = HubCommandsRequest(
-                    type = CommandType.UNLOCK_CONNECTOR,
-                    headers = headers,
-                    body = routingService.stringify(body))
-            routingService.forwardRequest(
-                    method = "POST",
-                    url = urlJoin(url, "/ocn/message"),
-                    headers = mapOf(
-                            "X-Request-ID" to generateUUIDv4Token(),
-                            "OCN-Signature" to routingService.signRequest(hubCommandsRequestBody)),
-                    body = hubCommandsRequestBody,
-                    expectedDataType = CommandResponse::class)
+        val response: HttpResponse<CommandResponse> = when (routingService.validateReceiver(receiver)) {
+
+            Receiver.LOCAL -> {
+
+                val resourceID = routingService.setProxyResource(body.responseURL, receiver, sender)
+
+                val proxyBody = body.copy(responseURL = urlJoin(properties.url, proxyPath, resourceID))
+
+                val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables)
+
+                httpService.makeOcpiRequest(url, headers, requestVariables.copy(body = proxyBody))
+
+            }
+
+            Receiver.REMOTE -> {
+
+                val (url, headers, ocnBody) = routingService.prepareRemotePlatformRequest(requestVariables) {
+
+                    val proxyUID = generateUUIDv4Token()
+
+                    requestVariables.copy(
+                            proxyUID = proxyUID,
+                            proxyResource = body.responseURL,
+                            body = body.copy(responseURL = urlJoin(it, proxyPath, proxyUID)))
+
+                }
+
+                httpService.postOcnMessage(url, headers, ocnBody)
+
+            }
+
         }
 
         return ResponseEntity.status(response.statusCode).body(response.body)
-
-
     }
 
 }

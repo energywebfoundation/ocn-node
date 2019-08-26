@@ -20,18 +20,19 @@
 package snc.openchargingnetwork.client.controllers.ocpi.v2_2
 
 import org.springframework.http.HttpHeaders
+import org.springframework.http.HttpMethod
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
-import snc.openchargingnetwork.client.models.HubGenericRequest
-import snc.openchargingnetwork.client.models.HubRequestParameters
-import snc.openchargingnetwork.client.models.HubRequestResponseType
+import snc.openchargingnetwork.client.models.*
 import snc.openchargingnetwork.client.models.ocpi.*
+import snc.openchargingnetwork.client.services.HttpService
 import snc.openchargingnetwork.client.services.RoutingService
-import snc.openchargingnetwork.client.tools.generateUUIDv4Token
-import snc.openchargingnetwork.client.tools.urlJoin
+import snc.openchargingnetwork.client.tools.isOcpiSuccess
 
 @RestController
-class TokensController(private val routingService: RoutingService) {
+class TokensController(private val routingService: RoutingService,
+                       private val httpService: HttpService) {
+
 
     /**
      * SENDER INTERFACE
@@ -55,43 +56,42 @@ class TokensController(private val routingService: RoutingService) {
 
         routingService.validateSender(authorization, sender)
 
-        val params = HubRequestParameters(dateFrom = dateFrom, dateTo = dateTo, offset = offset, limit = limit)
+        val requestVariables = OcpiRequestVariables(
+                module = ModuleID.TOKENS,
+                interfaceRole = InterfaceRole.SENDER,
+                method = HttpMethod.GET,
+                headers = OcpiRequestHeaders(
+                        requestID = requestID,
+                        correlationID = correlationID,
+                        sender = sender,
+                        receiver = receiver),
+                urlEncodedParams = OcpiRequestParameters(
+                        dateFrom = dateFrom,
+                        dateTo = dateTo,
+                        offset = offset,
+                        limit = limit))
 
-        val response = if (routingService.isRoleKnown(receiver)) {
-            val platformID = routingService.getPlatformID(receiver)
-            val endpoint = routingService.getPlatformEndpoint(platformID, "tokens", InterfaceRole.SENDER)
-            val headers = routingService.makeHeaders(platformID, correlationID, sender, receiver)
-            routingService.forwardRequest(
-                    method = "GET",
-                    url = endpoint.url,
-                    headers = headers,
-                    params = params.encode(),
-                    expectedDataType = Array<Token>::class)
-        } else {
-            val url = routingService.findBrokerUrl(receiver)
-            val headers = routingService.makeHeaders(requestID, correlationID, sender, receiver)
-            val hubRequestBody = HubGenericRequest(
-                    method = "GET",
-                    module = "tokens",
-                    role = InterfaceRole.SENDER,
-                    params = params,
-                    headers = headers,
-                    body = null,
-                    expectedResponseType = HubRequestResponseType.TOKEN_ARRAY)
-            routingService.forwardRequest(
-                    method = "POST",
-                    url = urlJoin(url, "/ocn/message"),
-                    headers = mapOf(
-                            "X-Request-ID" to generateUUIDv4Token(),
-                            "OCN-Signature" to routingService.signRequest(hubRequestBody)),
-                    body = hubRequestBody,
-                    expectedDataType = Array<Token>::class)
+        val response: HttpResponse<Array<Token>> = when (routingService.validateReceiver(receiver)) {
+
+            Receiver.LOCAL -> {
+
+                val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables)
+
+                httpService.makeOcpiRequest(url, headers, requestVariables)
+            }
+
+            Receiver.REMOTE -> {
+
+                val (url, headers, body) = routingService.prepareRemotePlatformRequest(requestVariables)
+
+                httpService.postOcnMessage(url, headers, body)
+            }
+
         }
 
-        val headers = HttpHeaders()
-        response.headers["Link"]?.let { headers.add("Link", "<RESPONSE_URL>; rel=\"next\"")}
-        response.headers["X-Total-Count"]?.let { headers.add("X-Total-Count", it) }
-        response.headers["X-Limit"]?.let { headers.add("X-Limit", it) }
+        val headers = routingService.proxyPaginationHeaders(
+                request = requestVariables,
+                responseHeaders = response.headers)
 
         return ResponseEntity
                 .status(response.statusCode)
@@ -99,7 +99,72 @@ class TokensController(private val routingService: RoutingService) {
                 .body(response.body)
     }
 
-    @PutMapping("/ocpi/sender/2.2/sessions/{tokenUID}/authorize")
+
+    @GetMapping("/ocpi/sender/2.2/tokens/page/{uid}")
+    fun getTokensPageFromDataOwner(@RequestHeader("authorization") authorization: String,
+                                   @RequestHeader("X-Request-ID") requestID: String,
+                                   @RequestHeader("X-Correlation-ID") correlationID: String,
+                                   @RequestHeader("OCPI-from-country-code") fromCountryCode: String,
+                                   @RequestHeader("OCPI-from-party-id") fromPartyID: String,
+                                   @RequestHeader("OCPI-to-country-code") toCountryCode: String,
+                                   @RequestHeader("OCPI-to-party-id") toPartyID: String,
+                                   @PathVariable uid: String): ResponseEntity<OcpiResponse<Array<Token>>> {
+
+        val sender = BasicRole(fromPartyID, fromCountryCode)
+        val receiver = BasicRole(toPartyID, toCountryCode)
+
+        routingService.validateSender(authorization, sender)
+
+        val requestVariables = OcpiRequestVariables(
+                module = ModuleID.TOKENS,
+                interfaceRole = InterfaceRole.SENDER,
+                method = HttpMethod.GET,
+                headers = OcpiRequestHeaders(
+                        requestID = requestID,
+                        correlationID = correlationID,
+                        sender = sender,
+                        receiver = receiver))
+
+        val response: HttpResponse<Array<Token>> = when (routingService.validateReceiver(receiver)) {
+
+            Receiver.LOCAL -> {
+
+                val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables, proxied = true)
+
+                httpService.makeOcpiRequest(url, headers, requestVariables)
+
+            }
+
+            Receiver.REMOTE -> {
+
+                val (url, headers, body) = routingService.prepareRemotePlatformRequest(requestVariables, proxied = true)
+
+                httpService.postOcnMessage(url, headers, body)
+
+            }
+
+        }
+
+        var headers = HttpHeaders()
+
+        if (isOcpiSuccess(response)) {
+
+            routingService.deleteProxyResource(uid)
+
+            headers = routingService.proxyPaginationHeaders(
+                    request = requestVariables,
+                    responseHeaders = response.headers)
+
+        }
+
+        return ResponseEntity
+                .status(response.statusCode)
+                .headers(headers)
+                .body(response.body)
+    }
+
+
+    @PostMapping("/ocpi/sender/2.2/tokens/{tokenUID}/authorize")
     fun postRealTimeTokenAuthorization(@RequestHeader("authorization") authorization: String,
                                        @RequestHeader("X-Request-ID") requestID: String,
                                        @RequestHeader("X-Correlation-ID") correlationID: String,
@@ -108,51 +173,52 @@ class TokensController(private val routingService: RoutingService) {
                                        @RequestHeader("OCPI-to-country-code") toCountryCode: String,
                                        @RequestHeader("OCPI-to-party-id") toPartyID: String,
                                        @PathVariable tokenUID: String,
-                                       @RequestParam("type", required = false) type: TokenType = TokenType.RFID,
+                                       @RequestParam("type", required = false) type: TokenType? = null,
                                        @RequestBody body: LocationReferences? = null): ResponseEntity<OcpiResponse<AuthorizationInfo>> {
+
 
         val sender = BasicRole(fromPartyID, fromCountryCode)
         val receiver = BasicRole(toPartyID, toCountryCode)
 
         routingService.validateSender(authorization, sender)
 
-        val params = HubRequestParameters(type = type)
+        val requestVariables = OcpiRequestVariables(
+                module = ModuleID.TOKENS,
+                interfaceRole = InterfaceRole.SENDER,
+                method = HttpMethod.POST,
+                headers = OcpiRequestHeaders(
+                        requestID = requestID,
+                        correlationID = correlationID,
+                        sender = sender,
+                        receiver = receiver),
+                urlPathVariables = "$tokenUID/authorize",
+                urlEncodedParams = OcpiRequestParameters(type = type
+                        ?: TokenType.RFID),
+                body = body)
 
-        val response = if (routingService.isRoleKnown(receiver)) {
-            val platformID = routingService.getPlatformID(receiver)
-            val endpoint = routingService.getPlatformEndpoint(platformID, "tokens", InterfaceRole.SENDER)
-            val headers = routingService.makeHeaders(platformID, correlationID, sender, receiver)
-            routingService.forwardRequest(
-                    method = "POST",
-                    url = urlJoin(endpoint.url, "/$tokenUID/authorize"),
-                    headers = headers,
-                    params = params.encode(),
-                    body = body,
-                    expectedDataType = AuthorizationInfo::class)
-        } else {
-            val url = routingService.findBrokerUrl(receiver)
-            val headers = routingService.makeHeaders(requestID, correlationID, sender, receiver)
-            val hubRequestBody = HubGenericRequest(
-                    method = "POST",
-                    module = "tokens",
-                    role = InterfaceRole.SENDER,
-                    path = "/$tokenUID/authorization",
-                    params = params,
-                    headers = headers,
-                    body = body,
-                    expectedResponseType = HubRequestResponseType.AUTHORIZATION_INFO)
-            routingService.forwardRequest(
-                    method = "POST",
-                    url = urlJoin(url, "/ocn/message"),
-                    headers = mapOf(
-                            "X-Request-ID" to generateUUIDv4Token(),
-                            "OCN-Signature" to routingService.signRequest(hubRequestBody)),
-                    body = hubRequestBody,
-                    expectedDataType = AuthorizationInfo::class)
+        val response: HttpResponse<AuthorizationInfo> = when (routingService.validateReceiver(receiver)) {
+
+            Receiver.LOCAL -> {
+
+                val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables)
+
+                httpService.makeOcpiRequest(url, headers, requestVariables)
+
+            }
+
+            Receiver.REMOTE -> {
+
+                val (url, headers, ocnBody) = routingService.prepareRemotePlatformRequest(requestVariables)
+
+                httpService.postOcnMessage(url, headers, ocnBody)
+
+            }
+
         }
 
         return ResponseEntity.status(response.statusCode).body(response.body)
     }
+
 
     /**
      * RECEIVER INTERFACE
@@ -169,50 +235,49 @@ class TokensController(private val routingService: RoutingService) {
                             @PathVariable countryCode: String,
                             @PathVariable partyID: String,
                             @PathVariable tokenUID: String,
-                            @RequestParam("type", required = false) type: TokenType = TokenType.RFID): ResponseEntity<OcpiResponse<Token>> {
+                            @RequestParam("type", required = false) type: TokenType? = null): ResponseEntity<OcpiResponse<Token>> {
 
         val sender = BasicRole(fromPartyID, fromCountryCode)
         val receiver = BasicRole(toPartyID, toCountryCode)
-        val objectOwner = BasicRole(partyID, countryCode)
 
-        routingService.validateSender(authorization, sender, objectOwner)
+        routingService.validateSender(authorization, sender)
 
-        val params = HubRequestParameters(type = type)
+        val requestVariables = OcpiRequestVariables(
+                module = ModuleID.TOKENS,
+                interfaceRole = InterfaceRole.RECEIVER,
+                method = HttpMethod.GET,
+                headers = OcpiRequestHeaders(
+                        requestID = requestID,
+                        correlationID = correlationID,
+                        sender = sender,
+                        receiver = receiver),
+                urlPathVariables = "/$countryCode/$partyID/$tokenUID",
+                urlEncodedParams = OcpiRequestParameters(type = type
+                        ?: TokenType.RFID))
 
-        val response = if (routingService.isRoleKnown(receiver)) {
-            val platformID = routingService.getPlatformID(receiver)
-            val endpoint = routingService.getPlatformEndpoint(platformID, "tokens", InterfaceRole.RECEIVER)
-            val headers = routingService.makeHeaders(platformID, correlationID, sender, receiver)
-            routingService.forwardRequest(
-                    method = "GET",
-                    url = urlJoin(endpoint.url, "/$countryCode/$partyID/$tokenUID"),
-                    headers = headers,
-                    params = params.encode(),
-                    expectedDataType = Token::class)
-        } else {
-            val url = routingService.findBrokerUrl(receiver)
-            val headers = routingService.makeHeaders(requestID, correlationID, sender, receiver)
-            val hubRequestBody = HubGenericRequest(
-                    method = "GET",
-                    module = "tokens",
-                    path = urlJoin(url, "/$countryCode/$partyID/$tokenUID"),
-                    params = params,
-                    headers = headers,
-                    body = null,
-                    role = InterfaceRole.RECEIVER,
-                    expectedResponseType = HubRequestResponseType.TOKEN)
-            routingService.forwardRequest(
-                    method = "POST",
-                    url = urlJoin(url, "/ocn/message"),
-                    headers = mapOf(
-                            "X-Request-ID" to generateUUIDv4Token(),
-                            "OCN-Signature" to routingService.signRequest(hubRequestBody)),
-                    body = hubRequestBody,
-                    expectedDataType = Token::class)
+        val response: HttpResponse<Token> = when (routingService.validateReceiver(receiver)) {
+
+            Receiver.LOCAL -> {
+
+                val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables)
+
+                httpService.makeOcpiRequest(url, headers, requestVariables)
+
+            }
+
+            Receiver.REMOTE -> {
+
+                val (url, headers, ocnBody) = routingService.prepareRemotePlatformRequest(requestVariables)
+
+                httpService.postOcnMessage(url, headers, ocnBody)
+
+            }
+
         }
 
         return ResponseEntity.status(response.statusCode).body(response.body)
     }
+
 
     @PutMapping("/ocpi/receiver/2.2/tokens/{countryCode}/{partyID}/{tokenUID}")
     fun putClientOwnedToken(@RequestHeader("authorization") authorization: String,
@@ -225,52 +290,51 @@ class TokensController(private val routingService: RoutingService) {
                             @PathVariable countryCode: String,
                             @PathVariable partyID: String,
                             @PathVariable tokenUID: String,
-                            @RequestParam("type") type: TokenType = TokenType.RFID,
-                            @RequestBody body: Token): ResponseEntity<OcpiResponse<Nothing>> {
+                            @RequestParam("type", required = false) type: TokenType? = null,
+                            @RequestBody body: Token): ResponseEntity<OcpiResponse<Unit>> {
 
         val sender = BasicRole(fromPartyID, fromCountryCode)
         val receiver = BasicRole(toPartyID, toCountryCode)
-        val objectOwner = BasicRole(partyID, countryCode)
-        val objectData = BasicRole(body.partyID, body.countryCode)
 
-        val params = HubRequestParameters(type = type)
+        routingService.validateSender(authorization, sender)
 
-        routingService.validateSender(authorization, sender, objectOwner, objectData)
+        val requestVariables = OcpiRequestVariables(
+                module = ModuleID.TOKENS,
+                interfaceRole = InterfaceRole.RECEIVER,
+                method = HttpMethod.PUT,
+                headers = OcpiRequestHeaders(
+                        requestID = requestID,
+                        correlationID = correlationID,
+                        sender = sender,
+                        receiver = receiver),
+                urlPathVariables = "/$countryCode/$partyID/$tokenUID",
+                urlEncodedParams = OcpiRequestParameters(type = type
+                        ?: TokenType.RFID),
+                body = body)
 
-        val response = if (routingService.isRoleKnown(receiver)) {
-            val platformID = routingService.getPlatformID(receiver)
-            val endpoint = routingService.getPlatformEndpoint(platformID, "tokens", InterfaceRole.RECEIVER)
-            val headers = routingService.makeHeaders(platformID, correlationID, sender, receiver)
-            routingService.forwardRequest(
-                    method = "PUT",
-                    url = urlJoin(endpoint.url, "/$countryCode/$partyID/$tokenUID"),
-                    headers = headers,
-                    params = params.encode(),
-                    body = body,
-                    expectedDataType = Nothing::class)
-        } else {
-            val url = routingService.findBrokerUrl(receiver)
-            val headers = routingService.makeHeaders(requestID, correlationID, sender, receiver)
-            val hubRequestBody = HubGenericRequest(
-                    method = "PUT",
-                    module = "tokens",
-                    path = urlJoin(url, "/$countryCode/$partyID/$tokenUID"),
-                    params = params,
-                    headers = headers,
-                    role = InterfaceRole.RECEIVER,
-                    body = body)
-            routingService.forwardRequest(
-                    method = "POST",
-                    url = urlJoin(url, "/ocn/message"),
-                    headers = mapOf(
-                            "X-Request-ID" to generateUUIDv4Token(),
-                            "OCN-Signature" to routingService.signRequest(hubRequestBody)),
-                    body = hubRequestBody,
-                    expectedDataType = Nothing::class)
+        val response: HttpResponse<Unit> = when (routingService.validateReceiver(receiver)) {
+
+            Receiver.LOCAL -> {
+
+                val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables)
+
+                httpService.makeOcpiRequest(url, headers, requestVariables)
+
+            }
+
+            Receiver.REMOTE -> {
+
+                val (url, headers, ocnBody) = routingService.prepareRemotePlatformRequest(requestVariables)
+
+                httpService.postOcnMessage(url, headers, ocnBody)
+
+            }
+
         }
 
         return ResponseEntity.status(response.statusCode).body(response.body)
     }
+
 
     @PatchMapping("/ocpi/receiver/2.2/tokens/{countryCode}/{partyID}/{tokenUID}")
     fun patchClientOwnedToken(@RequestHeader("authorization") authorization: String,
@@ -283,47 +347,46 @@ class TokensController(private val routingService: RoutingService) {
                                @PathVariable countryCode: String,
                                @PathVariable partyID: String,
                                @PathVariable tokenUID: String,
-                               @RequestParam("type") type: TokenType = TokenType.RFID,
-                               @RequestBody body: Map<String, Any>): ResponseEntity<OcpiResponse<Nothing>> {
+                               @RequestParam("type", required = false) type: TokenType? = null,
+                               @RequestBody body: Map<String, Any>): ResponseEntity<OcpiResponse<Unit>> {
 
         val sender = BasicRole(fromPartyID, fromCountryCode)
         val receiver = BasicRole(toPartyID, toCountryCode)
-        val objectOwner = BasicRole(partyID, countryCode)
 
-        val params = HubRequestParameters(type = type)
+        routingService.validateSender(authorization, sender)
 
-        routingService.validateSender(authorization, sender, objectOwner)
+        val requestVariables = OcpiRequestVariables(
+                module = ModuleID.TOKENS,
+                interfaceRole = InterfaceRole.RECEIVER,
+                method = HttpMethod.PATCH,
+                headers = OcpiRequestHeaders(
+                        requestID = requestID,
+                        correlationID = correlationID,
+                        sender = sender,
+                        receiver = receiver),
+                urlPathVariables = "/$countryCode/$partyID/$tokenUID",
+                urlEncodedParams = OcpiRequestParameters(type = type
+                        ?: TokenType.RFID),
+                body = body)
 
-        val response = if (routingService.isRoleKnown(receiver)) {
-            val platformID = routingService.getPlatformID(receiver)
-            val endpoint = routingService.getPlatformEndpoint(platformID, "tokens", InterfaceRole.RECEIVER)
-            val headers = routingService.makeHeaders(platformID, correlationID, sender, receiver)
-            routingService.forwardRequest(
-                    method = "PATCH",
-                    url = urlJoin(endpoint.url, "/$countryCode/$partyID/$tokenUID"),
-                    headers = headers,
-                    params = params.encode(),
-                    body = body,
-                    expectedDataType = Nothing::class)
-        } else {
-            val url = routingService.findBrokerUrl(receiver)
-            val headers = routingService.makeHeaders(requestID, correlationID, sender, receiver)
-            val hubRequestBody = HubGenericRequest(
-                    method = "PATCH",
-                    module = "tokens",
-                    path = urlJoin(url, "/$countryCode/$partyID/$tokenUID"),
-                    params = params,
-                    headers = headers,
-                    role = InterfaceRole.RECEIVER,
-                    body = body)
-            routingService.forwardRequest(
-                    method = "POST",
-                    url = urlJoin(url, "/ocn/message"),
-                    headers = mapOf(
-                            "X-Request-ID" to generateUUIDv4Token(),
-                            "OCN-Signature" to routingService.signRequest(hubRequestBody)),
-                    body = hubRequestBody,
-                    expectedDataType = Nothing::class)
+        val response: HttpResponse<Unit> = when (routingService.validateReceiver(receiver)) {
+
+            Receiver.LOCAL -> {
+
+                val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables)
+
+                httpService.makeOcpiRequest(url, headers, requestVariables)
+
+            }
+
+            Receiver.REMOTE -> {
+
+                val (url, headers, ocnBody) = routingService.prepareRemotePlatformRequest(requestVariables)
+
+                httpService.postOcnMessage(url, headers, ocnBody)
+
+            }
+
         }
 
         return ResponseEntity.status(response.statusCode).body(response.body)

@@ -50,6 +50,56 @@
 			"description": "Admin API requests"
 		},
 		{
+			"name": "OCN",
+			"item": [
+				{
+					"name": "Client Info",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/ocn/registry/client-info",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"ocn",
+								"registry",
+								"client-info"
+							]
+						},
+						"description": "Get Client Info on OCN."
+					},
+					"response": []
+				}
+			],
+			"description": "OCN specific requests (i.e. getting client information, getting registry information)",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "3b8ad01f-39cd-4931-adef-da013a0722e8",
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"id": "0e3ec999-9f50-451a-800f-0c2451727c7e",
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				}
+			]
+		},
+		{
 			"name": "OCPI",
 			"item": [
 				{
@@ -428,6 +478,219 @@
 					],
 					"description": "OCPI locations module request examples.\n\nSee [locations documentation](https://github.com/ocpi/ocpi/blob/develop/mod_locations.asciidoc) for more. ",
 					"_postman_isSubFolder": true
+				},
+				{
+					"name": "Tariffs",
+					"item": [
+						{
+							"name": "Tariffs",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Token CREDENTIALS_TOKEN_C",
+										"type": "text"
+									},
+									{
+										"key": "X-Request-ID",
+										"value": "1",
+										"type": "text"
+									},
+									{
+										"key": "X-Correlation-ID",
+										"value": "1",
+										"type": "text"
+									},
+									{
+										"key": "OCPI-from-country-code",
+										"value": "DE",
+										"type": "text"
+									},
+									{
+										"key": "OCPI-from-party-id",
+										"value": "MSP",
+										"type": "text"
+									},
+									{
+										"key": "OCPI-to-country-code",
+										"value": "DE",
+										"type": "text"
+									},
+									{
+										"key": "OCPI-to-party-id",
+										"value": "CPO",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "http://localhost:8080/ocpi/sender/2.2/tariffs",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"ocpi",
+										"sender",
+										"2.2",
+										"tariffs"
+									]
+								},
+								"description": "Example tariffs request from EMSP to CPO."
+							},
+							"response": []
+						}
+					],
+					"description": "OCPI Tariffs example requests.\n\n",
+					"_postman_isSubFolder": true
+				},
+				{
+					"name": "Commands",
+					"item": [
+						{
+							"name": "START_SESSION",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Token CREDENTIALS_TOKEN_C",
+										"type": "text"
+									},
+									{
+										"key": "X-Request-ID",
+										"value": "1",
+										"type": "text"
+									},
+									{
+										"key": "X-Correlation-ID",
+										"value": "1",
+										"type": "text"
+									},
+									{
+										"key": "OCPI-from-country-code",
+										"value": "DE",
+										"type": "text"
+									},
+									{
+										"key": "OCPI-from-party-id",
+										"value": "MSP",
+										"type": "text"
+									},
+									{
+										"key": "OCPI-to-country-code",
+										"value": "DE",
+										"type": "text"
+									},
+									{
+										"key": "OCPI-to-party-id",
+										"value": "CPO",
+										"type": "text"
+									},
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n\t\"response_url\": \"http://localhost:3001/ocpi/emsp/2.2/commands/START_SESSION/1\",\n\t\"token\": {\n\t\t\"country_code\": \"DE\",\n\t\t\"party_id\": \"MSP\",\n\t\t\"uid\": \"0102030405\",\n\t\t\"type\": \"APP_USER\",\n\t\t\"contract_id\": \"XX-12345\",\n\t\t\"issuer\": \"Test MSP\",\n\t\t\"valid\": true,\n\t\t\"whitelist\": \"ALWAYS\",\n\t\t\"last_updated\": \"2019-08-13T14:44:25.561Z\"\n\t},\n\t\"location_id\": \"LOC1\"\n}"
+								},
+								"url": {
+									"raw": "http://localhost:8080/ocpi/receiver/2.2/commands/START_SESSION",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"ocpi",
+										"receiver",
+										"2.2",
+										"commands",
+										"START_SESSION"
+									]
+								},
+								"description": "Send a request to the CPO to start session for a driver."
+							},
+							"response": []
+						},
+						{
+							"name": "STOP_SESSION",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"type": "text",
+										"value": "Token CREDENTIALS_TOKEN_C"
+									},
+									{
+										"key": "X-Request-ID",
+										"type": "text",
+										"value": "1"
+									},
+									{
+										"key": "X-Correlation-ID",
+										"type": "text",
+										"value": "1"
+									},
+									{
+										"key": "OCPI-from-country-code",
+										"type": "text",
+										"value": "DE"
+									},
+									{
+										"key": "OCPI-from-party-id",
+										"type": "text",
+										"value": "MSP"
+									},
+									{
+										"key": "OCPI-to-country-code",
+										"type": "text",
+										"value": "DE"
+									},
+									{
+										"key": "OCPI-to-party-id",
+										"type": "text",
+										"value": "CPO"
+									},
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n\t\"response_url\": \"http://localhost:3001/ocpi/emsp/2.2/commands/STOP_SESSION/2\",\n\t\"session_id\": \"xyzxyzyxyz\"\n}"
+								},
+								"url": {
+									"raw": "http://localhost:8080/ocpi/receiver/2.2/commands/STOP_SESSION",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"ocpi",
+										"receiver",
+										"2.2",
+										"commands",
+										"STOP_SESSION"
+									]
+								},
+								"description": "Send a request to the CPO to start session for a driver."
+							},
+							"response": []
+						}
+					],
+					"description": "OCPI commands module requests",
+					"_postman_isSubFolder": true
 				}
 			],
 			"description": "OCPI 2.2 request examples to the OCN Client.\n\nSee [OCPI 2.2 documentation](https://github.com/ocpi/ocpi/tree/develop) for more.",
@@ -453,71 +716,6 @@
 					}
 				}
 			]
-		},
-		{
-			"name": "Tariffs",
-			"item": [
-				{
-					"name": "Tariffs",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Token CREDENTIALS_TOKEN_C",
-								"type": "text"
-							},
-							{
-								"key": "X-Request-ID",
-								"value": "1",
-								"type": "text"
-							},
-							{
-								"key": "X-Correlation-ID",
-								"value": "1",
-								"type": "text"
-							},
-							{
-								"key": "OCPI-from-country-code",
-								"value": "DE",
-								"type": "text"
-							},
-							{
-								"key": "OCPI-from-party-id",
-								"value": "MSP",
-								"type": "text"
-							},
-							{
-								"key": "OCPI-to-country-code",
-								"value": "DE",
-								"type": "text"
-							},
-							{
-								"key": "OCPI-to-party-id",
-								"value": "CPO",
-								"type": "text"
-							}
-						],
-						"url": {
-							"raw": "http://localhost:8080/ocpi/sender/2.2/tariffs",
-							"protocol": "http",
-							"host": [
-								"localhost"
-							],
-							"port": "8080",
-							"path": [
-								"ocpi",
-								"sender",
-								"2.2",
-								"tariffs"
-							]
-						},
-						"description": "Example tariffs request from EMSP to CPO."
-					},
-					"response": []
-				}
-			],
-			"description": "OCPI Tariffs example requests.\n\n"
 		}
 	]
 }

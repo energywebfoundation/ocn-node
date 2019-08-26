@@ -20,3 +20,12 @@
 package snc.openchargingnetwork.client.tools
 
 fun String.extractToken() = split(" ").last()
+
+fun String.extractNextLink(): String? {
+    val next = split(", ").find { it.contains("; rel=\"next\"") }
+    return next?.let {
+        val start = it.indexOf('<') + 1
+        val end = it.indexOf('>') - 1
+        it.slice(IntRange(start, end))
+    }
+}

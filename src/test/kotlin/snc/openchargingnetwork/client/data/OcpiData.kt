@@ -1,6 +1,7 @@
 package snc.openchargingnetwork.client.data
 
 import snc.openchargingnetwork.client.models.ocpi.*
+import snc.openchargingnetwork.client.tools.generateUUIDv4Token
 import snc.openchargingnetwork.client.tools.getTimestamp
 
 val exampleLocation1 = Location(
@@ -115,3 +116,26 @@ val exampleCDR = CDR(
         totalTime = 23.2F,
         lastUpdated = getTimestamp()
 )
+
+val exampleTariff = Tariff(
+        countryCode = "DE",
+        partyID = "BSE",
+        id = "xxx-1234",
+        currency = "EUR",
+        elements = listOf(TariffElement(listOf(PriceComponent(
+                type = TariffDimensionType.ENERGY,
+                price = 0.28F,
+                stepSize = 1000)))),
+        lastUpdated = getTimestamp()
+)
+
+val exampleToken = Token(
+        countryCode = "DE",
+        partyID = "ZUI",
+        uid = generateUUIDv4Token(),
+        type = TokenType.AD_HOC_USER,
+        contractID = "123324324-XE",
+        issuer = "Greatest EMSP Co.",
+        valid = true,
+        whitelist = WhitelistType.ALWAYS,
+        lastUpdated = getTimestamp())

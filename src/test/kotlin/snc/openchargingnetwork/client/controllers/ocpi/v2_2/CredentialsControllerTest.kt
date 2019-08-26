@@ -22,7 +22,7 @@ import snc.openchargingnetwork.client.models.entities.EndpointEntity
 import snc.openchargingnetwork.client.models.entities.PlatformEntity
 import snc.openchargingnetwork.client.models.entities.RoleEntity
 import snc.openchargingnetwork.client.models.ocpi.*
-import snc.openchargingnetwork.client.services.HttpRequestService
+import snc.openchargingnetwork.client.services.HttpService
 import snc.openchargingnetwork.client.services.RoutingService
 
 @WebMvcTest(CredentialsController::class)
@@ -44,7 +44,7 @@ class CredentialsControllerTest(@Autowired val mockMvc: MockMvc) {
     lateinit var routingService: RoutingService
 
     @MockkBean
-    lateinit var httpRequestService: HttpRequestService
+    lateinit var httpService: HttpService
 
     @Test
     fun `When GET credentials then return broker credentials`() {
@@ -85,11 +85,11 @@ class CredentialsControllerTest(@Autowired val mockMvc: MockMvc) {
         val tokenB = "67890"
 
         every { platformRepo.findByAuth_TokenA(platform.auth.tokenA) } returns platform
-        every { httpRequestService.getVersions(versionsUrl, tokenB) } returns Versions(
+        every { httpService.getVersions(versionsUrl, tokenB) } returns Versions(
                 versions = listOf(Version(
                         version = "2.2",
                         url = versionDetailUrl)))
-        every { httpRequestService.getVersionDetail(versionDetailUrl, tokenB) } returns VersionDetail(
+        every { httpService.getVersionDetail(versionDetailUrl, tokenB) } returns VersionDetail(
                 version = "2.2",
                 endpoints = listOf(
                         Endpoint("credentials", InterfaceRole.SENDER, "https://org.charging.net/credentials"),
@@ -119,9 +119,9 @@ class CredentialsControllerTest(@Autowired val mockMvc: MockMvc) {
                 .andExpect(jsonPath("\$.data.url").value("http://my.broker.com/ocpi/versions"))
                 .andExpect(jsonPath("\$.data.roles", Matchers.hasSize<Array<CredentialsRole>>(1)))
                 .andExpect(jsonPath("\$.data.roles[0].role").value("HUB"))
-                .andExpect(jsonPath("\$.data.roles[0].party_id").value("SNC"))
+                .andExpect(jsonPath("\$.data.roles[0].party_id").value("OCN"))
                 .andExpect(jsonPath("\$.data.roles[0].country_code").value("DE"))
-                .andExpect(jsonPath("\$.data.roles[0].business_details.name").value("Share&Charge Message Broker"))
+                .andExpect(jsonPath("\$.data.roles[0].business_details.name").value("Open Charging Network Client"))
     }
 
     @Test
@@ -141,11 +141,11 @@ class CredentialsControllerTest(@Autowired val mockMvc: MockMvc) {
         val versionDetailUrl = "https://org.charging.net/2.2"
 
         every { platformRepo.findByAuth_TokenC(platform.auth.tokenC) } returns platform
-        every { httpRequestService.getVersions(versionsUrl, platform.auth.tokenB!!) } returns Versions(
+        every { httpService.getVersions(versionsUrl, platform.auth.tokenB!!) } returns Versions(
                 versions = listOf(Version(
                         version = "2.2",
                         url = versionDetailUrl)))
-        every { httpRequestService.getVersionDetail(versionDetailUrl, platform.auth.tokenB!!) } returns VersionDetail(
+        every { httpService.getVersionDetail(versionDetailUrl, platform.auth.tokenB!!) } returns VersionDetail(
                 version = "2.2",
                 endpoints = listOf(
                         Endpoint("credentials", InterfaceRole.SENDER, "https://org.charging.net/credentials"),
@@ -175,9 +175,9 @@ class CredentialsControllerTest(@Autowired val mockMvc: MockMvc) {
                 .andExpect(jsonPath("\$.data.url").value("http://my.broker.com/ocpi/versions"))
                 .andExpect(jsonPath("\$.data.roles", Matchers.hasSize<Array<CredentialsRole>>(1)))
                 .andExpect(jsonPath("\$.data.roles[0].role").value("HUB"))
-                .andExpect(jsonPath("\$.data.roles[0].party_id").value("SNC"))
+                .andExpect(jsonPath("\$.data.roles[0].party_id").value("OCN"))
                 .andExpect(jsonPath("\$.data.roles[0].country_code").value("DE"))
-                .andExpect(jsonPath("\$.data.roles[0].business_details.name").value("Share&Charge Message Broker"))
+                .andExpect(jsonPath("\$.data.roles[0].business_details.name").value("Open Charging Network Client"))
     }
 
     @Test
