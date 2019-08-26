@@ -22,6 +22,7 @@ pipelines:
             - gradle
           script:
             - bash ./gradlew build
+            # TODO: try rsync
             - scp -r ./build $HOST:ocn-client/
             - ssh $HOST 'sh ./ocn-client/restart.sh'
             - scp -r ./build $ALT_HOST:ocn-client/
