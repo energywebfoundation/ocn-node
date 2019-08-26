@@ -219,7 +219,9 @@ requested and stored your OCPI module endpoints for future use.
 
 This now completes the registration to the OCN client.
 
-### 5. Making OCPI requests to a CPO
+### 4. Making OCPI requests to a CPO
+
+#### Requesting location data
 
 Now that we have registered to our OCN client, we can send requests to one of the registered CPOs on the OCN. In this 
 request, we wish to fetch a list of the CPO's locations (i.e. charging stations under OCPI terminology). To do so, 
@@ -295,6 +297,8 @@ type follows a hierarchy of `location` -> `evse` -> `connector`. We can make als
 location, or a specific EVSE or connector. Take a look at the other requests in the locations directory to see how they
 work. 
 
+#### A note on headers
+
 The headers prefixed with `OCPI-` describe the desired routing of the message. The `OCPI-from-country-code` and 
 `OCPI-from-party-id` describe the OCPI party on the platform which is making the request (in our case we only have one
 party per platform, but it could be the case that a CPO and EMSP role share the same platform connection with an OCN
@@ -312,6 +316,14 @@ The mock CPOs featured in this demonstration are in fact identical, so all reque
 that requests made to "remote" OCPI parties in are considered more experimental than those between two parties sharing 
 the same OCN client.
 
+Note also the `X-Request-ID` and `X-Correlation-ID` headers. They don't play a role in our demonstration (both being
+set to `"1"` for all requests, but in production it is strongly advised to generate unique IDs (uuid version 4 preferred)
+for all requests, in order to help with any potential debugging. The request ID is unique for every request: in 
+forwarding such a request: an OCN client will actually set a new request ID. The correlation ID meanwhile, is unique for 
+every request-response: an OCN client will not change the correlation ID. 
+
+#### OCPI module dependencies and implementations
+
 Let's check out the other request types we can make now. Notice how on the Connector object there is a `tariff_ids` array. 
 What does this mean? 
 
@@ -324,6 +336,8 @@ EMSP and CPOs have not implemented the `credentials` interface, but it is import
 need to update its credentials on your system). It is up to the EMSP/CPO (or any other role) to implement the modules
 themselves. Therefore if we try to make, for instance, a `sessions` request to the CPO, we might receive a message 
 telling us that the CPO has not implemented the module (yet).
+
+#### More complex requests
 
 Our EMSP has actually implemented two OCPI modules: `commands` and `cdrs`. The first of which is the `SENDER` interface
 which allows the CPO to asynchronously notify the EMSP of a command result, i.e. a session has been started by a charge
@@ -354,6 +368,8 @@ CPO [DE CPO] acknowledges cdr correctly stored on EMSP system
 In this case, the CPO has sent a POST `cdrs` request to the EMSP, the response of which will contain a `Location` header
 set by the EMSP describing where the CPO can find this charge detail record on the EMSP system. The CPO can then make
 a GET request to this location to verify that the CDR was stored correctly by the EMSP. 
+
+#### Next steps
 
 That marks the end of this tutorial. More examples and use cases will be added to this tutorial in the future, but for 
 now this should be enough to get started on creating an OCPI 2.2 platform that is ready to join the Open Charging Network.
