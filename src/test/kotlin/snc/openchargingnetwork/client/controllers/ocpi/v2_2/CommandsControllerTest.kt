@@ -77,7 +77,7 @@ class CommandsControllerTest(@Autowired val mockMvc: MockMvc) {
         val jsonBody: Map<String, Any> = mapper.readValue(mapper.writeValueAsString(requestVariables.body))
 
         every {
-            httpService.makeOcpiRequest<Unit>(HttpMethod.POST, url, forwardingHeaders.encode(), json = jsonBody)
+            httpService.makeOcpiRequest<Unit>(HttpMethod.POST, url, forwardingHeaders.toMap(), json = jsonBody)
         } returns HttpResponse(
                 statusCode = 200,
                 headers = mapOf(),
@@ -141,7 +141,7 @@ class CommandsControllerTest(@Autowired val mockMvc: MockMvc) {
         val jsonBody: Map<String, Any> = mapper.readValue(mapper.writeValueAsString(proxyBody))
 
         every {
-            httpService.makeOcpiRequest<CommandResponse>(HttpMethod.POST, url, forwardingHeaders.encode(), json = jsonBody)
+            httpService.makeOcpiRequest<CommandResponse>(HttpMethod.POST, url, forwardingHeaders.toMap(), json = jsonBody)
         } returns HttpResponse(
                 statusCode = 200,
                 headers = mapOf(),
@@ -210,7 +210,7 @@ class CommandsControllerTest(@Autowired val mockMvc: MockMvc) {
         val jsonBody: Map<String, Any> = mapper.readValue(mapper.writeValueAsString(proxyBody))
 
         every {
-            httpService.makeOcpiRequest<CommandResponse>(HttpMethod.POST, url, forwardingHeaders.encode(), json = jsonBody)
+            httpService.makeOcpiRequest<CommandResponse>(HttpMethod.POST, url, forwardingHeaders.toMap(), json = jsonBody)
         } returns HttpResponse(
                 statusCode = 200,
                 headers = mapOf(),
@@ -277,7 +277,7 @@ class CommandsControllerTest(@Autowired val mockMvc: MockMvc) {
         val jsonBody: Map<String, Any> = mapper.readValue(mapper.writeValueAsString(proxyBody))
 
         every {
-            httpService.makeOcpiRequest<CommandResponse>(HttpMethod.POST, url, forwardingHeaders.encode(), json = jsonBody)
+            httpService.makeOcpiRequest<CommandResponse>(HttpMethod.POST, url, forwardingHeaders.toMap(), json = jsonBody)
         } returns HttpResponse(
                 statusCode = 200,
                 headers = mapOf(),
@@ -343,7 +343,7 @@ class CommandsControllerTest(@Autowired val mockMvc: MockMvc) {
         val jsonBody: Map<String, Any> = mapper.readValue(mapper.writeValueAsString(proxyBody))
 
         every {
-            httpService.makeOcpiRequest<CommandResponse>(HttpMethod.POST, url, forwardingHeaders.encode(), json = jsonBody)
+            httpService.makeOcpiRequest<CommandResponse>(HttpMethod.POST, url, forwardingHeaders.toMap(), json = jsonBody)
         } returns HttpResponse(
                 statusCode = 200,
                 headers = mapOf(),
@@ -411,7 +411,7 @@ class CommandsControllerTest(@Autowired val mockMvc: MockMvc) {
         val jsonBody: Map<String, Any> = mapper.readValue(mapper.writeValueAsString(proxyBody))
 
         every {
-            httpService.makeOcpiRequest<CommandResponse>(HttpMethod.POST, url, forwardingHeaders.encode(), json = jsonBody)
+            httpService.makeOcpiRequest<CommandResponse>(HttpMethod.POST, url, forwardingHeaders.toMap(), json = jsonBody)
         } returns HttpResponse(
                 statusCode = 200,
                 headers = mapOf(),

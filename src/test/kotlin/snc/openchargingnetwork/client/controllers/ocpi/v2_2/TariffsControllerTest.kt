@@ -76,7 +76,7 @@ class TariffsControllerTest(@Autowired val mockMvc: MockMvc) {
                 "X-Total-Count" to "23")
 
         every {
-            httpService.makeOcpiRequest<Array<Tariff>>(HttpMethod.GET, url, forwardingHeaders.encode(), requestVariables.urlEncodedParams?.encode()!!)
+            httpService.makeOcpiRequest<Array<Tariff>>(HttpMethod.GET, url, forwardingHeaders.toMap(), requestVariables.urlEncodedParams?.toMap()!!)
         } returns HttpResponse(
                 statusCode = 200,
                 headers = responseHeaders,
@@ -149,7 +149,7 @@ class TariffsControllerTest(@Autowired val mockMvc: MockMvc) {
                 "X-Total-Count" to "23")
 
         every {
-            httpService.makeOcpiRequest<Array<Tariff>>(HttpMethod.GET, url, forwardingHeaders.encode())
+            httpService.makeOcpiRequest<Array<Tariff>>(HttpMethod.GET, url, forwardingHeaders.toMap())
         } returns HttpResponse(
                 statusCode = 200,
                 headers = responseHeaders,
@@ -218,7 +218,7 @@ class TariffsControllerTest(@Autowired val mockMvc: MockMvc) {
         every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, forwardingHeaders)
 
         every {
-            httpService.makeOcpiRequest<Tariff>(HttpMethod.GET, url, forwardingHeaders.encode())
+            httpService.makeOcpiRequest<Tariff>(HttpMethod.GET, url, forwardingHeaders.toMap())
         } returns HttpResponse(
                 statusCode = 200,
                 headers = mapOf(),
@@ -275,7 +275,7 @@ class TariffsControllerTest(@Autowired val mockMvc: MockMvc) {
         val bodyMap: Map<String, Any> = mapper.readValue(mapper.writeValueAsString(requestVariables.body))
 
         every {
-            httpService.makeOcpiRequest<Unit>(HttpMethod.PUT, url, forwardingHeaders.encode(), json = bodyMap)
+            httpService.makeOcpiRequest<Unit>(HttpMethod.PUT, url, forwardingHeaders.toMap(), json = bodyMap)
         } returns HttpResponse(
                 statusCode = 200,
                 headers = mapOf(),
@@ -330,7 +330,7 @@ class TariffsControllerTest(@Autowired val mockMvc: MockMvc) {
         every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, forwardingHeaders)
 
         every {
-            httpService.makeOcpiRequest<Unit>(HttpMethod.DELETE, url, forwardingHeaders.encode())
+            httpService.makeOcpiRequest<Unit>(HttpMethod.DELETE, url, forwardingHeaders.toMap())
         } returns HttpResponse(
                 statusCode = 200,
                 headers = mapOf(),

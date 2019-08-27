@@ -6,9 +6,6 @@ import com.ninjasquad.springmockk.MockkBean
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
-import khttp.get as khttpGET
-import khttp.put as khttpPUT
-import khttp.patch as khttpPATCH
 import org.hamcrest.Matchers.hasSize
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -83,7 +80,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
                 "X-Total-Count" to "500")
 
         every {
-            httpService.makeOcpiRequest<Array<Location>>(HttpMethod.GET, url, forwardingHeaders.encode(), requestVariables.urlEncodedParams?.encode()!!)
+            httpService.makeOcpiRequest<Array<Location>>(HttpMethod.GET, url, forwardingHeaders.toMap(), requestVariables.urlEncodedParams?.toMap()!!)
         } returns HttpResponse(
                 statusCode = 200,
                 headers = responseHeaders,
@@ -157,7 +154,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
                 "X-Limit" to "100")
 
         every {
-            httpService.makeOcpiRequest<Array<Location>>(HttpMethod.GET, url, forwardingHeaders.encode())
+            httpService.makeOcpiRequest<Array<Location>>(HttpMethod.GET, url, forwardingHeaders.toMap())
         } returns HttpResponse(
                 statusCode = 200,
                 headers = responseHeaders,
@@ -226,7 +223,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
         every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, forwardingHeaders)
 
         every {
-            httpService.makeOcpiRequest<Location>(HttpMethod.GET, url, forwardingHeaders.encode())
+            httpService.makeOcpiRequest<Location>(HttpMethod.GET, url, forwardingHeaders.toMap())
         } returns HttpResponse(
                 statusCode = 200,
                 headers = mapOf(),
@@ -281,7 +278,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
         every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, forwardingHeaders)
 
         every {
-            httpService.makeOcpiRequest<Evse>(HttpMethod.GET, url, forwardingHeaders.encode())
+            httpService.makeOcpiRequest<Evse>(HttpMethod.GET, url, forwardingHeaders.toMap())
         } returns HttpResponse(
                 statusCode = 200,
                 headers = mapOf(),
@@ -337,7 +334,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
         every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, forwardingHeaders)
 
         every {
-            httpService.makeOcpiRequest<Connector>(HttpMethod.GET, url, forwardingHeaders.encode())
+            httpService.makeOcpiRequest<Connector>(HttpMethod.GET, url, forwardingHeaders.toMap())
         } returns HttpResponse(
                 statusCode = 200,
                 headers = mapOf(),
@@ -391,7 +388,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
         every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, forwardingHeaders)
 
         every {
-            httpService.makeOcpiRequest<Location>(HttpMethod.GET, url, forwardingHeaders.encode())
+            httpService.makeOcpiRequest<Location>(HttpMethod.GET, url, forwardingHeaders.toMap())
         } returns HttpResponse(
                 statusCode = 200,
                 headers = mapOf(),
@@ -446,7 +443,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
         every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, forwardingHeaders)
 
         every {
-            httpService.makeOcpiRequest<Evse>(HttpMethod.GET, url, forwardingHeaders.encode())
+            httpService.makeOcpiRequest<Evse>(HttpMethod.GET, url, forwardingHeaders.toMap())
         } returns HttpResponse(
                 statusCode = 200,
                 headers = mapOf(),
@@ -502,7 +499,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
         every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, forwardingHeaders)
 
         every {
-            httpService.makeOcpiRequest<Connector>(HttpMethod.GET, url, forwardingHeaders.encode())
+            httpService.makeOcpiRequest<Connector>(HttpMethod.GET, url, forwardingHeaders.toMap())
         } returns HttpResponse(
                 statusCode = 200,
                 headers = mapOf(),
@@ -560,7 +557,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
         val bodyMap: Map<String, Any> = mapper.readValue(mapper.writeValueAsString(requestVariables.body))
 
         every {
-            httpService.makeOcpiRequest<Unit>(HttpMethod.PUT, url, forwardingHeaders.encode(), json = bodyMap)
+            httpService.makeOcpiRequest<Unit>(HttpMethod.PUT, url, forwardingHeaders.toMap(), json = bodyMap)
         } returns HttpResponse(
                 statusCode = 200,
                 headers = mapOf(),
@@ -620,7 +617,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
         val bodyMap: Map<String, Any> = mapper.readValue(mapper.writeValueAsString(requestVariables.body))
 
         every {
-            httpService.makeOcpiRequest<Unit>(HttpMethod.PUT, url, forwardingHeaders.encode(), json = bodyMap)
+            httpService.makeOcpiRequest<Unit>(HttpMethod.PUT, url, forwardingHeaders.toMap(), json = bodyMap)
         } returns HttpResponse(
                 statusCode = 200,
                 headers = mapOf(),
@@ -681,7 +678,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
         val bodyMap: Map<String, Any> = mapper.readValue(mapper.writeValueAsString(requestVariables.body))
 
         every {
-            httpService.makeOcpiRequest<Unit>(HttpMethod.PUT, url, forwardingHeaders.encode(), json = bodyMap)
+            httpService.makeOcpiRequest<Unit>(HttpMethod.PUT, url, forwardingHeaders.toMap(), json = bodyMap)
         } returns HttpResponse(
                 statusCode = 200,
                 headers = mapOf(),
@@ -740,7 +737,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
         val bodyMap: Map<String, Any> = mapper.readValue(mapper.writeValueAsString(requestVariables.body))
 
         every {
-            httpService.makeOcpiRequest<Unit>(HttpMethod.PATCH, url, forwardingHeaders.encode(), json = bodyMap)
+            httpService.makeOcpiRequest<Unit>(HttpMethod.PATCH, url, forwardingHeaders.toMap(), json = bodyMap)
         } returns HttpResponse(
                 statusCode = 200,
                 headers = mapOf(),
@@ -801,7 +798,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
         val bodyMap: Map<String, Any> = mapper.readValue(mapper.writeValueAsString(requestVariables.body))
 
         every {
-            httpService.makeOcpiRequest<Unit>(HttpMethod.PATCH, url, forwardingHeaders.encode(), json = bodyMap)
+            httpService.makeOcpiRequest<Unit>(HttpMethod.PATCH, url, forwardingHeaders.toMap(), json = bodyMap)
         } returns HttpResponse(
                 statusCode = 200,
                 headers = mapOf(),
@@ -863,7 +860,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
         val bodyMap: Map<String, Any> = mapper.readValue(mapper.writeValueAsString(requestVariables.body))
 
         every {
-            httpService.makeOcpiRequest<Unit>(HttpMethod.PATCH, url, forwardingHeaders.encode(), json = bodyMap)
+            httpService.makeOcpiRequest<Unit>(HttpMethod.PATCH, url, forwardingHeaders.toMap(), json = bodyMap)
         } returns HttpResponse(
                 statusCode = 200,
                 headers = mapOf(),

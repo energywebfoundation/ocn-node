@@ -50,8 +50,6 @@ class HttpService {
             else -> throw IllegalStateException("Invalid method: $method")
         }
 
-//        val type = mapper.typeFactory.constructParametricType(OcpiResponse::class.java, responseType::class.java)
-//        val body: OcpiResponse<T> = mapper.readValue(response.text)
         return HttpResponse(
                 statusCode = response.statusCode,
                 headers = response.headers,
@@ -66,7 +64,7 @@ class HttpService {
                                                       headers: OcpiRequestHeaders,
                                                       requestVariables: OcpiRequestVariables): HttpResponse<T> {
 
-        val headersMap = headers.encode()
+        val headersMap = headers.toMap()
 
         var jsonBody: Map<String,Any>? = null
         if (requestVariables.body != null) {
@@ -76,7 +74,7 @@ class HttpService {
 
         var paramsMap: Map<String, String> = mapOf()
         if (requestVariables.urlEncodedParams != null) {
-            paramsMap = requestVariables.urlEncodedParams.encode()
+            paramsMap = requestVariables.urlEncodedParams.toMap()
         }
 
         return makeOcpiRequest(
@@ -137,7 +135,7 @@ class HttpService {
                                 headers: OcnMessageHeaders,
                                 body: String): HttpResponse<T> {
 
-        val headersMap = headers.encode()
+        val headersMap = headers.toMap()
 
         val fullURL = urlJoin(url, "/ocn/message")
 

@@ -79,7 +79,7 @@ class SessionsControllerTest(@Autowired val mockMvc: MockMvc) {
                 "X-Total-Count" to "87")
 
         every {
-            httpService.makeOcpiRequest<Array<Session>>(HttpMethod.GET, url, forwardingHeaders.encode(), requestVariables.urlEncodedParams?.encode()!!)
+            httpService.makeOcpiRequest<Array<Session>>(HttpMethod.GET, url, forwardingHeaders.toMap(), requestVariables.urlEncodedParams?.toMap()!!)
         } returns HttpResponse(
                 statusCode = 200,
                 headers = responseHeaders,
@@ -153,7 +153,7 @@ class SessionsControllerTest(@Autowired val mockMvc: MockMvc) {
                 "X-Total-Count" to "87")
 
         every {
-            httpService.makeOcpiRequest<Array<Session>>(HttpMethod.GET, url, forwardingHeaders.encode())
+            httpService.makeOcpiRequest<Array<Session>>(HttpMethod.GET, url, forwardingHeaders.toMap())
         } returns HttpResponse(
                 statusCode = 200,
                 headers = responseHeaders,
@@ -226,7 +226,7 @@ class SessionsControllerTest(@Autowired val mockMvc: MockMvc) {
         val bodyMap: Map<String, Any> = mapper.readValue(mapper.writeValueAsString(requestVariables.body))
 
         every {
-            httpService.makeOcpiRequest<ChargingPreferencesResponse>(HttpMethod.PUT, url, forwardingHeaders.encode(), json = bodyMap)
+            httpService.makeOcpiRequest<ChargingPreferencesResponse>(HttpMethod.PUT, url, forwardingHeaders.toMap(), json = bodyMap)
         } returns HttpResponse(
                 statusCode = 200,
                 headers = mapOf(),
@@ -281,7 +281,7 @@ class SessionsControllerTest(@Autowired val mockMvc: MockMvc) {
         every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, forwardingHeaders)
 
         every {
-            httpService.makeOcpiRequest<Session>(HttpMethod.GET, url, forwardingHeaders.encode())
+            httpService.makeOcpiRequest<Session>(HttpMethod.GET, url, forwardingHeaders.toMap())
         } returns HttpResponse(
                 statusCode = 200,
                 headers = mapOf(),
@@ -339,7 +339,7 @@ class SessionsControllerTest(@Autowired val mockMvc: MockMvc) {
         val bodyMap: Map<String, Any> = mapper.readValue(mapper.writeValueAsString(requestVariables.body))
 
         every {
-            httpService.makeOcpiRequest<Unit>(HttpMethod.PUT, url, forwardingHeaders.encode(), json = bodyMap)
+            httpService.makeOcpiRequest<Unit>(HttpMethod.PUT, url, forwardingHeaders.toMap(), json = bodyMap)
         } returns HttpResponse(
                 statusCode = 200,
                 headers = mapOf(),
@@ -398,7 +398,7 @@ class SessionsControllerTest(@Autowired val mockMvc: MockMvc) {
         val bodyMap: Map<String, Any> = mapper.readValue(mapper.writeValueAsString(requestVariables.body))
 
         every {
-            httpService.makeOcpiRequest<Unit>(HttpMethod.PATCH, url, forwardingHeaders.encode(), json = bodyMap)
+            httpService.makeOcpiRequest<Unit>(HttpMethod.PATCH, url, forwardingHeaders.toMap(), json = bodyMap)
         } returns HttpResponse(
                 statusCode = 200,
                 headers = mapOf(),

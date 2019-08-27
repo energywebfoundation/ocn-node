@@ -1,13 +1,11 @@
 package snc.openchargingnetwork.client.controllers.ocn
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
 import com.ninjasquad.springmockk.MockkBean
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
 import org.junit.jupiter.api.BeforeEach
-import khttp.get as khttpGET
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
@@ -76,7 +74,7 @@ class MessageControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every { routingService.prepareLocalPlatformRequest(body) } returns Pair(url, headers)
 
-        every { httpService.makeOcpiRequest<Location>(HttpMethod.GET, url, headers.encode())
+        every { httpService.makeOcpiRequest<Location>(HttpMethod.GET, url, headers.toMap())
         } returns HttpResponse(
                 statusCode = 200,
                 headers = mapOf(),

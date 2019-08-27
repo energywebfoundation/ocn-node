@@ -27,12 +27,11 @@ import java.time.Instant
 import java.time.format.DateTimeFormatter
 import javax.persistence.Embeddable
 import javax.persistence.Embedded
-import kotlin.reflect.KClass
 
 
 @Embeddable
-data class BasicRole(@JsonProperty("party_id") var id: String,
-                     @JsonProperty("country_code") var country: String) {
+data class BasicRole(@JsonProperty("party_id") final val id: String,
+                     @JsonProperty("country_code") final val country: String) {
 
     init {
         if (country.length != 2) {
@@ -41,12 +40,6 @@ data class BasicRole(@JsonProperty("party_id") var id: String,
         if (id.length != 3) {
             throw OcpiClientInvalidParametersException("Given party-id \"$id\" not 3 characters")
         }
-    }
-
-    fun toLowerCase(): BasicRole {
-        this.id = id.toLowerCase()
-        this.country = country.toLowerCase()
-        return this
     }
 }
 
@@ -70,20 +63,8 @@ data class OcpiRequestHeaders(@JsonProperty("Authorization") val authorization: 
                               val sender: BasicRole,
                               val receiver: BasicRole) {
 
-//    @JsonProperty("OCPI-from-country-code")
-//    val ocpiFromCountryCode = sender.country
-//
-//    @JsonProperty("OCPI-from-party-id")
-//    val ocpiFromPartyID = sender.id
-//
-//    @JsonProperty("OCPI-to-country-code")
-//    val ocpiToCountryCode = receiver.country
-//
-//    @JsonProperty("OCPI-to-party-id")
-//    val ocpiToPartyID = receiver.id
 
-
-    fun encode(): Map<String, String> {
+    fun toMap(): Map<String, String> {
         val map = mutableMapOf<String, String>()
         if (authorization != null) {
             map["Authorization"] = authorization
@@ -106,7 +87,7 @@ data class OcpiRequestParameters(@JsonProperty("type") val type: TokenType? = nu
                                  @JsonProperty("offset") val offset: Int? = null,
                                  @JsonProperty("limit") val limit: Int? = null) {
 
-    fun encode(): Map<String, String> {
+    fun toMap(): Map<String, String> {
         val map = mutableMapOf<String, String>()
         if (type != null) {
             map["type"] = type.toString()
@@ -126,36 +107,6 @@ data class OcpiRequestParameters(@JsonProperty("type") val type: TokenType? = nu
         return map
     }
 }
-
-
-//enum class OcpiType(val type: KClass<*>) {
-//    LOCATION(Location::class),
-//    LOCATION_ARRAY(Array<Location>::class),
-//    EVSE(Evse::class),
-//    CONNECTOR(Connector::class),
-//    SESSION(Session::class),
-//    SESSION_ARRAY(Array<Session>::class),
-//    CHARGING_PREFERENCE_RESPONSE(ChargingPreferencesResponse::class),
-//    CDR(snc.openchargingnetwork.client.models.ocpi.CDR::class),
-//    CDR_ARRAY(Array<snc.openchargingnetwork.client.models.ocpi.CDR>::class),
-//    TARIFF(Tariff::class),
-//    TARIFF_ARRAY(Array<Tariff>::class),
-//    TOKEN(Token::class),
-//    TOKEN_ARRAY(Array<Token>::class),
-//    AUTHORIZATION_INFO(AuthorizationInfo::class),
-//    CANCEL_RESERVATION(CancelReservation::class),
-//    RESERVE_NOW(ReserveNow::class),
-//    START_SESSION(StartSession::class),
-//    STOP_SESSION(StopSession::class),
-//    UNLOCK_CONNECTOR(UnlockConnector::class),
-//    COMMAND_RESULT(CommandResult::class),
-//    COMMAND_RESPONSE(CommandResponse::class),
-//    NOTHING(Nothing::class),
-//}
-//
-//
-//data class TypePair(val request: OcpiType = OcpiType.NOTHING,
-//                    val response: OcpiType = OcpiType.NOTHING)
 
 
 data class RegistrationInfo(@JsonProperty("token") val token: String,

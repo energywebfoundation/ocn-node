@@ -73,7 +73,7 @@ class CdrsControllerTest(@Autowired val mockMvc: MockMvc) {
                 "X-Limit" to "100")
 
         every {
-            httpService.makeOcpiRequest<Array<CDR>>(HttpMethod.GET, url, forwardingHeaders.encode(), requestVariables.urlEncodedParams?.encode()!!)
+            httpService.makeOcpiRequest<Array<CDR>>(HttpMethod.GET, url, forwardingHeaders.toMap(), requestVariables.urlEncodedParams?.toMap()!!)
         } returns HttpResponse(
                     statusCode = 200,
                     headers = responseHeaders,
@@ -144,7 +144,7 @@ class CdrsControllerTest(@Autowired val mockMvc: MockMvc) {
                 "X-Limit" to "100")
 
         every {
-            httpService.makeOcpiRequest<Array<CDR>>(HttpMethod.GET, url, forwardingHeaders.encode())
+            httpService.makeOcpiRequest<Array<CDR>>(HttpMethod.GET, url, forwardingHeaders.toMap())
         } returns HttpResponse(
                 statusCode = 200,
                 headers = responseHeaders,
@@ -211,7 +211,7 @@ class CdrsControllerTest(@Autowired val mockMvc: MockMvc) {
         every { routingService.prepareLocalPlatformRequest(requestVariables, proxied = true) } returns Pair(url, forwardingHeaders)
 
         every {
-            httpService.makeOcpiRequest<CDR>(HttpMethod.GET, url, forwardingHeaders.encode())
+            httpService.makeOcpiRequest<CDR>(HttpMethod.GET, url, forwardingHeaders.toMap())
         } returns HttpResponse(
                 statusCode = 200,
                 headers = mapOf(),
@@ -270,7 +270,7 @@ class CdrsControllerTest(@Autowired val mockMvc: MockMvc) {
         val bodyMap: Map<String, Any> = mapper.readValue(bodyString)
 
         every {
-            httpService.makeOcpiRequest<Unit>(HttpMethod.POST, url, forwardingHeaders.encode(), json = bodyMap)
+            httpService.makeOcpiRequest<Unit>(HttpMethod.POST, url, forwardingHeaders.toMap(), json = bodyMap)
         } returns HttpResponse(
                 statusCode = 200,
                 headers = mapOf("Location" to locationHeader),

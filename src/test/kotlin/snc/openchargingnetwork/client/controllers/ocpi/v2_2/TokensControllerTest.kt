@@ -75,7 +75,7 @@ class TokensControllerTest(@Autowired val mockMvc: MockMvc) {
                 "X-Total-Count" to "10675")
 
         every {
-            httpService.makeOcpiRequest<Array<Token>>(HttpMethod.GET, url, forwardingHeaders.encode(), requestVariables.urlEncodedParams?.encode()!!)
+            httpService.makeOcpiRequest<Array<Token>>(HttpMethod.GET, url, forwardingHeaders.toMap(), requestVariables.urlEncodedParams?.toMap()!!)
         } returns HttpResponse(
                 statusCode = 200,
                 headers = responseHeaders,
@@ -149,7 +149,7 @@ class TokensControllerTest(@Autowired val mockMvc: MockMvc) {
                 "X-Total-Count" to "10675")
 
         every {
-            httpService.makeOcpiRequest<Array<Token>>(HttpMethod.GET, url, forwardingHeaders.encode())
+            httpService.makeOcpiRequest<Array<Token>>(HttpMethod.GET, url, forwardingHeaders.toMap())
         } returns HttpResponse(
                 statusCode = 200,
                 headers = responseHeaders,
@@ -222,7 +222,7 @@ class TokensControllerTest(@Autowired val mockMvc: MockMvc) {
         val bodyMap: Map<String, Any> = mapper.readValue(mapper.writeValueAsString(requestVariables.body))
 
         every {
-            httpService.makeOcpiRequest<AuthorizationInfo>(HttpMethod.POST, url, forwardingHeaders.encode(), mapOf("type" to "RFID"), json = bodyMap)
+            httpService.makeOcpiRequest<AuthorizationInfo>(HttpMethod.POST, url, forwardingHeaders.toMap(), mapOf("type" to "RFID"), json = bodyMap)
         } returns HttpResponse(
                 statusCode = 200,
                 headers = mapOf(),
@@ -281,7 +281,7 @@ class TokensControllerTest(@Autowired val mockMvc: MockMvc) {
         every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, forwardingHeaders)
 
         every {
-            httpService.makeOcpiRequest<Token>(HttpMethod.GET, url, forwardingHeaders.encode(), requestVariables.urlEncodedParams?.encode()!!)
+            httpService.makeOcpiRequest<Token>(HttpMethod.GET, url, forwardingHeaders.toMap(), requestVariables.urlEncodedParams?.toMap()!!)
         } returns HttpResponse(
                 statusCode = 200,
                 headers = mapOf(),
@@ -339,7 +339,7 @@ class TokensControllerTest(@Autowired val mockMvc: MockMvc) {
         val bodyMap: Map<String, Any> = mapper.readValue(mapper.writeValueAsString(requestVariables.body))
 
         every {
-            httpService.makeOcpiRequest<Unit>(HttpMethod.PUT, url, forwardingHeaders.encode(), requestVariables.urlEncodedParams?.encode()!!, json = bodyMap)
+            httpService.makeOcpiRequest<Unit>(HttpMethod.PUT, url, forwardingHeaders.toMap(), requestVariables.urlEncodedParams?.toMap()!!, json = bodyMap)
         } returns HttpResponse(
                 statusCode = 200,
                 headers = mapOf(),
@@ -401,7 +401,7 @@ class TokensControllerTest(@Autowired val mockMvc: MockMvc) {
         val bodyMap: Map<String, Any> = mapper.readValue(mapper.writeValueAsString(requestVariables.body))
 
         every {
-            httpService.makeOcpiRequest<Unit>(HttpMethod.PATCH, url, forwardingHeaders.encode(), requestVariables.urlEncodedParams?.encode()!!, json = bodyMap)
+            httpService.makeOcpiRequest<Unit>(HttpMethod.PATCH, url, forwardingHeaders.toMap(), requestVariables.urlEncodedParams?.toMap()!!, json = bodyMap)
         } returns HttpResponse(
                 statusCode = 200,
                 headers = mapOf(),
