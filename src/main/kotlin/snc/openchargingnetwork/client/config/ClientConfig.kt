@@ -22,7 +22,6 @@ package snc.openchargingnetwork.client.config
 import org.springframework.boot.ApplicationRunner
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.web.filter.CommonsRequestLoggingFilter
 import org.web3j.protocol.Web3j
 import org.web3j.protocol.http.HttpService
 import org.web3j.tx.ClientTransactionManager
@@ -45,16 +44,6 @@ class Configuration(private val properties: Properties) {
                             endpointRepo: EndpointRepository,
                             proxyResourceRepository: ProxyResourceRepository,
                             walletRepo: WalletRepository) = ApplicationRunner {}
-
-    @Bean
-    fun requestLoggingFilter(): CommonsRequestLoggingFilter {
-        val filter = CommonsRequestLoggingFilter()
-        filter.setIncludeHeaders(true)
-        filter.setIncludePayload(true)
-        filter.setIncludePayload(true)
-        filter.setMaxPayloadLength(10000)
-        return filter
-    }
 
     @Bean
     fun registryFacade(): RegistryFacade {
