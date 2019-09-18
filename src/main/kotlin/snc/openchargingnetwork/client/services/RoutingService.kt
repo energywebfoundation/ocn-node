@@ -70,7 +70,6 @@ class RoutingService(private val platformRepo: PlatformRepository,
         val id = role.id.toByteArray()
 
         val clientServerURL = registry.clientURLOf(country, id).sendAsync().get()
-
         if (belongsToMe) {
             val ethAddress = registry.clientAddressOf(country, id).sendAsync().get()
             return clientServerURL == properties.url && ethAddress == walletService.address

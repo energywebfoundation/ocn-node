@@ -16,14 +16,26 @@ class RegistryController(private val walletService: WalletService,
                          private val registry: RegistryFacade) {
 
     @GetMapping("/client-info")
-    fun getMyAddress() = mapOf(
+    fun getMyClientInfo() = mapOf(
             "url" to properties.url,
             "address" to walletService.credentials.address)
 
-    @GetMapping("/client-url/{countryCode}/{partyID}")
+    @GetMapping("/client/{countryCode}/{partyID}")
     fun getClientOf(@PathVariable countryCode: String,
-                    @PathVariable partyID: String): String {
-        return registry.clientURLOf(countryCode.toByteArray(), partyID.toByteArray()).sendAsync().get()
+                    @PathVariable partyID: String): Any {
+        val countryBytes = countryCode.toUpperCase().toByteArray()
+        val idBytes = partyID.toUpperCase().toByteArray()
+
+        val url = registry.clientURLOf(countryBytes, idBytes).sendAsync().get()
+        val address = registry.clientAddressOf(countryBytes, idBytes).sendAsync().get()
+
+        if (url == "" || address == "0x0000000000000000000000000000000000000000") {
+            return "Party not registered on OCN"
+        }
+
+        return mapOf(
+                "url" to url,
+                "address" to address)
     }
 
 }
