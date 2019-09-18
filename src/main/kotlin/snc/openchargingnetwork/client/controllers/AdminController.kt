@@ -33,13 +33,12 @@ import snc.openchargingnetwork.client.models.entities.PlatformEntity
 import snc.openchargingnetwork.client.models.ocpi.RegistrationInfo
 import snc.openchargingnetwork.client.tools.generateUUIDv4Token
 import snc.openchargingnetwork.client.tools.urlJoin
-import javax.servlet.http.HttpServletRequest
+
 
 
 @RestController
 @RequestMapping("/admin")
-class AdminController(private val httpProtocol: HttpServletRequest,
-                      private val platformRepo: PlatformRepository,
+class AdminController(private val platformRepo: PlatformRepository,
                       private val roleRepo: RoleRepository,
                       private val properties: Properties) {
 
@@ -71,11 +70,6 @@ class AdminController(private val httpProtocol: HttpServletRequest,
     fun generateRegistrationToken(@RequestHeader("Authorization") authorization: String,
                                   @RequestBody body: Array<BasicRole>
     ): ResponseEntity<Any> {
-
-        // check request protocol
-        if(httpProtocol.scheme == "http"){
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("request protocol should be https")
-        }
 
         // check admin is authorized
         if (!isAuthorized(authorization)) {
