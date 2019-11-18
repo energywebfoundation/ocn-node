@@ -1,5 +1,5 @@
 /*
-    Copyright 2019 Energy Web Foundation
+    Copyright 2019 Share&Charge Foundation
 
     This file is part of Open Charging Network Client.
 
