@@ -33,6 +33,8 @@ import org.springframework.web.context.request.WebRequest
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler
 import snc.openchargingnetwork.client.models.ocpi.OcpiStatus
 import snc.openchargingnetwork.client.models.ocpi.OcpiResponse
+import java.net.ConnectException
+import java.net.SocketTimeoutException
 
 @Order(Ordered.HIGHEST_PRECEDENCE)
 @ControllerAdvice
@@ -54,6 +56,20 @@ class ExceptionHandler: ResponseEntityExceptionHandler() {
     fun handleMissingRequestHeaderException(e: MissingRequestHeaderException): ResponseEntity<OcpiResponse<Nothing>> {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(OcpiResponse(
                 statusCode = OcpiStatus.CLIENT_INVALID_PARAMETERS.code,
+                statusMessage = e.message))
+    }
+
+    @ExceptionHandler(SocketTimeoutException::class)
+    fun handleSocketTimeoutException(e: SocketTimeoutException): ResponseEntity<OcpiResponse<Nothing>> {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(OcpiResponse(
+                statusCode = OcpiStatus.HUB_REQUEST_TIMEOUT.code,
+                statusMessage = e.message))
+    }
+
+    @ExceptionHandler(ConnectException::class)
+    fun handleConnectException(e: ConnectException): ResponseEntity<OcpiResponse<Nothing>> {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(OcpiResponse(
+                statusCode = OcpiStatus.HUB_CONNECTION_PROBLEM.code,
                 statusMessage = e.message))
     }
 
