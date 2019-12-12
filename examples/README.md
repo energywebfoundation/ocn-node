@@ -1,6 +1,6 @@
 # Open Charge Network (OCN) Tutorial
 
-The following examples will guide you through administration of an OCN Client, as well as basic Open Charge Point 
+The following examples will guide you through administration of an OCN Node, as well as basic Open Charge Point 
 Interface implementation guidelines to aid with development of eMobility Service Provider (eMSP) or Charge Point 
 Operator (CPO) backoffices.
 
@@ -13,11 +13,11 @@ To follow and run the examples, there are a few dependencies that must first be 
 You will first need to install [Docker](https://docs.docker.com/install/) and [docker-compose](https://docs.docker.com/compose/install/) 
 on your chosen platform to run the local network.
 
-Next, ensure that the OCN Registry and Client repositories are cloned under the same parent directory:
+Next, ensure that the OCN Registry and Node repositories are cloned under the same parent directory:
 
 ```
 git clone git@bitbucket.org:shareandcharge/ocn-registry.git
-git clone git@bitbucket.org:shareandcharge/ocn-client.git
+git clone git@bitbucket.org:shareandcharge/ocn-node.git
 ```
 
 The directory structure should look like so:
@@ -25,13 +25,13 @@ The directory structure should look like so:
 ```
 - ocn/
     | - ocn-registry/
-    | - ocn-client/
+    | - ocn-node/
 ```
 
-Then change directory to `ocn-client` (using the `develop` branch) and run the network: 
+Then change directory to `ocn-node` (using the `develop` branch) and run the network: 
 
 ```
-cd ocn-client
+cd ocn-node
 git checkout develop
 docker-compose up
 ```
@@ -48,21 +48,21 @@ section when we walk through the example requests.
     - mnemonic: `candy maple cake sugar pudding cream honey rich smooth crumble sweet treat`
 - Reachable blockchain JSON RPC API
     - provider: `http://localhost:8544`
-- Two OCN Clients connected to the same OCN Registry as above
-    - client 1 address: `http://localhost:8080`
-    - client 2 address: `http://localhost:8081`
-    - admin API keys for both clients: `randomkey`
+- Two OCN Nodes connected to the same OCN Registry as above
+    - node 1 address: `http://localhost:8080`
+    - node 2 address: `http://localhost:8081`
+    - admin API keys for both nodes: `randomkey`
 
 Once the images are built and the containers are running, the following will show in stdout:
 
 ```
-ocn-client-1       | [...] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port(s): 8080 (http) with context path ''
-ocn-client-1       | [...] s.o.client.ApplicationKt                 : Started ApplicationKt in 20.76 seconds (JVM running for 22.842)
-ocn-client-2       | [...] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port(s): 8081 (http) with context path ''
-ocn-client-2       | [...] s.o.client.ApplicationKt                 : Started ApplicationKt in 20.448 seconds (JVM running for 22.829)
+ocn-node-1       | [...] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port(s): 8080 (http) with context path ''
+ocn-node-1       | [...] s.o.node.ApplicationKt                 : Started ApplicationKt in 20.76 seconds (JVM running for 22.842)
+ocn-node-2       | [...] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port(s): 8081 (http) with context path ''
+ocn-node-2       | [...] s.o.node.ApplicationKt                 : Started ApplicationKt in 20.448 seconds (JVM running for 22.829)
 ```
 
-Finally, go ahead and request the health of the two clients to make sure they are running:
+Finally, go ahead and request the health of the two nodes to make sure they are running:
 
 ```
 curl localhost:8080/health
@@ -92,7 +92,7 @@ start the respective backends and register the CPOs to the Open Charging Network
 npm start
 ``` 
 
-Observe the requests that are made to ganache, the ocn-client and the CPO server. This gives a quick overview of how
+Observe the requests that are made to ganache, the ocn-node and the CPO server. This gives a quick overview of how
 the OCN registration process using OCPI and the OCN Registry works.
 
 Leave the servers running alongside the network. The next step is to install Postman so that we can register our EMSP
@@ -106,17 +106,17 @@ import the JSON collection file provided in this directory and you are ready to 
 
 ## Tutorial
 
-In this tutorial, we will create an OCPI 2.2 connection with the OCN Client at [http:localhost:8080](http://localhost:8080). If you completed the
-above step, there should be one CPO already registered with our OCN Client and another at [http://localhost:8081](http://localhost:8081), which gives us
+In this tutorial, we will create an OCPI 2.2 connection with the OCN Node at [http:localhost:8080](http://localhost:8080). If you completed the
+above step, there should be one CPO already registered with our OCN Node and another at [http://localhost:8081](http://localhost:8081), which gives us
 a chance to make different requests across the network.
 
 ### 1. Adding an entry to the OCN Registry
 
-Before we create a connection to an OCN client, we must enter our party into the OCN Registry to become visible on the 
-network. To do this, we must sign a transaction which states our party's country code, party ID and client info of
-the OCN client we will connect to. The OCN Client info that we need is its Ethereum address and base url.
+Before we create a connection to an OCN Node, we must enter our party into the OCN Registry to become visible on the 
+network. To do this, we must sign a transaction which states our party's country code, party ID and node info of
+the OCN Node we will connect to. The OCN Node info that we need is its Ethereum address and base url.
 
-Provided in the Postman collection is a request `GET Client Info` under the OCN directory. Note that there is no
+Provided in the Postman collection is a request `GET Node Info` under the OCN directory. Note that there is no
 authorization needed to make this request. The response should be the following:
 
 ```json
@@ -138,27 +138,27 @@ npm run register-msp
 You should see the following output: 
 
 ```
-EMSP [DE MSP] has registered to the OCN on client http://localhost:8080 using wallet with address <ETHEREUM_ADDRESS>
+EMSP [DE MSP] has registered to the OCN on node http://localhost:8080 using wallet with address <ETHEREUM_ADDRESS>
 ```
 
 Your EMSP wallet was generated randomly and has already been discarded. Fortunately, you won't need it again for this
-tutorial. Should you wish to move to a different OCN Client (which you might want to in production), you would 
+tutorial. Should you wish to move to a different OCN Node (which you might want to in production), you would 
 have to update your listing in the OCN Registry using the same wallet.
 
-The script uses the above client info request under the hood to make sure that the data we are listing in the registry
+The script uses the above node info request under the hood to make sure that the data we are listing in the registry
 is correct. You may inspect the rest of the script (located at `ocn-demo/scripts/register.js`) to see how the 
 transaction was signed and sent to the network. 
 
 ### 2. Generating a CREDENTIALS_TOKEN_A
 
 Now that we have listed ourselves in the OCN Registry smart contract, we need to create a connection with our OCN 
-Client.
+Node.
 
-In order to connect to an OCN client, the administrator first must generate a token to be used in the OCPI credentials
-registration flow. This, described as `CREDENTIALS_TOKEN_A`, will be used to obtain information about the OCN Client, 
+In order to connect to an OCN Node, the administrator first must generate a token to be used in the OCPI credentials
+registration flow. This, described as `CREDENTIALS_TOKEN_A`, will be used to obtain information about the OCN Node, 
 e.g. the version of OCPI it is using and the modules it incorporates.
 
-In Postman, simply go to the `GET Generate Registration Token` request in the Admin directory of the OCN Client 
+In Postman, simply go to the `GET Generate Registration Token` request in the Admin directory of the OCN Node 
 collection and hit Send to make the request.
 
 You should see the following response:
@@ -173,7 +173,7 @@ Make sure to keep this request tab open as we will need the provided data for su
 
 ### 2. Request Versions and Version Details
 
-Our EMSP backend runs on OCPI 2.2. As such we would like to establish a connection to the OCN Client using the same
+Our EMSP backend runs on OCPI 2.2. As such we would like to establish a connection to the OCN Node using the same
 OCPI version. In Postman, navigate to the Versions directory and select the `GET versions` request. You will need to
 modify this request slightly for it to work. In the Headers tab, edit the `Authorization` key, which currently has the 
 value `Token CREDENTIALS_TOKEN_A`. Replace `CREDENTIALS_TOKEN_A` with the token received from the above request.
@@ -186,7 +186,7 @@ The data field should provide an array of supported versions and a url that will
 use this version.
 
 Do the same for the next request in the directory, for retrieving version details. The response will contain an array
-of endpoints supported by the client. The one we are most interested in for now is the `credentials` module:
+of endpoints supported by the node. The one we are most interested in for now is the `credentials` module:
 
 ```
 {
@@ -200,30 +200,30 @@ of endpoints supported by the client. The one we are most interested in for now 
 
 Now that we know where to send our credentials, we can open the `POST credentials` request in the credentials directory.
 Again, we should change the `Authorization` header to our `TOKEN_A`. This request contains a JSON body, as we our
-sending our own credentials to the OCN client. This includes the token that the OCN client should use to authorize
+sending our own credentials to the OCN Node. This includes the token that the OCN Node should use to authorize
 itself on *our* server, should it need to forward a request to us from a CPO (i.e. the CPO is pushing session or location
 updates to us). For now, the test CPO backend does not do this, so it is not so important. We also provide a url to 
-our versions endpoint, such that the OCN client can go through the same process we just did, in finding a common OCPI
+our versions endpoint, such that the OCN Node can go through the same process we just did, in finding a common OCPI
 version and obtaining a list of the endpoints we have. Lastly, we describe the roles that we employ. Notice how this is
 an array. OCPI 2.2 adds the ability for a platform operating multiple roles to communicate on a single OCPI connection.
 Therefore a platform that is both an EMSP and CPO needs not register twice. 
 
 Go ahead and send the request once the proper `Authorization` header has been set. 
 
-You should see the OCN client's credentials returned to you. There is a new token in the body: this is what's known as
-`CREDENTIALS_TOKEN_C` and will allow you to authorize any subsequent OCPI requests you make to your OCN client. The 
+You should see the OCN Node's credentials returned to you. There is a new token in the body: this is what's known as
+`CREDENTIALS_TOKEN_C` and will allow you to authorize any subsequent OCPI requests you make to your OCN Node. The 
 previous token is now discarded and will not be used again, so make sure to save this new token.
 
-In addition, you should see that there were two requests made to the EMSP server. This shows that the OCN client has
+In addition, you should see that there were two requests made to the EMSP server. This shows that the OCN Node has
 requested and stored your OCPI module endpoints for future use.
 
-This now completes the registration to the OCN client.
+This now completes the registration to the OCN Node.
 
 ### 4. Making OCPI requests to a CPO
 
 #### Requesting location data
 
-Now that we have registered to our OCN client, we can send requests to one of the registered CPOs on the OCN. In this 
+Now that we have registered to our OCN Node, we can send requests to one of the registered CPOs on the OCN. In this 
 request, we wish to fetch a list of the CPO's locations (i.e. charging stations under OCPI terminology). To do so, 
 navigate to the `GET locations list` request in the locations directory of the Postman collection. Substitute the 
 `CREDENTIALS_TOKEN_C` in the Authorization header and make the request.
@@ -302,9 +302,9 @@ work.
 The headers prefixed with `OCPI-` describe the desired routing of the message. The `OCPI-from-country-code` and 
 `OCPI-from-party-id` describe the OCPI party on the platform which is making the request (in our case we only have one
 party per platform, but it could be the case that a CPO and EMSP role share the same platform connection with an OCN
-client). Likewise, the `OCPI-to-country-code` and `OCPI-to-party-id` headers describe the recipient of the request. In
+node). Likewise, the `OCPI-to-country-code` and `OCPI-to-party-id` headers describe the recipient of the request. In
 our case we are making requests to a CPO with country code `DE` and party ID `CPO`. This CPO is registered to the same
-OCN client as our EMSP, but what if we want to contact a "remote" party connected to a different OCN client? We can
+OCN Node as our EMSP, but what if we want to contact a "remote" party connected to a different OCN Node? We can
 try this out by changing the request headers to the following:
 
 ```
@@ -314,13 +314,13 @@ OCPI-to-party-id: CPX
 
 The mock CPOs featured in this demonstration are in fact identical, so all requests can be sent to either of them. Note
 that requests made to "remote" OCPI parties in are considered more experimental than those between two parties sharing 
-the same OCN client.
+the same OCN Node.
 
 Note also the `X-Request-ID` and `X-Correlation-ID` headers. They don't play a role in our demonstration (both being
 set to `"1"` for all requests, but in production it is strongly advised to generate unique IDs (uuid version 4 preferred)
 for all requests, in order to help with any potential debugging. The request ID is unique for every request: in 
-forwarding such a request: an OCN client will actually set a new request ID. The correlation ID meanwhile, is unique for 
-every request-response: an OCN client will not change the correlation ID. 
+forwarding such a request: an OCN Node will actually set a new request ID. The correlation ID meanwhile, is unique for 
+every request-response: an OCN Node will not change the correlation ID. 
 
 #### OCPI module dependencies and implementations
 
@@ -332,7 +332,7 @@ tariffs provided by the CPO, with IDs matching those found on the Connector obje
 between OCPI modules. 
 
 However, all OCPI modules aside from `credentials` are optional (for the purpose of the demo the
-EMSP and CPOs have not implemented the `credentials` interface, but it is important to do so, as the OCN client could
+EMSP and CPOs have not implemented the `credentials` interface, but it is important to do so, as the OCN Node could
 need to update its credentials on your system). It is up to the EMSP/CPO (or any other role) to implement the modules
 themselves. Therefore if we try to make, for instance, a `sessions` request to the CPO, we might receive a message 
 telling us that the CPO has not implemented the module (yet).

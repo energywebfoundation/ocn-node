@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-cd ocn-client
+cd ocn-node
 git pull
 ./gradlew -Pprofile=test -x test build
-sudo service ocn-client restart
+sudo service ocn-node restart

@@ -13,7 +13,7 @@ plugins {
     id("org.asciidoctor.convert") version "1.5.9.2"
 }
 
-group = "snc.openchargingnetwork.client"
+group = "snc.openchargingnetwork.node"
 version = "0.1.0-SNAPSHOT"
 java.sourceCompatibility = JavaVersion.VERSION_1_8
 

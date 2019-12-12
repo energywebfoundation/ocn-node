@@ -22,26 +22,26 @@ services:
     networks:
       - ocn-dev-net
 
-  ocn-client-1:
-    container_name: ocn-client-1
+  ocn-node-1:
+    container_name: ocn-node-1
     build:
       context: .
       dockerfile: Dockerfile
-    image: "ocn-client"
+    image: "ocn-node"
     network_mode: "host"
     ports:
       - "8080:8080"
 
-  ocn-client-2:
-    container_name: ocn-client-2
+  ocn-node-2:
+    container_name: ocn-node-2
     build:
       context: .
       dockerfile: Dockerfile
-    image: "ocn-client"
+    image: "ocn-node"
     network_mode: "host"
     ports:
       - "8081:8081"
-    command: ["java", "-jar", "-Dserver.port=8081", "-Docn.client.url=http://localhost:8081", "./libs/ocn-client-0.1.0-SNAPSHOT.jar"]
+    command: ["java", "-jar", "-Dserver.port=8081", "-Docn.node.url=http://localhost:8081", "./libs/ocn-node-0.1.0-SNAPSHOT.jar"]
 
 
 networks:

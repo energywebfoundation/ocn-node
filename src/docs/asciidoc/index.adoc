@@ -1,8 +1,8 @@
-= Open Charging Network (OCN) Client Documentation
+= Open Charging Network (OCN) Node Documentation
 
 The following documentation provides usage details, with examples, for administrators and users of
-an OCN client. It assumes that the client has already been set up according to instructions provided in the
-https://bitbucket.org/shareandcharge/ocn-client/src/develop/[repository].
+an OCN Node. It assumes that the node has already been set up according to instructions provided in the
+https://bitbucket.org/shareandcharge/ocn-node/src/develop/[repository].
 
 == Health
 
@@ -19,7 +19,7 @@ include::{snippets}/health/http-response.adoc[]
 
 == Admin
 
-The admin API allows administrators to manage their OCN client. This can be used to generate new Open Charge Point
+The admin API allows administrators to manage their OCN Node. This can be used to generate new Open Charge Point
 Interface (OCPI) registration tokens for interested platforms.
 
 === Request
@@ -49,14 +49,14 @@ start the registration process.
 
 The Open Charge Point Interface enables eMobility platforms to connect to one another. The Open Charging Network
 uses this as it's primary means of connecting such parties. It is important to have developed an OCPI version 2.2
-API beforehand, in order to connect to and use an OCN client. Documentation for version 2.2 can be found on
+API beforehand, in order to connect to and use an OCN Node. Documentation for version 2.2 can be found on
 https://github.com/ocpi/ocpi/tree/develop[OCPI @ *GitHub*].
 
-The client strives to provide all the functionality of OCPI. As this software is in alpha stage, there are currently
+The node strives to provide all the functionality of OCPI. As this software is in alpha stage, there are currently
 some features of OCPI missing:
 
 - Paginated requests
-- Proxied Location header returned from a `POST cdrs` request when made *across clients*
+- Proxied Location header returned from a `POST cdrs` request when made *across nodes*
 - The `chargingprofiles` module
 - `hubclientinfo` PUSH requests
 - Hub-specific features such as broadcast push and intelligent routing

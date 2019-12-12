@@ -23,10 +23,10 @@ pipelines:
           script:
             - bash ./gradlew build
             # TODO: try rsync
-            - scp -r ./build $HOST:ocn-client/
-            - ssh $HOST 'sh ./ocn-client/restart.sh'
-            - scp -r ./build $ALT_HOST:ocn-client/
-            - ssh $ALT_HOST 'sh ./ocn-client/restart.sh'
+            - scp -r ./build $HOST:ocn-node/
+            - ssh $HOST 'sh ./ocn-node/restart.sh'
+            - scp -r ./build $ALT_HOST:ocn-node/
+            - ssh $ALT_HOST 'sh ./ocn-node/restart.sh'
     open-testing:
       - step:
           deployment: test
@@ -34,4 +34,4 @@ pipelines:
             - gradle
           script:
             - bash ./gradlew build
-            - ssh $BROKER_HOST 'bash ./ocn-client/infra/setup-test.sh'
+            - ssh $BROKER_HOST 'bash ./ocn-node/infra/setup-test.sh'
