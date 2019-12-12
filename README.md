@@ -5,6 +5,7 @@ The Open Charging Network (OCN) node with Open Charge Point Interface (OCPI) v2.
 **This project replaces the OCN Client, with the rename seeking to avoid confusion with client-server architecture.**
 
 Changelist from rename:
+
 - New registry contract address (`0x0A5f27Ee1EbDC68034aDbd9446F9375783aeF7DC`)
 - registry methods renamed:
     - `updateClientInfo` -> `updateNodeInfo`
