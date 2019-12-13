@@ -13,7 +13,7 @@ import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
 import snc.openchargingnetwork.node.repositories.*
-import snc.openchargingnetwork.node.config.Properties
+import snc.openchargingnetwork.node.config.NodeProperties
 import snc.openchargingnetwork.node.models.ocpi.InterfaceRole
 import snc.openchargingnetwork.node.models.ocpi.Role
 import snc.openchargingnetwork.node.models.ocpi.OcpiStatus
@@ -38,7 +38,7 @@ class CredentialsControllerTest(@Autowired val mockMvc: MockMvc) {
     lateinit var endpointRepo: EndpointRepository
 
     @MockkBean
-    lateinit var properties: Properties
+    lateinit var properties: NodeProperties
 
     @MockkBean
     lateinit var routingService: RoutingService
@@ -54,7 +54,7 @@ class CredentialsControllerTest(@Autowired val mockMvc: MockMvc) {
         mockMvc.perform(get("/ocpi/2.2/credentials")
                 .header("Authorization", "Token ${platform.auth.tokenC}"))
                 .andExpect(status().isOk)
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("\$.status_code").value(OcpiStatus.SUCCESS.code))
                 .andExpect(jsonPath("\$.status_message").doesNotExist())
                 .andExpect(jsonPath("\$.timestamp").isString)
@@ -111,7 +111,7 @@ class CredentialsControllerTest(@Autowired val mockMvc: MockMvc) {
                         url = versionsUrl,
                         roles = listOf(role1, role2)))))
                 .andExpect(status().isOk)
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("\$.status_code").value(OcpiStatus.SUCCESS.code))
                 .andExpect(jsonPath("\$.status_message").doesNotExist())
                 .andExpect(jsonPath("\$.timestamp").isString)
@@ -166,7 +166,7 @@ class CredentialsControllerTest(@Autowired val mockMvc: MockMvc) {
                         url = versionsUrl,
                         roles = listOf(role1, role2)))))
                 .andExpect(status().isOk)
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("\$.status_code").value(OcpiStatus.SUCCESS.code))
                 .andExpect(jsonPath("\$.status_message").doesNotExist())
                 .andExpect(jsonPath("\$.timestamp").isString)

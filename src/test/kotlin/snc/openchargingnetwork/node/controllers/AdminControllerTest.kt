@@ -20,7 +20,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders
 import org.springframework.web.context.WebApplicationContext
 import snc.openchargingnetwork.node.repositories.RoleRepository
 import snc.openchargingnetwork.node.repositories.PlatformRepository
-import snc.openchargingnetwork.node.config.Properties
+import snc.openchargingnetwork.node.config.NodeProperties
 import snc.openchargingnetwork.node.models.entities.PlatformEntity
 import snc.openchargingnetwork.node.models.ocpi.BasicRole
 
@@ -37,7 +37,7 @@ class AdminControllerTest {
     lateinit var roleRepo: RoleRepository
 
     @MockkBean
-    lateinit var properties: Properties
+    lateinit var properties: NodeProperties
 
     @BeforeEach
     fun setUp(webApplicationContext: WebApplicationContext,
@@ -61,7 +61,7 @@ class AdminControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(jacksonObjectMapper().writeValueAsString(arrayOf(role))))
                 .andExpect(status().isOk)
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("\$.token").isString)
                 .andExpect(jsonPath("\$.versions").value("http://localhost:8090/ocpi/versions"))
                 .andDo(document("admin"))

@@ -27,7 +27,7 @@ import org.springframework.web.bind.annotation.*
 import snc.openchargingnetwork.node.repositories.RoleRepository
 import snc.openchargingnetwork.node.repositories.PlatformRepository
 import snc.openchargingnetwork.node.models.ocpi.BasicRole
-import snc.openchargingnetwork.node.config.Properties
+import snc.openchargingnetwork.node.config.NodeProperties
 import snc.openchargingnetwork.node.models.entities.Auth
 import snc.openchargingnetwork.node.models.entities.PlatformEntity
 import snc.openchargingnetwork.node.models.ocpi.RegistrationInfo
@@ -40,7 +40,7 @@ import snc.openchargingnetwork.node.tools.urlJoin
 @RequestMapping("/admin")
 class AdminController(private val platformRepo: PlatformRepository,
                       private val roleRepo: RoleRepository,
-                      private val properties: Properties) {
+                      private val properties: NodeProperties) {
 
     fun isAuthorized(authorization: String): Boolean {
         return authorization == "Token ${properties.apikey}"

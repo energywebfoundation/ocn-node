@@ -22,7 +22,7 @@ package snc.openchargingnetwork.node.controllers.ocpi.v2_2
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.bind.annotation.*
 import snc.openchargingnetwork.node.repositories.*
-import snc.openchargingnetwork.node.config.Properties
+import snc.openchargingnetwork.node.config.NodeProperties
 import snc.openchargingnetwork.node.models.ocpi.ConnectionStatus
 import snc.openchargingnetwork.node.models.ocpi.Role
 import snc.openchargingnetwork.node.models.ocpi.OcpiStatus
@@ -41,7 +41,7 @@ import snc.openchargingnetwork.node.tools.*
 class CredentialsController(private val platformRepo: PlatformRepository,
                             private val roleRepo: RoleRepository,
                             private val endpointRepo: EndpointRepository,
-                            private val properties: Properties,
+                            private val properties: NodeProperties,
                             private val routingService: RoutingService,
                             private val httpService: HttpService) {
 

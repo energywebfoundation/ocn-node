@@ -7,7 +7,7 @@ import io.mockk.mockk
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpMethod
-import snc.openchargingnetwork.node.config.Properties
+import snc.openchargingnetwork.node.config.NodeProperties
 import snc.openchargingnetwork.node.models.*
 import snc.openchargingnetwork.node.models.entities.*
 import snc.openchargingnetwork.node.models.ocpi.*
@@ -25,7 +25,7 @@ class RoutingServiceTest {
     private val httpService: HttpService = mockk()
     private val registry: RegistryFacade = mockk()
     private val walletService: WalletService = mockk()
-    private val properties: Properties = mockk()
+    private val properties: NodeProperties = mockk()
 
     private val routingService: RoutingService
 

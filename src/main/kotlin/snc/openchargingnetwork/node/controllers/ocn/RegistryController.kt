@@ -4,7 +4,7 @@ import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
-import snc.openchargingnetwork.node.config.Properties
+import snc.openchargingnetwork.node.config.NodeProperties
 import snc.openchargingnetwork.node.services.WalletService
 import snc.openchargingnetwork.contracts.RegistryFacade
 
@@ -12,7 +12,7 @@ import snc.openchargingnetwork.contracts.RegistryFacade
 // TODO: test for API documentation
 @RequestMapping("/ocn/registry")
 class RegistryController(private val walletService: WalletService,
-                         private val properties: Properties,
+                         private val properties: NodeProperties,
                          private val registry: RegistryFacade) {
 
     @GetMapping("/node-info")

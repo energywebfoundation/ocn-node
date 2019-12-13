@@ -86,7 +86,7 @@ class MessageControllerTest(@Autowired val mockMvc: MockMvc) {
                 .header("OCN-Signature", "0x1234")
                 .content(jsonBodyString))
                 .andExpect(status().isOk)
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("\$.status_code").value(OcpiStatus.SUCCESS.code))
                 .andExpect(jsonPath("\$.status_message").doesNotExist())
                 .andExpect(jsonPath("\$.timestamp").isString)

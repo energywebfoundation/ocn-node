@@ -22,7 +22,7 @@ package snc.openchargingnetwork.node.controllers.ocpi.v2_2
 import org.springframework.http.HttpMethod
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
-import snc.openchargingnetwork.node.config.Properties
+import snc.openchargingnetwork.node.config.NodeProperties
 import snc.openchargingnetwork.node.models.*
 import snc.openchargingnetwork.node.models.ocpi.*
 import snc.openchargingnetwork.node.services.HttpService
@@ -33,7 +33,7 @@ import snc.openchargingnetwork.node.tools.urlJoin
 @RestController
 class CommandsController(private val routingService: RoutingService,
                          private val httpService: HttpService,
-                         private val properties: Properties) {
+                         private val properties: NodeProperties) {
 
 
     /**

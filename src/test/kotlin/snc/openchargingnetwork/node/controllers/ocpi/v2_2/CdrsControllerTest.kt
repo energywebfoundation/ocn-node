@@ -15,7 +15,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.content
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.header
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
-import snc.openchargingnetwork.node.config.Properties
+import snc.openchargingnetwork.node.config.NodeProperties
 import snc.openchargingnetwork.node.data.exampleCDR
 import snc.openchargingnetwork.node.services.RoutingService
 import snc.openchargingnetwork.node.tools.generateUUIDv4Token
@@ -36,7 +36,7 @@ class CdrsControllerTest(@Autowired val mockMvc: MockMvc) {
     lateinit var httpService: HttpService
 
     @MockkBean
-    lateinit var properties: Properties
+    lateinit var properties: NodeProperties
 
     private val mapper = jacksonObjectMapper()
 
@@ -100,7 +100,7 @@ class CdrsControllerTest(@Autowired val mockMvc: MockMvc) {
                 .andExpect(status().isOk)
                 .andExpect(header().string("Link", "https://node.ocn.co/ocpi/sender/2.2/cdrs/page/43; rel=\"next\""))
                 .andExpect(header().string("X-Limit", "100"))
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("\$.status_code").value(1000))
                 .andExpect(jsonPath("\$.status_message").doesNotExist())
                 .andExpect(jsonPath("\$.data").isArray)
@@ -172,7 +172,7 @@ class CdrsControllerTest(@Autowired val mockMvc: MockMvc) {
                 .andExpect(status().isOk)
                 .andExpect(header().string("Link", "https://node.ocn.co/ocpi/sender/2.2/cdrs/page/68; rel=\"next\""))
                 .andExpect(header().string("X-Limit", "100"))
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("\$.status_code").value(1000))
                 .andExpect(jsonPath("\$.status_message").doesNotExist())
                 .andExpect(jsonPath("\$.data").isArray)
@@ -226,7 +226,7 @@ class CdrsControllerTest(@Autowired val mockMvc: MockMvc) {
                 .header("OCPI-to-country-code", requestVariables.headers.receiver.country)
                 .header("OCPI-to-party-id", requestVariables.headers.receiver.id))
                 .andExpect(status().isOk)
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("\$.status_code").value(1000))
                 .andExpect(jsonPath("\$.status_message").doesNotExist())
                 .andExpect(jsonPath("\$.data.id").value(exampleCDR.id))
@@ -289,7 +289,7 @@ class CdrsControllerTest(@Autowired val mockMvc: MockMvc) {
                 .header("OCPI-to-party-id", requestVariables.headers.receiver.id)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(jacksonObjectMapper().writeValueAsString(exampleCDR)))
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("\$.status_code").value(1000))
                 .andExpect(jsonPath("\$.status_message").doesNotExist())
                 .andExpect(jsonPath("\$.data").doesNotExist())

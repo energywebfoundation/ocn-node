@@ -23,8 +23,8 @@ import org.springframework.stereotype.Component
 import snc.openchargingnetwork.node.services.WalletService
 
 @Component
-class NodeInfoLogger(properties: Properties,
-                       walletService: WalletService) {
+class NodeInfoLogger(properties: NodeProperties,
+                     walletService: WalletService) {
 
     init {
         println("\n====================================================\n" +

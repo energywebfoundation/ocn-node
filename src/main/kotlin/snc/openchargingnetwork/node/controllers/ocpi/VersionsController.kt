@@ -24,7 +24,7 @@ import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import snc.openchargingnetwork.node.repositories.PlatformRepository
-import snc.openchargingnetwork.node.config.Properties
+import snc.openchargingnetwork.node.config.NodeProperties
 import snc.openchargingnetwork.node.models.ocpi.InterfaceRole
 import snc.openchargingnetwork.node.models.ocpi.ModuleID
 import snc.openchargingnetwork.node.models.ocpi.OcpiStatus
@@ -36,7 +36,7 @@ import snc.openchargingnetwork.node.tools.urlJoin
 @RestController
 @RequestMapping("/ocpi")
 class VersionsController(private val repository: PlatformRepository,
-                         private val properties: Properties) {
+                         private val properties: NodeProperties) {
 
     @GetMapping("/versions")
     fun getVersions(@RequestHeader("Authorization") authorization: String): OcpiResponse<Versions> {

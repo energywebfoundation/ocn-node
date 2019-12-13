@@ -15,7 +15,7 @@ import org.springframework.http.MediaType
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
-import snc.openchargingnetwork.node.config.Properties
+import snc.openchargingnetwork.node.config.NodeProperties
 import snc.openchargingnetwork.node.data.exampleToken
 import snc.openchargingnetwork.node.models.*
 import snc.openchargingnetwork.node.models.ocpi.*
@@ -34,7 +34,7 @@ class CommandsControllerTest(@Autowired val mockMvc: MockMvc) {
     lateinit var httpService: HttpService
 
     @MockkBean
-    lateinit var properties: Properties
+    lateinit var properties: NodeProperties
 
     private val mapper = jacksonObjectMapper()
 

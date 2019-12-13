@@ -81,6 +81,9 @@ Likewise, for a public node on the test network, the url would be `https://serve
 to `https://server.example.com/ocpi/2.2/sender/locations`. Be sure to include the protocol so that connected platforms
 can correctly parse the endpoints provided.
 
+On startup, the OCN client will ensure that the public URL set is reachable. Additionally, there is different
+behaviour within this check depending on which mode the client is running in. See section 1.5 for more details.
+
 #### 1.2. Connecting to a Database
 
 The `dev` properties connects the node to an in-memory database, which will not persist data across node restarts.
@@ -114,6 +117,12 @@ ocn.node.apikey = randomkey
 
 The API key will be printed on node start, be it generated or user-specified. Consult the [API documentation](https://shareandcharge.bitbucket.io)
 for more information on how to use the Admin API. 
+
+#### 1.5 Setting the runtime mode
+
+The client can be run in "dev" or "prod" mode. By default, prod mode is in effect, which will check to see if the
+provided public client URL is reachable over HTTPS and is accessible to the outside world. When running in dev mode 
+(by setting `ocn.client.dev = true`), the client will allow insecure HTTP connections made over localhost.
 
 ### 2. Running the Node
 

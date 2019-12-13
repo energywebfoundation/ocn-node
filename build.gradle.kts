@@ -3,13 +3,13 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import org.springframework.boot.gradle.tasks.bundling.BootJar
 
 plugins {
-    kotlin("plugin.jpa") version "1.3.41"
-    id("org.springframework.boot") version "2.1.7.RELEASE"
+    kotlin("plugin.jpa") version "1.3.61"
+    id("org.springframework.boot") version "2.2.2.RELEASE"
     id("io.spring.dependency-management") version "1.0.8.RELEASE"
-    kotlin("jvm") version "1.3.41"
-    kotlin("plugin.spring") version "1.3.41"
-    kotlin("plugin.allopen") version "1.3.41"
-    kotlin("kapt") version "1.3.41"
+    kotlin("jvm") version "1.3.61"
+    kotlin("plugin.spring") version "1.3.61"
+    kotlin("plugin.allopen") version "1.3.61"
+    kotlin("kapt") version "1.3.61"
     id("org.asciidoctor.convert") version "1.5.9.2"
 }
 
@@ -32,27 +32,26 @@ repositories {
 
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
-//    implementation("org.springframework.boot:spring-boot-starter-mustache")
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
-    developmentOnly("org.springframework.boot:spring-boot-devtools")
+    implementation("khttp:khttp:1.0.0")
+    implementation("org.web3j:core:4.4.0")
+    implementation("org.postgresql:postgresql:42.2.6")
     runtimeOnly("com.h2database:h2")
+    kapt("org.springframework.boot:spring-boot-configuration-processor")
+    asciidoctor("org.springframework.restdocs:spring-restdocs-asciidoctor:2.0.3.RELEASE")
+    developmentOnly("org.springframework.boot:spring-boot-devtools")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
     testImplementation("org.springframework.boot:spring-boot-starter-test") {
         exclude(module = "junit")
         exclude(module = "mockito-core")
         exclude(module = "android-json")
     }
     testImplementation("org.junit.jupiter:junit-jupiter-api")
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
     testImplementation("com.ninja-squad:springmockk:1.1.2")
-    kapt("org.springframework.boot:spring-boot-configuration-processor")
-    asciidoctor("org.springframework.restdocs:spring-restdocs-asciidoctor:2.0.3.RELEASE")
-    testCompile("org.springframework.restdocs:spring-restdocs-mockmvc:2.0.3.RELEASE")
-    compile("khttp:khttp:1.0.0")
-    compile("org.web3j:core:4.4.0")
-    implementation("org.postgresql:postgresql:42.2.6")
+    testImplementation("org.springframework.restdocs:spring-restdocs-mockmvc:2.0.3.RELEASE")
 }
 
 allOpen {

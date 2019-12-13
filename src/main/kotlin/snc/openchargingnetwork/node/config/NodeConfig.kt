@@ -28,11 +28,11 @@ import org.web3j.tx.ClientTransactionManager
 import org.web3j.tx.TransactionManager
 import org.web3j.tx.gas.StaticGasProvider
 import snc.openchargingnetwork.node.repositories.*
-import snc.openchargingnetwork.node.tools.generateUUIDv4Token
 import snc.openchargingnetwork.contracts.RegistryFacade
 
+
 @Configuration
-class Configuration(private val properties: Properties) {
+class NodeConfig(private val properties: NodeProperties) {
 
     private val web3: Web3j = Web3j.build(HttpService(properties.web3.provider))
     private val txManager: TransactionManager = ClientTransactionManager(web3, null)
@@ -53,12 +53,6 @@ class Configuration(private val properties: Properties) {
                 txManager,
                 gasProvider
         )
-    }
-
-    init {
-        if (properties.apikey.isNullOrEmpty()) {
-            properties.apikey = generateUUIDv4Token()
-        }
     }
 
 }

@@ -11,8 +11,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import snc.openchargingnetwork.node.repositories.PlatformRepository
-import snc.openchargingnetwork.node.config.Properties
-import snc.openchargingnetwork.node.models.ocpi.ModuleID
+import snc.openchargingnetwork.node.config.NodeProperties
 import snc.openchargingnetwork.node.models.ocpi.OcpiStatus
 import snc.openchargingnetwork.node.models.entities.PlatformEntity
 import snc.openchargingnetwork.node.models.ocpi.Endpoint
@@ -24,7 +23,7 @@ class VersionsControllerTest(@Autowired val mockMvc: MockMvc) {
     lateinit var repository: PlatformRepository
 
     @MockkBean
-    lateinit var properties: Properties
+    lateinit var properties: NodeProperties
 
     @Test
     fun `When GET versions then return version information`() {

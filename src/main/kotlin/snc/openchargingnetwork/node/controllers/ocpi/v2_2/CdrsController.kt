@@ -23,7 +23,7 @@ import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
-import snc.openchargingnetwork.node.config.Properties
+import snc.openchargingnetwork.node.config.NodeProperties
 import snc.openchargingnetwork.node.models.*
 import snc.openchargingnetwork.node.models.ocpi.*
 import snc.openchargingnetwork.node.services.HttpService
@@ -34,7 +34,7 @@ import snc.openchargingnetwork.node.tools.urlJoin
 @RestController
 class CdrsController(val routingService: RoutingService,
                      val httpService: HttpService,
-                     val properties: Properties) {
+                     val properties: NodeProperties) {
 
 
     /**

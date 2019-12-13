@@ -20,11 +20,14 @@
 package snc.openchargingnetwork.node.config
 
 import org.springframework.boot.context.properties.ConfigurationProperties
+import snc.openchargingnetwork.node.tools.generateUUIDv4Token
 
 @ConfigurationProperties("ocn.node")
-class Properties {
+class NodeProperties {
 
-    var apikey: String? = null
+    var apikey: String = generateUUIDv4Token()
+
+    var dev: Boolean = false
 
     lateinit var url: String
 

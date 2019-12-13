@@ -21,7 +21,7 @@ package snc.openchargingnetwork.node.services
 
 import org.springframework.http.HttpHeaders
 import org.springframework.stereotype.Service
-import snc.openchargingnetwork.node.config.Properties
+import snc.openchargingnetwork.node.config.NodeProperties
 import snc.openchargingnetwork.node.models.*
 import snc.openchargingnetwork.node.models.entities.EndpointEntity
 import snc.openchargingnetwork.node.models.entities.ProxyResourceEntity
@@ -45,7 +45,7 @@ class RoutingService(private val platformRepo: PlatformRepository,
                      private val registry: RegistryFacade,
                      private val httpService: HttpService,
                      private val walletService: WalletService,
-                     private val properties: Properties) {
+                     private val properties: NodeProperties) {
 
 
     /**
