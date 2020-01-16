@@ -27,10 +27,11 @@ configurations {
 }
 
 repositories {
-    mavenCentral()
+    jcenter()
 }
 
 dependencies {
+    implementation("shareandcharge.openchargingnetwork:notary:0.0.1")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
@@ -46,6 +47,7 @@ dependencies {
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
     testImplementation("org.springframework.boot:spring-boot-starter-test") {
         exclude(module = "junit")
+        exclude(module = "junit-vintage-engine")
         exclude(module = "mockito-core")
         exclude(module = "android-json")
     }

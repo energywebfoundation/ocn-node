@@ -19,19 +19,17 @@
 
 package snc.openchargingnetwork.node.controllers.ocpi.v2_2
 
-import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import snc.openchargingnetwork.node.models.*
 import snc.openchargingnetwork.node.models.ocpi.*
-import snc.openchargingnetwork.node.services.HttpService
-import snc.openchargingnetwork.node.services.RoutingService
-import snc.openchargingnetwork.node.tools.isOcpiSuccess
+import snc.openchargingnetwork.node.services.RequestHandler
+import snc.openchargingnetwork.node.services.RequestHandlerBuilder
+
 
 @RestController
-class SessionsController(private val routingService: RoutingService,
-                         private val httpService: HttpService) {
+class SessionsController(private val requestHandlerBuilder: RequestHandlerBuilder) {
 
 
     /**
@@ -40,6 +38,7 @@ class SessionsController(private val routingService: RoutingService,
 
     @GetMapping("/ocpi/sender/2.2/sessions")
     fun getSessionsFromDataOwner(@RequestHeader("authorization") authorization: String,
+                                 @RequestHeader("OCN-Signature") signature: String? = null,
                                  @RequestHeader("X-Request-ID") requestID: String,
                                  @RequestHeader("X-Correlation-ID") correlationID: String,
                                  @RequestHeader("OCPI-from-country-code") fromCountryCode: String,
@@ -54,54 +53,27 @@ class SessionsController(private val routingService: RoutingService,
         val sender = BasicRole(fromPartyID, fromCountryCode)
         val receiver = BasicRole(toPartyID, toCountryCode)
 
-        routingService.validateSender(authorization, sender)
-
         val requestVariables = OcpiRequestVariables(
                 module = ModuleID.SESSIONS,
                 interfaceRole = InterfaceRole.SENDER,
                 method = HttpMethod.GET,
-                headers = OcpiRequestHeaders(
-                        requestID = requestID,
-                        correlationID = correlationID,
-                        sender = sender,
-                        receiver = receiver),
+                headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
                 urlEncodedParams = OcpiRequestParameters(
                         dateFrom = dateFrom,
                         dateTo = dateTo,
                         offset = offset,
                         limit = limit))
 
-        val response: HttpResponse<Array<Session>> = when (routingService.validateReceiver(receiver)) {
-
-            Receiver.LOCAL -> {
-
-                val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables)
-
-                httpService.makeOcpiRequest(url, headers, requestVariables)
-            }
-
-            Receiver.REMOTE -> {
-
-                val (url, headers, body) = routingService.prepareRemotePlatformRequest(requestVariables)
-
-                httpService.postOcnMessage(url, headers, body)
-            }
-
-        }
-
-        val headers = routingService.proxyPaginationHeaders(
-                request = requestVariables,
-                responseHeaders = response.headers)
-
-        return ResponseEntity
-                .status(response.statusCode)
-                .headers(headers)
-                .body(response.body)
+        val request: RequestHandler<Array<Session>> = requestHandlerBuilder.build(requestVariables)
+        return request
+                .validateSender()
+                .forwardRequest()
+                .getResponseWithPaginationHeaders()
     }
-
 
     @GetMapping("/ocpi/sender/2.2/sessions/page/{uid}")
     fun getSessionsPageFromDataOwner(@RequestHeader("authorization") authorization: String,
+                                     @RequestHeader("OCN-Signature") signature: String? = null,
                                      @RequestHeader("X-Request-ID") requestID: String,
                                      @RequestHeader("X-Correlation-ID") correlationID: String,
                                      @RequestHeader("OCPI-from-country-code") fromCountryCode: String,
@@ -113,60 +85,23 @@ class SessionsController(private val routingService: RoutingService,
         val sender = BasicRole(fromPartyID, fromCountryCode)
         val receiver = BasicRole(toPartyID, toCountryCode)
 
-        routingService.validateSender(authorization, sender)
-
         val requestVariables = OcpiRequestVariables(
                 module = ModuleID.SESSIONS,
                 interfaceRole = InterfaceRole.SENDER,
                 method = HttpMethod.GET,
-                headers = OcpiRequestHeaders(
-                        requestID = requestID,
-                        correlationID = correlationID,
-                        sender = sender,
-                        receiver = receiver),
+                headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
                 urlPathVariables = uid)
 
-        val response: HttpResponse<Array<Session>> = when (routingService.validateReceiver(receiver)) {
-
-            Receiver.LOCAL -> {
-
-                val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables, proxied = true)
-
-                httpService.makeOcpiRequest(url, headers, requestVariables)
-
-            }
-
-            Receiver.REMOTE -> {
-
-                val (url, headers, body) = routingService.prepareRemotePlatformRequest(requestVariables, proxied = true)
-
-                httpService.postOcnMessage(url, headers, body)
-
-            }
-
-        }
-
-        var headers = HttpHeaders()
-
-        if (isOcpiSuccess(response)) {
-
-            routingService.deleteProxyResource(uid)
-
-            headers = routingService.proxyPaginationHeaders(
-                    request = requestVariables,
-                    responseHeaders = response.headers)
-
-        }
-
-        return ResponseEntity
-                .status(response.statusCode)
-                .headers(headers)
-                .body(response.body)
+        val request: RequestHandler<Array<Session>> = requestHandlerBuilder.build(requestVariables)
+        return request
+                .validateSender()
+                .forwardRequest()
+                .getResponseWithPaginationHeaders()
     }
-
 
     @PutMapping("/ocpi/sender/2.2/sessions/{sessionID}/charging_preferences")
     fun putChargingPreferences(@RequestHeader("authorization") authorization: String,
+                               @RequestHeader("OCN-Signature") signature: String? = null,
                                @RequestHeader("X-Request-ID") requestID: String,
                                @RequestHeader("X-Correlation-ID") correlationID: String,
                                @RequestHeader("OCPI-from-country-code") fromCountryCode: String,
@@ -179,41 +114,19 @@ class SessionsController(private val routingService: RoutingService,
         val sender = BasicRole(fromPartyID, fromCountryCode)
         val receiver = BasicRole(toPartyID, toCountryCode)
 
-        routingService.validateSender(authorization, sender)
-
         val requestVariables = OcpiRequestVariables(
                 module = ModuleID.SESSIONS,
                 interfaceRole = InterfaceRole.SENDER,
                 method = HttpMethod.PUT,
-                headers = OcpiRequestHeaders(
-                        requestID = requestID,
-                        correlationID = correlationID,
-                        sender = sender,
-                        receiver = receiver),
+                headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
                 urlPathVariables = "/$sessionID/charging_preferences",
                 body = body)
 
-        val response: HttpResponse<ChargingPreferencesResponse> = when (routingService.validateReceiver(receiver)) {
-
-            Receiver.LOCAL -> {
-
-                val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables)
-
-                httpService.makeOcpiRequest(url, headers, requestVariables)
-
-            }
-
-            Receiver.REMOTE -> {
-
-                val (url, headers, ocnBody) = routingService.prepareRemotePlatformRequest(requestVariables)
-
-                httpService.postOcnMessage(url, headers, ocnBody)
-
-            }
-
-        }
-
-        return ResponseEntity.status(response.statusCode).body(response.body)
+        val request: RequestHandler<ChargingPreferencesResponse> = requestHandlerBuilder.build(requestVariables)
+        return request
+                .validateSender()
+                .forwardRequest()
+                .getResponse()
     }
 
 
@@ -223,6 +136,7 @@ class SessionsController(private val routingService: RoutingService,
 
     @GetMapping("/ocpi/receiver/2.2/sessions/{countryCode}/{partyID}/{sessionID}")
     fun getClientOwnedSession(@RequestHeader("authorization") authorization: String,
+                              @RequestHeader("OCN-Signature") signature: String? = null,
                               @RequestHeader("X-Request-ID") requestID: String,
                               @RequestHeader("X-Correlation-ID") correlationID: String,
                               @RequestHeader("OCPI-from-country-code") fromCountryCode: String,
@@ -236,45 +150,23 @@ class SessionsController(private val routingService: RoutingService,
         val sender = BasicRole(fromPartyID, fromCountryCode)
         val receiver = BasicRole(toPartyID, toCountryCode)
 
-        routingService.validateSender(authorization, sender)
-
         val requestVariables = OcpiRequestVariables(
                 module = ModuleID.SESSIONS,
                 interfaceRole = InterfaceRole.RECEIVER,
                 method = HttpMethod.GET,
-                headers = OcpiRequestHeaders(
-                        requestID = requestID,
-                        correlationID = correlationID,
-                        sender = sender,
-                        receiver = receiver),
+                headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
                 urlPathVariables = "/$countryCode/$partyID/$sessionID")
 
-        val response: HttpResponse<Session> = when (routingService.validateReceiver(receiver)) {
-
-            Receiver.LOCAL -> {
-
-                val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables)
-
-                httpService.makeOcpiRequest(url, headers, requestVariables)
-
-            }
-
-            Receiver.REMOTE -> {
-
-                val (url, headers, ocnBody) = routingService.prepareRemotePlatformRequest(requestVariables)
-
-                httpService.postOcnMessage(url, headers, ocnBody)
-
-            }
-
-        }
-
-        return ResponseEntity.status(response.statusCode).body(response.body)
+        val request: RequestHandler<Session> = requestHandlerBuilder.build(requestVariables)
+        return request
+                .validateSender()
+                .forwardRequest()
+                .getResponse()
     }
-
 
     @PutMapping("/ocpi/receiver/2.2/sessions/{countryCode}/{partyID}/{sessionID}")
     fun putClientOwnedSession(@RequestHeader("authorization") authorization: String,
+                              @RequestHeader("OCN-Signature") signature: String? = null,
                               @RequestHeader("X-Request-ID") requestID: String,
                               @RequestHeader("X-Correlation-ID") correlationID: String,
                               @RequestHeader("OCPI-from-country-code") fromCountryCode: String,
@@ -289,46 +181,24 @@ class SessionsController(private val routingService: RoutingService,
         val sender = BasicRole(fromPartyID, fromCountryCode)
         val receiver = BasicRole(toPartyID, toCountryCode)
 
-        routingService.validateSender(authorization, sender)
-
         val requestVariables = OcpiRequestVariables(
                 module = ModuleID.SESSIONS,
                 interfaceRole = InterfaceRole.RECEIVER,
                 method = HttpMethod.PUT,
-                headers = OcpiRequestHeaders(
-                        requestID = requestID,
-                        correlationID = correlationID,
-                        sender = sender,
-                        receiver = receiver),
+                headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
                 urlPathVariables = "/$countryCode/$partyID/$sessionID",
                 body = body)
 
-        val response: HttpResponse<Unit> = when (routingService.validateReceiver(receiver)) {
-
-            Receiver.LOCAL -> {
-
-                val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables)
-
-                httpService.makeOcpiRequest(url, headers, requestVariables)
-
-            }
-
-            Receiver.REMOTE -> {
-
-                val (url, headers, ocnBody) = routingService.prepareRemotePlatformRequest(requestVariables)
-
-                httpService.postOcnMessage(url, headers, ocnBody)
-
-            }
-
-        }
-
-        return ResponseEntity.status(response.statusCode).body(response.body)
+        val request: RequestHandler<Unit> = requestHandlerBuilder.build(requestVariables)
+        return request
+                .validateSender()
+                .forwardRequest()
+                .getResponse()
     }
-
 
     @PatchMapping("/ocpi/receiver/2.2/sessions/{countryCode}/{partyID}/{sessionID}")
     fun patchClientOwnedSession(@RequestHeader("authorization") authorization: String,
+                                @RequestHeader("OCN-Signature") signature: String? = null,
                                 @RequestHeader("X-Request-ID") requestID: String,
                                 @RequestHeader("X-Correlation-ID") correlationID: String,
                                 @RequestHeader("OCPI-from-country-code") fromCountryCode: String,
@@ -343,41 +213,19 @@ class SessionsController(private val routingService: RoutingService,
         val sender = BasicRole(fromPartyID, fromCountryCode)
         val receiver = BasicRole(toPartyID, toCountryCode)
 
-        routingService.validateSender(authorization, sender)
-
         val requestVariables = OcpiRequestVariables(
                 module = ModuleID.SESSIONS,
                 interfaceRole = InterfaceRole.RECEIVER,
                 method = HttpMethod.PATCH,
-                headers = OcpiRequestHeaders(
-                        requestID = requestID,
-                        correlationID = correlationID,
-                        sender = sender,
-                        receiver = receiver),
+                headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
                 urlPathVariables = "/$countryCode/$partyID/$sessionID",
                 body = body)
 
-        val response: HttpResponse<Unit> = when (routingService.validateReceiver(receiver)) {
-
-            Receiver.LOCAL -> {
-
-                val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables)
-
-                httpService.makeOcpiRequest(url, headers, requestVariables)
-
-            }
-
-            Receiver.REMOTE -> {
-
-                val (url, headers, ocnBody) = routingService.prepareRemotePlatformRequest(requestVariables)
-
-                httpService.postOcnMessage(url, headers, ocnBody)
-
-            }
-
-        }
-
-        return ResponseEntity.status(response.statusCode).body(response.body)
+        val request: RequestHandler<Unit> = requestHandlerBuilder.build(requestVariables)
+        return request
+                .validateSender()
+                .forwardRequest()
+                .getResponse()
     }
 
 }

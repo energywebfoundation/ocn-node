@@ -40,7 +40,7 @@ class HttpService {
     /**
      * Generic HTTP request expecting a response of type OcpiResponse<T> as defined by the caller
      */
-    fun <T: Any> makeOcpiRequest(method: HttpMethod, url: String, headers: Map<String, String>, params: Map<String, String> = mapOf(), json: Map<String, Any>? = null): HttpResponse<T> {
+    fun <T: Any> makeOcpiRequest(method: HttpMethod, url: String, headers: Map<String, String?>, params: Map<String, String> = mapOf(), json: Map<String, Any>? = null): HttpResponse<T> {
         val response = when (method) {
             HttpMethod.GET -> khttp.get(url, headers, params)
             HttpMethod.POST -> khttp.post(url, headers, params, json = json)
@@ -60,9 +60,9 @@ class HttpService {
     /**
      * Generic HTTP request expecting a response of type OcpiResponse<T> as defined by the caller
      */
-    final inline fun <reified T: Any> makeOcpiRequest(url: String,
-                                                      headers: OcpiRequestHeaders,
-                                                      requestVariables: OcpiRequestVariables): HttpResponse<T> {
+    final fun <T: Any> makeOcpiRequest(url: String,
+                                       headers: OcnHeaders,
+                                       requestVariables: OcpiRequestVariables): HttpResponse<T> {
 
         val headersMap = headers.toMap()
 
@@ -131,7 +131,7 @@ class HttpService {
      * Make a POST request to an OCN Node which implements /ocn/message
      * Used to forward requests to OCPI platforms of which the OCN Node does not share a local connection with
      */
-    final inline fun <reified T: Any> postOcnMessage(url: String,
+    final fun <T: Any> postOcnMessage(url: String,
                                 headers: OcnMessageHeaders,
                                 body: String): HttpResponse<T> {
 

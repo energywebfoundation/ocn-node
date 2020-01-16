@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "e22c7b29-dee2-4cdd-bf33-5c8df8760cdc",
+		"_postman_id": "6f7988c3-32a1-4884-a6bc-9e63ae5702ba",
 		"name": "OCN Node",
 		"description": "The OCN Node collection walks admins and users through the various use cases of the OCN Node.\n\nIncluded is the following requests:\n\n- Admin API\n\t- generate registration token\n\n- OCN\n\t- read data from the OCN Registry\n\n- OCPI\n\t- view OCPI versions\n\t- view OCPI version details (module enpdoints)\n\t- POST (register) credentials\n\t- PUT (update) credentials\n\t- and more...",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
@@ -16,7 +16,7 @@
 						"header": [
 							{
 								"key": "Authorization",
-								"value": "Token randomkey",
+								"value": "Token {{ADMIN_API_KEY}}",
 								"type": "text"
 							},
 							{
@@ -31,12 +31,10 @@
 							"raw": "[\n\t{\n\t\t\"country_code\": \"DE\",\n\t\t\"party_id\": \"MSP\"\n\t}\t\n]"
 						},
 						"url": {
-							"raw": "http://localhost:8080/admin/generate-registration-token",
-							"protocol": "http",
+							"raw": "{{NODE_URL}}/admin/generate-registration-token",
 							"host": [
-								"localhost"
+								"{{NODE_URL}}"
 							],
-							"port": "8080",
 							"path": [
 								"admin",
 								"generate-registration-token"
@@ -44,10 +42,77 @@
 						},
 						"description": "Generate a CREDENTIALS_TOKEN_A for a planned OCPI connection."
 					},
-					"response": []
+					"response": [
+						{
+							"name": "Generate Registration Token",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Token {{ADMIN_API_KEY}}",
+										"type": "text"
+									},
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "[\n\t{\n\t\t\"country_code\": \"DE\",\n\t\t\"party_id\": \"MSP\"\n\t}\t\n]",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{NODE_URL}}/admin/generate-registration-token",
+									"host": [
+										"{{NODE_URL}}"
+									],
+									"path": [
+										"admin",
+										"generate-registration-token"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								},
+								{
+									"key": "Transfer-Encoding",
+									"value": "chunked"
+								},
+								{
+									"key": "Date",
+									"value": "Wed, 15 Jan 2020 10:21:31 GMT"
+								},
+								{
+									"key": "Keep-Alive",
+									"value": "timeout=60"
+								},
+								{
+									"key": "Connection",
+									"value": "keep-alive"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"token\": \"493a7355-28f8-4575-ad73-a5b934b5ef25\",\n    \"versions\": \"http://localhost:8080/ocpi/versions\"\n}"
+						}
+					]
 				}
 			],
-			"description": "Admin API requests"
+			"description": "Admin API requests",
+			"protocolProfileBehavior": {}
 		},
 		{
 			"name": "OCN",
@@ -58,12 +123,10 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "http://localhost:8080/ocn/registry/node-info",
-							"protocol": "http",
+							"raw": "{{NODE_URL}}/ocn/registry/node-info",
 							"host": [
-								"localhost"
+								"{{NODE_URL}}"
 							],
-							"port": "8080",
 							"path": [
 								"ocn",
 								"registry",
@@ -72,7 +135,53 @@
 						},
 						"description": "Get Node Info on OCN."
 					},
-					"response": []
+					"response": [
+						{
+							"name": "Node Info",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{NODE_URL}}/ocn/registry/node-info",
+									"host": [
+										"{{NODE_URL}}"
+									],
+									"path": [
+										"ocn",
+										"registry",
+										"node-info"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								},
+								{
+									"key": "Transfer-Encoding",
+									"value": "chunked"
+								},
+								{
+									"key": "Date",
+									"value": "Wed, 15 Jan 2020 10:23:07 GMT"
+								},
+								{
+									"key": "Keep-Alive",
+									"value": "timeout=60"
+								},
+								{
+									"key": "Connection",
+									"value": "keep-alive"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"url\": \"http://localhost:8080\",\n    \"address\": \"0xc98a48f2e7895a4bcde9f9190eb5f4eb72e92e1a\"\n}"
+						}
+					]
 				}
 			],
 			"description": "OCN specific requests (i.e. getting node information, getting registry information)",
@@ -97,7 +206,8 @@
 						]
 					}
 				}
-			]
+			],
+			"protocolProfileBehavior": {}
 		},
 		{
 			"name": "OCPI",
@@ -112,17 +222,15 @@
 								"header": [
 									{
 										"key": "Authorization",
-										"value": "Token CREDENTIALS_TOKEN_A",
+										"value": "Token {{CREDENTIALS_TOKEN_A}}",
 										"type": "text"
 									}
 								],
 								"url": {
-									"raw": "http://localhost:8080/ocpi/versions",
-									"protocol": "http",
+									"raw": "{{NODE_URL}}/ocpi/versions",
 									"host": [
-										"localhost"
+										"{{NODE_URL}}"
 									],
-									"port": "8080",
 									"path": [
 										"ocpi",
 										"versions"
@@ -130,7 +238,58 @@
 								},
 								"description": "Get all versions supported by the OCN Node"
 							},
-							"response": []
+							"response": [
+								{
+									"name": "Versions",
+									"originalRequest": {
+										"method": "GET",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Token {{CREDENTIALS_TOKEN_A}}",
+												"type": "text"
+											}
+										],
+										"url": {
+											"raw": "{{NODE_URL}}/ocpi/versions",
+											"host": [
+												"{{NODE_URL}}"
+											],
+											"path": [
+												"ocpi",
+												"versions"
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "json",
+									"header": [
+										{
+											"key": "Content-Type",
+											"value": "application/json"
+										},
+										{
+											"key": "Transfer-Encoding",
+											"value": "chunked"
+										},
+										{
+											"key": "Date",
+											"value": "Wed, 15 Jan 2020 10:23:58 GMT"
+										},
+										{
+											"key": "Keep-Alive",
+											"value": "timeout=60"
+										},
+										{
+											"key": "Connection",
+											"value": "keep-alive"
+										}
+									],
+									"cookie": [],
+									"body": "{\n    \"status_code\": 1000,\n    \"data\": {\n        \"versions\": [\n            {\n                \"version\": \"2.2\",\n                \"url\": \"http://localhost:8080/ocpi/2.2\"\n            }\n        ]\n    },\n    \"timestamp\": \"2020-01-15T10:23:58.103Z\"\n}"
+								}
+							]
 						},
 						{
 							"name": "Version Details",
@@ -139,17 +298,15 @@
 								"header": [
 									{
 										"key": "Authorization",
-										"value": "Token CREDENTIALS_TOKEN_A",
+										"value": "Token {{CREDENTIALS_TOKEN_A}}",
 										"type": "text"
 									}
 								],
 								"url": {
-									"raw": "http://localhost:8080/ocpi/2.2",
-									"protocol": "http",
+									"raw": "{{NODE_URL}}/ocpi/2.2",
 									"host": [
-										"localhost"
+										"{{NODE_URL}}"
 									],
-									"port": "8080",
 									"path": [
 										"ocpi",
 										"2.2"
@@ -157,7 +314,58 @@
 								},
 								"description": "See 2.2 module interfaces of the OCN Node."
 							},
-							"response": []
+							"response": [
+								{
+									"name": "Version Details",
+									"originalRequest": {
+										"method": "GET",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Token {{CREDENTIALS_TOKEN_A}}",
+												"type": "text"
+											}
+										],
+										"url": {
+											"raw": "{{NODE_URL}}/ocpi/2.2",
+											"host": [
+												"{{NODE_URL}}"
+											],
+											"path": [
+												"ocpi",
+												"2.2"
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "json",
+									"header": [
+										{
+											"key": "Content-Type",
+											"value": "application/json"
+										},
+										{
+											"key": "Transfer-Encoding",
+											"value": "chunked"
+										},
+										{
+											"key": "Date",
+											"value": "Wed, 15 Jan 2020 10:24:32 GMT"
+										},
+										{
+											"key": "Keep-Alive",
+											"value": "timeout=60"
+										},
+										{
+											"key": "Connection",
+											"value": "keep-alive"
+										}
+									],
+									"cookie": [],
+									"body": "{\n    \"status_code\": 1000,\n    \"data\": {\n        \"version\": \"2.2\",\n        \"endpoints\": [\n            {\n                \"identifier\": \"cdrs\",\n                \"role\": \"SENDER\",\n                \"url\": \"http://localhost:8080/ocpi/sender/2.2/cdrs\"\n            },\n            {\n                \"identifier\": \"cdrs\",\n                \"role\": \"RECEIVER\",\n                \"url\": \"http://localhost:8080/ocpi/receiver/2.2/cdrs\"\n            },\n            {\n                \"identifier\": \"commands\",\n                \"role\": \"SENDER\",\n                \"url\": \"http://localhost:8080/ocpi/sender/2.2/commands\"\n            },\n            {\n                \"identifier\": \"commands\",\n                \"role\": \"RECEIVER\",\n                \"url\": \"http://localhost:8080/ocpi/receiver/2.2/commands\"\n            },\n            {\n                \"identifier\": \"credentials\",\n                \"role\": \"SENDER\",\n                \"url\": \"http://localhost:8080/ocpi/2.2/credentials\"\n            },\n            {\n                \"identifier\": \"hubclientinfo\",\n                \"role\": \"SENDER\",\n                \"url\": \"http://localhost:8080/ocpi/2.2/hubclientinfo\"\n            },\n            {\n                \"identifier\": \"locations\",\n                \"role\": \"SENDER\",\n                \"url\": \"http://localhost:8080/ocpi/sender/2.2/locations\"\n            },\n            {\n                \"identifier\": \"locations\",\n                \"role\": \"RECEIVER\",\n                \"url\": \"http://localhost:8080/ocpi/receiver/2.2/locations\"\n            },\n            {\n                \"identifier\": \"sessions\",\n                \"role\": \"SENDER\",\n                \"url\": \"http://localhost:8080/ocpi/sender/2.2/sessions\"\n            },\n            {\n                \"identifier\": \"sessions\",\n                \"role\": \"RECEIVER\",\n                \"url\": \"http://localhost:8080/ocpi/receiver/2.2/sessions\"\n            },\n            {\n                \"identifier\": \"tariffs\",\n                \"role\": \"SENDER\",\n                \"url\": \"http://localhost:8080/ocpi/sender/2.2/tariffs\"\n            },\n            {\n                \"identifier\": \"tariffs\",\n                \"role\": \"RECEIVER\",\n                \"url\": \"http://localhost:8080/ocpi/receiver/2.2/tariffs\"\n            },\n            {\n                \"identifier\": \"tokens\",\n                \"role\": \"SENDER\",\n                \"url\": \"http://localhost:8080/ocpi/sender/2.2/tokens\"\n            },\n            {\n                \"identifier\": \"tokens\",\n                \"role\": \"RECEIVER\",\n                \"url\": \"http://localhost:8080/ocpi/receiver/2.2/tokens\"\n            }\n        ]\n    },\n    \"timestamp\": \"2020-01-15T10:24:32.091Z\"\n}"
+								}
+							]
 						}
 					],
 					"description": "OCPI Versions module example requests.\n\nSee [Versions documentation](https://github.com/ocpi/ocpi/blob/develop/version_information_endpoint.asciidoc) for more.",
@@ -183,6 +391,7 @@
 							}
 						}
 					],
+					"protocolProfileBehavior": {},
 					"_postman_isSubFolder": true
 				},
 				{
@@ -195,7 +404,7 @@
 								"header": [
 									{
 										"key": "Authorization",
-										"value": "Token CREDENTIALS_TOKEN_A",
+										"value": "Token {{CREDENTIALS_TOKEN_A}}",
 										"type": "text"
 									},
 									{
@@ -207,15 +416,13 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n\t\"token\": \"abc-123\",\n\t\"url\": \"http://localhost:3001/ocpi/versions\",\n\t\"roles\": [{\n\t\t\"country_code\": \"DE\",\n\t\t\"party_id\": \"MSP\",\n\t\t\"role\": \"EMSP\",\n\t\t\"business_details\": {\n\t\t\t\"name\": \"Test MSP\"\n\t\t}\n\t}]\n}"
+									"raw": "{\n\t\"token\": \"abc-123\",\n\t\"url\": \"http://localhost:3002/ocpi/versions\",\n\t\"roles\": [{\n\t\t\"country_code\": \"DE\",\n\t\t\"party_id\": \"MSP\",\n\t\t\"role\": \"EMSP\",\n\t\t\"business_details\": {\n\t\t\t\"name\": \"Test MSP\"\n\t\t}\n\t}]\n}"
 								},
 								"url": {
-									"raw": "http://localhost:8080/ocpi/2.2/credentials",
-									"protocol": "http",
+									"raw": "{{NODE_URL}}/ocpi/2.2/credentials",
 									"host": [
-										"localhost"
+										"{{NODE_URL}}"
 									],
-									"port": "8080",
 									"path": [
 										"ocpi",
 										"2.2",
@@ -224,10 +431,73 @@
 								},
 								"description": "Register an EMSP role on the OCN Node."
 							},
-							"response": []
+							"response": [
+								{
+									"name": "Credentials",
+									"originalRequest": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Token {{CREDENTIALS_TOKEN_A}}",
+												"type": "text"
+											},
+											{
+												"key": "Content-Type",
+												"name": "Content-Type",
+												"value": "application/json",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n\t\"token\": \"abc-123\",\n\t\"url\": \"http://localhost:3002/ocpi/versions\",\n\t\"roles\": [{\n\t\t\"country_code\": \"DE\",\n\t\t\"party_id\": \"MSP\",\n\t\t\"role\": \"EMSP\",\n\t\t\"business_details\": {\n\t\t\t\"name\": \"Test MSP\"\n\t\t}\n\t}]\n}"
+										},
+										"url": {
+											"raw": "{{NODE_URL}}/ocpi/2.2/credentials",
+											"host": [
+												"{{NODE_URL}}"
+											],
+											"path": [
+												"ocpi",
+												"2.2",
+												"credentials"
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "json",
+									"header": [
+										{
+											"key": "Content-Type",
+											"value": "application/json"
+										},
+										{
+											"key": "Transfer-Encoding",
+											"value": "chunked"
+										},
+										{
+											"key": "Date",
+											"value": "Wed, 15 Jan 2020 09:56:56 GMT"
+										},
+										{
+											"key": "Keep-Alive",
+											"value": "timeout=60"
+										},
+										{
+											"key": "Connection",
+											"value": "keep-alive"
+										}
+									],
+									"cookie": [],
+									"body": "{\n    \"status_code\": 1000,\n    \"data\": {\n        \"token\": \"ef4c3b29-5679-4bb9-8a59-4c53fc3dacef\",\n        \"url\": \"http://localhost:8080/ocpi/versions\",\n        \"roles\": [\n            {\n                \"role\": \"HUB\",\n                \"business_details\": {\n                    \"name\": \"Open Charging Network Node\"\n                },\n                \"party_id\": \"OCN\",\n                \"country_code\": \"DE\"\n            }\n        ]\n    },\n    \"timestamp\": \"2020-01-15T09:56:56.547Z\"\n}"
+								}
+							]
 						}
 					],
 					"description": "Example OCPI credentials requests to the OCN Node.\n\nCheck [the OCPI credentials documentation](https://github.com/ocpi/ocpi/blob/develop/credentials.asciidoc) for more, which also includes a diagram of the registration process.",
+					"protocolProfileBehavior": {},
 					"_postman_isSubFolder": true
 				},
 				{
@@ -240,7 +510,7 @@
 								"header": [
 									{
 										"key": "Authorization",
-										"value": "Token CREDENTIALS_TOKEN_C",
+										"value": "Token {{CREDENTIALS_TOKEN_C}}",
 										"type": "text"
 									},
 									{
@@ -275,12 +545,10 @@
 									}
 								],
 								"url": {
-									"raw": "http://localhost:8080/ocpi/sender/2.2/locations",
-									"protocol": "http",
+									"raw": "{{NODE_URL}}/ocpi/sender/2.2/locations",
 									"host": [
-										"localhost"
+										"{{NODE_URL}}"
 									],
-									"port": "8080",
 									"path": [
 										"ocpi",
 										"sender",
@@ -290,7 +558,102 @@
 								},
 								"description": "Request a list of locations from a CPO."
 							},
-							"response": []
+							"response": [
+								{
+									"name": "Location List",
+									"originalRequest": {
+										"method": "GET",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Token {{CREDENTIALS_TOKEN_C}}",
+												"type": "text"
+											},
+											{
+												"key": "X-Request-ID",
+												"value": "1",
+												"type": "text"
+											},
+											{
+												"key": "X-Correlation-ID",
+												"value": "1",
+												"type": "text"
+											},
+											{
+												"key": "OCPI-from-country-code",
+												"value": "DE",
+												"type": "text"
+											},
+											{
+												"key": "OCPI-from-party-id",
+												"value": "MSP",
+												"type": "text"
+											},
+											{
+												"key": "OCPI-to-country-code",
+												"value": "DE",
+												"type": "text"
+											},
+											{
+												"key": "OCPI-to-party-id",
+												"value": "CPO",
+												"type": "text"
+											}
+										],
+										"url": {
+											"raw": "{{NODE_URL}}/ocpi/sender/2.2/locations",
+											"host": [
+												"{{NODE_URL}}"
+											],
+											"path": [
+												"ocpi",
+												"sender",
+												"2.2",
+												"locations"
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "json",
+									"header": [
+										{
+											"key": "Link",
+											"value": "http://localhost:8080/ocpi/sender/2.2/locations/page/12; rel=\"next\""
+										},
+										{
+											"key": "X-Total-Count",
+											"value": "1"
+										},
+										{
+											"key": "X-Limit",
+											"value": "1"
+										},
+										{
+											"key": "Content-Type",
+											"value": "application/json"
+										},
+										{
+											"key": "Transfer-Encoding",
+											"value": "chunked"
+										},
+										{
+											"key": "Date",
+											"value": "Wed, 15 Jan 2020 09:58:37 GMT"
+										},
+										{
+											"key": "Keep-Alive",
+											"value": "timeout=60"
+										},
+										{
+											"key": "Connection",
+											"value": "keep-alive"
+										}
+									],
+									"cookie": [],
+									"body": "{\n    \"status_code\": 1000,\n    \"data\": [\n        {\n            \"country_code\": \"DE\",\n            \"party_id\": \"CPO\",\n            \"id\": \"LOC1\",\n            \"type\": \"ON_STREET\",\n            \"address\": \"somestreet 1\",\n            \"city\": \"Essen\",\n            \"postal_code\": \"45131\",\n            \"country\": \"DEU\",\n            \"coordinates\": {\n                \"latitude\": \"52.232\",\n                \"longitude\": \"0.809\"\n            },\n            \"evses\": [\n                {\n                    \"uid\": \"1234\",\n                    \"evse_id\": \"XX-1234-YY\",\n                    \"status\": \"AVAILABLE\",\n                    \"connectors\": [\n                        {\n                            \"id\": \"1\",\n                            \"standard\": \"IEC_62196_T2\",\n                            \"format\": \"SOCKET\",\n                            \"power_type\": \"AC_3_PHASE\",\n                            \"max_voltage\": 400,\n                            \"max_amperage\": 32,\n                            \"tariff_ids\": [\n                                \"xxx-123\"\n                            ],\n                            \"last_updated\": \"2019-08-13T14:44:25.561Z\"\n                        }\n                    ],\n                    \"last_updated\": \"2019-08-13T14:44:25.561Z\"\n                },\n                {\n                    \"uid\": \"4567\",\n                    \"evse_id\": \"XX-4567-YY\",\n                    \"status\": \"RESERVED\",\n                    \"connectors\": [\n                        {\n                            \"id\": \"1\",\n                            \"standard\": \"IEC_62196_T2\",\n                            \"format\": \"SOCKET\",\n                            \"power_type\": \"AC_3_PHASE\",\n                            \"max_voltage\": 400,\n                            \"max_amperage\": 32,\n                            \"tariff_ids\": [\n                                \"xyz-456\"\n                            ],\n                            \"last_updated\": \"2019-08-13T14:44:25.561Z\"\n                        }\n                    ],\n                    \"last_updated\": \"2019-08-13T14:44:25.561Z\"\n                }\n            ],\n            \"last_updated\": \"2019-08-13T14:44:25.561Z\"\n        }\n    ],\n    \"timestamp\": \"2020-01-15T09:58:37.490Z\"\n}"
+								}
+							]
 						},
 						{
 							"name": "Location Object",
@@ -299,7 +662,7 @@
 								"header": [
 									{
 										"key": "Authorization",
-										"value": "Token CREDENTIALS_TOKEN_C",
+										"value": "Token {{CREDENTIALS_TOKEN_C}}",
 										"type": "text"
 									},
 									{
@@ -334,12 +697,10 @@
 									}
 								],
 								"url": {
-									"raw": "http://localhost:8080/ocpi/sender/2.2/locations/LOC1",
-									"protocol": "http",
+									"raw": "{{NODE_URL}}/ocpi/sender/2.2/locations/LOC1",
 									"host": [
-										"localhost"
+										"{{NODE_URL}}"
 									],
-									"port": "8080",
 									"path": [
 										"ocpi",
 										"sender",
@@ -350,7 +711,91 @@
 								},
 								"description": "Request a single location object from a CPO."
 							},
-							"response": []
+							"response": [
+								{
+									"name": "Location Object",
+									"originalRequest": {
+										"method": "GET",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Token {{CREDENTIALS_TOKEN_C}}",
+												"type": "text"
+											},
+											{
+												"key": "X-Request-ID",
+												"value": "1",
+												"type": "text"
+											},
+											{
+												"key": "X-Correlation-ID",
+												"value": "1",
+												"type": "text"
+											},
+											{
+												"key": "OCPI-from-country-code",
+												"value": "DE",
+												"type": "text"
+											},
+											{
+												"key": "OCPI-from-party-id",
+												"value": "MSP",
+												"type": "text"
+											},
+											{
+												"key": "OCPI-to-country-code",
+												"value": "DE",
+												"type": "text"
+											},
+											{
+												"key": "OCPI-to-party-id",
+												"value": "CPO",
+												"type": "text"
+											}
+										],
+										"url": {
+											"raw": "{{NODE_URL}}/ocpi/sender/2.2/locations/LOC1",
+											"host": [
+												"{{NODE_URL}}"
+											],
+											"path": [
+												"ocpi",
+												"sender",
+												"2.2",
+												"locations",
+												"LOC1"
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "json",
+									"header": [
+										{
+											"key": "Content-Type",
+											"value": "application/json"
+										},
+										{
+											"key": "Transfer-Encoding",
+											"value": "chunked"
+										},
+										{
+											"key": "Date",
+											"value": "Wed, 15 Jan 2020 10:26:06 GMT"
+										},
+										{
+											"key": "Keep-Alive",
+											"value": "timeout=60"
+										},
+										{
+											"key": "Connection",
+											"value": "keep-alive"
+										}
+									],
+									"cookie": [],
+									"body": "{\n    \"status_code\": 1000,\n    \"data\": {\n        \"country_code\": \"DE\",\n        \"party_id\": \"CPO\",\n        \"id\": \"LOC1\",\n        \"type\": \"ON_STREET\",\n        \"address\": \"somestreet 1\",\n        \"city\": \"Essen\",\n        \"postal_code\": \"45131\",\n        \"country\": \"DEU\",\n        \"coordinates\": {\n            \"latitude\": \"52.232\",\n            \"longitude\": \"0.809\"\n        },\n        \"evses\": [\n            {\n                \"uid\": \"1234\",\n                \"evse_id\": \"XX-1234-YY\",\n                \"status\": \"AVAILABLE\",\n                \"connectors\": [\n                    {\n                        \"id\": \"1\",\n                        \"standard\": \"IEC_62196_T2\",\n                        \"format\": \"SOCKET\",\n                        \"power_type\": \"AC_3_PHASE\",\n                        \"max_voltage\": 400,\n                        \"max_amperage\": 32,\n                        \"tariff_ids\": [\n                            \"xxx-123\"\n                        ],\n                        \"last_updated\": \"2019-08-13T14:44:25.561Z\"\n                    }\n                ],\n                \"last_updated\": \"2019-08-13T14:44:25.561Z\"\n            },\n            {\n                \"uid\": \"4567\",\n                \"evse_id\": \"XX-4567-YY\",\n                \"status\": \"RESERVED\",\n                \"connectors\": [\n                    {\n                        \"id\": \"1\",\n                        \"standard\": \"IEC_62196_T2\",\n                        \"format\": \"SOCKET\",\n                        \"power_type\": \"AC_3_PHASE\",\n                        \"max_voltage\": 400,\n                        \"max_amperage\": 32,\n                        \"tariff_ids\": [\n                            \"xyz-456\"\n                        ],\n                        \"last_updated\": \"2019-08-13T14:44:25.561Z\"\n                    }\n                ],\n                \"last_updated\": \"2019-08-13T14:44:25.561Z\"\n            }\n        ],\n        \"last_updated\": \"2019-08-13T14:44:25.561Z\"\n    },\n    \"timestamp\": \"2020-01-15T10:26:06.657Z\"\n}"
+								}
+							]
 						},
 						{
 							"name": "EVSE",
@@ -359,7 +804,7 @@
 								"header": [
 									{
 										"key": "Authorization",
-										"value": "Token CREDENTIALS_TOKEN_C",
+										"value": "Token {{CREDENTIALS_TOKEN_C}}",
 										"type": "text"
 									},
 									{
@@ -394,12 +839,10 @@
 									}
 								],
 								"url": {
-									"raw": "http://localhost:8080/ocpi/sender/2.2/locations/LOC1/1234",
-									"protocol": "http",
+									"raw": "{{NODE_URL}}/ocpi/sender/2.2/locations/LOC1/1234",
 									"host": [
-										"localhost"
+										"{{NODE_URL}}"
 									],
-									"port": "8080",
 									"path": [
 										"ocpi",
 										"sender",
@@ -411,7 +854,92 @@
 								},
 								"description": "Request a specific EVSE from a CPO."
 							},
-							"response": []
+							"response": [
+								{
+									"name": "EVSE",
+									"originalRequest": {
+										"method": "GET",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Token {{CREDENTIALS_TOKEN_C}}",
+												"type": "text"
+											},
+											{
+												"key": "X-Request-ID",
+												"value": "1",
+												"type": "text"
+											},
+											{
+												"key": "X-Correlation-ID",
+												"value": "1",
+												"type": "text"
+											},
+											{
+												"key": "OCPI-from-country-code",
+												"value": "DE",
+												"type": "text"
+											},
+											{
+												"key": "OCPI-from-party-id",
+												"value": "MSP",
+												"type": "text"
+											},
+											{
+												"key": "OCPI-to-country-code",
+												"value": "DE",
+												"type": "text"
+											},
+											{
+												"key": "OCPI-to-party-id",
+												"value": "CPO",
+												"type": "text"
+											}
+										],
+										"url": {
+											"raw": "{{NODE_URL}}/ocpi/sender/2.2/locations/LOC1/1234",
+											"host": [
+												"{{NODE_URL}}"
+											],
+											"path": [
+												"ocpi",
+												"sender",
+												"2.2",
+												"locations",
+												"LOC1",
+												"1234"
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "json",
+									"header": [
+										{
+											"key": "Content-Type",
+											"value": "application/json"
+										},
+										{
+											"key": "Transfer-Encoding",
+											"value": "chunked"
+										},
+										{
+											"key": "Date",
+											"value": "Wed, 15 Jan 2020 10:26:35 GMT"
+										},
+										{
+											"key": "Keep-Alive",
+											"value": "timeout=60"
+										},
+										{
+											"key": "Connection",
+											"value": "keep-alive"
+										}
+									],
+									"cookie": [],
+									"body": "{\n    \"status_code\": 1000,\n    \"data\": {\n        \"uid\": \"1234\",\n        \"evse_id\": \"XX-1234-YY\",\n        \"status\": \"AVAILABLE\",\n        \"connectors\": [\n            {\n                \"id\": \"1\",\n                \"standard\": \"IEC_62196_T2\",\n                \"format\": \"SOCKET\",\n                \"power_type\": \"AC_3_PHASE\",\n                \"max_voltage\": 400,\n                \"max_amperage\": 32,\n                \"tariff_ids\": [\n                    \"xxx-123\"\n                ],\n                \"last_updated\": \"2019-08-13T14:44:25.561Z\"\n            }\n        ],\n        \"last_updated\": \"2019-08-13T14:44:25.561Z\"\n    },\n    \"timestamp\": \"2020-01-15T10:26:35.951Z\"\n}"
+								}
+							]
 						},
 						{
 							"name": "Connector",
@@ -420,7 +948,7 @@
 								"header": [
 									{
 										"key": "Authorization",
-										"value": "Token CREDENTIALS_TOKEN_C",
+										"value": "Token {{CREDENTIALS_TOKEN_C}}",
 										"type": "text"
 									},
 									{
@@ -455,12 +983,10 @@
 									}
 								],
 								"url": {
-									"raw": "http://localhost:8080/ocpi/sender/2.2/locations/LOC1/1234/1",
-									"protocol": "http",
+									"raw": "{{NODE_URL}}/ocpi/sender/2.2/locations/LOC1/1234/1",
 									"host": [
-										"localhost"
+										"{{NODE_URL}}"
 									],
-									"port": "8080",
 									"path": [
 										"ocpi",
 										"sender",
@@ -473,10 +999,97 @@
 								},
 								"description": "Request a specific connector from a CPO."
 							},
-							"response": []
+							"response": [
+								{
+									"name": "Connector",
+									"originalRequest": {
+										"method": "GET",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Token {{CREDENTIALS_TOKEN_C}}",
+												"type": "text"
+											},
+											{
+												"key": "X-Request-ID",
+												"value": "1",
+												"type": "text"
+											},
+											{
+												"key": "X-Correlation-ID",
+												"value": "1",
+												"type": "text"
+											},
+											{
+												"key": "OCPI-from-country-code",
+												"value": "DE",
+												"type": "text"
+											},
+											{
+												"key": "OCPI-from-party-id",
+												"value": "MSP",
+												"type": "text"
+											},
+											{
+												"key": "OCPI-to-country-code",
+												"value": "DE",
+												"type": "text"
+											},
+											{
+												"key": "OCPI-to-party-id",
+												"value": "CPO",
+												"type": "text"
+											}
+										],
+										"url": {
+											"raw": "{{NODE_URL}}/ocpi/sender/2.2/locations/LOC1/1234/1",
+											"host": [
+												"{{NODE_URL}}"
+											],
+											"path": [
+												"ocpi",
+												"sender",
+												"2.2",
+												"locations",
+												"LOC1",
+												"1234",
+												"1"
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "json",
+									"header": [
+										{
+											"key": "Content-Type",
+											"value": "application/json"
+										},
+										{
+											"key": "Transfer-Encoding",
+											"value": "chunked"
+										},
+										{
+											"key": "Date",
+											"value": "Wed, 15 Jan 2020 10:27:06 GMT"
+										},
+										{
+											"key": "Keep-Alive",
+											"value": "timeout=60"
+										},
+										{
+											"key": "Connection",
+											"value": "keep-alive"
+										}
+									],
+									"cookie": [],
+									"body": "{\n    \"status_code\": 1000,\n    \"data\": {\n        \"id\": \"1\",\n        \"standard\": \"IEC_62196_T2\",\n        \"format\": \"SOCKET\",\n        \"power_type\": \"AC_3_PHASE\",\n        \"max_voltage\": 400,\n        \"max_amperage\": 32,\n        \"tariff_ids\": [\n            \"xxx-123\"\n        ],\n        \"last_updated\": \"2019-08-13T14:44:25.561Z\"\n    },\n    \"timestamp\": \"2020-01-15T10:27:06.103Z\"\n}"
+								}
+							]
 						}
 					],
 					"description": "OCPI locations module request examples.\n\nSee [locations documentation](https://github.com/ocpi/ocpi/blob/develop/mod_locations.asciidoc) for more. ",
+					"protocolProfileBehavior": {},
 					"_postman_isSubFolder": true
 				},
 				{
@@ -489,7 +1102,7 @@
 								"header": [
 									{
 										"key": "Authorization",
-										"value": "Token CREDENTIALS_TOKEN_C",
+										"value": "Token {{CREDENTIALS_TOKEN_C}}",
 										"type": "text"
 									},
 									{
@@ -524,12 +1137,10 @@
 									}
 								],
 								"url": {
-									"raw": "http://localhost:8080/ocpi/sender/2.2/tariffs",
-									"protocol": "http",
+									"raw": "{{NODE_URL}}/ocpi/sender/2.2/tariffs",
 									"host": [
-										"localhost"
+										"{{NODE_URL}}"
 									],
-									"port": "8080",
 									"path": [
 										"ocpi",
 										"sender",
@@ -539,10 +1150,94 @@
 								},
 								"description": "Example tariffs request from EMSP to CPO."
 							},
-							"response": []
+							"response": [
+								{
+									"name": "Tariffs",
+									"originalRequest": {
+										"method": "GET",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Token {{CREDENTIALS_TOKEN_C}}",
+												"type": "text"
+											},
+											{
+												"key": "X-Request-ID",
+												"value": "1",
+												"type": "text"
+											},
+											{
+												"key": "X-Correlation-ID",
+												"value": "1",
+												"type": "text"
+											},
+											{
+												"key": "OCPI-from-country-code",
+												"value": "DE",
+												"type": "text"
+											},
+											{
+												"key": "OCPI-from-party-id",
+												"value": "MSP",
+												"type": "text"
+											},
+											{
+												"key": "OCPI-to-country-code",
+												"value": "DE",
+												"type": "text"
+											},
+											{
+												"key": "OCPI-to-party-id",
+												"value": "CPO",
+												"type": "text"
+											}
+										],
+										"url": {
+											"raw": "{{NODE_URL}}/ocpi/sender/2.2/tariffs",
+											"host": [
+												"{{NODE_URL}}"
+											],
+											"path": [
+												"ocpi",
+												"sender",
+												"2.2",
+												"tariffs"
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "json",
+									"header": [
+										{
+											"key": "Content-Type",
+											"value": "application/json"
+										},
+										{
+											"key": "Transfer-Encoding",
+											"value": "chunked"
+										},
+										{
+											"key": "Date",
+											"value": "Wed, 15 Jan 2020 10:27:27 GMT"
+										},
+										{
+											"key": "Keep-Alive",
+											"value": "timeout=60"
+										},
+										{
+											"key": "Connection",
+											"value": "keep-alive"
+										}
+									],
+									"cookie": [],
+									"body": "{\n    \"status_code\": 1000,\n    \"data\": [\n        {\n            \"country_code\": \"DE\",\n            \"party_id\": \"CPO\",\n            \"id\": \"xxx-123\",\n            \"currency\": \"EUR\",\n            \"type\": \"REGULAR\",\n            \"elements\": [\n                {\n                    \"price_components\": [\n                        {\n                            \"type\": \"FLAT\",\n                            \"price\": 2.5,\n                            \"step_size\": 1\n                        }\n                    ]\n                }\n            ],\n            \"last_updated\": \"2019-08-13T14:46:18.903Z\"\n        },\n        {\n            \"country_code\": \"DE\",\n            \"party_id\": \"CPO\",\n            \"id\": \"xyz-456\",\n            \"currency\": \"EUR\",\n            \"type\": \"REGULAR\",\n            \"elements\": [\n                {\n                    \"price_components\": [\n                        {\n                            \"type\": \"FLAT\",\n                            \"price\": 1.2,\n                            \"step_size\": 1\n                        },\n                        {\n                            \"type\": \"TIME\",\n                            \"price\": 0.3,\n                            \"step_size\": 1000\n                        }\n                    ]\n                }\n            ],\n            \"last_updated\": \"2019-08-13T14:46:18.903Z\"\n        }\n    ],\n    \"timestamp\": \"2020-01-15T10:27:27.235Z\"\n}"
+								}
+							]
 						}
 					],
 					"description": "OCPI Tariffs example requests.\n\n",
+					"protocolProfileBehavior": {},
 					"_postman_isSubFolder": true
 				},
 				{
@@ -555,7 +1250,7 @@
 								"header": [
 									{
 										"key": "Authorization",
-										"value": "Token CREDENTIALS_TOKEN_C",
+										"value": "Token {{CREDENTIALS_TOKEN_C}}",
 										"type": "text"
 									},
 									{
@@ -597,15 +1292,13 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n\t\"response_url\": \"http://localhost:3001/ocpi/emsp/2.2/commands/START_SESSION/1\",\n\t\"token\": {\n\t\t\"country_code\": \"DE\",\n\t\t\"party_id\": \"MSP\",\n\t\t\"uid\": \"0102030405\",\n\t\t\"type\": \"APP_USER\",\n\t\t\"contract_id\": \"XX-12345\",\n\t\t\"issuer\": \"Test MSP\",\n\t\t\"valid\": true,\n\t\t\"whitelist\": \"ALWAYS\",\n\t\t\"last_updated\": \"2019-08-13T14:44:25.561Z\"\n\t},\n\t\"location_id\": \"LOC1\"\n}"
+									"raw": "{\n\t\"response_url\": \"http://localhost:3002/ocpi/emsp/2.2/commands/START_SESSION/1\",\n\t\"token\": {\n\t\t\"country_code\": \"DE\",\n\t\t\"party_id\": \"MSP\",\n\t\t\"uid\": \"0102030405\",\n\t\t\"type\": \"APP_USER\",\n\t\t\"contract_id\": \"XX-12345\",\n\t\t\"issuer\": \"Test MSP\",\n\t\t\"valid\": true,\n\t\t\"whitelist\": \"ALWAYS\",\n\t\t\"last_updated\": \"2019-08-13T14:44:25.561Z\"\n\t},\n\t\"location_id\": \"LOC1\"\n}"
 								},
 								"url": {
-									"raw": "http://localhost:8080/ocpi/receiver/2.2/commands/START_SESSION",
-									"protocol": "http",
+									"raw": "{{NODE_URL}}/ocpi/receiver/2.2/commands/START_SESSION",
 									"host": [
-										"localhost"
+										"{{NODE_URL}}"
 									],
-									"port": "8080",
 									"path": [
 										"ocpi",
 										"receiver",
@@ -616,7 +1309,101 @@
 								},
 								"description": "Send a request to the CPO to start session for a driver."
 							},
-							"response": []
+							"response": [
+								{
+									"name": "START_SESSION",
+									"originalRequest": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Token {{CREDENTIALS_TOKEN_C}}",
+												"type": "text"
+											},
+											{
+												"key": "X-Request-ID",
+												"value": "1",
+												"type": "text"
+											},
+											{
+												"key": "X-Correlation-ID",
+												"value": "1",
+												"type": "text"
+											},
+											{
+												"key": "OCPI-from-country-code",
+												"value": "DE",
+												"type": "text"
+											},
+											{
+												"key": "OCPI-from-party-id",
+												"value": "MSP",
+												"type": "text"
+											},
+											{
+												"key": "OCPI-to-country-code",
+												"value": "DE",
+												"type": "text"
+											},
+											{
+												"key": "OCPI-to-party-id",
+												"value": "CPO",
+												"type": "text"
+											},
+											{
+												"key": "Content-Type",
+												"name": "Content-Type",
+												"value": "application/json",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n\t\"response_url\": \"http://localhost:3002/ocpi/emsp/2.2/commands/START_SESSION/1\",\n\t\"token\": {\n\t\t\"country_code\": \"DE\",\n\t\t\"party_id\": \"MSP\",\n\t\t\"uid\": \"0102030405\",\n\t\t\"type\": \"APP_USER\",\n\t\t\"contract_id\": \"XX-12345\",\n\t\t\"issuer\": \"Test MSP\",\n\t\t\"valid\": true,\n\t\t\"whitelist\": \"ALWAYS\",\n\t\t\"last_updated\": \"2019-08-13T14:44:25.561Z\"\n\t},\n\t\"location_id\": \"LOC1\"\n}"
+										},
+										"url": {
+											"raw": "{{NODE_URL}}/ocpi/receiver/2.2/commands/START_SESSION",
+											"host": [
+												"{{NODE_URL}}"
+											],
+											"path": [
+												"ocpi",
+												"receiver",
+												"2.2",
+												"commands",
+												"START_SESSION"
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "json",
+									"header": [
+										{
+											"key": "Content-Type",
+											"value": "application/json"
+										},
+										{
+											"key": "Transfer-Encoding",
+											"value": "chunked"
+										},
+										{
+											"key": "Date",
+											"value": "Wed, 15 Jan 2020 10:27:45 GMT"
+										},
+										{
+											"key": "Keep-Alive",
+											"value": "timeout=60"
+										},
+										{
+											"key": "Connection",
+											"value": "keep-alive"
+										}
+									],
+									"cookie": [],
+									"body": "{\n    \"status_code\": 1000,\n    \"data\": {\n        \"result\": \"ACCEPTED\",\n        \"timeout\": 20\n    },\n    \"timestamp\": \"2020-01-15T10:27:45.229Z\"\n}"
+								}
+							]
 						},
 						{
 							"name": "STOP_SESSION",
@@ -626,7 +1413,7 @@
 									{
 										"key": "Authorization",
 										"type": "text",
-										"value": "Token CREDENTIALS_TOKEN_C"
+										"value": "Token {{CREDENTIALS_TOKEN_C}}"
 									},
 									{
 										"key": "X-Request-ID",
@@ -651,12 +1438,12 @@
 									{
 										"key": "OCPI-to-country-code",
 										"type": "text",
-										"value": "DE"
+										"value": "NL"
 									},
 									{
 										"key": "OCPI-to-party-id",
 										"type": "text",
-										"value": "CPO"
+										"value": "CPX"
 									},
 									{
 										"key": "Content-Type",
@@ -667,15 +1454,13 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n\t\"response_url\": \"http://localhost:3001/ocpi/emsp/2.2/commands/STOP_SESSION/2\",\n\t\"session_id\": \"xyzxyzyxyz\"\n}"
+									"raw": "{\n\t\"response_url\": \"http://localhost:3002/ocpi/emsp/2.2/commands/STOP_SESSION/2\",\n\t\"session_id\": \"xyzxyzyxyz\"\n}"
 								},
 								"url": {
-									"raw": "http://localhost:8080/ocpi/receiver/2.2/commands/STOP_SESSION",
-									"protocol": "http",
+									"raw": "{{NODE_URL}}/ocpi/receiver/2.2/commands/STOP_SESSION",
 									"host": [
-										"localhost"
+										"{{NODE_URL}}"
 									],
-									"port": "8080",
 									"path": [
 										"ocpi",
 										"receiver",
@@ -686,10 +1471,105 @@
 								},
 								"description": "Send a request to the CPO to start session for a driver."
 							},
-							"response": []
+							"response": [
+								{
+									"name": "STOP_SESSION",
+									"originalRequest": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Authorization",
+												"type": "text",
+												"value": "Token {{CREDENTIALS_TOKEN_C}}"
+											},
+											{
+												"key": "X-Request-ID",
+												"type": "text",
+												"value": "1"
+											},
+											{
+												"key": "X-Correlation-ID",
+												"type": "text",
+												"value": "1"
+											},
+											{
+												"key": "OCPI-from-country-code",
+												"type": "text",
+												"value": "DE"
+											},
+											{
+												"key": "OCPI-from-party-id",
+												"type": "text",
+												"value": "MSP"
+											},
+											{
+												"key": "OCPI-to-country-code",
+												"type": "text",
+												"value": "DE"
+											},
+											{
+												"key": "OCPI-to-party-id",
+												"type": "text",
+												"value": "CPO"
+											},
+											{
+												"key": "Content-Type",
+												"name": "Content-Type",
+												"type": "text",
+												"value": "application/json"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n\t\"response_url\": \"http://localhost:3002/ocpi/emsp/2.2/commands/STOP_SESSION/2\",\n\t\"session_id\": \"xyzxyzyxyz\"\n}"
+										},
+										"url": {
+											"raw": "{{NODE_URL}}/ocpi/receiver/2.2/commands/STOP_SESSION",
+											"host": [
+												"{{NODE_URL}}"
+											],
+											"path": [
+												"ocpi",
+												"receiver",
+												"2.2",
+												"commands",
+												"STOP_SESSION"
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "json",
+									"header": [
+										{
+											"key": "Content-Type",
+											"value": "application/json"
+										},
+										{
+											"key": "Transfer-Encoding",
+											"value": "chunked"
+										},
+										{
+											"key": "Date",
+											"value": "Wed, 15 Jan 2020 10:18:40 GMT"
+										},
+										{
+											"key": "Keep-Alive",
+											"value": "timeout=60"
+										},
+										{
+											"key": "Connection",
+											"value": "keep-alive"
+										}
+									],
+									"cookie": [],
+									"body": "{\n    \"status_code\": 1000,\n    \"data\": {\n        \"result\": \"ACCEPTED\",\n        \"timeout\": 20\n    },\n    \"timestamp\": \"2020-01-15T10:18:40.595Z\"\n}"
+								}
+							]
 						}
 					],
 					"description": "OCPI commands module requests",
+					"protocolProfileBehavior": {},
 					"_postman_isSubFolder": true
 				}
 			],
@@ -715,7 +1595,9 @@
 						]
 					}
 				}
-			]
+			],
+			"protocolProfileBehavior": {}
 		}
-	]
+	],
+	"protocolProfileBehavior": {}
 }

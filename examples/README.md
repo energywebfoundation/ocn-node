@@ -28,20 +28,19 @@ The directory structure should look like so:
     | - ocn-node/
 ```
 
-Then change directory to `ocn-node` (using the `develop` branch) and run the network: 
+Then change directory to `ocn-node` and run the network: 
 
 ```
 cd ocn-node
-git checkout develop
 docker-compose up
 ```
 
-The first build will take a few minutes but subsequent docker-compose up commands will be much faster. Whilst the Docker
+The first build will take a few minutes but subsequent `docker-compose up` commands will be much faster. Whilst the Docker
 images are being built, you may look over the details of the network below, which may or may not mean anything depending 
 on prior knowledge of Ethereum blockchain technology. Don't worry if they do not, as they will be explained in the following
 section when we walk through the example requests.
 
-- OCN Registry smart contract deployed on a development Ethereum blockchain (ganache)
+- OCN Registry smart contract deployed on a local development Ethereum blockchain (ganache)
     - address: `0x345cA3e014Aaf5dcA488057592ee47305D9B3e10`
     - owner: `0x627306090abaB3A6e1400e9345bC60c78a8BEf57`
 - A Wallet containing 20 addresses each pre-funded with 100 ETH
@@ -57,26 +56,35 @@ Once the images are built and the containers are running, the following will sho
 
 ```
 ocn-node-1       | [...] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port(s): 8080 (http) with context path ''
-ocn-node-1       | [...] s.o.node.ApplicationKt                 : Started ApplicationKt in 20.76 seconds (JVM running for 22.842)
+ocn-node-1       | [...] s.o.node.ApplicationKt                   : Started ApplicationKt in 20.76 seconds (JVM running for 22.842)
 ocn-node-2       | [...] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port(s): 8081 (http) with context path ''
-ocn-node-2       | [...] s.o.node.ApplicationKt                 : Started ApplicationKt in 20.448 seconds (JVM running for 22.829)
+ocn-node-2       | [...] s.o.node.ApplicationKt                   : Started ApplicationKt in 20.448 seconds (JVM running for 22.829)
 ```
 
-Finally, go ahead and request the health of the two nodes to make sure they are running:
+You will also see the results of a request, for example:
+
+```
+ocn-node-2         | [...] o.s.web.servlet.DispatcherServlet        : GET "/health", parameters={}
+ocn-node-2         | [...] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped to snc.openchargingnetwork.node.controllers.HealthController#getHealth()
+ocn-node-2         | [...] m.m.a.RequestResponseBodyMethodProcessor : Using 'text/plain', given [*/*] and supported [text/plain, */*, text/plain, */*, application/json, application/*+json, application/json, application/*+json]
+ocn-node-2         | [...] m.m.a.RequestResponseBodyMethodProcessor : Writing ["OK"]
+ocn-node-2         | [...] o.s.web.servlet.DispatcherServlet        : Completed 200 OK
+```
+
+The node checks its own health endpoint on start to make sure it is configured correctly. We can also manually ensure 
+that both nodes are running, like so:
 
 ```
 curl localhost:8080/health
 curl localhost:8081/health
 ```
 
-Both requests should return 200 OK responses. 
-
-Leave the network running and open a new tab in your terminal.
+Now leave the network running and open a new tab in your terminal.
 
 #### 2. Clone the OCN Demo Repository and run the Mock servers 
 
-The OCN Demo repository should be cloned, which contains mock eMSP and CPO backoffices, as well as a means of
-registering to the OCN Registry. 
+The OCN Demo repository contains mock eMSP and CPO backoffices, as well as a script which will allow us to register 
+to the OCN Registry. Clone it by returning to the parent directory:
 
 ```
 cd ..
@@ -86,22 +94,25 @@ npm install
 ```
 
 The demo contains two Charge Point Operators (CPOs) and one eMobility Service Provider (EMSP). Starting the demo will 
-start the respective backends and register the CPOs to the Open Charging Network that was previously set up:
+start the respective backends and register the CPOs to the Open Charging Network that we have running in the background:
 
 ```
 npm start
 ``` 
 
 Observe the requests that are made to ganache, the ocn-node and the CPO server. This gives a quick overview of how
-the OCN registration process using OCPI and the OCN Registry works.
+the OCN registration process using OCPI and the OCN Registry looks. For those familiar with OCPI, you will see the
+CPOs receiving versions and version detail requests, as the OCN node processes the credentials registration.
 
-Leave the servers running alongside the network. The next step is to install Postman so that we can register our EMSP
-to the network.
+Leave the servers running in the background, alongside the network. The next step is to install Postman so that we can 
+register our EMSP to the network.
 
 #### 3. Install Postman and Import Collection
 
 In order to visualize HTTP API requests, we can use [Postman](https://www.getpostman.com/). Once installed, simply
-import the JSON collection file provided in this directory and you are ready to begin.
+import the JSON collection and environment files provided in this directory. You will need to change your environment
+to the provided "OCN Node" environment that you just imported, by selecting it from the dropdown menu in the top right
+corner of Postman. This will allow you to easily change common variables across all your requests in the future.
 
 
 ## Tutorial
@@ -113,11 +124,14 @@ a chance to make different requests across the network.
 ### 1. Adding an entry to the OCN Registry
 
 Before we create a connection to an OCN Node, we must enter our party into the OCN Registry to become visible on the 
-network. To do this, we must sign a transaction which states our party's country code, party ID and node info of
-the OCN Node we will connect to. The OCN Node info that we need is its Ethereum address and base url.
+network. To do this, we must sign a transaction which states our party's country code and party IDm as well as the
+public information of the OCN Node we will connect to. The OCN Node information that we need is its Ethereum address and 
+base url.
 
 Provided in the Postman collection is a request `GET Node Info` under the OCN directory. Note that there is no
-authorization needed to make this request. The response should be the following:
+authorization needed to make this request and the variable `{{NODE_URL}}` has been configured to `http://localhost:8080`
+within the "OCN Node" environment that you imported. To change environment variables, click the eye symbol button next
+to the dropdown menu where you selected the environment. The response should be the following:
 
 ```json
 {
@@ -126,8 +140,8 @@ authorization needed to make this request. The response should be the following:
 }
 ```
 
-You might recall seeing the same information printed to stdout when running the local OCN. The above request can be used
-when registering yourself to a test or production OCN environment. In our local development case, we can skip this 
+You might recall briefly seeing the same information printed to stdout when running the local OCN. The above request can 
+be used when registering yourself to a test or production OCN environment. In our local development case, we can skip this 
 manual step and use a script provided in the `ocn-demo` repository to save us some time. 
 
 ```
@@ -159,27 +173,27 @@ registration flow. This, described as `CREDENTIALS_TOKEN_A`, will be used to obt
 e.g. the version of OCPI it is using and the modules it incorporates.
 
 In Postman, simply go to the `GET Generate Registration Token` request in the Admin directory of the OCN Node 
-collection and hit Send to make the request.
+collection and hit Send to make the request. The authorization token (`{{ADMIN_API_KEY`}}) has already been declared in 
+the "OCN Node" environment. 
 
 You should see the following response:
 ```
 {
-    "token": <CREDENTIALS_TOKEN_A>,
+    "token": {{CREDENTIALS_TOKEN_A}},
     "versions": "http://localhost:8080/ocpi/versions"
 }
 ```
 
-Make sure to keep this request tab open as we will need the provided data for subsequent requests.
+Taking the provided token, we can now set our environment variable, using the eye symbol button in Postman, as 
+described before.
 
 ### 2. Request Versions and Version Details
 
 Our EMSP backend runs on OCPI 2.2. As such we would like to establish a connection to the OCN Node using the same
-OCPI version. In Postman, navigate to the Versions directory and select the `GET versions` request. You will need to
-modify this request slightly for it to work. In the Headers tab, edit the `Authorization` key, which currently has the 
-value `Token CREDENTIALS_TOKEN_A`. Replace `CREDENTIALS_TOKEN_A` with the token received from the above request.
+OCPI version. In Postman, navigate to the Versions directory and send the `GET versions` request.
 
 This is our first chance to see the OCPI JSON response format, containing the OCPI status code of the response, the
-timestamp, and (optionally) any data returned. If the request is instead made with an incorrect token, the HTTP status code
+timestamp, and (optionally) any data returned. If the request is made with an incorrect token, the HTTP status code
 will be 401 rather than 200, and the `data` field will be (optionally) replaced with `status_message`. 
 
 The data field should provide an array of supported versions and a url that will provide information regarding how to 
@@ -199,23 +213,42 @@ of endpoints supported by the node. The one we are most interested in for now is
 ### 3. Registering EMSP credentials
 
 Now that we know where to send our credentials, we can open the `POST credentials` request in the credentials directory.
-Again, we should change the `Authorization` header to our `TOKEN_A`. This request contains a JSON body, as we our
-sending our own credentials to the OCN Node. This includes the token that the OCN Node should use to authorize
-itself on *our* server, should it need to forward a request to us from a CPO (i.e. the CPO is pushing session or location
-updates to us). For now, the test CPO backend does not do this, so it is not so important. We also provide a url to 
-our versions endpoint, such that the OCN Node can go through the same process we just did, in finding a common OCPI
-version and obtaining a list of the endpoints we have. Lastly, we describe the roles that we employ. Notice how this is
-an array. OCPI 2.2 adds the ability for a platform operating multiple roles to communicate on a single OCPI connection.
-Therefore a platform that is both an EMSP and CPO needs not register twice. 
+This request contains a JSON body of our own credentials to be sent to the OCN Node. This includes the token that the 
+OCN Node should use to authorize itself on *our* server, should it need to forward a request to us from a CPO (i.e. if 
+the CPO is pushing session or location updates to us). We also provide a url to  our versions endpoint, such that the 
+OCN Node can go through the same process we just did, in finding a common OCPI version and obtaining a list of the 
+endpoints we have. Lastly, we describe the roles that we employ. Notice how this is an array. OCPI 2.2 adds the ability 
+for a platform operating multiple roles to communicate on a single OCPI connection. Therefore a platform that is both an 
+EMSP and CPO needs not register twice. 
 
-Go ahead and send the request once the proper `Authorization` header has been set. 
+```
+{
+    "status_code": 1000,
+    "data": {
+        "token": "ef4c3b29-5679-4bb9-8a59-4c53fc3dacef",
+        "url": "http://localhost:8080/ocpi/versions",
+        "roles": [
+            {
+                "role": "HUB",
+                "business_details": {
+                    "name": "Open Charging Network Node"
+                },
+                "party_id": "OCN",
+                "country_code": "DE"
+            }
+        ]
+    },
+    "timestamp": "2020-01-15T09:56:56.547Z"
+}
+```
 
-You should see the OCN Node's credentials returned to you. There is a new token in the body: this is what's known as
-`CREDENTIALS_TOKEN_C` and will allow you to authorize any subsequent OCPI requests you make to your OCN Node. The 
-previous token is now discarded and will not be used again, so make sure to save this new token.
+Once sent, you should see the OCN Node's credentials returned to you. There is a new token in the body: this is what's 
+known as token C and will be used to authorize any subsequent OCPI requests you make to your OCN Node. 
+The previous token is now discarded and will not be used again, so make sure to save this new token under the 
+environment variable `CREDENTIALS_TOKEN_C`.
 
-In addition, you should see that there were two requests made to the EMSP server. This shows that the OCN Node has
-requested and stored your OCPI module endpoints for future use.
+In addition, you should see that there were two requests made to the EMSP server in the logs of the OCN demo. This 
+shows that the OCN Node has requested and stored your OCPI module endpoints for future use.
 
 This now completes the registration to the OCN Node.
 
@@ -225,69 +258,68 @@ This now completes the registration to the OCN Node.
 
 Now that we have registered to our OCN Node, we can send requests to one of the registered CPOs on the OCN. In this 
 request, we wish to fetch a list of the CPO's locations (i.e. charging stations under OCPI terminology). To do so, 
-navigate to the `GET locations list` request in the locations directory of the Postman collection. Substitute the 
-`CREDENTIALS_TOKEN_C` in the Authorization header and make the request.
+send the `GET locations list` request in the locations directory of the Postman collection.
 
 The result should look like the following:
 ```
 {
     "status_code": 1000,
     "data": [
-                    {
-                        "country_code": "DE",
-                        "party_id": "CPO",
-                        "id": "LOC1",
-                        "type": "ON_STREET",
-                        "address": "somestreet 1",
-                        "city": "Essen",
-                        "country": "DEU",
-                        "coordinates": {
-                            "latitude": "52.232",
-                            "longitude": "0.809"
-                        },
-                        "evses": [
-                            {
-                                "uid": "1234",
-                                "status": "AVAILABLE",
-                                "connectors": [
-                                    {
-                                        "id": "1",
-                                        "standard": "IEC_62196_T2",
-                                        "format": "SOCKET",
-                                        "power_type": "AC_3_PHASE",
-                                        "max_voltage": 400,
-                                        "max_amperage": 32,
-                                        "tariff_ids": [
-                                            "xxx-123"
-                                        ],
-                                        "last_updated": "2019-08-13T14:44:25.561Z"
-                                    }
-                                ],
-                                "last_updated": "2019-08-13T14:44:25.561Z"
-                            },
-                            {
-                                "uid": "4567",
-                                "status": "RESERVED",
-                                "connectors": [
-                                    {
-                                        "id": "1",
-                                        "standard": "IEC_62196_T2",
-                                        "format": "SOCKET",
-                                        "power_type": "AC_3_PHASE",
-                                        "max_voltage": 400,
-                                        "max_amperage": 32,
-                                        "tariff_ids": [
-                                            "xyz-456"
-                                        ],
-                                        "last_updated": "2019-08-13T14:44:25.561Z"
-                                    }
-                                ],
-                                "last_updated": "2019-08-13T14:44:25.561Z"
-                            }
-                        ],
-                        "last_updated": "2019-08-13T14:44:25.561Z"
-                    }
-                ],
+        {
+            "country_code": "DE",
+            "party_id": "CPO",
+            "id": "LOC1",
+            "type": "ON_STREET",
+            "address": "somestreet 1",
+            "city": "Essen",
+            "country": "DEU",
+            "coordinates": {
+                "latitude": "52.232",
+                "longitude": "0.809"
+            },
+            "evses": [
+                {
+                    "uid": "1234",
+                    "status": "AVAILABLE",
+                    "connectors": [
+                        {
+                            "id": "1",
+                            "standard": "IEC_62196_T2",
+                            "format": "SOCKET",
+                            "power_type": "AC_3_PHASE",
+                            "max_voltage": 400,
+                            "max_amperage": 32,
+                            "tariff_ids": [
+                                "xxx-123"
+                            ],
+                            "last_updated": "2019-08-13T14:44:25.561Z"
+                        }
+                    ],
+                    "last_updated": "2019-08-13T14:44:25.561Z"
+                },
+                {
+                    "uid": "4567",
+                    "status": "RESERVED",
+                    "connectors": [
+                        {
+                            "id": "1",
+                            "standard": "IEC_62196_T2",
+                            "format": "SOCKET",
+                            "power_type": "AC_3_PHASE",
+                            "max_voltage": 400,
+                            "max_amperage": 32,
+                            "tariff_ids": [
+                                "xyz-456"
+                            ],
+                            "last_updated": "2019-08-13T14:44:25.561Z"
+                        }
+                    ],
+                    "last_updated": "2019-08-13T14:44:25.561Z"
+                }
+            ],
+            "last_updated": "2019-08-13T14:44:25.561Z"
+        }
+    ],
     "timestamp": "2019-08-13T15:25:24.435Z"
 }
 ```
@@ -312,15 +344,11 @@ OCPI-to-country-code: NL
 OCPI-to-party-id: CPX
 ```
 
-The mock CPOs featured in this demonstration are in fact identical, so all requests can be sent to either of them. Note
-that requests made to "remote" OCPI parties in are considered more experimental than those between two parties sharing 
-the same OCN Node.
-
 Note also the `X-Request-ID` and `X-Correlation-ID` headers. They don't play a role in our demonstration (both being
 set to `"1"` for all requests, but in production it is strongly advised to generate unique IDs (uuid version 4 preferred)
 for all requests, in order to help with any potential debugging. The request ID is unique for every request: in 
-forwarding such a request: an OCN Node will actually set a new request ID. The correlation ID meanwhile, is unique for 
-every request-response: an OCN Node will not change the correlation ID. 
+forwarding such a request: an OCN Node will actually set a new request ID when forwarding a message. The correlation
+ID meanwhile, is unique for every request-response: an OCN Node will never change the correlation ID. 
 
 #### OCPI module dependencies and implementations
 

@@ -19,57 +19,29 @@
 
 package snc.openchargingnetwork.node.controllers.ocn
 
-import org.springframework.http.HttpHeaders
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
-import snc.openchargingnetwork.node.models.exceptions.OcpiHubUnknownReceiverException
+import snc.openchargingnetwork.node.services.RequestHandler
+import snc.openchargingnetwork.node.services.RequestHandlerBuilder
 import snc.openchargingnetwork.node.models.ocpi.OcpiResponse
-import snc.openchargingnetwork.node.services.WalletService
-import snc.openchargingnetwork.node.services.HttpService
-import snc.openchargingnetwork.node.services.RoutingService
 
 
 @RestController
 @RequestMapping("/ocn/message")
-class MessageController(private val routingService: RoutingService,
-                        private val walletService: WalletService,
-                        private val httpService: HttpService) {
+class MessageController(private val requestHandlerBuilder: RequestHandlerBuilder) {
 
 
     @PostMapping
     fun postMessage(@RequestHeader("X-Request-ID") requestID: String,
                     @RequestHeader("OCN-Signature") signature: String,
-                    @RequestBody body: String): ResponseEntity<OcpiResponse<out Any>> {
+                    @RequestBody body: String): ResponseEntity<OcpiResponse<Any>> {
 
-        val requestVariables = httpService.convertToRequestVariables(body)
+        val request: RequestHandler<Any> = requestHandlerBuilder.build(body)
 
-        val sender = requestVariables.headers.sender
-        val receiver = requestVariables.headers.receiver
-
-        // verify the signer of the request is authorized to forward messages on behalf of the sender
-        walletService.verify(body, signature, sender)
-
-        // check sender has been registered on network
-        if (!routingService.isRoleKnownOnNetwork(sender, belongsToMe = false)) {
-            throw OcpiHubUnknownReceiverException("Sending party not registered on Open Charging Network")
-        }
-
-        // check receiver known to node
-        if (!routingService.isRoleKnown(receiver)) {
-            throw OcpiHubUnknownReceiverException("Recipient unknown to OCN Node entered in Registry")
-        }
-
-        val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables)
-
-        val response = httpService.makeOcpiRequest<Any>(url, headers, requestVariables)
-
-        val responseHeaders = HttpHeaders()
-        response.headers["location"]?.let { responseHeaders.set("Location", it) }
-        response.headers["Link"]?.let { responseHeaders.set("Link", it) }
-        response.headers["X-Total-Count"]?.let { responseHeaders.set("X-Total-Count", it) }
-        response.headers["X-Limit"]?.let { responseHeaders.set("X-Limit", it) }
-
-        return ResponseEntity.status(response.statusCode).headers(responseHeaders).body(response.body)
+        return request
+                .validateOcnMessage(signature)
+                .forwardRequest()
+                .getResponseWithAllHeaders()
     }
 
 }

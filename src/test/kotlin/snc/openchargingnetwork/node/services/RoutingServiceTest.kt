@@ -1,6 +1,5 @@
 package snc.openchargingnetwork.node.services
 
-
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.mockk.every
 import io.mockk.mockk
@@ -15,6 +14,7 @@ import snc.openchargingnetwork.node.repositories.*
 import snc.openchargingnetwork.node.tools.generateUUIDv4Token
 import snc.openchargingnetwork.node.tools.urlJoin
 import snc.openchargingnetwork.contracts.RegistryFacade
+
 
 class RoutingServiceTest {
 
@@ -47,12 +47,12 @@ class RoutingServiceTest {
                 module = ModuleID.TOKENS,
                 method = HttpMethod.GET,
                 interfaceRole = InterfaceRole.RECEIVER,
-                headers = OcpiRequestHeaders(
+                headers = OcnHeaders(
+                        authorization = "Token token-c",
                         requestID = generateUUIDv4Token(),
                         correlationID = generateUUIDv4Token(),
                         sender = BasicRole("SNC", "DE"),
-                        receiver = BasicRole("ABC", "CH")
-                ),
+                        receiver = BasicRole("ABC", "CH")),
                 urlPathVariables = "DE/SNC/abc123",
                 urlEncodedParams = OcpiRequestParameters(type = TokenType.APP_USER))
 
@@ -90,12 +90,12 @@ class RoutingServiceTest {
                 module = ModuleID.CDRS,
                 method = HttpMethod.GET,
                 interfaceRole = InterfaceRole.SENDER,
-                headers = OcpiRequestHeaders(
+                headers = OcnHeaders(
+                        authorization = "Token token-c",
                         requestID = generateUUIDv4Token(),
                         correlationID = generateUUIDv4Token(),
                         sender = BasicRole("SNC", "DE"),
-                        receiver = BasicRole("ABC", "CH")
-                ),
+                        receiver = BasicRole("ABC", "CH")),
                 urlPathVariables = "67")
 
         every { routingService.getPlatformID(request.headers.receiver) } returns 126L
@@ -128,27 +128,29 @@ class RoutingServiceTest {
                 module = ModuleID.TOKENS,
                 method = HttpMethod.GET,
                 interfaceRole = InterfaceRole.RECEIVER,
-                headers = OcpiRequestHeaders(
+                headers = OcnHeaders(
+                        authorization = "Token token-c",
                         requestID = generateUUIDv4Token(),
                         correlationID = generateUUIDv4Token(),
                         sender = BasicRole("SNC", "DE"),
-                        receiver = BasicRole("ABC", "CH")
-                ),
+                        receiver = BasicRole("ABC", "CH")),
                 urlPathVariables = "DE/SNC/abc123",
                 urlEncodedParams = OcpiRequestParameters(type = TokenType.APP_USER))
 
         val sig = "0x9955af11969a2d2a7f860cb00e6a00cfa7c581f5df2dbe8ea16700b33f4b4b9" +
                 "b69f945012f7ea7d3febf11eb1b78e1adc2d1c14c2cf48b25000938cc1860c83e01"
 
+        val modifiedRequest = request.copy(headers = request.headers.copy(authorization = ""))
+
         every { registry.nodeURLOf(
                 request.headers.receiver.country.toByteArray(),
                 request.headers.receiver.id.toByteArray()).sendAsync().get() } returns "https://ocn.node.net"
 
-        val jsonString = jacksonObjectMapper().writeValueAsString(request)
-        every { httpService.mapper.writeValueAsString(request) } returns jsonString
+        val jsonString = jacksonObjectMapper().writeValueAsString(modifiedRequest)
+        every { httpService.mapper.writeValueAsString(modifiedRequest) } returns jsonString
         every { walletService.sign(jsonString) } returns sig
 
-        val (url, headers, body) = routingService.prepareRemotePlatformRequest(request)
+        val (url, headers, body) = routingService.prepareRemotePlatformRequest(modifiedRequest)
 
         assertThat(url).isEqualTo("https://ocn.node.net")
         assertThat(headers.requestID.length).isEqualTo(36)
@@ -163,18 +165,20 @@ class RoutingServiceTest {
                 module = ModuleID.SESSIONS,
                 method = HttpMethod.GET,
                 interfaceRole = InterfaceRole.SENDER,
-                headers = OcpiRequestHeaders(
+                headers = OcnHeaders(
+                        authorization = "Token token-c",
                         requestID = generateUUIDv4Token(),
                         correlationID = generateUUIDv4Token(),
                         sender = BasicRole("SNC", "DE"),
-                        receiver = BasicRole("ABC", "CH")
-                ),
+                        receiver = BasicRole("ABC", "CH")),
                 urlPathVariables = "45")
 
         val sig = "0x9955af11969a2d2a7f860cb00e6a00cfa7c581f5df2dbe8ea16700b33f4b4b9" +
                 "b69f945012f7ea7d3febf11eb1b78e1adc2d1c14c2cf48b25000938cc1860c83e01"
 
-        val modifiedRequest = request.copy(proxyResource = "https://actual.cpo.com/ocpi/sender/2.2/sessions?limit=10&offset=50; rel =\"next\"")
+        val modifiedRequest = request.copy(
+                headers = request.headers.copy(authorization = ""),
+                proxyResource = "https://actual.cpo.com/ocpi/sender/2.2/sessions?limit=10&offset=50; rel =\"next\"")
 
         every { registry.nodeURLOf(
                 request.headers.receiver.country.toByteArray(),
@@ -187,7 +191,7 @@ class RoutingServiceTest {
         every { httpService.mapper.writeValueAsString(modifiedRequest) } returns jsonString
         every { walletService.sign(jsonString) } returns sig
 
-        val (url, headers, body) = routingService.prepareRemotePlatformRequest(request, proxied = true)
+        val (url, headers, body) = routingService.prepareRemotePlatformRequest(modifiedRequest, proxied = true)
 
         assertThat(url).isEqualTo("https://ocn-node.provider.net")
         assertThat(headers.requestID.length).isEqualTo(36)
@@ -206,7 +210,8 @@ class RoutingServiceTest {
                 module = ModuleID.COMMANDS,
                 interfaceRole = InterfaceRole.RECEIVER,
                 method = HttpMethod.POST,
-                headers = OcpiRequestHeaders(
+                headers = OcnHeaders(
+                        authorization = "Token token-c",
                         requestID = "123",
                         correlationID = "456",
                         sender = BasicRole("EMY", "DE"),
@@ -223,7 +228,9 @@ class RoutingServiceTest {
                 request.headers.receiver.country.toByteArray(),
                 request.headers.receiver.id.toByteArray()).sendAsync().get() } returns "https://ocn-node.provider.net"
 
-        val expectedAlteredBody = request.copy(body = body.copy(responseURL = "https://ocn-node.provider.net/commands/CANCEL_RESERVATION/128"))
+        val expectedAlteredBody = request.copy(
+                headers = request.headers.copy(authorization = ""),
+                body = body.copy(responseURL = "https://ocn-node.provider.net/commands/CANCEL_RESERVATION/128"))
 
         val jsonString = jacksonObjectMapper().writeValueAsString(expectedAlteredBody)
         every { httpService.mapper.writeValueAsString(expectedAlteredBody) } returns jsonString
@@ -249,12 +256,12 @@ class RoutingServiceTest {
                 module = ModuleID.TARIFFS,
                 method = HttpMethod.GET,
                 interfaceRole = InterfaceRole.SENDER,
-                headers = OcpiRequestHeaders(
+                headers = OcnHeaders(
+                        authorization = "Token token-c",
                         requestID = generateUUIDv4Token(),
                         correlationID = generateUUIDv4Token(),
                         sender = BasicRole("SNC", "DE"),
-                        receiver = BasicRole("ABC", "CH")
-                ),
+                        receiver = BasicRole("ABC", "CH")),
                 urlEncodedParams = OcpiRequestParameters(limit = 25))
 
         val link = "https://some.link.com/ocpi/tariffs?limit=25&offset=25; rel=\"next\""

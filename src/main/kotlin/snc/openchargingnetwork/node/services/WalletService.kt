@@ -60,6 +60,8 @@ class WalletService(walletRepo: WalletRepository,
         address = credentials.address
     }
 
+    val privateKey: String get() = credentials.ecKeyPair.privateKey.toString(16)
+
     /**
      * Take a component of a signature (r,s,v) and convert it to a string to include as an OCN-Signature header
      * in network requests

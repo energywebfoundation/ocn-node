@@ -1,19 +1,17 @@
 package snc.openchargingnetwork.node.controllers.ocpi.v2_2
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
 import com.ninjasquad.springmockk.MockkBean
-import io.mockk.Runs
 import io.mockk.every
-import io.mockk.just
+import io.mockk.mockk
 import org.hamcrest.Matchers
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
 import org.springframework.http.MediaType
+import org.springframework.http.ResponseEntity
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
@@ -22,25 +20,16 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
 import snc.openchargingnetwork.node.data.exampleTariff
 import snc.openchargingnetwork.node.models.*
 import snc.openchargingnetwork.node.models.ocpi.*
-import snc.openchargingnetwork.node.services.HttpService
-import snc.openchargingnetwork.node.services.RoutingService
+import snc.openchargingnetwork.node.services.RequestHandler
+import snc.openchargingnetwork.node.services.RequestHandlerBuilder
 import snc.openchargingnetwork.node.tools.generateUUIDv4Token
+
 
 @WebMvcTest(TariffsController::class)
 class TariffsControllerTest(@Autowired val mockMvc: MockMvc) {
 
     @MockkBean
-    lateinit var routingService: RoutingService
-
-    @MockkBean
-    lateinit var httpService: HttpService
-
-    private val mapper = jacksonObjectMapper()
-
-    @BeforeEach
-    fun before() {
-        every { httpService.mapper } returns mapper
-    }
+    lateinit var requestHandlerBuilder: RequestHandlerBuilder
 
 
     @Test
@@ -53,44 +42,27 @@ class TariffsControllerTest(@Autowired val mockMvc: MockMvc) {
                 module = ModuleID.TARIFFS,
                 interfaceRole = InterfaceRole.SENDER,
                 method = HttpMethod.GET,
-                headers = OcpiRequestHeaders(
+                headers = OcnHeaders(
+                        authorization = "Token token-c",
                         requestID = generateUUIDv4Token(),
                         correlationID = generateUUIDv4Token(),
                         sender = sender,
                         receiver = receiver),
                 urlEncodedParams = OcpiRequestParameters(limit = 10))
 
-        val url = "https://ocpi.emsp.com/2.2/tariffs"
+        val mockRequestHandler = mockk<RequestHandler<Array<Tariff>>>()
 
-        val forwardingHeaders = requestVariables.headers.copy(
-                authorization = "Token token-b",
-                requestID = generateUUIDv4Token())
+        val responseHeaders = HttpHeaders()
+        responseHeaders["Link"] = "https://node.ocn.co/ocpi/sender/2.2/tariffs/page/39; rel=\"next\""
+        responseHeaders["X-Limit"] = "10"
+        responseHeaders["X-Total-Count"] = "23"
 
-        every { routingService.validateSender("Token token-c", sender) } just Runs
-        every { routingService.validateReceiver(receiver) } returns Receiver.LOCAL
-        every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, forwardingHeaders)
+        every { requestHandlerBuilder.build<Array<Tariff>>(requestVariables) } returns mockRequestHandler
 
-        val responseHeaders = mapOf(
-                "Link" to "https://ocpi.cpo.com/tariffs?limit=10&offset=10; rel=\"next\"",
-                "X-Limit" to "10",
-                "X-Total-Count" to "23")
-
-        every {
-            httpService.makeOcpiRequest<Array<Tariff>>(HttpMethod.GET, url, forwardingHeaders.toMap(), requestVariables.urlEncodedParams?.toMap()!!)
-        } returns HttpResponse(
-                statusCode = 200,
-                headers = responseHeaders,
-                body = OcpiResponse(statusCode = 1000, data = arrayOf(exampleTariff)))
-
-        val httpHeaders = HttpHeaders()
-        httpHeaders["Link"] = "https://node.ocn.co/ocpi/sender/2.2/tariffs/page/39; rel=\"next\""
-        httpHeaders["X-Limit"] = responseHeaders["X-Limit"]
-        httpHeaders["X-Total-Count"] = responseHeaders["X-Total-Count"]
-
-        every {
-            routingService.proxyPaginationHeaders(
-                    request = requestVariables,
-                    responseHeaders = responseHeaders) } returns httpHeaders
+        every { mockRequestHandler.validateSender().forwardRequest().getResponseWithPaginationHeaders() } returns ResponseEntity
+                .status(200)
+                .headers(responseHeaders)
+                .body(OcpiResponse(statusCode = 1000, data = arrayOf(exampleTariff)))
 
         mockMvc.perform(get("/ocpi/sender/2.2/tariffs")
                 .header("Authorization", "Token token-c")
@@ -115,7 +87,6 @@ class TariffsControllerTest(@Autowired val mockMvc: MockMvc) {
                 .andExpect(jsonPath("\$.data[0].party_id").value(exampleTariff.partyID))
     }
 
-
     @Test
     fun `When GET sender Tariffs page should return proxied tariff list`() {
 
@@ -126,44 +97,26 @@ class TariffsControllerTest(@Autowired val mockMvc: MockMvc) {
                 module = ModuleID.TARIFFS,
                 interfaceRole = InterfaceRole.SENDER,
                 method = HttpMethod.GET,
-                headers = OcpiRequestHeaders(
+                headers = OcnHeaders(
+                        authorization = "Token token-c",
                         requestID = generateUUIDv4Token(),
                         correlationID = generateUUIDv4Token(),
                         sender = sender,
                         receiver = receiver),
                 urlPathVariables = "39")
 
-        val url = "https://ocpi.cpo.com/tariffs?limit=10?offset=10"
+        val mockRequestHandler = mockk<RequestHandler<Array<Tariff>>>()
 
-        val forwardingHeaders = requestVariables.headers.copy(
-                authorization = "Token token-b",
-                requestID = generateUUIDv4Token())
+        val responseHeaders = HttpHeaders()
+        responseHeaders["Link"] = "https://client.ocn.co/ocpi/sender/2.2/tariffs/page/40; rel=\"next\""
+        responseHeaders["X-Limit"] = "10"
 
-        every { routingService.validateSender("Token token-c", sender) } just Runs
-        every { routingService.validateReceiver(receiver) } returns Receiver.LOCAL
-        every { routingService.prepareLocalPlatformRequest(requestVariables, proxied = true) } returns Pair(url, forwardingHeaders)
+        every { requestHandlerBuilder.build<Array<Tariff>>(requestVariables) } returns mockRequestHandler
 
-        val responseHeaders = mapOf(
-                "Link" to "https://some.emsp.com/actual/tariffs?limit=10&offset=10; rel=\"next\"",
-                "X-Limit" to "10",
-                "X-Total-Count" to "23")
-
-        every {
-            httpService.makeOcpiRequest<Array<Tariff>>(HttpMethod.GET, url, forwardingHeaders.toMap())
-        } returns HttpResponse(
-                statusCode = 200,
-                headers = responseHeaders,
-                body = OcpiResponse(statusCode = 1000, data = arrayOf(exampleTariff)))
-
-        val httpHeaders = HttpHeaders()
-        httpHeaders["Link"] = "https://client.ocn.co/ocpi/sender/2.2/tariffs/page/40; rel=\"next\""
-        httpHeaders["X-Limit"] = responseHeaders["X-Limit"]
-
-        every { routingService.deleteProxyResource(requestVariables.urlPathVariables!!) } just Runs
-
-        every { routingService.proxyPaginationHeaders(
-                request = requestVariables,
-                responseHeaders = responseHeaders) } returns httpHeaders
+        every { mockRequestHandler.validateSender().forwardRequest().getResponseWithPaginationHeaders() } returns ResponseEntity
+                .status(200)
+                .headers(responseHeaders)
+                .body(OcpiResponse(statusCode = 1000, data = arrayOf(exampleTariff)))
 
         mockMvc.perform(get("/ocpi/sender/2.2/tariffs/page/${requestVariables.urlPathVariables}")
                 .header("Authorization", "Token token-c")
@@ -187,7 +140,6 @@ class TariffsControllerTest(@Autowired val mockMvc: MockMvc) {
                 .andExpect(jsonPath("\$.timestamp").isString)
     }
 
-
     @Test
     fun `When GET receiver Tariffs return single tariff object`() {
 
@@ -200,29 +152,21 @@ class TariffsControllerTest(@Autowired val mockMvc: MockMvc) {
                 module = ModuleID.TARIFFS,
                 interfaceRole = InterfaceRole.RECEIVER,
                 method = HttpMethod.GET,
-                headers = OcpiRequestHeaders(
+                headers = OcnHeaders(
+                        authorization = "Token token-c",
                         requestID = generateUUIDv4Token(),
                         correlationID = generateUUIDv4Token(),
                         sender = sender,
                         receiver = receiver),
                 urlPathVariables = "/${sender.country}/${sender.id}/$tariffID")
 
-        val url = "https://ocpi.cpo.com/2.2/tariffs/${sender.country}/${sender.id}/$tariffID"
+        val mockRequestHandler = mockk<RequestHandler<Tariff>>()
 
-        val forwardingHeaders = requestVariables.headers.copy(
-                authorization = "Token token-b",
-                requestID = generateUUIDv4Token())
+        every { requestHandlerBuilder.build<Tariff>(requestVariables) } returns mockRequestHandler
 
-        every { routingService.validateSender("Token token-c", sender) } just Runs
-        every { routingService.validateReceiver(receiver) } returns Receiver.LOCAL
-        every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, forwardingHeaders)
-
-        every {
-            httpService.makeOcpiRequest<Tariff>(HttpMethod.GET, url, forwardingHeaders.toMap())
-        } returns HttpResponse(
-                statusCode = 200,
-                headers = mapOf(),
-                body = OcpiResponse(statusCode = 1000, data = exampleTariff))
+        every { mockRequestHandler.validateSender().forwardRequest().getResponse() } returns ResponseEntity
+                .status(200)
+                .body(OcpiResponse(statusCode = 1000, data = exampleTariff))
 
         mockMvc.perform(get("/ocpi/receiver/2.2/tariffs/${sender.country}/${sender.id}/$tariffID")
                 .header("Authorization", "Token token-c")
@@ -241,7 +185,6 @@ class TariffsControllerTest(@Autowired val mockMvc: MockMvc) {
                 .andExpect(jsonPath("\$.data.party_id").value(exampleTariff.partyID))
     }
 
-
     @Test
     fun `When PUT receiver Tariffs return OCPI success`() {
 
@@ -254,7 +197,8 @@ class TariffsControllerTest(@Autowired val mockMvc: MockMvc) {
                 module = ModuleID.TARIFFS,
                 interfaceRole = InterfaceRole.RECEIVER,
                 method = HttpMethod.PUT,
-                headers = OcpiRequestHeaders(
+                headers = OcnHeaders(
+                        authorization = "Token token-c",
                         requestID = generateUUIDv4Token(),
                         correlationID = generateUUIDv4Token(),
                         sender = sender,
@@ -262,24 +206,13 @@ class TariffsControllerTest(@Autowired val mockMvc: MockMvc) {
                 urlPathVariables = "/${sender.country}/${sender.id}/$tariffID",
                 body = exampleTariff)
 
-        val url = "https://ocpi.cpo.com/2.2/tariffs/${sender.country}/${sender.id}/$tariffID"
+        val mockRequestHandler = mockk<RequestHandler<Unit>>()
 
-        val forwardingHeaders = requestVariables.headers.copy(
-                authorization = "Token token-b",
-                requestID = generateUUIDv4Token())
+        every { requestHandlerBuilder.build<Unit>(requestVariables) } returns mockRequestHandler
 
-        every { routingService.validateSender("Token token-c", sender) } just Runs
-        every { routingService.validateReceiver(receiver) } returns Receiver.LOCAL
-        every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, forwardingHeaders)
-
-        val bodyMap: Map<String, Any> = mapper.readValue(mapper.writeValueAsString(requestVariables.body))
-
-        every {
-            httpService.makeOcpiRequest<Unit>(HttpMethod.PUT, url, forwardingHeaders.toMap(), json = bodyMap)
-        } returns HttpResponse(
-                statusCode = 200,
-                headers = mapOf(),
-                body = OcpiResponse(statusCode = 1000))
+        every { mockRequestHandler.validateSender().forwardRequest().getResponse() } returns ResponseEntity
+                .status(200)
+                .body(OcpiResponse(statusCode = 1000))
 
         mockMvc.perform(put("/ocpi/receiver/2.2/tariffs/${sender.country}/${sender.id}/$tariffID")
                 .header("Authorization", "Token token-c")
@@ -299,7 +232,6 @@ class TariffsControllerTest(@Autowired val mockMvc: MockMvc) {
                 .andExpect(jsonPath("\$.timestamp").isString)
     }
 
-
     @Test
     fun `When DELETE receiver Tariffs return OCPI success`() {
 
@@ -312,29 +244,21 @@ class TariffsControllerTest(@Autowired val mockMvc: MockMvc) {
                 module = ModuleID.TARIFFS,
                 interfaceRole = InterfaceRole.RECEIVER,
                 method = HttpMethod.DELETE,
-                headers = OcpiRequestHeaders(
+                headers = OcnHeaders(
+                        authorization = "Token token-c",
                         requestID = generateUUIDv4Token(),
                         correlationID = generateUUIDv4Token(),
                         sender = sender,
                         receiver = receiver),
                 urlPathVariables = "/${sender.country}/${sender.id}/$tariffID")
 
-        val url = "https://ocpi.cpo.com/2.2/tariffs/${sender.country}/${sender.id}/$tariffID"
+        val mockRequestHandler = mockk<RequestHandler<Unit>>()
 
-        val forwardingHeaders = requestVariables.headers.copy(
-                authorization = "Token token-b",
-                requestID = generateUUIDv4Token())
+        every { requestHandlerBuilder.build<Unit>(requestVariables) } returns mockRequestHandler
 
-        every { routingService.validateSender("Token token-c", sender) } just Runs
-        every { routingService.validateReceiver(receiver) } returns Receiver.LOCAL
-        every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, forwardingHeaders)
-
-        every {
-            httpService.makeOcpiRequest<Unit>(HttpMethod.DELETE, url, forwardingHeaders.toMap())
-        } returns HttpResponse(
-                statusCode = 200,
-                headers = mapOf(),
-                body = OcpiResponse(statusCode = 1000))
+        every { mockRequestHandler.validateSender().forwardRequest().getResponse() } returns ResponseEntity
+                .status(200)
+                .body(OcpiResponse(statusCode = 1000))
 
         mockMvc.perform(delete("/ocpi/receiver/2.2/tariffs/${sender.country}/${sender.id}/$tariffID")
                 .header("Authorization", "Token token-c")

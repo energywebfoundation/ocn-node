@@ -32,7 +32,7 @@ import snc.openchargingnetwork.contracts.RegistryFacade
 
 
 @Configuration
-class NodeConfig(private val properties: NodeProperties) {
+open class NodeConfig(private val properties: NodeProperties) {
 
     private val web3: Web3j = Web3j.build(HttpService(properties.web3.provider))
     private val txManager: TransactionManager = ClientTransactionManager(web3, null)

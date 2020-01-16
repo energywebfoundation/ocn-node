@@ -1,4 +1,4 @@
-FROM gradle:jdk AS builder
+FROM gradle:jdk8 AS builder
 
 COPY . /ocn-node
 WORKDIR /ocn-node

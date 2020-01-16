@@ -29,6 +29,8 @@ class NodeProperties {
 
     var dev: Boolean = false
 
+    var signatures: Boolean = false
+
     lateinit var url: String
 
     val web3 = Web3()

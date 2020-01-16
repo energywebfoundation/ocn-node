@@ -27,11 +27,25 @@ class NodeInfoLogger(properties: NodeProperties,
                      walletService: WalletService) {
 
     init {
-        println("\n====================================================\n" +
-                "ADMIN_APIKEY = ${properties.apikey}\n" +
-                "URL = ${properties.url}\n" +
-                "ADDRESS = ${walletService.address}" +
-                "\n====================================================\n")
+        val borderLength = calculateBorderLength(properties.url.length, properties.apikey.length)
+        val border = "=".repeat(borderLength)
+        println("\n$border\n" +
+                "URL        | ${properties.url}\n" +
+                "ADDRESS    | ${walletService.address}\n" +
+                "APIKEY     | ${properties.apikey}\n" +
+                "SIGNATURES | ${properties.signatures}" +
+                "\n$border\n")
+    }
+
+    private fun calculateBorderLength(url: Int, apikey: Int): Int {
+        val baseLength = 13
+        val address = 42
+        return baseLength + when {
+            url >= apikey && url >= address -> url
+            apikey >= url && apikey >= address -> apikey
+            address >= url && address >= apikey -> address
+            else -> 50
+        }
     }
 
 }

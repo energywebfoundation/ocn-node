@@ -23,16 +23,16 @@ Gitter [community](https://gitter.im/shareandcharge/community).
 ## Open Charging Network
 
 To participate in the OCN, a node must be used to broker OCPI requests (e.g. start/stop requests, POI data retrieval) 
-between parties. There are two ways to use a node. Either it is run on-premises by an administrator working for the
-OCPI party wishing to participate in the network, or it is provided as a Service by an OCN Node Provider. If the 
-latter scenario is desired, the OCPI party needs only to obtain a `CREDENTIALS_TOKEN_A` and versions endpoint from said 
-provider to begin the regular OCPI 2.2 credentials registration process with the provider's OCN Node.  
+between parties. There are two ways to use a node. Either it is run on-premises by an administrator, or it is provided 
+as a Service by an OCN Node Provider. If the latter scenario is desired, an OCPI party (i.e. eMobility Service Provider
+or Charge Point Operator) needs only to obtain a `CREDENTIALS_TOKEN_A` and versions endpoint from said provider to 
+begin the regular OCPI 2.2 credentials registration process with the provider's OCN Node.  
 
 For more information about the OCN, check out the [wiki](https://bitbucket.org/shareandcharge/ocn-node/wiki/).
 
 ## API Documentation
 
-See [Open Charging Network Node Documentation](https://shareandcharge.bitbucket.io).
+See [Open Charging Network Node API Documentation](https://shareandcharge.bitbucket.io).
 
 ## Dependencies
 
@@ -43,8 +43,8 @@ If following the Local OCN tutorial below, it is only necessary to have Docker i
 
 Before running a node and connecting it to a local, test or prod environment, it is recommended to become acquainted 
 with how the network operates first. The `docker-compose` file provided spins up a local environment with the OCN
-Registry and two OCN Nodes already pre-configured. A [tutorial](./examples) has been provided to guide 
-administrators and users of an OCN Node alike through various use case examples.  
+Registry and two OCN Nodes pre-configured. A [tutorial](./examples) has been provided to guide administrators and users 
+of an OCN Node alike through various use case examples.  
 
 ## Running a Node
 
@@ -123,6 +123,21 @@ for more information on how to use the Admin API.
 The client can be run in "dev" or "prod" mode. By default, prod mode is in effect, which will check to see if the
 provided public client URL is reachable over HTTPS and is accessible to the outside world. When running in dev mode 
 (by setting `ocn.client.dev = true`), the client will allow insecure HTTP connections made over localhost.
+
+#### 1.6 Enabling message signing
+
+A feature of the Open Charging Network is it's security. To ensure that requests sent over the OCN are delivered to 
+their recipient as intended, messages are signed by the sender. In some particular cases, an OCN Node may need to 
+rewrite entries in the sender's original requests (such as when providing response URLs in commands requests). The 
+message signing functionality allows for this, as a signature of a modified request must also reference any values
+that have been changed. For more details on how to sign and verify messages, check out the [OCN Notary](https://bitbucket.org/shareandcharge/ocn-notary).
+
+During the alpha phase, message signing will not be enabled by default. **Once the OCN is in production, message signing
+will be enabled by default.** To toggle this feature on/off, set `ocn.node.signatures` to true (on) or false (off). 
+
+Be aware that even if an OCN Node does not require message signing, a recipient may still reject the request if it's
+missing an `OCN-Signature` header. Additionally, the OCN Node will verify signatures if they are present in a request's
+header, regardless of this setting. 
 
 ### 2. Running the Node
 

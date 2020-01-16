@@ -36,6 +36,7 @@ import snc.openchargingnetwork.node.services.HttpService
 import snc.openchargingnetwork.node.services.RoutingService
 import snc.openchargingnetwork.node.tools.*
 
+
 @RestController
 @RequestMapping("/ocpi/2.2/credentials")
 class CredentialsController(private val platformRepo: PlatformRepository,
@@ -91,6 +92,8 @@ class CredentialsController(private val platformRepo: PlatformRepository,
             if (!routingService.isRoleKnownOnNetwork(basicRole)) {
                 throw OcpiClientInvalidParametersException("Role with party_id=${basicRole.id} and country_code=${basicRole.country} not listed in OCN Registry with my node info!")
             }
+            // TODO: check existance by role (MSP/CPO), to support a platform with a CPO and MSP implementation
+            //  that uses the same country_code/party_id
             if (roleRepo.existsByCountryCodeAndPartyIDAllIgnoreCase(basicRole.country, basicRole.id)) {
                 throw OcpiClientInvalidParametersException("Role with party_id=${basicRole.id} and country_code=${basicRole.country} already connected to this node!")
             }

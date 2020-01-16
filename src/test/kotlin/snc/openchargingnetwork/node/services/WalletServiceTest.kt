@@ -15,6 +15,7 @@ import snc.openchargingnetwork.node.models.ocpi.*
 import snc.openchargingnetwork.node.repositories.WalletRepository
 import snc.openchargingnetwork.node.tools.generatePrivateKey
 import snc.openchargingnetwork.contracts.RegistryFacade
+import snc.openchargingnetwork.node.models.OcnHeaders
 
 class WalletServiceTest {
 
@@ -25,7 +26,8 @@ class WalletServiceTest {
             method = HttpMethod.GET,
             module = ModuleID.SESSIONS,
             interfaceRole = InterfaceRole.RECEIVER,
-            headers = OcpiRequestHeaders(
+            headers = OcnHeaders(
+                    authorization = "Token token-c",
                     requestID = "1",
                     correlationID = "1",
                     sender = BasicRole("XXX", "DE"),

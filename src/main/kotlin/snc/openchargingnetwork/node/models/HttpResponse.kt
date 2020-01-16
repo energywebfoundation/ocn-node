@@ -22,5 +22,5 @@ package snc.openchargingnetwork.node.models
 import snc.openchargingnetwork.node.models.ocpi.OcpiResponse
 
 data class HttpResponse<T: Any>(val statusCode: Int,
-                        val headers: Map<String, String>,
-                        val body: OcpiResponse<T>)
+                                val headers: Map<String, String>,
+                                val body: OcpiResponse<T>)

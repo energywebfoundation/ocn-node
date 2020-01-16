@@ -152,7 +152,7 @@ class RoutingService(private val platformRepo: PlatformRepository,
      * Used after validating a receiver: find the url of the local recipient for the given OCPI module/interface
      * and set the correct headers, replacing the X-Request-ID and Authorization token.
      */
-    fun prepareLocalPlatformRequest(request: OcpiRequestVariables, proxied: Boolean = false): Pair<String, OcpiRequestHeaders> {
+    fun prepareLocalPlatformRequest(request: OcpiRequestVariables, proxied: Boolean = false): Pair<String, OcnHeaders> {
 
         val platformID = getPlatformID(request.headers.receiver)
 
@@ -202,23 +202,30 @@ class RoutingService(private val platformRepo: PlatformRepository,
 
         val url = getRemoteNodeUrl(request.headers.receiver)
 
-        val body = when (proxied) {
-            true -> request.copy(proxyResource = getProxyResource(request.urlPathVariables, request.headers.sender, request.headers.receiver))
-            false -> request
+        var modifiedBody = request.copy()
+
+        // if callback function present, use it
+        alterBody?.let { modifiedBody = it(url) }
+
+        // if proxied request, modify the resource
+        if (proxied) {
+            modifiedBody = modifiedBody.copy(proxyResource = getProxyResource(
+                    modifiedBody.urlPathVariables,
+                    modifiedBody.headers.sender,
+                    modifiedBody.headers.receiver))
         }
 
-        val jsonString = if (alterBody != null) {
-            val alteredBody = alterBody(url)
-            stringify(alteredBody)
-        } else {
-            stringify(body)
-        }
+        // strip authorization
+        modifiedBody = modifiedBody.copy(headers = modifiedBody.headers.copy(authorization = ""))
 
+        val bodyString = stringify(modifiedBody)
+
+        // TODO: replace OCN-Signature with Notary signed string
         val headers = OcnMessageHeaders(
                 requestID = generateUUIDv4Token(),
-                signature = walletService.sign(jsonString))
+                signature = walletService.sign(bodyString))
 
-        return Triple(url, headers, jsonString)
+        return Triple(url, headers, bodyString)
     }
 
 

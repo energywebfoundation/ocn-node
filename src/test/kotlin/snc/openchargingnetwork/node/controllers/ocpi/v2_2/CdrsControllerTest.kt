@@ -1,7 +1,6 @@
 package snc.openchargingnetwork.node.controllers.ocpi.v2_2
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
 import com.ninjasquad.springmockk.MockkBean
 import io.mockk.*
 import org.junit.jupiter.api.Test
@@ -15,30 +14,23 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.content
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.header
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
-import snc.openchargingnetwork.node.config.NodeProperties
 import snc.openchargingnetwork.node.data.exampleCDR
-import snc.openchargingnetwork.node.services.RoutingService
 import snc.openchargingnetwork.node.tools.generateUUIDv4Token
 import org.hamcrest.Matchers.hasSize
 import org.springframework.http.HttpHeaders
+import org.springframework.http.ResponseEntity
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import snc.openchargingnetwork.node.models.*
 import snc.openchargingnetwork.node.models.ocpi.*
-import snc.openchargingnetwork.node.services.HttpService
+import snc.openchargingnetwork.node.services.RequestHandler
+import snc.openchargingnetwork.node.services.RequestHandlerBuilder
+
 
 @WebMvcTest(CdrsController::class)
 class CdrsControllerTest(@Autowired val mockMvc: MockMvc) {
 
     @MockkBean
-    lateinit var routingService: RoutingService
-
-    @MockkBean
-    lateinit var httpService: HttpService
-
-    @MockkBean
-    lateinit var properties: NodeProperties
-
-    private val mapper = jacksonObjectMapper()
+    lateinit var requestHandlerBuilder: RequestHandlerBuilder
 
 
     @Test
@@ -51,42 +43,26 @@ class CdrsControllerTest(@Autowired val mockMvc: MockMvc) {
                 module = ModuleID.CDRS,
                 interfaceRole = InterfaceRole.SENDER,
                 method = HttpMethod.GET,
-                headers = OcpiRequestHeaders(
+                headers = OcnHeaders(
+                        authorization = "Token token-c",
                         requestID = generateUUIDv4Token(),
                         correlationID = generateUUIDv4Token(),
                         sender = sender,
                         receiver = receiver),
                 urlEncodedParams = OcpiRequestParameters(limit = 100))
 
-        val url = "https://some.emsp.com/ocpi/emsp/2.2/cdrs"
+        val mockRequestHandler = mockk<RequestHandler<Array<CDR>>>()
 
-        val forwardingHeaders = requestVariables.headers.copy(
-                authorization = "Token token-b",
-                requestID = generateUUIDv4Token())
+        val responseHeaders = HttpHeaders()
+        responseHeaders["Link"] = "https://node.ocn.co/ocpi/sender/2.2/cdrs/page/43; rel=\"next\""
+        responseHeaders["X-Limit"] = "100"
 
-        every { routingService.validateSender("Token token-c", sender) } just Runs
-        every { routingService.validateReceiver(receiver) } returns Receiver.LOCAL
-        every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, forwardingHeaders)
+        every { requestHandlerBuilder.build<Array<CDR>>(requestVariables) } returns mockRequestHandler
 
-        val responseHeaders = mapOf(
-                "Link" to "https://some.cpo.com/actual/cdr/page/2; rel=\"next\"",
-                "X-Limit" to "100")
-
-        every {
-            httpService.makeOcpiRequest<Array<CDR>>(HttpMethod.GET, url, forwardingHeaders.toMap(), requestVariables.urlEncodedParams?.toMap()!!)
-        } returns HttpResponse(
-                    statusCode = 200,
-                    headers = responseHeaders,
-                    body = OcpiResponse(statusCode = 1000, data = arrayOf(exampleCDR)))
-
-
-        val httpHeaders = HttpHeaders()
-        httpHeaders["Link"] = "https://node.ocn.co/ocpi/sender/2.2/cdrs/page/43; rel=\"next\""
-        httpHeaders["X-Limit"] = responseHeaders["X-Limit"]
-
-        every { routingService.proxyPaginationHeaders(
-                request = requestVariables,
-                responseHeaders = responseHeaders) } returns httpHeaders
+        every { mockRequestHandler.validateSender().forwardRequest().getResponseWithPaginationHeaders() } returns ResponseEntity
+                .status(200)
+                .headers(responseHeaders)
+                .body(OcpiResponse(statusCode = 1000, data = arrayOf(exampleCDR)))
 
         mockMvc.perform(get("/ocpi/sender/2.2/cdrs")
                 .header("Authorization", "Token token-c")
@@ -108,9 +84,7 @@ class CdrsControllerTest(@Autowired val mockMvc: MockMvc) {
                 .andExpect(jsonPath("\$.data[0].id").value(exampleCDR.id))
                 .andExpect(jsonPath("\$.data[0].party_id").value(exampleCDR.partyID))
                 .andExpect(jsonPath("\$.timestamp").isString)
-
     }
-
 
     @Test
     fun `When GET sender CDRs page should return proxied cdrs list page`() {
@@ -122,43 +96,26 @@ class CdrsControllerTest(@Autowired val mockMvc: MockMvc) {
                 module = ModuleID.CDRS,
                 interfaceRole = InterfaceRole.SENDER,
                 method = HttpMethod.GET,
-                headers = OcpiRequestHeaders(
+                headers = OcnHeaders(
+                        authorization = "Token token-c",
                         requestID = generateUUIDv4Token(),
                         correlationID = generateUUIDv4Token(),
                         sender = sender,
                         receiver = receiver),
                 urlPathVariables = "67")
 
-        val url = "https://some.emsp.com/actual/cdr/page/2"
+        val mockRequestHandler = mockk<RequestHandler<Array<CDR>>>()
 
-        val forwardingHeaders = requestVariables.headers.copy(
-                authorization = "Token token-b",
-                requestID = generateUUIDv4Token())
+        val responseHeaders = HttpHeaders()
+        responseHeaders["Link"] = "https://node.ocn.co/ocpi/sender/2.2/cdrs/page/68; rel=\"next\""
+        responseHeaders["X-Limit"] = "100"
 
-        every { routingService.validateSender("Token token-c", sender) } just Runs
-        every { routingService.validateReceiver(receiver) } returns Receiver.LOCAL
-        every { routingService.prepareLocalPlatformRequest(requestVariables, proxied = true) } returns Pair(url, forwardingHeaders)
+        every { requestHandlerBuilder.build<Array<CDR>>(requestVariables) } returns mockRequestHandler
 
-        val responseHeaders = mapOf(
-                "Link" to "https://some.emsp.com/actual/cdr/page/3; rel=\"next\"",
-                "X-Limit" to "100")
-
-        every {
-            httpService.makeOcpiRequest<Array<CDR>>(HttpMethod.GET, url, forwardingHeaders.toMap())
-        } returns HttpResponse(
-                statusCode = 200,
-                headers = responseHeaders,
-                body = OcpiResponse(statusCode = 1000, data = arrayOf(exampleCDR)))
-
-        val httpHeaders = HttpHeaders()
-        httpHeaders["Link"] = "https://node.ocn.co/ocpi/sender/2.2/cdrs/page/68; rel=\"next\""
-        httpHeaders["X-Limit"] = responseHeaders["X-Limit"]
-
-        every { routingService.deleteProxyResource(requestVariables.urlPathVariables!!) } just Runs
-
-        every { routingService.proxyPaginationHeaders(
-                request = requestVariables,
-                responseHeaders = responseHeaders) } returns httpHeaders
+        every { mockRequestHandler.validateSender().forwardRequest(true).getResponseWithPaginationHeaders() } returns ResponseEntity
+                .status(200)
+                .headers(responseHeaders)
+                .body(OcpiResponse(statusCode = 1000, data = arrayOf(exampleCDR)))
 
         mockMvc.perform(get("/ocpi/sender/2.2/cdrs/page/${requestVariables.urlPathVariables}")
                 .header("Authorization", "Token token-c")
@@ -182,7 +139,6 @@ class CdrsControllerTest(@Autowired val mockMvc: MockMvc) {
                 .andExpect(jsonPath("\$.timestamp").isString)
     }
 
-
     @Test
     fun `When GET receiver CDRs should return single CDR`() {
 
@@ -193,29 +149,21 @@ class CdrsControllerTest(@Autowired val mockMvc: MockMvc) {
                 module = ModuleID.CDRS,
                 interfaceRole = InterfaceRole.RECEIVER,
                 method = HttpMethod.GET,
-                headers = OcpiRequestHeaders(
+                headers = OcnHeaders(
+                        authorization = "Token token-c",
                         requestID = generateUUIDv4Token(),
                         correlationID = generateUUIDv4Token(),
                         sender = sender,
                         receiver = receiver),
                 urlPathVariables = "6534")
 
-        val url = "https://some.cpo.com/ocpi/emsp/2.2/cdrs"
+        val mockRequestHandler = mockk<RequestHandler<CDR>>()
 
-        val forwardingHeaders = requestVariables.headers.copy(
-                authorization = "Token token-b",
-                requestID = generateUUIDv4Token())
+        every { requestHandlerBuilder.build<CDR>(requestVariables) } returns mockRequestHandler
 
-        every { routingService.validateSender("Token token-c", sender) } just Runs
-        every { routingService.validateReceiver(receiver) } returns Receiver.LOCAL
-        every { routingService.prepareLocalPlatformRequest(requestVariables, proxied = true) } returns Pair(url, forwardingHeaders)
-
-        every {
-            httpService.makeOcpiRequest<CDR>(HttpMethod.GET, url, forwardingHeaders.toMap())
-        } returns HttpResponse(
-                statusCode = 200,
-                headers = mapOf(),
-                body = OcpiResponse(statusCode = 1000, data = exampleCDR))
+        every { mockRequestHandler.validateSender().forwardRequest(true).getResponse() } returns ResponseEntity
+                .status(200)
+                .body(OcpiResponse(statusCode = 1000, data = exampleCDR))
 
         mockMvc.perform(get("/ocpi/receiver/2.2/cdrs/${requestVariables.urlPathVariables}")
                 .header("Authorization", "Token token-c")
@@ -234,7 +182,6 @@ class CdrsControllerTest(@Autowired val mockMvc: MockMvc) {
                 .andExpect(jsonPath("\$.timestamp").isString)
     }
 
-
     @Test
     fun `when POST receiver cdrs should return Location header`() {
 
@@ -245,39 +192,25 @@ class CdrsControllerTest(@Autowired val mockMvc: MockMvc) {
                 module = ModuleID.CDRS,
                 interfaceRole = InterfaceRole.RECEIVER,
                 method = HttpMethod.POST,
-                headers = OcpiRequestHeaders(
+                headers = OcnHeaders(
+                        authorization = "Token token-c",
                         requestID = generateUUIDv4Token(),
                         correlationID = generateUUIDv4Token(),
                         sender = sender,
                         receiver = receiver),
                 body = exampleCDR)
 
-        val url = "https://some.cpo.com/ocpi/emsp/2.2/cdrs"
+        val mockRequestHandler = mockk<RequestHandler<Unit>>()
 
-        val forwardingHeaders = requestVariables.headers.copy(
-                authorization = "Token token-b",
-                requestID = generateUUIDv4Token())
+        val responseHeaders = HttpHeaders()
+        responseHeaders["Location"] = "https://super.hub.net/ocpi/receiver/2.2/cdrs/6545"
 
-        every { routingService.validateSender("Token token-c", sender) } just Runs
-        every { routingService.validateReceiver(receiver) } returns Receiver.LOCAL
-        every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, forwardingHeaders)
+        every { requestHandlerBuilder.build<Unit>(requestVariables) } returns mockRequestHandler
 
-        val locationHeader = "https://real.msp.net/path/to/location/1"
-
-        every { httpService.mapper } returns mapper
-
-        val bodyString = mapper.writeValueAsString(requestVariables.body)
-        val bodyMap: Map<String, Any> = mapper.readValue(bodyString)
-
-        every {
-            httpService.makeOcpiRequest<Unit>(HttpMethod.POST, url, forwardingHeaders.toMap(), json = bodyMap)
-        } returns HttpResponse(
-                statusCode = 200,
-                headers = mapOf("Location" to locationHeader),
-                body = OcpiResponse(statusCode = 1000))
-
-        every { routingService.setProxyResource(locationHeader, sender, receiver) } returns "6545"
-        every { properties.url } returns "https://super.hub.net"
+        every { mockRequestHandler.validateSender().forwardRequest().getResponseWithLocationHeader("/ocpi/receiver/2.2/cdrs") } returns ResponseEntity
+                .status(200)
+                .headers(responseHeaders)
+                .body(OcpiResponse(statusCode = 1000))
 
         mockMvc.perform(post("/ocpi/receiver/2.2/cdrs")
                 .header("Authorization", "Token token-c")

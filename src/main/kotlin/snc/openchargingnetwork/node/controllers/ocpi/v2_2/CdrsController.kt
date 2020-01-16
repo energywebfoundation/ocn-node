@@ -19,22 +19,17 @@
 
 package snc.openchargingnetwork.node.controllers.ocpi.v2_2
 
-import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
-import snc.openchargingnetwork.node.config.NodeProperties
 import snc.openchargingnetwork.node.models.*
 import snc.openchargingnetwork.node.models.ocpi.*
-import snc.openchargingnetwork.node.services.HttpService
-import snc.openchargingnetwork.node.services.RoutingService
-import snc.openchargingnetwork.node.tools.isOcpiSuccess
-import snc.openchargingnetwork.node.tools.urlJoin
+import snc.openchargingnetwork.node.services.RequestHandler
+import snc.openchargingnetwork.node.services.RequestHandlerBuilder
+
 
 @RestController
-class CdrsController(val routingService: RoutingService,
-                     val httpService: HttpService,
-                     val properties: NodeProperties) {
+class CdrsController(private val requestHandlerBuilder: RequestHandlerBuilder) {
 
 
     /**
@@ -43,6 +38,7 @@ class CdrsController(val routingService: RoutingService,
 
     @GetMapping("/ocpi/sender/2.2/cdrs")
     fun getCdrsFromDataOwner(@RequestHeader("authorization") authorization: String,
+                             @RequestHeader("OCN-Signature") signature: String? = null,
                              @RequestHeader("X-Request-ID") requestID: String,
                              @RequestHeader("X-Correlation-ID") correlationID: String,
                              @RequestHeader("OCPI-from-country-code") fromCountryCode: String,
@@ -54,57 +50,31 @@ class CdrsController(val routingService: RoutingService,
                              @RequestParam("offset", required = false) offset: Int?,
                              @RequestParam("limit", required = false) limit: Int?): ResponseEntity<OcpiResponse<Array<CDR>>> {
 
-
         val sender = BasicRole(fromPartyID, fromCountryCode)
         val receiver = BasicRole(toPartyID, toCountryCode)
-
-        routingService.validateSender(authorization, sender)
 
         val requestVariables = OcpiRequestVariables(
                 module = ModuleID.CDRS,
                 interfaceRole = InterfaceRole.SENDER,
                 method = HttpMethod.GET,
-                headers = OcpiRequestHeaders(
-                        requestID = requestID,
-                        correlationID = correlationID,
-                        sender = sender,
-                        receiver = receiver),
+                headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
                 urlEncodedParams = OcpiRequestParameters(
                         dateFrom = dateFrom,
                         dateTo = dateTo,
                         offset = offset,
                         limit = limit))
 
-        val response: HttpResponse<Array<CDR>> = when (routingService.validateReceiver(receiver)) {
+        val request: RequestHandler<Array<CDR>> = requestHandlerBuilder.build(requestVariables)
+        return request
+                .validateSender()
+                .forwardRequest()
+                .getResponseWithPaginationHeaders()
 
-            Receiver.LOCAL -> {
-
-                val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables)
-
-                httpService.makeOcpiRequest(url, headers, requestVariables)
-            }
-
-            Receiver.REMOTE -> {
-
-                val (url, headers, body) = routingService.prepareRemotePlatformRequest(requestVariables)
-
-                httpService.postOcnMessage(url, headers, body)
-            }
-
-        }
-
-        val headers = routingService.proxyPaginationHeaders(
-                request = requestVariables,
-                responseHeaders = response.headers)
-
-        return ResponseEntity
-                .status(response.statusCode)
-                .headers(headers)
-                .body(response.body)
     }
 
     @GetMapping("/ocpi/sender/2.2/cdrs/page/{uid}")
     fun getCdrPageFromDataOwner(@RequestHeader("authorization") authorization: String,
+                                @RequestHeader("OCN-Signature") signature: String? = null,
                                 @RequestHeader("X-Request-ID") requestID: String,
                                 @RequestHeader("X-Correlation-ID") correlationID: String,
                                 @RequestHeader("OCPI-from-country-code") fromCountryCode: String,
@@ -116,56 +86,20 @@ class CdrsController(val routingService: RoutingService,
         val sender = BasicRole(fromPartyID, fromCountryCode)
         val receiver = BasicRole(toPartyID, toCountryCode)
 
-        routingService.validateSender(authorization, sender)
-
         val requestVariables = OcpiRequestVariables(
                 module = ModuleID.CDRS,
                 interfaceRole = InterfaceRole.SENDER,
                 method = HttpMethod.GET,
-                headers = OcpiRequestHeaders(
-                        requestID = requestID,
-                        correlationID = correlationID,
-                        sender = sender,
-                        receiver = receiver),
+                headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
                 urlPathVariables = uid)
 
-        val response: HttpResponse<Array<CDR>> = when (routingService.validateReceiver(receiver)) {
-
-            Receiver.LOCAL -> {
-
-                val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables, proxied = true)
-
-                httpService.makeOcpiRequest(url, headers, requestVariables)
-
-            }
-
-            Receiver.REMOTE -> {
-
-                val (url, headers, body) = routingService.prepareRemotePlatformRequest(requestVariables, proxied = true)
-
-                httpService.postOcnMessage(url, headers, body)
-
-            }
-
-        }
-
-        var headers = HttpHeaders()
-
-        if (isOcpiSuccess(response)) {
-
-            routingService.deleteProxyResource(uid)
-
-            headers = routingService.proxyPaginationHeaders(
-                    request = requestVariables,
-                    responseHeaders = response.headers)
-
-        }
-
-        return ResponseEntity
-                .status(response.statusCode)
-                .headers(headers)
-                .body(response.body)
+        val request: RequestHandler<Array<CDR>> = requestHandlerBuilder.build(requestVariables)
+        return request
+                .validateSender()
+                .forwardRequest(proxied = true)
+                .getResponseWithPaginationHeaders()
     }
+
 
     /**
      * RECEIVER INTERFACE
@@ -173,6 +107,7 @@ class CdrsController(val routingService: RoutingService,
 
     @GetMapping("/ocpi/receiver/2.2/cdrs/{cdrID}")
     fun getClientOwnedCdr(@RequestHeader("authorization") authorization: String,
+                          @RequestHeader("OCN-Signature") signature: String? = null,
                           @RequestHeader("X-Request-ID") requestID: String,
                           @RequestHeader("X-Correlation-ID") correlationID: String,
                           @RequestHeader("OCPI-from-country-code") fromCountryCode: String,
@@ -184,44 +119,24 @@ class CdrsController(val routingService: RoutingService,
         val sender = BasicRole(fromPartyID, fromCountryCode)
         val receiver = BasicRole(toPartyID, toCountryCode)
 
-        routingService.validateSender(authorization, sender)
-
         val requestVariables = OcpiRequestVariables(
                 module = ModuleID.CDRS,
                 interfaceRole = InterfaceRole.RECEIVER,
                 method = HttpMethod.GET,
-                headers = OcpiRequestHeaders(
-                        requestID = requestID,
-                        correlationID = correlationID,
-                        sender = sender,
-                        receiver = receiver),
+                headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
                 urlPathVariables = cdrID)
 
-        val response: HttpResponse<CDR> = when (routingService.validateReceiver(receiver)) {
-
-            Receiver.LOCAL -> {
-
-                val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables, proxied = true)
-
-                httpService.makeOcpiRequest(url, headers, requestVariables)
-            }
-
-            Receiver.REMOTE -> {
-
-                val (url, headers, body) = routingService.prepareRemotePlatformRequest(requestVariables, proxied = true)
-
-                httpService.postOcnMessage(url, headers, body)
-            }
-
-        }
-
-        return ResponseEntity.status(response.statusCode).body(response.body)
+        val request: RequestHandler<CDR> = requestHandlerBuilder.build(requestVariables)
+        return request
+                .validateSender()
+                .forwardRequest(proxied = true)
+                .getResponse()
     }
-
 
 //    @Transactional
     @PostMapping("/ocpi/receiver/2.2/cdrs")
     fun postClientOwnedCdr(@RequestHeader("authorization") authorization: String,
+                           @RequestHeader("OCN-Signature") signature: String? = null,
                            @RequestHeader("X-Request-ID") requestID: String,
                            @RequestHeader("X-Correlation-ID") correlationID: String,
                            @RequestHeader("OCPI-from-country-code") fromCountryCode: String,
@@ -233,48 +148,18 @@ class CdrsController(val routingService: RoutingService,
         val sender = BasicRole(fromPartyID, fromCountryCode)
         val receiver = BasicRole(toPartyID, toCountryCode)
 
-        routingService.validateSender(authorization, sender)
-
         val requestVariables = OcpiRequestVariables(
                 module = ModuleID.CDRS,
                 interfaceRole = InterfaceRole.RECEIVER,
                 method = HttpMethod.POST,
-                headers = OcpiRequestHeaders(
-                        requestID = requestID,
-                        correlationID = correlationID,
-                        sender = sender,
-                        receiver = receiver),
+                headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
                 body = body)
 
-        val response: HttpResponse<Unit> = when (routingService.validateReceiver(receiver)) {
-
-            Receiver.LOCAL -> {
-
-                val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables)
-
-                httpService.makeOcpiRequest(url, headers, requestVariables)
-            }
-
-            Receiver.REMOTE -> {
-
-                val (url, headers, ocnBody) = routingService.prepareRemotePlatformRequest(requestVariables)
-
-                httpService.postOcnMessage(url, headers, ocnBody)
-            }
-
-        }
-
-        val headers = HttpHeaders()
-
-        response.headers["Location"]?.let {
-            val resourceID = routingService.setProxyResource(it, sender, receiver)
-            headers["Location"] = urlJoin(properties.url, "/ocpi/receiver/2.2/cdrs/$resourceID")
-        }
-
-        return ResponseEntity
-                .status(response.statusCode)
-                .headers(headers)
-                .body(response.body)
+        val request: RequestHandler<Unit> = requestHandlerBuilder.build(requestVariables)
+        return request
+                .validateSender()
+                .forwardRequest()
+                .getResponseWithLocationHeader("/ocpi/receiver/2.2/cdrs")
     }
 
 }

@@ -67,12 +67,3 @@ fun generatePrivateKey(): String {
 fun <T: Any> isOcpiSuccess(response: HttpResponse<T>): Boolean {
     return response.statusCode == 200 && response.body.statusCode == 1000
 }
-
-fun isCommandResponseAccepted(response: HttpResponse<CommandResponse>): Boolean {
-    if (response.body.data == null) {
-        return false
-    }
-    return response.statusCode == 200
-            && response.body.statusCode == 1000
-            && response.body.data.result == CommandResponseType.ACCEPTED
-}

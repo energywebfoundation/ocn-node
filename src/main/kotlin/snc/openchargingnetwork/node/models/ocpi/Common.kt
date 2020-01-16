@@ -22,6 +22,9 @@ package snc.openchargingnetwork.node.models.ocpi
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
 import org.springframework.http.HttpMethod
+import shareandcharge.openchargingnetwork.notary.OcpiRequest
+import shareandcharge.openchargingnetwork.notary.OcpiUrlEncodedParameters
+import snc.openchargingnetwork.node.models.OcnHeaders
 import snc.openchargingnetwork.node.models.exceptions.OcpiClientInvalidParametersException
 import java.time.Instant
 import java.time.format.DateTimeFormatter
@@ -48,34 +51,18 @@ data class BasicRole(@JsonProperty("party_id") final val id: String,
 data class OcpiRequestVariables(@JsonProperty("module") val module: ModuleID,
                                 @JsonProperty("interface_role") val interfaceRole: InterfaceRole,
                                 @JsonProperty("method") val method: HttpMethod,
-                                @JsonProperty("headers") val headers: OcpiRequestHeaders,
+                                @JsonProperty("headers") val headers: OcnHeaders,
                                 @JsonProperty("url_path_variables") val urlPathVariables: String? = null,
                                 @JsonProperty("url_encoded_params") val urlEncodedParams: OcpiRequestParameters? = null,
                                 @JsonProperty("proxy_uid") val proxyUID: String? = null,
                                 @JsonProperty("proxy_resource") val proxyResource: String? = null,
-                                @JsonProperty("body") val body: Any? = null)
+                                @JsonProperty("body") val body: Any? = null) {
 
-
-@JsonInclude(JsonInclude.Include.NON_NULL)
-data class OcpiRequestHeaders(@JsonProperty("Authorization") val authorization: String? = null,
-                              @JsonProperty("X-Request-ID") val requestID: String,
-                              @JsonProperty("X-Correlation-ID") val correlationID: String,
-                              val sender: BasicRole,
-                              val receiver: BasicRole) {
-
-
-    fun toMap(): Map<String, String> {
-        val map = mutableMapOf<String, String>()
-        if (authorization != null) {
-            map["Authorization"] = authorization
-        }
-        map["X-Request-ID"] = requestID
-        map["X-Correlation-ID"] = correlationID
-        map["OCPI-from-country-code"] = sender.country
-        map["OCPI-from-party-id"] = sender.id
-        map["OCPI-to-country-code"] = receiver.country
-        map["OCPI-to-party-id"] = receiver.id
-        return map
+    fun toNotaryReadableVariables(): OcpiRequest<*> {
+        return OcpiRequest(
+                headers = headers.toNotaryReadableHeaders(),
+                params = urlEncodedParams?.toNotaryReadableParameters(),
+                body = body)
     }
 }
 
@@ -106,6 +93,22 @@ data class OcpiRequestParameters(@JsonProperty("type") val type: TokenType? = nu
         }
         return map
     }
+
+    fun toNotaryReadableParameters(): OcpiUrlEncodedParameters {
+        toMap().apply {
+            return OcpiUrlEncodedParameters(
+                    // use map to safely get 2.2 full release parameters; OcpiRequestParameters follows 2.2 RC2
+                    countryCode = get("country_code"),
+                    partyId = get("party_id"),
+                    tokenUid = get("token_uid"),
+                    type = get("type"),
+                    dateFrom = get("date_from"),
+                    date_to = get("date_to"),
+                    offset = get("offset"),
+                    limit = get("limit"))
+        }
+    }
+
 }
 
 

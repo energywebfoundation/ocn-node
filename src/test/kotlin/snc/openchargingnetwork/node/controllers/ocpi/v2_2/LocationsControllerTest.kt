@@ -1,19 +1,17 @@
 package snc.openchargingnetwork.node.controllers.ocpi.v2_2
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
 import com.ninjasquad.springmockk.MockkBean
-import io.mockk.Runs
 import io.mockk.every
-import io.mockk.just
+import io.mockk.mockk
 import org.hamcrest.Matchers.hasSize
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
 import org.springframework.http.MediaType
+import org.springframework.http.ResponseEntity
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch
@@ -23,26 +21,17 @@ import snc.openchargingnetwork.node.data.exampleLocation1
 import snc.openchargingnetwork.node.data.exampleLocation2
 import snc.openchargingnetwork.node.models.*
 import snc.openchargingnetwork.node.models.ocpi.*
-import snc.openchargingnetwork.node.services.HttpService
-import snc.openchargingnetwork.node.services.RoutingService
+import snc.openchargingnetwork.node.services.RequestHandler
+import snc.openchargingnetwork.node.services.RequestHandlerBuilder
 import snc.openchargingnetwork.node.tools.generateUUIDv4Token
 import snc.openchargingnetwork.node.tools.getTimestamp
+
 
 @WebMvcTest(LocationsController::class)
 class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
 
     @MockkBean
-    lateinit var routingService: RoutingService
-
-    @MockkBean
-    lateinit var httpService: HttpService
-
-    private val mapper = jacksonObjectMapper()
-
-    @BeforeEach
-    fun before() {
-        every { httpService.mapper } returns mapper
-    }
+    lateinit var requestHandlerBuilder: RequestHandlerBuilder
 
 
     @Test
@@ -57,44 +46,29 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
                 module = ModuleID.LOCATIONS,
                 interfaceRole = InterfaceRole.SENDER,
                 method = HttpMethod.GET,
-                headers = OcpiRequestHeaders(
-                    requestID = generateUUIDv4Token(),
-                    correlationID = generateUUIDv4Token(),
-                    sender = sender,
-                    receiver = receiver),
+                headers = OcnHeaders(
+                        authorization = "Token token-c",
+                        requestID = generateUUIDv4Token(),
+                        correlationID = generateUUIDv4Token(),
+                        sender = sender,
+                        receiver = receiver),
                 urlEncodedParams = OcpiRequestParameters(dateFrom = dateFrom))
 
-        val url = "https://ocpi.emsp.com/2.2/locations"
+        val mockRequestHandler = mockk<RequestHandler<Array<Location>>>()
 
-        val forwardingHeaders = requestVariables.headers.copy(
-                authorization = "Token token-b",
-                requestID = generateUUIDv4Token())
+        val responseHeaders = HttpHeaders()
+        responseHeaders["Link"] = "https://node.ocn.co/ocpi/sender/2.2/locations/page/189; rel=\"next\""
+        responseHeaders["X-Limit"] = "25"
+        responseHeaders["X-Total-Count"] = "500"
 
-        every { routingService.validateSender("Token token-c", sender) } just Runs
-        every { routingService.validateReceiver(receiver) } returns Receiver.LOCAL
-        every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, forwardingHeaders)
+        every { requestHandlerBuilder.build<Array<Location>>(requestVariables) } returns mockRequestHandler
 
-        val responseHeaders = mapOf(
-                "Link" to "https://ocpi.cpo.com/locations/page/2?dateFrom=$dateFrom; rel=\"next\"",
-                "X-Limit" to "25",
-                "X-Total-Count" to "500")
-
-        every {
-            httpService.makeOcpiRequest<Array<Location>>(HttpMethod.GET, url, forwardingHeaders.toMap(), requestVariables.urlEncodedParams?.toMap()!!)
-        } returns HttpResponse(
-                statusCode = 200,
-                headers = responseHeaders,
-                body = OcpiResponse(statusCode = 1000, data = arrayOf(exampleLocation1, exampleLocation2)))
-
-        val httpHeaders = HttpHeaders()
-        httpHeaders["Link"] = "https://node.ocn.co/ocpi/sender/2.2/locations/page/189; rel=\"next\""
-        httpHeaders["X-Limit"] = responseHeaders["X-Limit"]
-        httpHeaders["X-Total-Count"] = responseHeaders["X-Total-Count"]
-
-        every {
-            routingService.proxyPaginationHeaders(
-                    request = requestVariables,
-                    responseHeaders = responseHeaders) } returns httpHeaders
+        every { mockRequestHandler.validateSender().forwardRequest().getResponseWithPaginationHeaders() } returns ResponseEntity
+                .status(200)
+                .headers(responseHeaders)
+                .body(OcpiResponse(
+                        statusCode = 1000,
+                        data = arrayOf(exampleLocation1, exampleLocation2)))
 
         mockMvc.perform(get("/ocpi/sender/2.2/locations")
                 .header("Authorization", "Token token-c")
@@ -121,7 +95,6 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
                 .andExpect(jsonPath("\$.data[1].party_id").value(exampleLocation2.partyID))
     }
 
-
     @Test
     fun `When GET sender Locations page should return proxied locations list page`() {
 
@@ -132,43 +105,28 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
                 module = ModuleID.LOCATIONS,
                 interfaceRole = InterfaceRole.SENDER,
                 method = HttpMethod.GET,
-                headers = OcpiRequestHeaders(
+                headers = OcnHeaders(
+                        authorization = "Token token-c",
                         requestID = generateUUIDv4Token(),
                         correlationID = generateUUIDv4Token(),
                         sender = sender,
                         receiver = receiver),
                 urlPathVariables = "67")
 
-        val url = "https://some.emsp.com/actual/locations/page/2"
+        val mockRequestHandler = mockk<RequestHandler<Array<Location>>>()
 
-        val forwardingHeaders = requestVariables.headers.copy(
-                authorization = "Token token-b",
-                requestID = generateUUIDv4Token())
+        val responseHeaders = HttpHeaders()
+        responseHeaders["Link"] = "https://node.ocn.co/ocpi/sender/2.2/locations/page/68; rel=\"next\""
+        responseHeaders["X-Limit"] = "100"
 
-        every { routingService.validateSender("Token token-c", sender) } just Runs
-        every { routingService.validateReceiver(receiver) } returns Receiver.LOCAL
-        every { routingService.prepareLocalPlatformRequest(requestVariables, proxied = true) } returns Pair(url, forwardingHeaders)
+        every { requestHandlerBuilder.build<Array<Location>>(requestVariables) } returns mockRequestHandler
 
-        val responseHeaders = mapOf(
-                "Link" to "https://some.emsp.com/actual/locations/page/3; rel=\"next\"",
-                "X-Limit" to "100")
-
-        every {
-            httpService.makeOcpiRequest<Array<Location>>(HttpMethod.GET, url, forwardingHeaders.toMap())
-        } returns HttpResponse(
-                statusCode = 200,
-                headers = responseHeaders,
-                body = OcpiResponse(statusCode = 1000, data = arrayOf(exampleLocation2)))
-
-        val httpHeaders = HttpHeaders()
-        httpHeaders["Link"] = "https://node.ocn.co/ocpi/sender/2.2/locations/page/68; rel=\"next\""
-        httpHeaders["X-Limit"] = responseHeaders["X-Limit"]
-
-        every { routingService.deleteProxyResource(requestVariables.urlPathVariables!!) } just Runs
-
-        every { routingService.proxyPaginationHeaders(
-                    request = requestVariables,
-                    responseHeaders = responseHeaders) } returns httpHeaders
+        every { mockRequestHandler.validateSender().forwardRequest(true).getResponseWithPaginationHeaders() } returns ResponseEntity
+                .status(200)
+                .headers(responseHeaders)
+                .body(OcpiResponse(
+                        statusCode = 1000,
+                        data = arrayOf(exampleLocation2)))
 
         mockMvc.perform(get("/ocpi/sender/2.2/locations/page/${requestVariables.urlPathVariables}")
                 .header("Authorization", "Token token-c")
@@ -192,7 +150,6 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
                 .andExpect(jsonPath("\$.timestamp").isString)
     }
 
-
     @Test
     fun `When GET sender Locations return single location`() {
 
@@ -205,29 +162,23 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
                 module = ModuleID.LOCATIONS,
                 interfaceRole = InterfaceRole.SENDER,
                 method = HttpMethod.GET,
-                headers = OcpiRequestHeaders(
+                headers = OcnHeaders(
+                        authorization = "Token token-c",
                         requestID = generateUUIDv4Token(),
                         correlationID = generateUUIDv4Token(),
                         sender = sender,
                         receiver = receiver),
                 urlPathVariables = locationID)
 
-        val url = "https://ocpi.emsp.com/2.2/locations/$locationID"
+        val mockRequestHandler = mockk<RequestHandler<Location>>()
 
-        val forwardingHeaders = requestVariables.headers.copy(
-                authorization = "Token token-b",
-                requestID = generateUUIDv4Token())
+        every { requestHandlerBuilder.build<Location>(requestVariables) } returns mockRequestHandler
 
-        every { routingService.validateSender("Token token-c", sender) } just Runs
-        every { routingService.validateReceiver(receiver) } returns Receiver.LOCAL
-        every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, forwardingHeaders)
-
-        every {
-            httpService.makeOcpiRequest<Location>(HttpMethod.GET, url, forwardingHeaders.toMap())
-        } returns HttpResponse(
-                statusCode = 200,
-                headers = mapOf(),
-                body = OcpiResponse(statusCode = 1000, data = exampleLocation1))
+        every { mockRequestHandler.validateSender().forwardRequest().getResponse() } returns ResponseEntity
+                .status(200)
+                .body(OcpiResponse(
+                        statusCode = 1000,
+                        data = exampleLocation1))
 
         mockMvc.perform(get("/ocpi/sender/2.2/locations/$locationID")
                 .header("Authorization", "Token token-c")
@@ -246,7 +197,6 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
                 .andExpect(jsonPath("\$.data.party_id").value(exampleLocation1.partyID))
     }
 
-
     @Test
     fun `When GET sender Locations return single evse`() {
 
@@ -260,29 +210,23 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
                 module = ModuleID.LOCATIONS,
                 interfaceRole = InterfaceRole.SENDER,
                 method = HttpMethod.GET,
-                headers = OcpiRequestHeaders(
+                headers = OcnHeaders(
+                        authorization = "Token token-c",
                         requestID = generateUUIDv4Token(),
                         correlationID = generateUUIDv4Token(),
                         sender = sender,
                         receiver = receiver),
                 urlPathVariables = "/$locationID/$evseUID")
 
-        val url = "https://ocpi.emsp.com/2.2/locations/$locationID/$evseUID"
+        val mockRequestHandler = mockk<RequestHandler<Evse>>()
 
-        val forwardingHeaders = requestVariables.headers.copy(
-                authorization = "Token token-b",
-                requestID = generateUUIDv4Token())
+        every { requestHandlerBuilder.build<Evse>(requestVariables) } returns mockRequestHandler
 
-        every { routingService.validateSender("Token token-c", sender) } just Runs
-        every { routingService.validateReceiver(receiver) } returns Receiver.LOCAL
-        every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, forwardingHeaders)
-
-        every {
-            httpService.makeOcpiRequest<Evse>(HttpMethod.GET, url, forwardingHeaders.toMap())
-        } returns HttpResponse(
-                statusCode = 200,
-                headers = mapOf(),
-                body = OcpiResponse(statusCode = 1000, data = exampleLocation1.evses!![0]))
+        every { mockRequestHandler.validateSender().forwardRequest().getResponse() } returns ResponseEntity
+                .status(200)
+                .body(OcpiResponse(
+                        statusCode = 1000,
+                        data = exampleLocation1.evses!![0]))
 
         mockMvc.perform(get("/ocpi/sender/2.2/locations/$locationID/$evseUID")
                 .header("Authorization", "Token token-c")
@@ -301,7 +245,6 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
                 .andExpect(jsonPath("\$.data.status").value(exampleLocation1.evses!![0].status.toString()))
     }
 
-
     @Test
     fun `When GET sender Locations return single connector`() {
 
@@ -316,29 +259,23 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
                 module = ModuleID.LOCATIONS,
                 interfaceRole = InterfaceRole.SENDER,
                 method = HttpMethod.GET,
-                headers = OcpiRequestHeaders(
+                headers = OcnHeaders(
+                        authorization = "Token token-c",
                         requestID = generateUUIDv4Token(),
                         correlationID = generateUUIDv4Token(),
                         sender = sender,
                         receiver = receiver),
                 urlPathVariables = "/$locationID/$evseUID/$connectorID")
 
-        val url = "https://ocpi.emsp.com/2.2/locations/$locationID/$evseUID/$connectorID"
+        val mockRequestHandler = mockk<RequestHandler<Connector>>()
 
-        val forwardingHeaders = requestVariables.headers.copy(
-                authorization = "Token token-b",
-                requestID = generateUUIDv4Token())
+        every { requestHandlerBuilder.build<Connector>(requestVariables) } returns mockRequestHandler
 
-        every { routingService.validateSender("Token token-c", sender) } just Runs
-        every { routingService.validateReceiver(receiver) } returns Receiver.LOCAL
-        every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, forwardingHeaders)
-
-        every {
-            httpService.makeOcpiRequest<Connector>(HttpMethod.GET, url, forwardingHeaders.toMap())
-        } returns HttpResponse(
-                statusCode = 200,
-                headers = mapOf(),
-                body = OcpiResponse(statusCode = 1000, data = exampleLocation1.evses!![0].connectors[0]))
+        every { mockRequestHandler.validateSender().forwardRequest().getResponse() } returns ResponseEntity
+                .status(200)
+                .body(OcpiResponse(
+                        statusCode = 1000,
+                        data = exampleLocation1.evses!![0].connectors[0]))
 
         mockMvc.perform(get("/ocpi/sender/2.2/locations/$locationID/$evseUID/$connectorID")
                 .header("Authorization", "Token token-c")
@@ -357,7 +294,6 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
                 .andExpect(jsonPath("\$.data.standard").value(exampleLocation1.evses!![0].connectors[0].standard.toString()))
     }
 
-
     @Test
     fun `When GET receiver Locations return single location`() {
 
@@ -370,29 +306,23 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
                 module = ModuleID.LOCATIONS,
                 interfaceRole = InterfaceRole.RECEIVER,
                 method = HttpMethod.GET,
-                headers = OcpiRequestHeaders(
+                headers = OcnHeaders(
+                        authorization = "Token token-c",
                         requestID = generateUUIDv4Token(),
                         correlationID = generateUUIDv4Token(),
                         sender = sender,
                         receiver = receiver),
                 urlPathVariables = "/${sender.country}/${sender.id}/$locationID")
 
-        val url = "https://ocpi.cpo.com/2.2/locations/${sender.country}/${sender.id}/$locationID"
+        val mockRequestHandler = mockk<RequestHandler<Location>>()
 
-        val forwardingHeaders = requestVariables.headers.copy(
-                authorization = "Token token-b",
-                requestID = generateUUIDv4Token())
+        every { requestHandlerBuilder.build<Location>(requestVariables) } returns mockRequestHandler
 
-        every { routingService.validateSender("Token token-c", sender) } just Runs
-        every { routingService.validateReceiver(receiver) } returns Receiver.LOCAL
-        every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, forwardingHeaders)
-
-        every {
-            httpService.makeOcpiRequest<Location>(HttpMethod.GET, url, forwardingHeaders.toMap())
-        } returns HttpResponse(
-                statusCode = 200,
-                headers = mapOf(),
-                body = OcpiResponse(statusCode = 1000, data = exampleLocation2))
+        every { mockRequestHandler.validateSender().forwardRequest().getResponse() } returns ResponseEntity
+                .status(200)
+                .body(OcpiResponse(
+                        statusCode = 1000,
+                        data = exampleLocation2))
 
         mockMvc.perform(get("/ocpi/receiver/2.2/locations/${sender.country}/${sender.id}/$locationID")
                 .header("Authorization", "Token token-c")
@@ -411,7 +341,6 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
                 .andExpect(jsonPath("\$.data.party_id").value((exampleLocation2.partyID)))
     }
 
-
     @Test
     fun `When GET receiver Locations return single evse`() {
 
@@ -425,29 +354,23 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
                 module = ModuleID.LOCATIONS,
                 interfaceRole = InterfaceRole.RECEIVER,
                 method = HttpMethod.GET,
-                headers = OcpiRequestHeaders(
+                headers = OcnHeaders(
+                        authorization = "Token token-c",
                         requestID = generateUUIDv4Token(),
                         correlationID = generateUUIDv4Token(),
                         sender = sender,
                         receiver = receiver),
                 urlPathVariables = "/${sender.country}/${sender.id}/$locationID/$evseUID")
 
-        val url = "https://ocpi.cpo.com/2.2/locations/${sender.country}/${sender.id}/$locationID/$evseUID"
+        val mockRequestHandler = mockk<RequestHandler<Evse>>()
 
-        val forwardingHeaders = requestVariables.headers.copy(
-                authorization = "Token token-b",
-                requestID = generateUUIDv4Token())
+        every { requestHandlerBuilder.build<Evse>(requestVariables) } returns mockRequestHandler
 
-        every { routingService.validateSender("Token token-c", sender) } just Runs
-        every { routingService.validateReceiver(receiver) } returns Receiver.LOCAL
-        every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, forwardingHeaders)
-
-        every {
-            httpService.makeOcpiRequest<Evse>(HttpMethod.GET, url, forwardingHeaders.toMap())
-        } returns HttpResponse(
-                statusCode = 200,
-                headers = mapOf(),
-                body = OcpiResponse(statusCode = 1000, data = exampleLocation2.evses!![0]))
+        every { mockRequestHandler.validateSender().forwardRequest().getResponse() } returns ResponseEntity
+                .status(200)
+                .body(OcpiResponse(
+                        statusCode = 1000,
+                        data = exampleLocation2.evses!![0]))
 
         mockMvc.perform(get("/ocpi/receiver/2.2/locations/${sender.country}/${sender.id}/$locationID/$evseUID")
                 .header("Authorization", "Token token-c")
@@ -466,7 +389,6 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
                 .andExpect(jsonPath("\$.data.status").value((exampleLocation2.evses!![0].status.toString())))
     }
 
-
     @Test
     fun `When GET receiver Locations return single connector`() {
 
@@ -481,29 +403,23 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
                 module = ModuleID.LOCATIONS,
                 interfaceRole = InterfaceRole.RECEIVER,
                 method = HttpMethod.GET,
-                headers = OcpiRequestHeaders(
+                headers = OcnHeaders(
+                        authorization = "Token token-c",
                         requestID = generateUUIDv4Token(),
                         correlationID = generateUUIDv4Token(),
                         sender = sender,
                         receiver = receiver),
                 urlPathVariables = "/${sender.country}/${sender.id}/$locationID/$evseUID/$connectorID")
 
-        val url = "https://ocpi.cpo.com/2.2/locations/${sender.country}/${sender.id}/$locationID/$evseUID/$connectorID"
+        val mockRequestHandler = mockk<RequestHandler<Connector>>()
 
-        val forwardingHeaders = requestVariables.headers.copy(
-                authorization = "Token token-b",
-                requestID = generateUUIDv4Token())
+        every { requestHandlerBuilder.build<Connector>(requestVariables) } returns mockRequestHandler
 
-        every { routingService.validateSender("Token token-c", sender) } just Runs
-        every { routingService.validateReceiver(receiver) } returns Receiver.LOCAL
-        every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, forwardingHeaders)
-
-        every {
-            httpService.makeOcpiRequest<Connector>(HttpMethod.GET, url, forwardingHeaders.toMap())
-        } returns HttpResponse(
-                statusCode = 200,
-                headers = mapOf(),
-                body = OcpiResponse(statusCode = 1000, data = exampleLocation2.evses!![0].connectors[0]))
+        every { mockRequestHandler.validateSender().forwardRequest().getResponse() } returns ResponseEntity
+                .status(200)
+                .body(OcpiResponse(
+                        statusCode = 1000,
+                        data = exampleLocation2.evses!![0].connectors[0]))
 
         mockMvc.perform(get("/ocpi/receiver/2.2/locations/${sender.country}/${sender.id}/$locationID/$evseUID/$connectorID")
                 .header("Authorization", "Token token-c")
@@ -522,7 +438,6 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
                 .andExpect(jsonPath("\$.data.format").value((exampleLocation2.evses!![0].connectors[0].format.toString())))
     }
 
-
     @Test
     fun `When PUT receiver Locations with location body return OCPI success`() {
 
@@ -536,7 +451,8 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
                 module = ModuleID.LOCATIONS,
                 interfaceRole = InterfaceRole.RECEIVER,
                 method = HttpMethod.PUT,
-                headers = OcpiRequestHeaders(
+                headers = OcnHeaders(
+                        authorization = "Token token-c",
                         requestID = generateUUIDv4Token(),
                         correlationID = generateUUIDv4Token(),
                         sender = sender,
@@ -544,24 +460,13 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
                 urlPathVariables = "/${sender.country}/${sender.id}/$locationID",
                 body = exampleLocation2)
 
-        val url = "https://ocpi.cpo.com/2.2/locations/${sender.country}/${sender.id}/$locationID"
+        val mockRequestHandler = mockk<RequestHandler<Unit>>()
 
-        val forwardingHeaders = requestVariables.headers.copy(
-                authorization = "Token token-b",
-                requestID = generateUUIDv4Token())
+        every { requestHandlerBuilder.build<Unit>(requestVariables) } returns mockRequestHandler
 
-        every { routingService.validateSender("Token token-c", sender) } just Runs
-        every { routingService.validateReceiver(receiver) } returns Receiver.LOCAL
-        every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, forwardingHeaders)
-
-        val bodyMap: Map<String, Any> = mapper.readValue(mapper.writeValueAsString(requestVariables.body))
-
-        every {
-            httpService.makeOcpiRequest<Unit>(HttpMethod.PUT, url, forwardingHeaders.toMap(), json = bodyMap)
-        } returns HttpResponse(
-                statusCode = 200,
-                headers = mapOf(),
-                body = OcpiResponse(statusCode = 1000))
+        every { mockRequestHandler.validateSender().forwardRequest().getResponse() } returns ResponseEntity
+                .status(200)
+                .body(OcpiResponse(statusCode = 1000))
 
         mockMvc.perform(put("/ocpi/receiver/2.2/locations/${sender.country}/${sender.id}/$locationID")
                 .header("Authorization", "Token token-c")
@@ -581,7 +486,6 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
                 .andExpect(jsonPath("\$.timestamp").isString)
     }
 
-
     @Test
     fun `When PUT receiver Locations with evse body return OCPI success`() {
 
@@ -596,7 +500,8 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
                 module = ModuleID.LOCATIONS,
                 interfaceRole = InterfaceRole.RECEIVER,
                 method = HttpMethod.PUT,
-                headers = OcpiRequestHeaders(
+                headers = OcnHeaders(
+                        authorization = "Token token-c",
                         requestID = generateUUIDv4Token(),
                         correlationID = generateUUIDv4Token(),
                         sender = sender,
@@ -604,24 +509,13 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
                 urlPathVariables = "/${sender.country}/${sender.id}/$locationID/$evseUID",
                 body = body)
 
-        val url = "https://ocpi.cpo.com/2.2/locations/${sender.country}/${sender.id}/$locationID/$evseUID"
+        val mockRequestHandler = mockk<RequestHandler<Unit>>()
 
-        val forwardingHeaders = requestVariables.headers.copy(
-                authorization = "Token token-b",
-                requestID = generateUUIDv4Token())
+        every { requestHandlerBuilder.build<Unit>(requestVariables) } returns mockRequestHandler
 
-        every { routingService.validateSender("Token token-c", sender) } just Runs
-        every { routingService.validateReceiver(receiver) } returns Receiver.LOCAL
-        every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, forwardingHeaders)
-
-        val bodyMap: Map<String, Any> = mapper.readValue(mapper.writeValueAsString(requestVariables.body))
-
-        every {
-            httpService.makeOcpiRequest<Unit>(HttpMethod.PUT, url, forwardingHeaders.toMap(), json = bodyMap)
-        } returns HttpResponse(
-                statusCode = 200,
-                headers = mapOf(),
-                body = OcpiResponse(statusCode = 1000))
+        every { mockRequestHandler.validateSender().forwardRequest().getResponse() } returns ResponseEntity
+                .status(200)
+                .body(OcpiResponse(statusCode = 1000))
 
         mockMvc.perform(put("/ocpi/receiver/2.2/locations/${sender.country}/${sender.id}/$locationID/$evseUID")
                 .header("Authorization", "Token token-c")
@@ -641,7 +535,6 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
                 .andExpect(jsonPath("\$.timestamp").isString)
     }
 
-
     @Test
     fun `When PUT receiver Locations with connector body return OCPI success`() {
 
@@ -657,7 +550,8 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
                 module = ModuleID.LOCATIONS,
                 interfaceRole = InterfaceRole.RECEIVER,
                 method = HttpMethod.PUT,
-                headers = OcpiRequestHeaders(
+                headers = OcnHeaders(
+                        authorization = "Token token-c",
                         requestID = generateUUIDv4Token(),
                         correlationID = generateUUIDv4Token(),
                         sender = sender,
@@ -665,24 +559,13 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
                 urlPathVariables = "/${sender.country}/${sender.id}/$locationID/$evseUID/$connectorID",
                 body = body)
 
-        val url = "https://ocpi.cpo.com/2.2/locations/${sender.country}/${sender.id}/$locationID/$evseUID/$connectorID"
+        val mockRequestHandler = mockk<RequestHandler<Unit>>()
 
-        val forwardingHeaders = requestVariables.headers.copy(
-                authorization = "Token token-b",
-                requestID = generateUUIDv4Token())
+        every { requestHandlerBuilder.build<Unit>(requestVariables) } returns mockRequestHandler
 
-        every { routingService.validateSender("Token token-c", sender) } just Runs
-        every { routingService.validateReceiver(receiver) } returns Receiver.LOCAL
-        every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, forwardingHeaders)
-
-        val bodyMap: Map<String, Any> = mapper.readValue(mapper.writeValueAsString(requestVariables.body))
-
-        every {
-            httpService.makeOcpiRequest<Unit>(HttpMethod.PUT, url, forwardingHeaders.toMap(), json = bodyMap)
-        } returns HttpResponse(
-                statusCode = 200,
-                headers = mapOf(),
-                body = OcpiResponse(statusCode = 1000))
+        every { mockRequestHandler.validateSender().forwardRequest().getResponse() } returns ResponseEntity
+                .status(200)
+                .body(OcpiResponse(statusCode = 1000))
 
         mockMvc.perform(put("/ocpi/receiver/2.2/locations/${sender.country}/${sender.id}/$locationID/$evseUID/$connectorID")
                 .header("Authorization", "Token token-c")
@@ -702,7 +585,6 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
                 .andExpect(jsonPath("\$.timestamp").isString)
     }
 
-
     @Test
     fun `When PATCH receiver Locations on location object return OCPI success`() {
 
@@ -716,7 +598,8 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
                 module = ModuleID.LOCATIONS,
                 interfaceRole = InterfaceRole.RECEIVER,
                 method = HttpMethod.PATCH,
-                headers = OcpiRequestHeaders(
+                headers = OcnHeaders(
+                        authorization = "Token token-c",
                         requestID = generateUUIDv4Token(),
                         correlationID = generateUUIDv4Token(),
                         sender = sender,
@@ -724,24 +607,13 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
                 urlPathVariables = "/${sender.country}/${sender.id}/$locationID",
                 body = body)
 
-        val url = "https://ocpi.cpo.com/2.2/locations/${sender.country}/${sender.id}/$locationID"
+        val mockRequestHandler = mockk<RequestHandler<Unit>>()
 
-        val forwardingHeaders = requestVariables.headers.copy(
-                authorization = "Token token-b",
-                requestID = generateUUIDv4Token())
+        every { requestHandlerBuilder.build<Unit>(requestVariables) } returns mockRequestHandler
 
-        every { routingService.validateSender("Token token-c", sender) } just Runs
-        every { routingService.validateReceiver(receiver) } returns Receiver.LOCAL
-        every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, forwardingHeaders)
-
-        val bodyMap: Map<String, Any> = mapper.readValue(mapper.writeValueAsString(requestVariables.body))
-
-        every {
-            httpService.makeOcpiRequest<Unit>(HttpMethod.PATCH, url, forwardingHeaders.toMap(), json = bodyMap)
-        } returns HttpResponse(
-                statusCode = 200,
-                headers = mapOf(),
-                body = OcpiResponse(statusCode = 1000))
+        every { mockRequestHandler.validateSender().forwardRequest().getResponse() } returns ResponseEntity
+                .status(200)
+                .body(OcpiResponse(statusCode = 1000))
 
         mockMvc.perform(patch("/ocpi/receiver/2.2/locations/${sender.country}/${sender.id}/$locationID")
                 .header("Authorization", "Token token-c")
@@ -760,8 +632,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
                 .andExpect(jsonPath("\$.data").doesNotExist())
                 .andExpect(jsonPath("\$.timestamp").isString)
     }
-
-
+//
     @Test
     fun `When PATCH receiver Locations on evse object return OCPI success`() {
 
@@ -777,7 +648,8 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
                 module = ModuleID.LOCATIONS,
                 interfaceRole = InterfaceRole.RECEIVER,
                 method = HttpMethod.PATCH,
-                headers = OcpiRequestHeaders(
+                headers = OcnHeaders(
+                        authorization = "Token token-c",
                         requestID = generateUUIDv4Token(),
                         correlationID = generateUUIDv4Token(),
                         sender = sender,
@@ -785,24 +657,13 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
                 urlPathVariables = "/${sender.country}/${sender.id}/$locationID/$evseUID",
                 body = body)
 
-        val url = "https://ocpi.cpo.com/2.2/locations/${sender.country}/${sender.id}/$locationID/$evseUID"
+        val mockRequestHandler = mockk<RequestHandler<Unit>>()
 
-        val forwardingHeaders = requestVariables.headers.copy(
-                authorization = "Token token-b",
-                requestID = generateUUIDv4Token())
+        every { requestHandlerBuilder.build<Unit>(requestVariables) } returns mockRequestHandler
 
-        every { routingService.validateSender("Token token-c", sender) } just Runs
-        every { routingService.validateReceiver(receiver) } returns Receiver.LOCAL
-        every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, forwardingHeaders)
-
-        val bodyMap: Map<String, Any> = mapper.readValue(mapper.writeValueAsString(requestVariables.body))
-
-        every {
-            httpService.makeOcpiRequest<Unit>(HttpMethod.PATCH, url, forwardingHeaders.toMap(), json = bodyMap)
-        } returns HttpResponse(
-                statusCode = 200,
-                headers = mapOf(),
-                body = OcpiResponse(statusCode = 1000))
+        every { mockRequestHandler.validateSender().forwardRequest().getResponse() } returns ResponseEntity
+                .status(200)
+                .body(OcpiResponse(statusCode = 1000))
 
         mockMvc.perform(patch("/ocpi/receiver/2.2/locations/${sender.country}/${sender.id}/$locationID/$evseUID")
                 .header("Authorization", "Token token-c")
@@ -822,7 +683,6 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
                 .andExpect(jsonPath("\$.timestamp").isString)
     }
 
-
     @Test
     fun `When PATCH receiver Locations on connector object return OCPI success`() {
 
@@ -839,7 +699,8 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
                 module = ModuleID.LOCATIONS,
                 interfaceRole = InterfaceRole.RECEIVER,
                 method = HttpMethod.PATCH,
-                headers = OcpiRequestHeaders(
+                headers = OcnHeaders(
+                        authorization = "Token token-c",
                         requestID = generateUUIDv4Token(),
                         correlationID = generateUUIDv4Token(),
                         sender = sender,
@@ -847,24 +708,13 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
                 urlPathVariables = "/${sender.country}/${sender.id}/$locationID/$evseUID/$connectorID",
                 body = body)
 
-        val url = "https://ocpi.cpo.com/2.2/locations/${sender.country}/${sender.id}/$locationID/$evseUID/$connectorID"
+        val mockRequestHandler = mockk<RequestHandler<Unit>>()
 
-        val forwardingHeaders = requestVariables.headers.copy(
-                authorization = "Token token-b",
-                requestID = generateUUIDv4Token())
+        every { requestHandlerBuilder.build<Unit>(requestVariables) } returns mockRequestHandler
 
-        every { routingService.validateSender("Token token-c", sender) } just Runs
-        every { routingService.validateReceiver(receiver) } returns Receiver.LOCAL
-        every { routingService.prepareLocalPlatformRequest(requestVariables) } returns Pair(url, forwardingHeaders)
-
-        val bodyMap: Map<String, Any> = mapper.readValue(mapper.writeValueAsString(requestVariables.body))
-
-        every {
-            httpService.makeOcpiRequest<Unit>(HttpMethod.PATCH, url, forwardingHeaders.toMap(), json = bodyMap)
-        } returns HttpResponse(
-                statusCode = 200,
-                headers = mapOf(),
-                body = OcpiResponse(statusCode = 1000))
+        every { mockRequestHandler.validateSender().forwardRequest().getResponse() } returns ResponseEntity
+                .status(200)
+                .body(OcpiResponse(statusCode = 1000))
 
         mockMvc.perform(patch("/ocpi/receiver/2.2/locations/${sender.country}/${sender.id}/$locationID/$evseUID/$connectorID")
                 .header("Authorization", "Token token-c")
