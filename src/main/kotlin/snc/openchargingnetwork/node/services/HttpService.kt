@@ -89,10 +89,10 @@ class HttpService {
     /**
      * Get OCPI versions during the Credentials registration handshake
      */
-    fun getVersions(url: String, authorization: String): Versions {
+    fun getVersions(url: String, authorization: String): List<Version> {
         try {
             val response = khttp.get(url = url, headers = mapOf("Authorization" to "Token $authorization"))
-            val body: OcpiResponse<Versions> = mapper.readValue(response.text)
+            val body: OcpiResponse<List<Version>> = mapper.readValue(response.text)
 
             return if (response.statusCode == 200 && body.statusCode == 1000) {
                 body.data!!

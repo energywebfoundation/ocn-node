@@ -150,6 +150,7 @@ enum class OcpiStatus(val code: Int, val message: String? = null) {
     CLIENT_INVALID_PARAMETERS(2001, "Invalid or missing parameters"),
     CLIENT_NOT_ENOUGH_INFO(2002, "Not enough information"),
     CLIENT_UNKNOWN_LOCATION(2003, "Unknown location"),
+    UNKNOWN_TOKEN(2004, "Unknown token"),
     SERVER_ERROR(3000),
     SERVER_UNUSABLE_API(3001),
     SERVER_UNSUPPORTED_VERSION(3002),
@@ -191,6 +192,7 @@ enum class Role {
     CPO,
     EMSP,
     HUB,
+    NAP,
     NSP,
     OTHER,
     SCSP

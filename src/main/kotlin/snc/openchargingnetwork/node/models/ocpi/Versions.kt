@@ -21,8 +21,6 @@ package snc.openchargingnetwork.node.models.ocpi
 
 import com.fasterxml.jackson.annotation.JsonProperty
 
-data class Versions(@JsonProperty("versions") val versions: List<Version>)
-
 data class Version(@JsonProperty("version") val version: String,
                    @JsonProperty("url") val url: String)
 

@@ -48,6 +48,7 @@ data class CDR(@JsonProperty("country_code") val countryCode: String,
                @JsonProperty("total_parking_cost") val totalParkingCost: Price? = null,
                @JsonProperty("total_reservation_cost") val totalReservationCost: Price? = null,
                @JsonProperty("remark") val remark: String? = null,
+               @JsonProperty("invoice_reference_id") val invoiceReferenceID: String? = null,
                @JsonProperty("credit") val credit: Boolean? = null,
                @JsonProperty("credit_reference_id") val creditReferenceID: String? = null,
                @JsonProperty("last_updated") val lastUpdated: String)

@@ -39,11 +39,11 @@ class VersionsController(private val repository: PlatformRepository,
                          private val properties: NodeProperties) {
 
     @GetMapping("/versions")
-    fun getVersions(@RequestHeader("Authorization") authorization: String): OcpiResponse<Versions> {
+    fun getVersions(@RequestHeader("Authorization") authorization: String): OcpiResponse<List<Version>> {
 
         val token = authorization.extractToken()
         val endpoint = urlJoin(properties.url, "/ocpi/2.2")
-        val versions = Versions(versions = listOf(Version("2.2", endpoint)))
+        val versions = listOf(Version("2.2", endpoint))
         val response = OcpiResponse(OcpiStatus.SUCCESS.code, data = versions)
 
         return when {

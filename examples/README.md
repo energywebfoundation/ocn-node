@@ -202,7 +202,7 @@ use this version.
 Do the same for the next request in the directory, for retrieving version details. The response will contain an array
 of endpoints supported by the node. The one we are most interested in for now is the `credentials` module:
 
-```
+```json
 {
     "identifier": "credentials",
     "role": "SENDER",
@@ -221,7 +221,7 @@ endpoints we have. Lastly, we describe the roles that we employ. Notice how this
 for a platform operating multiple roles to communicate on a single OCPI connection. Therefore a platform that is both an 
 EMSP and CPO needs not register twice. 
 
-```
+```json
 {
     "status_code": 1000,
     "data": {
@@ -261,7 +261,7 @@ request, we wish to fetch a list of the CPO's locations (i.e. charging stations 
 send the `GET locations list` request in the locations directory of the Postman collection.
 
 The result should look like the following:
-```
+```json
 {
     "status_code": 1000,
     "data": [
@@ -269,7 +269,7 @@ The result should look like the following:
             "country_code": "DE",
             "party_id": "CPO",
             "id": "LOC1",
-            "type": "ON_STREET",
+            "publish": true,
             "address": "somestreet 1",
             "city": "Essen",
             "country": "DEU",

@@ -80,7 +80,7 @@ class CredentialsController(private val platformRepo: PlatformRepository,
         val versionsInfo = httpService.getVersions(body.url, body.token)
 
         // try to match version 2.2
-        val correctVersion = versionsInfo.versions.firstOrNull { it.version == "2.2" }
+        val correctVersion = versionsInfo.firstOrNull { it.version == "2.2" }
                 ?: throw OcpiServerNoMatchingEndpointsException("Expected version 2.2 from $versionsInfo")
 
         // GET 2.2 version details
@@ -156,10 +156,10 @@ class CredentialsController(private val platformRepo: PlatformRepository,
                 ?: throw OcpiClientInvalidParametersException("Invalid CREDENTIALS_TOKEN_C")
 
         // GET versions information endpoint with TOKEN_B (both provided in request body)
-        val versionsInfo: Versions = httpService.getVersions(body.url, body.token)
+        val versionsInfo: List<Version> = httpService.getVersions(body.url, body.token)
 
         // try to match version 2.2
-        val correctVersion = versionsInfo.versions.firstOrNull { it.version == "2.2" }
+        val correctVersion = versionsInfo.firstOrNull { it.version == "2.2" }
                 ?: throw OcpiClientInvalidParametersException("Expected version 2.2 from ${body.url}")
 
         // GET 2.2 version details

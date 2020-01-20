@@ -36,10 +36,10 @@ class VersionsControllerTest(@Autowired val mockMvc: MockMvc) {
                 .andExpect(jsonPath("\$.status_code").value(OcpiStatus.SUCCESS.code))
                 .andExpect(jsonPath("\$.status_message").doesNotExist())
                 .andExpect(jsonPath("\$.timestamp").isString)
-                .andExpect(jsonPath("\$.data.versions").isArray)
-                .andExpect(jsonPath("\$.data.versions[0]").isMap)
-                .andExpect(jsonPath("\$.data.versions[0].version").value("2.2"))
-                .andExpect(jsonPath("\$.data.versions[0].url").value("http://localhost:8070/ocpi/2.2"))
+                .andExpect(jsonPath("\$.data").isArray)
+                .andExpect(jsonPath("\$.data[0]").isMap)
+                .andExpect(jsonPath("\$.data[0].version").value("2.2"))
+                .andExpect(jsonPath("\$.data[0].url").value("http://localhost:8070/ocpi/2.2"))
     }
 
     @Test

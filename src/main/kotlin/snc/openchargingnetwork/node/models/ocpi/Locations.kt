@@ -26,7 +26,8 @@ import com.fasterxml.jackson.annotation.JsonProperty
 data class Location(@JsonProperty("country_code") val countryCode: String,
                     @JsonProperty("party_id") val partyID: String,
                     @JsonProperty("id") val id: String,
-                    @JsonProperty("type") val type: LocationType,
+                    @JsonProperty("publish") val publish: Boolean,
+                    @JsonProperty("publish_allowed_to") val publishAllowedTo: List<PublishTokenType>? = null,
                     @JsonProperty("name") val name: String? = null,
                     @JsonProperty("address") val address: String,
                     @JsonProperty("city") val city: String,
@@ -35,6 +36,7 @@ data class Location(@JsonProperty("country_code") val countryCode: String,
                     @JsonProperty("country") val country: String,
                     @JsonProperty("coordinates") val coordinates: GeoLocation,
                     @JsonProperty("related_locations") val relatedLocations: List<AdditionalGeoLocation>? = null,
+                    @JsonProperty("parking_type") val parkingType: ParkingType? = null,
                     @JsonProperty("evses") val evses: List<Evse>? = null,
                     @JsonProperty("directions") val directions: List<DisplayText>? = null,
                     @JsonProperty("operator") val operator: BusinessDetails? = null,
@@ -115,6 +117,14 @@ data class StatusSchedule(@JsonProperty("period_begin") val periodBegin: String,
                           @JsonProperty("period_end") val periodEnd: String? = null,
                           @JsonProperty("status") val status: EvseStatus)
 
+@JsonInclude(JsonInclude.Include.NON_NULL)
+data class PublishTokenType(@JsonProperty("uid") val uid: String? = null,
+                            @JsonProperty("type") val type: String? = null,
+                            @JsonProperty("visual_number") val visualNumber: String? = null,
+                            @JsonProperty("issuer") val issuer: String? = null,
+                            @JsonProperty("group_id ") val groupID: String? = null)
+
+
 enum class LocationType {
     ON_STREET,
     PARKING_GARAGE,
@@ -178,8 +188,11 @@ enum class EvseStatus {
 enum class Capability {
     CHARGING_PROFILE_CAPABLE,
     CHARGING_PREFERENCES_CAPABLE,
+    CHIP_CARD_SUPPORT,
+    CONTACTLESS_CARD_SUPPORT,
     CREDIT_CARD_PAYABLE,
     DEBIT_CARD_PAYABLE,
+    PED_TERMINAL,
     REMOTE_START_STOP_CAPABLE,
     RESERVABLE,
     RFID_READER,
@@ -234,4 +247,13 @@ enum class PowerType {
     AC_1_PHASE,
     AC_3_PHASE,
     DC
+}
+
+enum class ParkingType {
+    ALONG_MOTORWAY,
+    PARKING_GARAGE,
+    PARKING_LOT,
+    ON_DRIVEWAY,
+    ON_STREET,
+    UNDERGROUND_GARAGE
 }

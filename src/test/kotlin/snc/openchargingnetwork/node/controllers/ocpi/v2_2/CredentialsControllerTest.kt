@@ -85,10 +85,9 @@ class CredentialsControllerTest(@Autowired val mockMvc: MockMvc) {
         val tokenB = "67890"
 
         every { platformRepo.findByAuth_TokenA(platform.auth.tokenA) } returns platform
-        every { httpService.getVersions(versionsUrl, tokenB) } returns Versions(
-                versions = listOf(Version(
+        every { httpService.getVersions(versionsUrl, tokenB) } returns listOf(Version(
                         version = "2.2",
-                        url = versionDetailUrl)))
+                        url = versionDetailUrl))
         every { httpService.getVersionDetail(versionDetailUrl, tokenB) } returns VersionDetail(
                 version = "2.2",
                 endpoints = listOf(
@@ -141,10 +140,9 @@ class CredentialsControllerTest(@Autowired val mockMvc: MockMvc) {
         val versionDetailUrl = "https://org.charging.net/2.2"
 
         every { platformRepo.findByAuth_TokenC(platform.auth.tokenC) } returns platform
-        every { httpService.getVersions(versionsUrl, platform.auth.tokenB!!) } returns Versions(
-                versions = listOf(Version(
+        every { httpService.getVersions(versionsUrl, platform.auth.tokenB!!) } returns listOf(Version(
                         version = "2.2",
-                        url = versionDetailUrl)))
+                        url = versionDetailUrl))
         every { httpService.getVersionDetail(versionDetailUrl, platform.auth.tokenB!!) } returns VersionDetail(
                 version = "2.2",
                 endpoints = listOf(

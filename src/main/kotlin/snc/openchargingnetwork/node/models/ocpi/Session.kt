@@ -27,7 +27,7 @@ data class Session(@JsonProperty("country_code") val countryCode: String,
                    @JsonProperty("party_id") val partyID: String,
                    @JsonProperty("id") val id: String,
                    @JsonProperty("start_date_time") val startDateTime: String,
-                   @JsonProperty("stop_date_time") val stopDateTime: String? = null,
+                   @JsonProperty("end_date_time") val endDateTime: String? = null,
                    @JsonProperty("kwh") val kwh: Float,
                    @JsonProperty("cdr_token") val cdrToken: CdrToken,
                    @JsonProperty("auth_method") val authMethod: AuthMethod,
@@ -83,7 +83,8 @@ enum class SessionStatus {
     ACTIVE,
     COMPLETED,
     INVALID,
-    PENDING
+    PENDING,
+    RESERVATION
 }
 
 enum class ProfileType {
