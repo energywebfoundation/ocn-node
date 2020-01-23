@@ -40,12 +40,13 @@ class HttpService {
     /**
      * Generic HTTP request expecting a response of type OcpiResponse<T> as defined by the caller
      */
-    fun <T: Any> makeOcpiRequest(method: HttpMethod, url: String, headers: Map<String, String?>, params: Map<String, String> = mapOf(), json: Map<String, Any>? = null): HttpResponse<T> {
+    fun <T : Any> makeOcpiRequest(method: HttpMethod, url: String, headers: Map<String, String?>, params: Map<String, Any?>? = null, json: Map<String, Any>? = null): HttpResponse<T> {
+        val paramsWithStringValues = params?.mapValues { it.toString() } ?: mapOf()
         val response = when (method) {
-            HttpMethod.GET -> khttp.get(url, headers, params)
-            HttpMethod.POST -> khttp.post(url, headers, params, json = json)
-            HttpMethod.PUT -> khttp.put(url, headers, params, json = json)
-            HttpMethod.PATCH -> khttp.patch(url, headers, params, json = json)
+            HttpMethod.GET -> khttp.get(url, headers, paramsWithStringValues)
+            HttpMethod.POST -> khttp.post(url, headers, paramsWithStringValues, json = json)
+            HttpMethod.PUT -> khttp.put(url, headers, paramsWithStringValues, json = json)
+            HttpMethod.PATCH -> khttp.patch(url, headers, paramsWithStringValues, json = json)
             HttpMethod.DELETE -> khttp.delete(url, headers)
             else -> throw IllegalStateException("Invalid method: $method")
         }
@@ -72,16 +73,11 @@ class HttpService {
             jsonBody = mapper.readValue(jsonString)
         }
 
-        var paramsMap: Map<String, String> = mapOf()
-        if (requestVariables.urlEncodedParams != null) {
-            paramsMap = requestVariables.urlEncodedParams.toMap()
-        }
-
         return makeOcpiRequest(
                 method = requestVariables.method,
                 url = url,
                 headers = headersMap,
-                params = paramsMap,
+                params = requestVariables.urlEncodedParams,
                 json = jsonBody)
     }
 

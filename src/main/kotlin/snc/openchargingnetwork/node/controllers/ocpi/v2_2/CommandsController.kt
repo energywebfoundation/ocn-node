@@ -99,7 +99,7 @@ class CommandsController(private val requestHandlerBuilder: RequestHandlerBuilde
         val request: RequestHandler<CommandResponse> = requestHandlerBuilder.build(requestVariables)
         return request
                 .validateSender()
-                .forwardCommandsReceiverRequest(body.responseURL) { requestVariables.copy(body = body.copy(responseURL = it)) }
+                .forwardModifiableRequest(body.responseURL) { requestVariables.copy(body = body.copy(responseURL = it)) }
                 .getResponse()
     }
 
@@ -129,7 +129,7 @@ class CommandsController(private val requestHandlerBuilder: RequestHandlerBuilde
         val request: RequestHandler<CommandResponse> = requestHandlerBuilder.build(requestVariables)
         return request
                 .validateSender()
-                .forwardCommandsReceiverRequest(body.responseURL) { requestVariables.copy(body = body.copy(responseURL = it)) }
+                .forwardModifiableRequest(body.responseURL) { requestVariables.copy(body = body.copy(responseURL = it)) }
                 .getResponse()
     }
 
@@ -159,7 +159,7 @@ class CommandsController(private val requestHandlerBuilder: RequestHandlerBuilde
         val request: RequestHandler<CommandResponse> = requestHandlerBuilder.build(requestVariables)
         return request
                 .validateSender()
-                .forwardCommandsReceiverRequest(body.responseURL) { requestVariables.copy(body = body.copy(responseURL = it)) }
+                .forwardModifiableRequest(body.responseURL) { requestVariables.copy(body = body.copy(responseURL = it)) }
                 .getResponse()
     }
 
@@ -189,7 +189,7 @@ class CommandsController(private val requestHandlerBuilder: RequestHandlerBuilde
         val request: RequestHandler<CommandResponse> = requestHandlerBuilder.build(requestVariables)
         return request
                 .validateSender()
-                .forwardCommandsReceiverRequest(body.responseURL) { requestVariables.copy(body = body.copy(responseURL = it)) }
+                .forwardModifiableRequest(body.responseURL) { requestVariables.copy(body = body.copy(responseURL = it)) }
                 .getResponse()
     }
 
@@ -219,7 +219,7 @@ class CommandsController(private val requestHandlerBuilder: RequestHandlerBuilde
         val request: RequestHandler<CommandResponse> = requestHandlerBuilder.build(requestVariables)
         return request
                 .validateSender()
-                .forwardCommandsReceiverRequest(body.responseURL) { requestVariables.copy(body = body.copy(responseURL = it)) }
+                .forwardModifiableRequest(body.responseURL) { requestVariables.copy(body = body.copy(responseURL = it)) }
                 .getResponse()
     }
 

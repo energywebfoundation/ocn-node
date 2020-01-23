@@ -26,6 +26,7 @@ import snc.openchargingnetwork.node.models.*
 import snc.openchargingnetwork.node.models.ocpi.*
 import snc.openchargingnetwork.node.services.RequestHandler
 import snc.openchargingnetwork.node.services.RequestHandlerBuilder
+import snc.openchargingnetwork.node.tools.filterNull
 
 @RestController
 class TokensController(private val requestHandlerBuilder: RequestHandlerBuilder) {
@@ -52,16 +53,14 @@ class TokensController(private val requestHandlerBuilder: RequestHandlerBuilder)
         val sender = BasicRole(fromPartyID, fromCountryCode)
         val receiver = BasicRole(toPartyID, toCountryCode)
 
+        val params = mapOf("date_from" to dateFrom, "date_to" to dateTo, "offset" to offset, "limit" to limit).filterNull()
+
         val requestVariables = OcpiRequestVariables(
                 module = ModuleID.TOKENS,
                 interfaceRole = InterfaceRole.SENDER,
                 method = HttpMethod.GET,
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
-                urlEncodedParams = OcpiRequestParameters(
-                        dateFrom = dateFrom,
-                        dateTo = dateTo,
-                        offset = offset,
-                        limit = limit))
+                urlEncodedParams = params)
 
         val request: RequestHandler<Array<Token>> = requestHandlerBuilder.build(requestVariables)
         return request
@@ -108,7 +107,7 @@ class TokensController(private val requestHandlerBuilder: RequestHandlerBuilder)
                                        @RequestHeader("OCPI-to-country-code") toCountryCode: String,
                                        @RequestHeader("OCPI-to-party-id") toPartyID: String,
                                        @PathVariable tokenUID: String,
-                                       @RequestParam("type", required = false) type: TokenType? = null,
+                                       @RequestParam("type", required = false, defaultValue = "RFID") type: TokenType? = null,
                                        @RequestBody body: LocationReferences? = null): ResponseEntity<OcpiResponse<AuthorizationInfo>> {
 
 
@@ -121,7 +120,7 @@ class TokensController(private val requestHandlerBuilder: RequestHandlerBuilder)
                 method = HttpMethod.POST,
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
                 urlPathVariables = "$tokenUID/authorize",
-                urlEncodedParams = OcpiRequestParameters(type = type ?: TokenType.RFID),
+                urlEncodedParams = mapOf("type" to type),
                 body = body)
 
         val request: RequestHandler<AuthorizationInfo> = requestHandlerBuilder.build(requestVariables)
@@ -148,7 +147,7 @@ class TokensController(private val requestHandlerBuilder: RequestHandlerBuilder)
                             @PathVariable countryCode: String,
                             @PathVariable partyID: String,
                             @PathVariable tokenUID: String,
-                            @RequestParam("type", required = false) type: TokenType? = null): ResponseEntity<OcpiResponse<Token>> {
+                            @RequestParam("type", required = false, defaultValue = "RFID") type: TokenType? = null): ResponseEntity<OcpiResponse<Token>> {
 
         val sender = BasicRole(fromPartyID, fromCountryCode)
         val receiver = BasicRole(toPartyID, toCountryCode)
@@ -159,7 +158,7 @@ class TokensController(private val requestHandlerBuilder: RequestHandlerBuilder)
                 method = HttpMethod.GET,
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
                 urlPathVariables = "/$countryCode/$partyID/$tokenUID",
-                urlEncodedParams = OcpiRequestParameters(type = type ?: TokenType.RFID))
+                urlEncodedParams = mapOf("type" to type))
 
         val request: RequestHandler<Token> = requestHandlerBuilder.build(requestVariables)
         return request
@@ -180,7 +179,7 @@ class TokensController(private val requestHandlerBuilder: RequestHandlerBuilder)
                             @PathVariable countryCode: String,
                             @PathVariable partyID: String,
                             @PathVariable tokenUID: String,
-                            @RequestParam("type", required = false) type: TokenType? = null,
+                            @RequestParam("type", required = false, defaultValue = "RFID") type: TokenType? = null,
                             @RequestBody body: Token): ResponseEntity<OcpiResponse<Unit>> {
 
         val sender = BasicRole(fromPartyID, fromCountryCode)
@@ -192,7 +191,7 @@ class TokensController(private val requestHandlerBuilder: RequestHandlerBuilder)
                 method = HttpMethod.PUT,
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
                 urlPathVariables = "/$countryCode/$partyID/$tokenUID",
-                urlEncodedParams = OcpiRequestParameters(type = type ?: TokenType.RFID),
+                urlEncodedParams = mapOf("type" to type),
                 body = body)
 
         val request: RequestHandler<Unit> = requestHandlerBuilder.build(requestVariables)
@@ -214,7 +213,7 @@ class TokensController(private val requestHandlerBuilder: RequestHandlerBuilder)
                                @PathVariable countryCode: String,
                                @PathVariable partyID: String,
                                @PathVariable tokenUID: String,
-                               @RequestParam("type", required = false) type: TokenType? = null,
+                               @RequestParam("type", required = false, defaultValue = "RFID") type: TokenType? = null,
                                @RequestBody body: Map<String, Any>): ResponseEntity<OcpiResponse<Unit>> {
 
         val sender = BasicRole(fromPartyID, fromCountryCode)
@@ -226,7 +225,7 @@ class TokensController(private val requestHandlerBuilder: RequestHandlerBuilder)
                 method = HttpMethod.PATCH,
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
                 urlPathVariables = "/$countryCode/$partyID/$tokenUID",
-                urlEncodedParams = OcpiRequestParameters(type = type ?: TokenType.RFID),
+                urlEncodedParams = mapOf("type" to type),
                 body = body)
 
         val request: RequestHandler<Unit> = requestHandlerBuilder.build(requestVariables)

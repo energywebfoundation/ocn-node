@@ -49,7 +49,7 @@ class CdrsControllerTest(@Autowired val mockMvc: MockMvc) {
                         correlationID = generateUUIDv4Token(),
                         sender = sender,
                         receiver = receiver),
-                urlEncodedParams = OcpiRequestParameters(limit = 100))
+                urlEncodedParams = mapOf("limit" to 100))
 
         val mockRequestHandler = mockk<RequestHandler<Array<CDR>>>()
 

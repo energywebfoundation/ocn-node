@@ -26,6 +26,7 @@ import snc.openchargingnetwork.node.models.*
 import snc.openchargingnetwork.node.models.ocpi.*
 import snc.openchargingnetwork.node.services.RequestHandler
 import snc.openchargingnetwork.node.services.RequestHandlerBuilder
+import snc.openchargingnetwork.node.tools.filterNull
 
 
 @RestController
@@ -53,16 +54,14 @@ class SessionsController(private val requestHandlerBuilder: RequestHandlerBuilde
         val sender = BasicRole(fromPartyID, fromCountryCode)
         val receiver = BasicRole(toPartyID, toCountryCode)
 
+        val params = mapOf("date_from" to dateFrom, "date_to" to dateTo, "offset" to offset, "limit" to limit).filterNull()
+
         val requestVariables = OcpiRequestVariables(
                 module = ModuleID.SESSIONS,
                 interfaceRole = InterfaceRole.SENDER,
                 method = HttpMethod.GET,
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
-                urlEncodedParams = OcpiRequestParameters(
-                        dateFrom = dateFrom,
-                        dateTo = dateTo,
-                        offset = offset,
-                        limit = limit))
+                urlEncodedParams = params)
 
         val request: RequestHandler<Array<Session>> = requestHandlerBuilder.build(requestVariables)
         return request

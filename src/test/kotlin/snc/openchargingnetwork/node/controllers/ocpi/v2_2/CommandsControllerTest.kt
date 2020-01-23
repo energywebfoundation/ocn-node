@@ -104,7 +104,7 @@ class CommandsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every { mockRequestHandler
                 .validateSender()
-                .forwardCommandsReceiverRequest(body.responseURL, any())
+                .forwardModifiableRequest(body.responseURL, any())
                 .getResponse() } returns ResponseEntity
                     .status(200)
                     .body(OcpiResponse(
@@ -160,7 +160,7 @@ class CommandsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every { mockRequestHandler
                 .validateSender()
-                .forwardCommandsReceiverRequest(body.responseURL, any())
+                .forwardModifiableRequest(body.responseURL, any())
                 .getResponse() } returns ResponseEntity
                 .status(200)
                 .body(OcpiResponse(
@@ -214,7 +214,7 @@ class CommandsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every { mockRequestHandler
                 .validateSender()
-                .forwardCommandsReceiverRequest(body.responseURL, any())
+                .forwardModifiableRequest(body.responseURL, any())
                 .getResponse() } returns ResponseEntity
                 .status(200)
                 .body(OcpiResponse(
@@ -267,7 +267,7 @@ class CommandsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every { mockRequestHandler
                 .validateSender()
-                .forwardCommandsReceiverRequest(body.responseURL, any())
+                .forwardModifiableRequest(body.responseURL, any())
                 .getResponse() } returns ResponseEntity
                 .status(200)
                 .body(OcpiResponse(
@@ -322,7 +322,7 @@ class CommandsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every { mockRequestHandler
                 .validateSender()
-                .forwardCommandsReceiverRequest(body.responseURL, any())
+                .forwardModifiableRequest(body.responseURL, any())
                 .getResponse() } returns ResponseEntity
                 .status(200)
                 .body(OcpiResponse(

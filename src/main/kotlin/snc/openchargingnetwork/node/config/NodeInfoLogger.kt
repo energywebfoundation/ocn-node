@@ -30,6 +30,7 @@ class NodeInfoLogger(properties: NodeProperties,
         val borderLength = calculateBorderLength(properties.url.length, properties.apikey.length)
         val border = "=".repeat(borderLength)
         println("\n$border\n" +
+                "DEV        | ${properties.dev}\n" +
                 "URL        | ${properties.url}\n" +
                 "ADDRESS    | ${walletService.address}\n" +
                 "APIKEY     | ${properties.apikey}\n" +

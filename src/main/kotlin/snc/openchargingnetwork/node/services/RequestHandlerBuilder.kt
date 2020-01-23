@@ -152,7 +152,7 @@ class RequestHandler<T: Any>(private val request: OcpiRequestVariables,
      * @param modifyRequest callback which allows the request (OcpiRequestVariables) used by this RequestHandler to
      * be modified with the new response_url which will be sent to the receiver.
      */
-    fun forwardCommandsReceiverRequest(responseUrl: String, modifyRequest: (newResponseUrl: String) -> OcpiRequestVariables): RequestHandler<T> {
+    fun forwardModifiableRequest(responseUrl: String, modifyRequest: (newResponseUrl: String) -> OcpiRequestVariables): RequestHandler<T> {
         val proxyPath = "/ocpi/sender/2.2/commands/${request.urlPathVariables}"
 
         fun rewriteAndSign(modifiedRequest: OcpiRequestVariables): String? {

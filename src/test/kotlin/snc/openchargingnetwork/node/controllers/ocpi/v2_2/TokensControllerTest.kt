@@ -46,7 +46,7 @@ class TokensControllerTest(@Autowired val mockMvc: MockMvc) {
                         correlationID = generateUUIDv4Token(),
                         sender = sender,
                         receiver = receiver),
-                urlEncodedParams = OcpiRequestParameters(limit = 50))
+                urlEncodedParams = mapOf("limit" to 50))
 
         val mockRequestHandler = mockk<RequestHandler<Array<Token>>>()
 
@@ -161,7 +161,7 @@ class TokensControllerTest(@Autowired val mockMvc: MockMvc) {
                         sender = sender,
                         receiver = receiver),
                 urlPathVariables = "1234567890/authorize",
-                urlEncodedParams = OcpiRequestParameters(type = TokenType.RFID),
+                urlEncodedParams = mapOf("type" to TokenType.RFID),
                 body = body)
 
         val mockRequestHandler = mockk<RequestHandler<AuthorizationInfo>>()
@@ -213,7 +213,7 @@ class TokensControllerTest(@Autowired val mockMvc: MockMvc) {
                         sender = sender,
                         receiver = receiver),
                 urlPathVariables = "/${sender.country}/${sender.id}/$tokenUID",
-                urlEncodedParams = OcpiRequestParameters(type = TokenType.RFID))
+                urlEncodedParams = mapOf("type" to TokenType.RFID))
 
         val mockRequestHandler = mockk<RequestHandler<Token>>()
 
@@ -260,7 +260,7 @@ class TokensControllerTest(@Autowired val mockMvc: MockMvc) {
                         sender = sender,
                         receiver = receiver),
                 urlPathVariables = "/${sender.country}/${sender.id}/$tokenUID",
-                urlEncodedParams = OcpiRequestParameters(type = TokenType.APP_USER),
+                urlEncodedParams = mapOf("type" to TokenType.APP_USER),
                 body = exampleToken)
 
         val mockRequestHandler = mockk<RequestHandler<Unit>>()
@@ -312,7 +312,7 @@ class TokensControllerTest(@Autowired val mockMvc: MockMvc) {
                         sender = sender,
                         receiver = receiver),
                 urlPathVariables = "/${sender.country}/${sender.id}/$tokenUID",
-                urlEncodedParams = OcpiRequestParameters(type = TokenType.APP_USER),
+                urlEncodedParams = mapOf("type" to TokenType.APP_USER),
                 body = body)
 
         val mockRequestHandler = mockk<RequestHandler<Unit>>()

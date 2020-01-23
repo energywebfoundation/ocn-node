@@ -119,7 +119,7 @@ data class StatusSchedule(@JsonProperty("period_begin") val periodBegin: String,
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 data class PublishTokenType(@JsonProperty("uid") val uid: String? = null,
-                            @JsonProperty("type") val type: String? = null,
+                            @JsonProperty("type") val type: TokenType? = null,
                             @JsonProperty("visual_number") val visualNumber: String? = null,
                             @JsonProperty("issuer") val issuer: String? = null,
                             @JsonProperty("group_id ") val groupID: String? = null)

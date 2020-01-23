@@ -18,6 +18,8 @@ services:
     build:
       context: ../ocn-registry
       dockerfile: Dockerfile
+    depends_on:
+      - ganache
     image: "registry-deploy"
     networks:
       - ocn-dev-net

@@ -48,7 +48,7 @@ class TariffsControllerTest(@Autowired val mockMvc: MockMvc) {
                         correlationID = generateUUIDv4Token(),
                         sender = sender,
                         receiver = receiver),
-                urlEncodedParams = OcpiRequestParameters(limit = 10))
+                urlEncodedParams = mapOf("limit" to 10))
 
         val mockRequestHandler = mockk<RequestHandler<Array<Tariff>>>()
 

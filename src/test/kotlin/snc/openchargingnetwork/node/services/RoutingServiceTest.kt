@@ -54,7 +54,7 @@ class RoutingServiceTest {
                         sender = BasicRole("SNC", "DE"),
                         receiver = BasicRole("ABC", "CH")),
                 urlPathVariables = "DE/SNC/abc123",
-                urlEncodedParams = OcpiRequestParameters(type = TokenType.APP_USER))
+                urlEncodedParams = mapOf("type" to TokenType.APP_USER))
 
         every { routingService.getPlatformID(request.headers.receiver) } returns 6L
         every { routingService.getPlatformEndpoint(
@@ -135,7 +135,7 @@ class RoutingServiceTest {
                         sender = BasicRole("SNC", "DE"),
                         receiver = BasicRole("ABC", "CH")),
                 urlPathVariables = "DE/SNC/abc123",
-                urlEncodedParams = OcpiRequestParameters(type = TokenType.APP_USER))
+                urlEncodedParams = mapOf("type" to TokenType.APP_USER))
 
         val sig = "0x9955af11969a2d2a7f860cb00e6a00cfa7c581f5df2dbe8ea16700b33f4b4b9" +
                 "b69f945012f7ea7d3febf11eb1b78e1adc2d1c14c2cf48b25000938cc1860c83e01"
@@ -262,7 +262,7 @@ class RoutingServiceTest {
                         correlationID = generateUUIDv4Token(),
                         sender = BasicRole("SNC", "DE"),
                         receiver = BasicRole("ABC", "CH")),
-                urlEncodedParams = OcpiRequestParameters(limit = 25))
+                urlEncodedParams = mapOf("limit" to 25))
 
         val link = "https://some.link.com/ocpi/tariffs?limit=25&offset=25; rel=\"next\""
 

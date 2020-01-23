@@ -36,15 +36,18 @@ See [Open Charging Network Node API Documentation](https://shareandcharge.bitbuc
 
 ## Dependencies
 
-The OCN Node is built with Kotlin, targeting the JVM. Either OpenJDK 8 or Docker can be used to build and run the node.
-If following the Local OCN tutorial below, it is only necessary to have Docker installed.
+The OCN Node is built with Kotlin, targeting the JVM. [OpenJDK 8](https://openjdk.java.net/install/index.html) or higher 
+is needed to build and run the project. Additionally, the node can be run in [Docker](https://docs.docker.com/install/) 
+with the provided Dockerfile, however the build step takes place on the host rather than inside a container.
+ 
 
 ## Running a Local Open Charging Network
 
 Before running a node and connecting it to a local, test or prod environment, it is recommended to become acquainted 
 with how the network operates first. The `docker-compose` file provided spins up a local environment with the OCN
 Registry and two OCN Nodes pre-configured. A [tutorial](./examples) has been provided to guide administrators and users 
-of an OCN Node alike through various use case examples.  
+of an OCN Node alike through various use case examples.  To complete this tutorial it is necessary to install
+[Docker Compose](https://docs.docker.com/compose/install/) in addition to the above dependencies.
 
 ## Running a Node
 
@@ -178,30 +181,23 @@ java -jar -Dspring.config.location=/path/to/application.prod.properties ./build/
 Especially helpful for development, the node can quickly be run in one step with Gradle using the provided wrapper:
 
 ```
-./gradlew bootRun -Pprofile=<PROFILE>
+./gradlew -Pprofile=local bootRun
 ```
 
 #### 2.3. Using Docker
 
-A Dockerfile is provided which, once built, will run the above command in a container. To build, simply run the following
-with a name flag so that we can identify it later:
+A Dockerfile is provided which, once built, will run the above command in a container. Firstly, build the OCN Node with
+gradle locally, then build the Docker image with a tag flag so that we can identify it later:
 
 ```
-docker build . -n ocn-node
+./gradlew -Pprofile=local build
+docker build -t ocn-node .
 ```
 
-Note that building the docker image can take a few minutes.
-
-Once built, the node can be run, exposing the application server's `8080` port within the container to the outside environment:
+Once built, the node can be run and accessed by exposing the application server's `8080` port within the container to 
+the outside environment:
 ```
 docker run -p 8080:8080 ocn-node 
-```
-
-By default this will use the `docker` profile. This can be changed by modifying the Dockerfile directly (and rebuilding
-if necessary), or by changing the location of the properties file at runtime with a custom command, as shown below:
-
-```
-docker run -p 8080:8080 ocn-node java -jar -Dspring.config.location=resources/main/application.<PROFILE>.properties lib/ocn-node-0.1.0-SNAPSHOT.jar
 ```
 
 ### 3. Operating the OCN Node

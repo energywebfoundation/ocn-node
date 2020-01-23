@@ -53,7 +53,7 @@ data class OcpiRequestVariables(@JsonProperty("module") val module: ModuleID,
                                 @JsonProperty("method") val method: HttpMethod,
                                 @JsonProperty("headers") val headers: OcnHeaders,
                                 @JsonProperty("url_path_variables") val urlPathVariables: String? = null,
-                                @JsonProperty("url_encoded_params") val urlEncodedParams: OcpiRequestParameters? = null,
+                                @JsonProperty("url_encoded_params") val urlEncodedParams: Map<String, Any?>? = null,
                                 @JsonProperty("proxy_uid") val proxyUID: String? = null,
                                 @JsonProperty("proxy_resource") val proxyResource: String? = null,
                                 @JsonProperty("body") val body: Any? = null) {
@@ -61,54 +61,19 @@ data class OcpiRequestVariables(@JsonProperty("module") val module: ModuleID,
     fun toNotaryReadableVariables(): OcpiRequest<*> {
         return OcpiRequest(
                 headers = headers.toNotaryReadableHeaders(),
-                params = urlEncodedParams?.toNotaryReadableParameters(),
+                params = urlEncodedParams?.run {
+                    OcpiUrlEncodedParameters(
+                            countryCode = get("country_code")?.toString(),
+                            partyId = get("party_id")?.toString(),
+                            tokenUid = get("token_uid")?.toString(),
+                            type = get("type")?.toString(),
+                            dateFrom = get("date_from")?.toString(),
+                            date_to = get("date_to")?.toString(),
+                            offset = get("offset")?.toString(),
+                            limit = get("limit")?.toString())
+                },
                 body = body)
-    }
-}
-
-
-@JsonInclude(JsonInclude.Include.NON_NULL)
-data class OcpiRequestParameters(@JsonProperty("type") val type: TokenType? = null,
-                                 @JsonProperty("date_from") val dateFrom: String? = null,
-                                 @JsonProperty("date_to") val dateTo: String? = null,
-                                 @JsonProperty("offset") val offset: Int? = null,
-                                 @JsonProperty("limit") val limit: Int? = null) {
-
-    fun toMap(): Map<String, String> {
-        val map = mutableMapOf<String, String>()
-        if (type != null) {
-            map["type"] = type.toString()
         }
-        if (dateFrom != null) {
-            map["date_from"] = dateFrom
-        }
-        if (dateTo != null) {
-            map["date_to"] = dateTo
-        }
-        if (offset != null) {
-            map["offset"] = offset.toString()
-        }
-        if (limit != null) {
-            map["limit"] = limit.toString()
-        }
-        return map
-    }
-
-    fun toNotaryReadableParameters(): OcpiUrlEncodedParameters {
-        toMap().apply {
-            return OcpiUrlEncodedParameters(
-                    // use map to safely get 2.2 full release parameters; OcpiRequestParameters follows 2.2 RC2
-                    countryCode = get("country_code"),
-                    partyId = get("party_id"),
-                    tokenUid = get("token_uid"),
-                    type = get("type"),
-                    dateFrom = get("date_from"),
-                    date_to = get("date_to"),
-                    offset = get("offset"),
-                    limit = get("limit"))
-        }
-    }
-
 }
 
 

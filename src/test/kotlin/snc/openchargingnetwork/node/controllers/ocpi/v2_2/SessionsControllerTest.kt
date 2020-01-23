@@ -51,7 +51,7 @@ class SessionsControllerTest(@Autowired val mockMvc: MockMvc) {
                         correlationID = generateUUIDv4Token(),
                         sender = sender,
                         receiver = receiver),
-                urlEncodedParams = OcpiRequestParameters(dateFrom = dateFrom, limit = 20))
+                urlEncodedParams = mapOf("date_from" to dateFrom, "limit" to 20))
 
         val mockRequestHandler = mockk<RequestHandler<Array<Session>>>()
 

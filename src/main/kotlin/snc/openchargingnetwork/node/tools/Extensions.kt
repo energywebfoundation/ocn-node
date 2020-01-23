@@ -29,3 +29,7 @@ fun String.extractNextLink(): String? {
         it.slice(IntRange(start, end))
     }
 }
+
+fun Map<String, Any?>.filterNull(): Map<String, Any?> {
+    return filterValues { it != null }
+}

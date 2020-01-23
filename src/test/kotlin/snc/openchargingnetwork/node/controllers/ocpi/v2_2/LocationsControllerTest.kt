@@ -52,7 +52,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
                         correlationID = generateUUIDv4Token(),
                         sender = sender,
                         receiver = receiver),
-                urlEncodedParams = OcpiRequestParameters(dateFrom = dateFrom))
+                urlEncodedParams = mapOf("date_from" to dateFrom))
 
         val mockRequestHandler = mockk<RequestHandler<Array<Location>>>()
 

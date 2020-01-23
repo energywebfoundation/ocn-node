@@ -207,12 +207,11 @@ class RoutingService(private val platformRepo: PlatformRepository,
         // if callback function present, use it
         alterBody?.let { modifiedBody = it(url) }
 
-        // if proxied request, modify the resource
+        // if proxied request, add the proxy resource to the body
         if (proxied) {
-            modifiedBody = modifiedBody.copy(proxyResource = getProxyResource(
-                    modifiedBody.urlPathVariables,
-                    modifiedBody.headers.sender,
-                    modifiedBody.headers.receiver))
+            modifiedBody = modifiedBody.run {
+                copy(proxyResource = getProxyResource(urlPathVariables, headers.sender, headers.receiver))
+            }
         }
 
         // strip authorization
@@ -220,7 +219,6 @@ class RoutingService(private val platformRepo: PlatformRepository,
 
         val bodyString = stringify(modifiedBody)
 
-        // TODO: replace OCN-Signature with Notary signed string
         val headers = OcnMessageHeaders(
                 requestID = generateUUIDv4Token(),
                 signature = walletService.sign(bodyString))
