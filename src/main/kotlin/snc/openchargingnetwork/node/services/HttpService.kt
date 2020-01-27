@@ -41,7 +41,7 @@ class HttpService {
      * Generic HTTP request expecting a response of type OcpiResponse<T> as defined by the caller
      */
     fun <T : Any> makeOcpiRequest(method: HttpMethod, url: String, headers: Map<String, String?>, params: Map<String, Any?>? = null, json: Map<String, Any>? = null): HttpResponse<T> {
-        val paramsWithStringValues = params?.mapValues { it.toString() } ?: mapOf()
+        val paramsWithStringValues = params?.mapValues { (_, value) -> value.toString() } ?: mapOf()
         val response = when (method) {
             HttpMethod.GET -> khttp.get(url, headers, paramsWithStringValues)
             HttpMethod.POST -> khttp.post(url, headers, paramsWithStringValues, json = json)
