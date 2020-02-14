@@ -54,7 +54,7 @@ class VersionsControllerTest(@Autowired val mockMvc: MockMvc) {
                 .andExpect(jsonPath("\$.status_message").doesNotExist())
                 .andExpect(jsonPath("\$.timestamp").isString)
                 .andExpect(jsonPath("\$.data.version").value("2.2"))
-                .andExpect(jsonPath("\$.data.endpoints", hasSize<Array<Endpoint>>(14)))
+                .andExpect(jsonPath("\$.data.endpoints", hasSize<Array<Endpoint>>(17)))
                 .andExpect(jsonPath("\$.data.endpoints[0].identifier").value("cdrs"))
                 .andExpect(jsonPath("\$.data.endpoints[0].role").value("SENDER"))
                 .andExpect(jsonPath("\$.data.endpoints[0].url").value("https://broker.provider.com/ocpi/sender/2.2/cdrs"))

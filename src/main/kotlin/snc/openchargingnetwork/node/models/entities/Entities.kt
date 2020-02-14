@@ -16,6 +16,8 @@
 
 package snc.openchargingnetwork.node.models.entities
 
+import org.hibernate.annotations.ColumnDefault
+import snc.openchargingnetwork.node.models.OcnRulesListType
 import snc.openchargingnetwork.node.models.ocpi.*
 import snc.openchargingnetwork.node.tools.generatePrivateKey
 import snc.openchargingnetwork.node.tools.generateUUIDv4Token
@@ -41,6 +43,7 @@ class PlatformEntity(var status: ConnectionStatus = ConnectionStatus.PLANNED,
                      var lastUpdated: String = getTimestamp(),
                      var versionsUrl: String? = null,
                      @Embedded var auth: Auth = Auth(),
+                     @Embedded var rules: OcnRules = OcnRules(),
                      @Id @GeneratedValue var id: Long? = null)
 
 /**
@@ -54,6 +57,10 @@ class Auth(var tokenA: String? = generateUUIDv4Token(),
            var tokenB: String? = null,
            var tokenC: String? = null)
 
+@Embeddable
+class OcnRules(@Column(columnDefinition = "boolean default false") var signatures: Boolean = false,
+               @Column(columnDefinition = "boolean default false") var blacklist: Boolean = false,
+               @Column(columnDefinition = "boolean default false") var whitelist: Boolean = false)
 
 /**
  * Store a role linked to an OCPI platform (i.e. a platform can implement both EMSP and CPO roles)
@@ -105,3 +112,18 @@ class ProxyResourceEntity(
         val alternativeUID: String? = null,
 
         @Id @GeneratedValue var id: Long? = null)
+
+@Entity
+@Table(name = "ocn_rules_list")
+class OcnRulesListEntity(
+        val platformID: Long,
+
+        @AttributeOverrides(
+                AttributeOverride(name = "id", column = Column(name ="sender_id")),
+                AttributeOverride(name = "country", column = Column(name ="sender_country"))
+        )
+        @Embedded
+        val counterparty: BasicRole,
+
+        @Id @GeneratedValue val id: Long? = null
+)

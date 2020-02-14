@@ -39,6 +39,7 @@ import snc.openchargingnetwork.node.tools.*
 class CredentialsController(private val platformRepo: PlatformRepository,
                             private val roleRepo: RoleRepository,
                             private val endpointRepo: EndpointRepository,
+                            private val ocnRulesListRepo: OcnRulesListRepository,
                             private val properties: NodeProperties,
                             private val routingService: RoutingService,
                             private val httpService: HttpService) {
@@ -104,6 +105,7 @@ class CredentialsController(private val platformRepo: PlatformRepository,
         platform.versionsUrl = body.url
         platform.status = ConnectionStatus.CONNECTED
         platform.lastUpdated = getTimestamp()
+        platform.rules.signatures = properties.signatures
 
         // set platform's roles' credentials
         val roles = mutableListOf<RoleEntity>()
@@ -221,6 +223,7 @@ class CredentialsController(private val platformRepo: PlatformRepository,
         platformRepo.deleteById(platform.id!!)
         roleRepo.deleteByPlatformID(platform.id)
         endpointRepo.deleteByPlatformID(platform.id)
+        ocnRulesListRepo.deleteByPlatformID(platform.id)
 
         return OcpiResponse(statusCode = 1000, data = null)
     }

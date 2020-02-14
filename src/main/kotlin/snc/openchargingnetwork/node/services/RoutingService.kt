@@ -16,15 +16,13 @@
 
 package snc.openchargingnetwork.node.services
 
+import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpHeaders
 import org.springframework.stereotype.Service
 import snc.openchargingnetwork.node.config.NodeProperties
 import snc.openchargingnetwork.node.models.*
 import snc.openchargingnetwork.node.models.entities.EndpointEntity
 import snc.openchargingnetwork.node.models.entities.ProxyResourceEntity
-import snc.openchargingnetwork.node.models.exceptions.OcpiClientInvalidParametersException
-import snc.openchargingnetwork.node.models.exceptions.OcpiClientUnknownLocationException
-import snc.openchargingnetwork.node.models.exceptions.OcpiHubUnknownReceiverException
 import snc.openchargingnetwork.node.models.ocpi.*
 import snc.openchargingnetwork.node.repositories.*
 import snc.openchargingnetwork.node.tools.extractNextLink
@@ -32,6 +30,9 @@ import snc.openchargingnetwork.node.tools.extractToken
 import snc.openchargingnetwork.node.tools.generateUUIDv4Token
 import snc.openchargingnetwork.node.tools.urlJoin
 import snc.openchargingnetwork.contracts.RegistryFacade
+import snc.openchargingnetwork.node.models.entities.OcnRules
+import snc.openchargingnetwork.node.models.entities.PlatformEntity
+import snc.openchargingnetwork.node.models.exceptions.*
 import java.lang.Exception
 
 @Service
@@ -39,6 +40,7 @@ class RoutingService(private val platformRepo: PlatformRepository,
                      private val roleRepo: RoleRepository,
                      private val endpointRepo: EndpointRepository,
                      private val proxyResourceRepo: ProxyResourceRepository,
+                     private val ocnRulesListRepo: OcnRulesListRepository,
                      private val registry: RegistryFacade,
                      private val httpService: HttpService,
                      private val walletService: WalletService,
@@ -75,6 +77,14 @@ class RoutingService(private val platformRepo: PlatformRepository,
         return nodeServerURL != ""
     }
 
+    /**
+     * get platform by role
+     */
+    fun getPlatform(role: BasicRole): PlatformEntity {
+        val platformID = getPlatformID(role)
+        return platformRepo.findByIdOrNull(platformID)
+                ?: throw IllegalStateException("Platform with id=$platformID does not exist, but has roles.")
+    }
 
     /**
      * get platform ID - used as foreign key in endpoint and roles repositories
@@ -82,6 +92,15 @@ class RoutingService(private val platformRepo: PlatformRepository,
     fun getPlatformID(role: BasicRole): Long {
         return roleRepo.findByCountryCodeAndPartyIDAllIgnoreCase(role.country, role.id)?.platformID
                 ?: throw OcpiHubUnknownReceiverException("Could not find platform ID of $role")
+    }
+
+    /**
+     * get the rules (signature, white/blacklist) implemented by a role/platform
+     */
+    fun getPlatformRules(role: BasicRole): OcnRules {
+        val platformID = getPlatformID(role)
+        return platformRepo.findByIdOrNull(platformID)?.rules
+                ?: throw IllegalStateException("Platform with id=$platformID does not exist, but has roles.")
     }
 
 
@@ -144,6 +163,21 @@ class RoutingService(private val platformRepo: PlatformRepository,
         }
     }
 
+    /**
+     * Check receiver has allowed sender to send them messages
+     */
+    fun validateWhitelisted(sender: BasicRole, receiver: BasicRole) {
+        val platform = getPlatform(receiver)
+        val rulesList = ocnRulesListRepo.findAllByPlatformID(platform.id)
+        val whitelisted = when {
+            platform.rules.whitelist -> rulesList.any { it.counterparty == sender }
+            platform.rules.blacklist -> rulesList.none { it.counterparty == sender }
+            else -> true
+        }
+        if (!whitelisted) {
+            throw OcpiClientGenericException("Message receiver not in sender's whitelist.")
+        }
+    }
 
     /**
      * Used after validating a receiver: find the url of the local recipient for the given OCPI module/interface

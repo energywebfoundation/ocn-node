@@ -17,21 +17,56 @@ include::{snippets}/health/http-request.adoc[]
 include::{snippets}/health/http-response.adoc[]
 
 
+== Registry
+
+The registry API provides helpful https://bitbucket.org/shareandcharge/ocn-node/issues[OCN Registry] queries. The
+registry smart contract itself holds information about parties and nodes on the network. By extension, the following
+API can be used to check whether the OCN Node has been correctly configured to interact with the registry smart
+contract.
+
+=== Get Node Information
+
+This endpoint retrieves the publicly available information (root public URL, Ethereum wallet address) of a given OCN
+Node. This information should match the OCN Registry listing of the OCPI party using the Node.
+
+==== Request
+
+include::{snippets}/registry/node-info/http-request.adoc[]
+
+==== Response
+
+include::{snippets}/registry/node-info/http-response.adoc[]
+
+=== Get Party's Node Information
+
+This endpoint is used to find the OCN Registry listing of a given party. Two url path variables should be provided:
+the OCPI `country_code` and `party_id`.
+
+==== Request
+
+include::{snippets}/registry/node-of/http-request.adoc[]
+
+==== Response
+
+include::{snippets}/registry/node-of/http-response.adoc[]
+
+
+
 == Admin
 
-The admin API allows administrators to manage their OCN Node. This can be used to generate new Open Charge Point
-Interface (OCPI) registration tokens for interested platforms.
+The admin API allows administrators to manage their OCN Node. Currently, the only admin functionality is the generatoion
+of new Open Charge Point Interface registration tokens (so-called `CREDENTIALS_TOKEN_A`) for interested platforms.
 
 === Request
 
-include::{snippets}/admin/http-request.adoc[]
+include::{snippets}/admin/generate-registration-token/http-request.adoc[]
 
 The Authorization header should be set in the format `Token ${api_key}`. The admin can find this in stdout when
-the application runs (a new key will be generated each time).
+the application runs (a new key will be generated each time unless specified in the application's properties file).
 
 ==== Body
 
-include::{snippets}/admin/request-body.adoc[]
+include::{snippets}/admin/generate-registration-token/request-body.adoc[]
 
 The request body is a list of a platforms' roles, containing their `party_id`
 and `country_code`. This allows a platform with multiple OCPI roles (i.e. EMSP and CPO) to register on the
@@ -39,7 +74,7 @@ same OCPI connection.
 
 === Response
 
-include::{snippets}/admin/http-response.adoc[]
+include::{snippets}/admin/generate-registration-token/http-response.adoc[]
 
 The response contains the OCPI `TOKEN_A` and the message broker's versions endpoint, both of which are needed to
 start the registration process.
@@ -49,14 +84,235 @@ start the registration process.
 
 The Open Charge Point Interface enables eMobility platforms to connect to one another. The Open Charging Network
 uses this as it's primary means of connecting such parties. It is important to have developed an OCPI version 2.2
-API beforehand, in order to connect to and use an OCN Node. Documentation for version 2.2 can be found on
-https://github.com/ocpi/ocpi/tree/develop[OCPI @ *GitHub*].
+API beforehand, in order to connect to and use an OCN Node. This comprises, as a bare minimum, the credentials module.
+Documentation for version 2.2 can be found on https://github.com/ocpi/ocpi[OCPI @ *GitHub*].
 
 The node strives to provide all the functionality of OCPI. As this software is in alpha stage, there are currently
 some features of OCPI missing:
 
-- Paginated requests
-- Proxied Location header returned from a `POST cdrs` request when made *across nodes*
-- The `chargingprofiles` module
-- `hubclientinfo` PUSH requests
-- Hub-specific features such as broadcast push and intelligent routing
+- `hubclientinfo` module is only partly implemented.
+- Hub-specific features such as broadcast push and intelligent routing are missing.
+
+
+== _OcnRules_ module
+
+*Module Identifier: `ocnrules`*
+
+*Type*: Configuration Module
+
+OCN Nodes provide an additional, optional OCPI module: _OcnRules_. This allows platforms to configure filtering
+rules for their chosen OCN Node. Current filtering rules include: overriding OCN signature requirement preferences;
+blacklisting and whitelisting. Note that the blacklist and whitelist cannot be active at the same time. If the
+whitelist is active, all senders not on the whitelist will have their requests filtered by the OCN Node (they will not
+reach the receiver). Likewise, if the blacklist is active, all requests will reach the platform except those from
+senders specified on the blacklist.
+
+The signature rules allows the default OCN signature header requirement of the OCN Node to be overruled by the receiving
+platform. By default, the value will match that of the OCN Node. The platform can set signatures to be required even if
+the OCN Node does not do so by default. Note that the other way is not possible - a platform cannot tell the OCN Node
+to turn off signature verification.
+
+=== Interfaces
+
+The _OcnRules_ module only specifies a receiver interface, implemented by the OCN Node itself. Connected platforms
+use this interface to update rules on their given OCN Node.
+
+==== Receiver Interface
+
+Endpoint structure: `/ocpi/receiver/2.2/ocnrules`
+
+[cols="2,12",options="header"]
+|===
+|Method |Description
+
+|<<ocn_rules_get,GET>> |Retrieve the full list of rules as stored on the platform's OCN Node.
+|<<ocn_rules_post,POST>> |Add a single rule entry, for example to the whitelist or blacklist.
+|<<ocn_rules_put,PUT>> |Update a rule
+|PATCH |n/a
+|<<ocn_rules_delete,DELETE>> |Delete a single rule entry
+|===
+
+'''
+
+[[ocn_rules_get]]
+===== *GET* Method
+
+Used by a platform to check their rules as stored on their OCN Node.
+
+====== Response Data
+
+The response contains the requested object.
+
+[cols="3,2,10",options="header"]
+|===
+|Type |Card. |Description
+|<<ocn_rules_object,OcnRules>> |1 |The requested OcnRules object.
+|===
+
+'''
+
+[[ocn_rules_post]]
+===== *POST* Method
+
+New rules entries are updated by the platform on the OCN Node. Applies to whitelist and blacklist.
+
+====== Request parameters
+
+The following parameters can be provided as URL segments.
+
+[cols="3,2,1,10",options="header"]
+|===
+|Parameter |Datatype |Required |Description
+|list_type |<<ocn_rules_list_type_enum,OcnRulesListType>> |yes |The type of list which the new entry applies to.
+|country_code |https://github.com/ocpi/ocpi/blob/master/types.asciidoc#types_cistring_type[CIString](2) |yes |Country code of role to add to the specified list
+|party_id |https://github.com/ocpi/ocpi/blob/master/types.asciidoc#types_cistring_type[CIString](3) |yes |Party ID (Provider ID) of role to add to the specified list
+
+|===
+
+====== Example: add party to blacklist
+
+[source]
+----
+POST to URL: https://node.ocn.org/ocpi/receiver/2.2/ocnrules/blacklist/NL/XYZ
+----
+
+'''
+
+[[ocn_rules_put]]
+===== *PUT* Method
+
+Updates all rules entries for a platform on the OCN Node. Applies to signatures, whitelist and blacklist.
+
+[cols="3,2,1,10",options="header"]
+|===
+|Parameter |Datatype |Required |Description
+|type |<<ocn_rules_type_enum,OcnRulesType>> |yes |The type of rule to update.
+|===
+
+====== Request Body
+
+Body is required if sending a PUT request to `whitelist` or `blacklist`. If an empty list is sent, the OCN Node will
+interpret that as the deletion of all rules for the given list. Therefore, the specified list will be deactivated. If
+updating `signatures`, then no body is required.
+
+[cols="3,2,10",options="headers"]
+|===
+|Type |Card. |Description
+|<<basic_role_class,BasicRole>> |* |The counterparty role information to add to the specified list.
+|===
+
+====== Example: update whitelist
+
+[source]
+----
+PUT to URL: https://node.ocn.org/ocpi/receiver/2.2/ocnrules/whitelist
+
+[
+  {
+    "country_code": "DE",
+    "party_id": "ABC"
+  },
+  {
+    "country_code": "CH",
+    "party_id": "DEF"
+  }
+]
+----
+
+====== Example: update signatures toggle
+
+There is no request body required for this request. The value will be set to the opposite of the current value (`true`
+or `false`).
+
+[source]
+----
+PUT to URL: https://node.ocn.org/ocpi/receiver/2.2/ocnrules/signatures
+----
+
+'''
+
+[[ocn_rules_delete]]
+===== *DELETE* Method
+
+Removes a single entry from a rules list. Applies to the whitelist and blacklist.
+
+====== Request parameters
+
+The following parameters can be provided as URL segments.
+
+[cols="3,2,1,10",options="header"]
+|===
+|Parameter |Datatype |Required |Description
+|list_type |<<ocn_rules_list_type_enum,OcnRulesListType>> |yes |The type of list which the new entry applies to.
+|country_code |https://github.com/ocpi/ocpi/blob/master/types.asciidoc#types_cistring_type[CIString](2) |yes |Country code of role to add to the specified list
+|party_id |https://github.com/ocpi/ocpi/blob/master/types.asciidoc#types_cistring_type[CIString](3) |yes |Party ID (Provider ID) of role to add to the specified list
+
+|===
+
+====== Example: remove party from blacklist
+
+[source]
+----
+DELETE to URL: https://node.ocn.org/ocpi/receiver/2.2/ocnrules/blacklist/NL/XYZ
+----
+
+'''
+
+==== Object Description
+
+
+[[ocn_rules_object]]
+===== _OcnRules_ Object
+
+[cols="3,2,1,10",options="header"]
+|===
+|Property |Type |Card. |Description
+|signatures |Boolean |1 |States whether request signature verification is enabled.
+|whitelist |<<ocn_rules_list_class,OcnRulesList>> |1 |Whitelist rules.
+|blacklist |<<ocn_rules_list_class,OcnRulesList>> |1 |Blacklist rules.
+|===
+
+'''
+
+==== Data Types
+
+[[ocn_rules_list_class]]
+===== OcnRulesList _class_
+
+[cols="3,2,1,10",options="header"]
+|===
+|Property |Type |Card. |Description
+|active | Boolean |1 |States whether the list is active.
+|list |<<basic_role_class,BasicRole>> |* |Roles in the list.
+|===
+
+[[basic_role_class]]
+===== BasicRole _class_
+
+[cols="3,2,1,10",options="header"]
+|===
+|Property |Type |Card. |Description
+|country_code |https://github.com/ocpi/ocpi/blob/master/types.asciidoc#types_cistring_type[CIString](2) |1 |Country code of role.
+|party_id |https://github.com/ocpi/ocpi/blob/master/types.asciidoc#types_cistring_type[CIString](3) |1 |Party ID (Provider ID) of role.
+|===
+
+[[ocn_rules_type_enum]]
+===== OcnRulesType _Enum_
+
+[cols="2,8",options="header"]
+|===
+|Value |Description
+|signatures |Parties must include valid OCN Signature header in requests to receiver.
+|whitelist |List of parties allowed to send messages to receiver.
+|blacklist |List of parties not allowed to send messages to receiver.
+|===
+
+[[ocn_rules_list_type_enum]]
+===== OcnRulesListType _Enum_
+
+[cols="2,8",options="header"]
+|===
+|Value |Description
+|whitelist |List of parties allowed to send messages to receiver.
+|blacklist |List of parties not allowed to send messages to receiver.
+|===

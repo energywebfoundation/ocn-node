@@ -53,7 +53,7 @@ class AdminControllerTest {
         val platform = PlatformEntity()
         val role = BasicRole(country = "DE", id = "SNC")
         every { properties.apikey } returns "1234567890"
-        every { properties.url } returns "http://localhost:8090"
+        every { properties.url } returns "https://node.ocn.org"
         every { roleRepo.existsByCountryCodeAndPartyIDAllIgnoreCase(role.country, role.id) } returns false
         every { platformRepo.save(any<PlatformEntity>()) } returns platform
         mockMvc.perform(post("/admin/generate-registration-token")
@@ -63,8 +63,8 @@ class AdminControllerTest {
                 .andExpect(status().isOk)
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("\$.token").isString)
-                .andExpect(jsonPath("\$.versions").value("http://localhost:8090/ocpi/versions"))
-                .andDo(document("admin"))
+                .andExpect(jsonPath("\$.versions").value("https://node.ocn.org/ocpi/versions"))
+                .andDo(document("admin/generate-registration-token"))
     }
 
 }

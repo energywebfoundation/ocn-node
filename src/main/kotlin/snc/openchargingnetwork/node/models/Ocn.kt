@@ -72,3 +72,11 @@ enum class Receiver {
     LOCAL,
     REMOTE,
 }
+
+data class OcnRulesList(val active: Boolean, val list: List<BasicRole>)
+data class OcnRules(val signatures: Boolean, val whitelist: OcnRulesList, val blacklist: OcnRulesList)
+
+enum class OcnRulesListType {
+    WHITELIST,
+    BLACKLIST
+}

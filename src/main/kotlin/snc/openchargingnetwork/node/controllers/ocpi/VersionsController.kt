@@ -73,20 +73,12 @@ class VersionsController(private val repository: PlatformRepository,
         for (module in ModuleID.values()) {
 
             if (module.id == "credentials" || module.id == "hubclientinfo") {
-
                 // these modules have only SENDER endpoint (the broker/hub)
                 endpoints.add(Endpoint(
                         identifier = module.id,
                         role = InterfaceRole.SENDER,
                         url = urlJoin(properties.url, "/ocpi/2.2/${module.id}")))
-
-            } else if (module.id == "chargingprofiles") {
-
-                // not yet implemented
-                continue
-
             } else {
-
                 // remaining modules have both interfaces implemented
                 endpoints.addAll(listOf(
                         Endpoint(
@@ -97,9 +89,15 @@ class VersionsController(private val repository: PlatformRepository,
                                 identifier = module.id,
                                 role = InterfaceRole.RECEIVER,
                                 url = urlJoin(properties.url, "/ocpi/receiver/2.2/${module.id}"))))
-
             }
         }
+
+        // custom module
+        endpoints.add(Endpoint(
+                identifier = "ocnrules",
+                role = InterfaceRole.RECEIVER,
+                url = urlJoin(properties.url, "/ocpi/2.2/receiver/ocnrules")
+        ))
 
         return endpoints
     }

@@ -21,6 +21,7 @@ class RoutingServiceTest {
     private val platformRepo: PlatformRepository = mockk()
     private val roleRepo: RoleRepository = mockk()
     private val endpointRepo: EndpointRepository = mockk()
+    private val ocnRulesListRepo: OcnRulesListRepository = mockk()
     private val proxyResourceRepo: ProxyResourceRepository = mockk()
     private val httpService: HttpService = mockk()
     private val registry: RegistryFacade = mockk()
@@ -35,6 +36,7 @@ class RoutingServiceTest {
                 roleRepo,
                 endpointRepo,
                 proxyResourceRepo,
+                ocnRulesListRepo,
                 registry,
                 httpService,
                 walletService,

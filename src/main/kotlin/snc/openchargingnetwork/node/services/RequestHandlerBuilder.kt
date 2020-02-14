@@ -25,6 +25,7 @@ import snc.openchargingnetwork.node.models.HttpResponse
 import snc.openchargingnetwork.node.models.Receiver
 import snc.openchargingnetwork.node.models.exceptions.OcpiClientInvalidParametersException
 import snc.openchargingnetwork.node.models.exceptions.OcpiHubUnknownReceiverException
+import snc.openchargingnetwork.node.models.ocpi.BasicRole
 import snc.openchargingnetwork.node.models.ocpi.OcpiRequestVariables
 import snc.openchargingnetwork.node.models.ocpi.OcpiResponse
 import snc.openchargingnetwork.node.tools.generateUUIDv4Token
@@ -74,7 +75,7 @@ class RequestHandlerBuilder(private val routingService: RoutingService,
  *
  * requestHandler.validateSender().forwardRequest().getResponse()
  * requestHandler.validateSender().forwardRequest(proxied = true).getResponseWithPaginatedHeaders()
- * requestHandler.validateOcnMessage().forwardRequest().getResponseWithAllHeaders()
+ * requestHandler.validateOcnMessage(signature).forwardRequest().getResponseWithAllHeaders()
  *
  * @property request the OCPI HTTP request as OcpiRequestVariables.
  */
@@ -103,11 +104,6 @@ class RequestHandler<T: Any>(private val request: OcpiRequestVariables,
      */
     fun validateSender(): RequestHandler<T> {
         routingService.validateSender(request.headers.authorization, request.headers.sender)
-
-        if (isSigningActive()) {
-            validateOcnSignature()
-        }
-
         return this
     }
 
@@ -127,11 +123,6 @@ class RequestHandler<T: Any>(private val request: OcpiRequestVariables,
 
         val requestString = httpService.mapper.writeValueAsString(request)
         walletService.verify(requestString, signature, request.headers.sender)
-
-        if (isSigningActive()) {
-            validateOcnSignature()
-        }
-
         return this
     }
 
@@ -147,10 +138,13 @@ class RequestHandler<T: Any>(private val request: OcpiRequestVariables,
     fun forwardRequest(proxied: Boolean = false): RequestHandler<T> {
         response = when (routingService.validateReceiver(request.headers.receiver)) {
             Receiver.LOCAL -> {
+                routingService.validateWhitelisted(request.headers.sender, request.headers.receiver)
+                validateOcnSignature(request.headers.receiver)
                 val (url, headers) = routingService.prepareLocalPlatformRequest(request, proxied)
                 httpService.makeOcpiRequest(url, headers, request)
             }
             Receiver.REMOTE -> {
+                validateOcnSignature()
                 val (url, headers, body) = routingService.prepareRemotePlatformRequest(request, proxied)
                 httpService.postOcnMessage(url, headers, body)
             }
@@ -185,6 +179,8 @@ class RequestHandler<T: Any>(private val request: OcpiRequestVariables,
         response = when (routingService.validateReceiver(request.headers.receiver)) {
 
             Receiver.LOCAL -> {
+                routingService.validateWhitelisted(request.headers.sender, request.headers.receiver)
+                validateOcnSignature(request.headers.receiver)
                 // save the original resource (response_url), returning a uid pointing to its location
                 val resourceID = routingService.setProxyResource(responseUrl, request.headers.receiver, request.headers.sender)
                 // use the callback to modify the original request with the new response_url
@@ -197,6 +193,9 @@ class RequestHandler<T: Any>(private val request: OcpiRequestVariables,
             }
 
             Receiver.REMOTE -> {
+
+                validateOcnSignature()
+
                 val (url, headers, body) = routingService.prepareRemotePlatformRequest(request) {
                     // create a uid that will point to the original response_url
                     val proxyUID = generateUUIDv4Token()
@@ -207,6 +206,7 @@ class RequestHandler<T: Any>(private val request: OcpiRequestVariables,
                     // add the proxy uid and resource to the outgoing body (read by the recipient's OCN node)
                     modifiedRequest.copy(proxyUID = proxyUID, proxyResource = responseUrl)
                 }
+
                 httpService.postOcnMessage(url, headers, body)
             }
 
@@ -257,7 +257,8 @@ class RequestHandler<T: Any>(private val request: OcpiRequestVariables,
                     val resourceId = routingService.setProxyResource(it, request.headers.sender, request.headers.receiver)
                     headers["Location"] = urlJoin(properties.url, proxyPath, resourceId)
                 }
-                return ResponseEntity
+
+                ResponseEntity
                         .status(response.statusCode)
                         .headers(headers)
                         .body(response.body)
@@ -278,7 +279,7 @@ class RequestHandler<T: Any>(private val request: OcpiRequestVariables,
                 response.headers["Link"]?.let { responseHeaders.set("Link", it) }
                 response.headers["X-Total-Count"]?.let { responseHeaders.set("X-Total-Count", it) }
                 response.headers["X-Limit"]?.let { responseHeaders.set("X-Limit", it) }
-                return ResponseEntity
+                ResponseEntity
                         .status(response.statusCode)
                         .headers(responseHeaders)
                         .body(response.body)
@@ -295,14 +296,38 @@ class RequestHandler<T: Any>(private val request: OcpiRequestVariables,
     }
 
     /**
-     * Check message signing is enabled. Can be enabled in two ways:
+     * Check message signing is enabled. Can be enabled in the following ways:
      * 1. ocn.node.signatures property is set to true
      * 2. request contains a signature header
+     * 3. (optional) recipient requires it (overrides other settings)
      *
-     * Disclaimer: the receiver of the request may require message signing even if the OCN Node does not.
      */
-    private fun isSigningActive(): Boolean {
-        return properties.signatures || request.headers.signature != null
+    private fun isSigningActive(recipient: BasicRole? = null): Boolean {
+        var active = properties.signatures || request.headers.signature != null
+        if (recipient != null) {
+            val recipientRules = routingService.getPlatformRules(recipient)
+            active = active || recipientRules.signatures
+        }
+        return active
+    }
+
+    /**
+     * Use the OCN Notary to validate a request's "OCN-Signature" header. Only validated if signing is active.
+     *
+     * @param recipient if forwarding to a local party, provide the recipient role information to assess whether they
+     * require messages to be signed (overriding the OCN Node preferences).
+     */
+    private fun validateOcnSignature(recipient: BasicRole? = null) {
+        if (isSigningActive(recipient)) {
+            val result = request.headers.signature?.let {
+                notary = Notary.deserialize(it)
+                notary?.verify(request.toNotaryReadableVariables())
+            }
+            when {
+                result == null -> throw OcpiClientInvalidParametersException("Missing required header: \"OCN-Signature\"")
+                !result.isValid -> throw OcpiClientInvalidParametersException("Unable to verify signature: ${result.error}")
+            }
+        }
     }
 
     /**
@@ -317,20 +342,6 @@ class RequestHandler<T: Any>(private val request: OcpiRequestVariables,
      */
     private fun validateNotary(): Notary {
         return notary ?: throw UnsupportedOperationException("Non-canonical method chaining: must call a validating method first")
-    }
-
-    /**
-     * Use the OCN Notary to validate a request's "OCN-Signature" header. Only use if signing is active.
-     */
-    private fun validateOcnSignature() {
-        val result = request.headers.signature?.let {
-            notary = Notary.deserialize(it)
-            notary?.verify(request.toNotaryReadableVariables())
-        }
-        when {
-            result == null -> throw OcpiClientInvalidParametersException("Missing required header: \"OCN-Signature\"")
-            !result.isValid -> throw OcpiClientInvalidParametersException("Unable to verify signature: ${result.error}")
-        }
     }
 
 }

@@ -41,6 +41,10 @@ data class BasicRole(@JsonProperty("party_id") final val id: String,
             throw OcpiClientInvalidParametersException("Given party-id \"$id\" not 3 characters")
         }
     }
+
+    fun toUpperCase(): BasicRole {
+        return BasicRole(id = id.toUpperCase(), country = country.toUpperCase())
+    }
 }
 
 
@@ -106,20 +110,21 @@ data class DisplayText(@JsonProperty("language") val language: String,
                        @JsonProperty("text") val text: String)
 
 
-enum class OcpiStatus(val code: Int, val message: String? = null) {
+enum class OcpiStatus(val code: Int) {
     SUCCESS(1000),
     CLIENT_ERROR(2000),
-    CLIENT_INVALID_PARAMETERS(2001, "Invalid or missing parameters"),
-    CLIENT_NOT_ENOUGH_INFO(2002, "Not enough information"),
-    CLIENT_UNKNOWN_LOCATION(2003, "Unknown location"),
-    UNKNOWN_TOKEN(2004, "Unknown token"),
+    CLIENT_INVALID_PARAMETERS(2001),
+    CLIENT_NOT_ENOUGH_INFO(2002),
+    CLIENT_UNKNOWN_LOCATION(2003),
+    CLIENT_UNKNOWN_TOKEN(2004),
+    CLIENT_BLACKLISTED(2900),
     SERVER_ERROR(3000),
     SERVER_UNUSABLE_API(3001),
     SERVER_UNSUPPORTED_VERSION(3002),
     SERVER_NO_MATCHING_ENDPOINTS(3003),
-    HUB_UNKNOWN_RECEIVER(4001, "Unknown receiver"),
-    HUB_REQUEST_TIMEOUT(4002, "Timeout on forwarded request"),
-    HUB_CONNECTION_PROBLEM(4003, "Connection problem")
+    HUB_UNKNOWN_RECEIVER(4001),
+    HUB_REQUEST_TIMEOUT(4002),
+    HUB_CONNECTION_PROBLEM(4003)
 }
 
 

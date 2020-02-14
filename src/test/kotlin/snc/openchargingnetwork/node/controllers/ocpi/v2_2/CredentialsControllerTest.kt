@@ -2,7 +2,9 @@ package snc.openchargingnetwork.node.controllers.ocpi.v2_2
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.ninjasquad.springmockk.MockkBean
+import io.mockk.Runs
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
 import org.hamcrest.Matchers
 import org.junit.jupiter.api.Test
@@ -14,13 +16,10 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
 import snc.openchargingnetwork.node.repositories.*
 import snc.openchargingnetwork.node.config.NodeProperties
+import snc.openchargingnetwork.node.models.entities.*
 import snc.openchargingnetwork.node.models.ocpi.InterfaceRole
 import snc.openchargingnetwork.node.models.ocpi.Role
 import snc.openchargingnetwork.node.models.ocpi.OcpiStatus
-import snc.openchargingnetwork.node.models.entities.Auth
-import snc.openchargingnetwork.node.models.entities.EndpointEntity
-import snc.openchargingnetwork.node.models.entities.PlatformEntity
-import snc.openchargingnetwork.node.models.entities.RoleEntity
 import snc.openchargingnetwork.node.models.ocpi.*
 import snc.openchargingnetwork.node.services.HttpService
 import snc.openchargingnetwork.node.services.RoutingService
@@ -36,6 +35,9 @@ class CredentialsControllerTest(@Autowired val mockMvc: MockMvc) {
 
     @MockkBean
     lateinit var endpointRepo: EndpointRepository
+    
+    @MockkBean
+    lateinit var ocnRulesListRepo: OcnRulesListRepository
 
     @MockkBean
     lateinit var properties: NodeProperties
@@ -69,7 +71,11 @@ class CredentialsControllerTest(@Autowired val mockMvc: MockMvc) {
 
     @Test
     fun `When POST credentials then return broker credentials and TOKEN_C`() {
-        val platform = PlatformEntity(id = 1L, auth = Auth(tokenA = "12345"))
+        val platform = PlatformEntity(
+                id = 1L,
+                auth = Auth(tokenA = "12345"),
+                rules = OcnRules(signatures = true, blacklist = false, whitelist = false))
+
         val role1 = CredentialsRole(
                 role = Role.CPO,
                 businessDetails = BusinessDetails("charging.net"),
@@ -80,6 +86,7 @@ class CredentialsControllerTest(@Autowired val mockMvc: MockMvc) {
                 businessDetails = BusinessDetails("msp.co"),
                 partyID = "MSC",
                 countryCode = "NL")
+
         val versionsUrl = "https://org.charging.net/versions"
         val versionDetailUrl = "https://org.charging.net/2.2"
         val tokenB = "67890"
@@ -94,6 +101,7 @@ class CredentialsControllerTest(@Autowired val mockMvc: MockMvc) {
                         Endpoint("credentials", InterfaceRole.SENDER, "https://org.charging.net/credentials"),
                         Endpoint("commands", InterfaceRole.RECEIVER, "https://org.charging.net/commands")))
         every { properties.url } returns "http://my.broker.com"
+        every { properties.signatures } returns true
         every { routingService.isRoleKnownOnNetwork(BasicRole(role1.partyID, role1.countryCode)) } returns true
         every { roleRepo.existsByCountryCodeAndPartyIDAllIgnoreCase(role1.countryCode, role1.partyID) } returns false
         every { routingService.isRoleKnownOnNetwork(BasicRole(role2.partyID, role2.countryCode)) } returns true
@@ -125,7 +133,11 @@ class CredentialsControllerTest(@Autowired val mockMvc: MockMvc) {
 
     @Test
     fun `When PUT credentials then return broker credentials and new TOKEN_C`() {
-        val platform = PlatformEntity(id = 1L, auth = Auth(tokenA = null, tokenB = "67890", tokenC = "0102030405"))
+        val platform = PlatformEntity(
+                id = 1L,
+                auth = Auth(tokenA = null, tokenB = "67890", tokenC = "0102030405"),
+                rules = OcnRules(signatures = false, whitelist = true, blacklist = false))
+
         val role1 = CredentialsRole(
                 role = Role.CPO,
                 businessDetails = BusinessDetails("charging.net"),
@@ -136,6 +148,7 @@ class CredentialsControllerTest(@Autowired val mockMvc: MockMvc) {
                 businessDetails = BusinessDetails("msp.co"),
                 partyID = "MSC",
                 countryCode = "NL")
+
         val versionsUrl = "https://org.charging.net/versions"
         val versionDetailUrl = "https://org.charging.net/2.2"
 
@@ -149,6 +162,7 @@ class CredentialsControllerTest(@Autowired val mockMvc: MockMvc) {
                         Endpoint("credentials", InterfaceRole.SENDER, "https://org.charging.net/credentials"),
                         Endpoint("commands", InterfaceRole.RECEIVER, "https://org.charging.net/commands")))
         every { properties.url } returns "http://my.broker.com"
+        every { properties.signatures } returns false
         every { platformRepo.save(any<PlatformEntity>()) } returns platform
         every { endpointRepo.deleteByPlatformID(platform.id) } returns mockk()
         every { endpointRepo.save(any<EndpointEntity>()) } returns mockk()
@@ -182,11 +196,12 @@ class CredentialsControllerTest(@Autowired val mockMvc: MockMvc) {
     fun `When DELETE credentials then return OCPI success message`() {
         val platform = PlatformEntity(id = 3L, auth = Auth(tokenA = null, tokenB = "123", tokenC = "456"))
         every { platformRepo.findByAuth_TokenC(platform.auth.tokenC) } returns platform
-        every { platformRepo.deleteById(platform.id!!) } returns mockk()
+        every { platformRepo.deleteById(platform.id!!) } just Runs
         every { roleRepo.findAllByPlatformID(platform.id) } returns listOf<RoleEntity>()
-        every { roleRepo.deleteByPlatformID(platform.id) } returns mockk()
-        every { endpointRepo.deleteByPlatformID(platform.id) } returns mockk()
-
+        every { roleRepo.deleteByPlatformID(platform.id) } just Runs
+        every { endpointRepo.deleteByPlatformID(platform.id) } just Runs
+        every { ocnRulesListRepo.deleteByPlatformID(platform.id) } just Runs
+        
         mockMvc.perform(delete("/ocpi/2.2/credentials")
                 .header("Authorization", "Token ${platform.auth.tokenC}"))
                 .andExpect(status().isOk)

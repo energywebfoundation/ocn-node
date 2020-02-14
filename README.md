@@ -1,24 +1,17 @@
 # Open Charging Network Node
 
-The Open Charging Network (OCN) node with Open Charge Point Interface (OCPI) v2.2 [RC2] API. 
+The Open Charging Network (OCN) node with Open Charge Point Interface (OCPI) v2.2 API. 
 
-**This project replaces the OCN Client, with the rename seeking to avoid confusion with client-server architecture.**
-
-Changelist from rename:
-
-- New registry contract address (`0x0A5f27Ee1EbDC68034aDbd9446F9375783aeF7DC`)
-- registry methods renamed:
-    - `updateClientInfo` -> `updateNodeInfo`
-    - `clientAddressOf` -> `nodeAddressOf`
-    - `clientURLOf` -> `nodeURLOf`
-- `/ocn/registry/client-info` endpoint renamed to `/ocn/registry/node-info`
-
-
-**This software is in alpha**. 
+**This software is in development.** As such, bugs may be encountered. To see an overview of current and past issues,
+see our [issue tracker](https://bitbucket.org/shareandcharge/ocn-node/issues).  
 
 As the aim is for this to be a community project, contributions are always welcome in the form of comments, pull 
 requests and raised issues. Questions may also be asked on Stack Overflow using the tag `ShareAndCharge`, or in the
-Gitter [community](https://gitter.im/shareandcharge/community).
+Gitter [community](https://gitter.im/shareandcharge/community). 
+
+Before contributing to the source code, please take the
+time to read over the [Developer Certificate of Origin](https://developercertificate.org/). For more information, 
+see our [contributing guidelines](https://shareandcharge.atlassian.net/wiki/spaces/OCN/pages/360611849/Contributing+to+the+Open+Charging+Network).
 
 ## Open Charging Network
 
@@ -30,9 +23,11 @@ begin the regular OCPI 2.2 credentials registration process with the provider's 
 
 For more information about the OCN, check out the [wiki](https://bitbucket.org/shareandcharge/ocn-node/wiki/).
 
-## API Documentation
+## HTTP API Documentation
 
-See [Open Charging Network Node API Documentation](https://shareandcharge.bitbucket.io).
+The [HTTP API Documentation](https://shareandcharge.bitbucket.io) for the OCN Node describes endpoints which can be used 
+by administrators and users. Outside of the full OCPI v2.2 API, OCN Nodes provide additional features, such as the custom
+OCPI module, _OcnRules_, as well as ways for admins to restrict use and users to query the OCN Registry.
 
 ## Dependencies
 
