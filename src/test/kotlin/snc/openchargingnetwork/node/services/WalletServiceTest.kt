@@ -9,12 +9,13 @@ import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpMethod
 import org.web3j.crypto.Credentials
 import org.web3j.crypto.Sign
+import org.web3j.tuples.generated.Tuple2
 import snc.openchargingnetwork.node.models.entities.WalletEntity
 import snc.openchargingnetwork.node.models.exceptions.OcpiHubConnectionProblemException
 import snc.openchargingnetwork.node.models.ocpi.*
 import snc.openchargingnetwork.node.repositories.WalletRepository
 import snc.openchargingnetwork.node.tools.generatePrivateKey
-import snc.openchargingnetwork.contracts.RegistryFacade
+import snc.openchargingnetwork.contracts.Registry
 import snc.openchargingnetwork.node.models.OcnHeaders
 
 class WalletServiceTest {
@@ -34,7 +35,7 @@ class WalletServiceTest {
                     receiver = BasicRole("AAA", "DE")))
 
     private val walletRepo: WalletRepository = mockk()
-    private val registry: RegistryFacade = mockk()
+    private val registry: Registry = mockk()
 
     private val walletService: WalletService
 
@@ -73,7 +74,7 @@ class WalletServiceTest {
     fun `verifyRequest silently succeeds`() {
         val jsonStringBody = jacksonObjectMapper().writeValueAsString(body)
         val sig = walletService.sign(jsonStringBody)
-        every { registry.nodeAddressOf("DE".toByteArray(), "XXX".toByteArray()).sendAsync().get() } returns address
+        every { registry.getOperatorByOcpi("DE".toByteArray(), "XXX".toByteArray()).sendAsync().get() } returns Tuple2(address, "")
         walletService.verify(jsonStringBody, sig, BasicRole("XXX", "DE"))
     }
 
@@ -82,7 +83,7 @@ class WalletServiceTest {
         val credentials2 = Credentials.create(generatePrivateKey())
         val jsonStringBody = jacksonObjectMapper().writeValueAsString(body)
         val sig = walletService.sign(jsonStringBody)
-        every { registry.nodeAddressOf("DE".toByteArray(), "XXX".toByteArray()).sendAsync().get() } returns credentials2.address
+        every { registry.getOperatorByOcpi("DE".toByteArray(), "XXX".toByteArray()).sendAsync().get() } returns Tuple2(credentials2.address, "")
         try {
             walletService.verify(jsonStringBody, sig, BasicRole("XXX", "DE"))
         } catch (e: OcpiHubConnectionProblemException) {

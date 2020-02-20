@@ -25,7 +25,7 @@ import org.web3j.tx.ClientTransactionManager
 import org.web3j.tx.TransactionManager
 import org.web3j.tx.gas.StaticGasProvider
 import snc.openchargingnetwork.node.repositories.*
-import snc.openchargingnetwork.contracts.RegistryFacade
+import snc.openchargingnetwork.contracts.Registry
 
 
 @Configuration
@@ -43,8 +43,8 @@ open class NodeConfig(private val properties: NodeProperties) {
                             walletRepo: WalletRepository) = ApplicationRunner {}
 
     @Bean
-    fun registryFacade(): RegistryFacade {
-        return RegistryFacade.load(
+    fun Registry(): Registry {
+        return Registry.load(
                 properties.web3.contracts.registry,
                 web3,
                 txManager,

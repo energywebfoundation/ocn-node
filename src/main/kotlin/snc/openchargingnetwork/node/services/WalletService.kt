@@ -27,12 +27,12 @@ import snc.openchargingnetwork.node.models.exceptions.OcpiHubConnectionProblemEx
 import snc.openchargingnetwork.node.models.ocpi.BasicRole
 import snc.openchargingnetwork.node.repositories.WalletRepository
 import snc.openchargingnetwork.node.tools.generatePrivateKey
-import snc.openchargingnetwork.contracts.RegistryFacade
+import snc.openchargingnetwork.contracts.Registry
 import java.nio.charset.StandardCharsets
 
 @Service
 class WalletService(walletRepo: WalletRepository,
-                    private val registry: RegistryFacade) {
+                    private val registry: Registry) {
 
 
     /**
@@ -101,8 +101,8 @@ class WalletService(walletRepo: WalletRepository,
         val (r, s, v) = toByteArray(signature)
         val signingKey = Sign.signedPrefixedMessageToKey(dataToVerify, Sign.SignatureData(v, r, s))
         val signingAddress = "0x${Keys.getAddress(signingKey)}"
-        val registeredNodeAddress = registry.nodeAddressOf(sender.country.toByteArray(), sender.id.toByteArray()).sendAsync().get()
-        if (signingAddress.toLowerCase() != registeredNodeAddress.toLowerCase()) {
+        val (operator, _) = registry.getOperatorByOcpi(sender.country.toByteArray(), sender.id.toByteArray()).sendAsync().get()
+        if (signingAddress.toLowerCase() != operator.toLowerCase()) {
             throw OcpiHubConnectionProblemException("Could not verify OCN-Signature of request")
         }
     }

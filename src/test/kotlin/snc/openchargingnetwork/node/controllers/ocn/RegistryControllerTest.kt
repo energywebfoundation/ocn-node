@@ -17,7 +17,8 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPat
 import org.springframework.test.web.servlet.setup.DefaultMockMvcBuilder
 import org.springframework.test.web.servlet.setup.MockMvcBuilders
 import org.springframework.web.context.WebApplicationContext
-import snc.openchargingnetwork.contracts.RegistryFacade
+import org.web3j.tuples.generated.Tuple2
+import snc.openchargingnetwork.contracts.Registry
 import snc.openchargingnetwork.node.config.NodeProperties
 import snc.openchargingnetwork.node.services.WalletService
 
@@ -34,7 +35,7 @@ class RegistryControllerTest {
     lateinit var properties: NodeProperties
 
     @MockkBean
-    lateinit var registry: RegistryFacade
+    lateinit var registry: Registry
 
     @BeforeEach
     fun setUp(webApplicationContext: WebApplicationContext,
@@ -63,8 +64,7 @@ class RegistryControllerTest {
         val id = "ABC"
         val expectedUrl = "https://node.ocn.org"
         val expectedAddress = "0x22D44D286d219e1B55E6A5f1a3c82Af69716756A"
-        every { registry.nodeURLOf(country.toByteArray(), id.toByteArray()).sendAsync().get() } returns expectedUrl
-        every { registry.nodeAddressOf(country.toByteArray(), id.toByteArray()).sendAsync().get() } returns expectedAddress
+        every { registry.getOperatorByOcpi(country.toByteArray(), id.toByteArray()).sendAsync().get() } returns Tuple2(expectedAddress, expectedUrl)
         mockMvc.perform(get("/ocn/registry/node/$country/$id"))
                 .andExpect(jsonPath("\$.url").value(expectedUrl))
                 .andExpect(jsonPath("\$.address").value(expectedAddress))

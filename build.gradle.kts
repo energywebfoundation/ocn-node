@@ -38,7 +38,7 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
     implementation("khttp:khttp:1.0.0")
-    implementation("org.web3j:core:4.4.0")
+    implementation("org.web3j:core:4.5.5")
     implementation("org.postgresql:postgresql:42.2.6")
     runtimeOnly("com.h2database:h2")
     kapt("org.springframework.boot:spring-boot-configuration-processor")

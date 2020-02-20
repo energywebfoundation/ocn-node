@@ -29,7 +29,7 @@ import snc.openchargingnetwork.node.tools.extractNextLink
 import snc.openchargingnetwork.node.tools.extractToken
 import snc.openchargingnetwork.node.tools.generateUUIDv4Token
 import snc.openchargingnetwork.node.tools.urlJoin
-import snc.openchargingnetwork.contracts.RegistryFacade
+import snc.openchargingnetwork.contracts.Registry
 import snc.openchargingnetwork.node.models.entities.OcnRules
 import snc.openchargingnetwork.node.models.entities.PlatformEntity
 import snc.openchargingnetwork.node.models.exceptions.*
@@ -41,7 +41,7 @@ class RoutingService(private val platformRepo: PlatformRepository,
                      private val endpointRepo: EndpointRepository,
                      private val proxyResourceRepo: ProxyResourceRepository,
                      private val ocnRulesListRepo: OcnRulesListRepository,
-                     private val registry: RegistryFacade,
+                     private val registry: Registry,
                      private val httpService: HttpService,
                      private val walletService: WalletService,
                      private val properties: NodeProperties) {
@@ -68,13 +68,12 @@ class RoutingService(private val platformRepo: PlatformRepository,
         val country = role.country.toByteArray()
         val id = role.id.toByteArray()
 
-        val nodeServerURL = registry.nodeURLOf(country, id).sendAsync().get()
+        val (operator, domain) = registry.getOperatorByOcpi(country, id).sendAsync().get()
         if (belongsToMe) {
-            val ethAddress = registry.nodeAddressOf(country, id).sendAsync().get()
-            return nodeServerURL == properties.url && ethAddress == walletService.address
+            return domain == properties.url && operator == walletService.address
         }
 
-        return nodeServerURL != ""
+        return domain != ""
     }
 
     /**
@@ -117,11 +116,11 @@ class RoutingService(private val platformRepo: PlatformRepository,
      * get the OCN Node URL as registered by the basic role in the OCN Registry
      */
     fun getRemoteNodeUrl(receiver: BasicRole): String {
-        val url = registry.nodeURLOf(receiver.country.toByteArray(), receiver.id.toByteArray()).sendAsync().get()
-        if (url == "") {
+        val (_, domain) = registry.getOperatorByOcpi(receiver.country.toByteArray(), receiver.id.toByteArray()).sendAsync().get()
+        if (domain == "") {
             throw OcpiHubUnknownReceiverException("Recipient not registered on OCN")
         }
-        return url
+        return domain
     }
 
 
