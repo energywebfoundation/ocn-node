@@ -26,6 +26,8 @@ class NodeProperties {
 
     var dev: Boolean = false
 
+    var privateKey: String? = null
+
     var signatures: Boolean = false
 
     lateinit var url: String

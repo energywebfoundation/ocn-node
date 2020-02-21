@@ -3,15 +3,28 @@ package snc.openchargingnetwork.node.config
 import org.springframework.boot.context.event.ApplicationReadyEvent
 import org.springframework.context.event.EventListener
 import org.springframework.stereotype.Component
+import org.web3j.crypto.Credentials
+import snc.openchargingnetwork.contracts.Registry
 import snc.openchargingnetwork.node.tools.urlJoin
 import java.net.ConnectException
 import java.net.InetAddress
 import java.net.URL
 import java.net.UnknownHostException
+import java.util.concurrent.ExecutionException
 import javax.net.ssl.SSLException
 
 @Component
-class Verification(private val properties: NodeProperties) {
+class Verification(private val properties: NodeProperties,
+                   private val registry: Registry) {
+
+    @EventListener(ApplicationReadyEvent::class)
+    fun testRegistry() {
+        if (properties.dev) {
+            testDevRegistry()
+        } else {
+            testProdRegistry()
+        }
+    }
 
     @EventListener(ApplicationReadyEvent::class)
     fun testPublicURL() {
@@ -35,6 +48,28 @@ class Verification(private val properties: NodeProperties) {
 
         this.testHealth()
 
+    }
+
+    private fun testDevRegistry() {
+        if (properties.privateKey == null) {
+            properties.privateKey = "0x1c3e5453c0f9aa74a8eb0216310b2b013f017813a648fce364bf41dbc0b37647"
+        }
+        val credentials = Credentials.create(properties.privateKey)
+        val domain = registry.getNode(credentials.address).sendAsync().get()
+        if (domain != properties.url) {
+            registry.setNode(properties.url).sendAsync()
+        }
+    }
+
+    private fun testProdRegistry() {
+        if (properties.privateKey == null) {
+            throw IllegalStateException("No private key set. Unable to verify registry configuration.")
+        }
+        val credentials = Credentials.create(properties.privateKey)
+        val domain = registry.getNode(credentials.address).sendAsync().get()
+        if (domain != properties.url) {
+            throw IllegalStateException("Expected registry listing with domain \"${properties.url}\", got \"$domain\"")
+        }
     }
 
     private fun testHealth() {
