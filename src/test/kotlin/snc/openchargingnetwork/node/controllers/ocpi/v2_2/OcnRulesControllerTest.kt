@@ -16,6 +16,7 @@ import snc.openchargingnetwork.node.models.OcnRules
 import snc.openchargingnetwork.node.models.OcnRulesList
 import snc.openchargingnetwork.node.models.ocpi.BasicRole
 import snc.openchargingnetwork.node.services.OcnRulesService
+import snc.openchargingnetwork.node.models.ocpi.WhiteListModules
 
 
 @WebMvcTest(OcnRulesController::class)
@@ -47,7 +48,7 @@ class OcnRulesControllerTest(@Autowired val mockMvc: MockMvc) {
 
     @Test
     fun updateWhitelist() {
-        val body = listOf(BasicRole("ABC", "DE"), BasicRole("DEF", "DE"))
+        val body = listOf(WhiteListModules("ABC", "DE", listOf("cdrs", "sessions")), WhiteListModules("DEF", "DE", listOf("locations", "tariffs")))
 
         every { ocnRulesService.updateWhitelist("Token token-c", body) } just Runs
 

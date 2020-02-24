@@ -21,8 +21,6 @@ import org.springframework.http.HttpHeaders
 import org.springframework.stereotype.Service
 import snc.openchargingnetwork.node.config.NodeProperties
 import snc.openchargingnetwork.node.models.*
-import snc.openchargingnetwork.node.models.entities.EndpointEntity
-import snc.openchargingnetwork.node.models.entities.ProxyResourceEntity
 import snc.openchargingnetwork.node.models.ocpi.*
 import snc.openchargingnetwork.node.repositories.*
 import snc.openchargingnetwork.node.tools.extractNextLink
@@ -30,8 +28,8 @@ import snc.openchargingnetwork.node.tools.extractToken
 import snc.openchargingnetwork.node.tools.generateUUIDv4Token
 import snc.openchargingnetwork.node.tools.urlJoin
 import snc.openchargingnetwork.contracts.RegistryFacade
+import snc.openchargingnetwork.node.models.entities.*
 import snc.openchargingnetwork.node.models.entities.OcnRules
-import snc.openchargingnetwork.node.models.entities.PlatformEntity
 import snc.openchargingnetwork.node.models.exceptions.*
 import java.lang.Exception
 
@@ -166,17 +164,71 @@ class RoutingService(private val platformRepo: PlatformRepository,
     /**
      * Check receiver has allowed sender to send them messages
      */
-    fun validateWhitelisted(sender: BasicRole, receiver: BasicRole) {
+    fun validateWhitelisted(sender: BasicRole, receiver: BasicRole, module: ModuleID) {
         val platform = getPlatform(receiver)
         val rulesList = ocnRulesListRepo.findAllByPlatformID(platform.id)
         val whitelisted = when {
-            platform.rules.whitelist -> rulesList.any { it.counterparty == sender }
+            platform.rules.whitelist -> rulesList.any { validateWhiteListWithModule(it, sender, module)  }
             platform.rules.blacklist -> rulesList.none { it.counterparty == sender }
             else -> true
         }
         if (!whitelisted) {
             throw OcpiClientGenericException("Message receiver not in sender's whitelist.")
         }
+    }
+
+    /**
+     * check receiver has allowed the module of sender to send them message
+     */
+    fun validateWhiteListWithModule (it: OcnRulesListEntity, sender: BasicRole, module: ModuleID): Boolean {
+        if(it.counterparty == sender){
+            when(module) {
+                ModuleID.CDRS -> {
+                    if( it.cdrs === true) {
+                        throw OcpiClientGenericException("CDRS Module is blocked")
+                    }
+                    return true
+                }
+                ModuleID.CHARGING_PROFILES -> {
+                    if( it.chargingprofiles === true) {
+                        throw OcpiClientGenericException("Charging Profiles Module is blocked")
+                    }
+                    return true
+                }
+                ModuleID.COMMANDS -> {
+                    if( it.commands === true) {
+                        throw OcpiClientGenericException("Commands Module is blocked")
+                    }
+                    return true
+                }
+                ModuleID.LOCATIONS -> {
+                    if( it.locations === true) {
+                        throw OcpiClientGenericException("Locations Module is blocked")
+                    }
+                    return true
+                }
+                ModuleID.SESSIONS -> {
+                    if( it.sessions === true) {
+                        throw OcpiClientGenericException("Session Module is blocked")
+                    }
+                    return true
+                }
+                ModuleID.TARIFFS -> {
+                    if( it.tariffs === true) {
+                        throw OcpiClientGenericException("Tariffs Module is blocked")
+                    }
+                    return true
+                }
+                ModuleID.TOKENS -> {
+                    if( it.tokens === true) {
+                        throw OcpiClientGenericException("Token Module is blocked")
+                    }
+                    return true
+                }
+                else -> return true
+            }
+        }
+        return false;
     }
 
     /**

@@ -25,6 +25,7 @@ import snc.openchargingnetwork.node.models.entities.PlatformEntity
 import snc.openchargingnetwork.node.models.exceptions.OcpiClientGenericException
 import snc.openchargingnetwork.node.models.exceptions.OcpiClientInvalidParametersException
 import snc.openchargingnetwork.node.models.ocpi.BasicRole
+import snc.openchargingnetwork.node.models.ocpi.WhiteListModules
 import snc.openchargingnetwork.node.repositories.OcnRulesListRepository
 import snc.openchargingnetwork.node.repositories.PlatformRepository
 import snc.openchargingnetwork.node.tools.extractToken
@@ -61,7 +62,7 @@ class OcnRulesService(private val platformRepo: PlatformRepository,
         platformRepo.save(platform)
     }
 
-    fun updateWhitelist(authorization: String, parties: List<BasicRole>) {
+    fun updateWhitelist(authorization: String, parties: List<WhiteListModules>) {
         // 1. check token C / find platform
         val platform = findPlatform(authorization)
 
@@ -84,7 +85,15 @@ class OcnRulesService(private val platformRepo: PlatformRepository,
         ocnRulesListRepo.deleteByPlatformID(platform.id)
         ocnRulesListRepo.saveAll(parties.map { OcnRulesListEntity(
             platformID = platform.id!!,
-            counterparty = it.toUpperCase()) })
+            counterparty = BasicRole(it.id, it.country).toUpperCase(),
+            cdrs = it.modules.contains("cdrs"),
+            chargingprofiles = it.modules.contains("chargingprofiles"),
+            commands = it.modules.contains("commands"),
+            sessions = it.modules.contains("sessions"),
+            locations= it.modules.contains("locations"),
+            tariffs = it.modules.contains("tariffs"),
+            tokens = it.modules.contains("tokens")
+        )})
     }
 
     fun updateBlacklist(authorization: String, parties: List<BasicRole>) {

@@ -16,8 +16,6 @@
 
 package snc.openchargingnetwork.node.models.entities
 
-import org.hibernate.annotations.ColumnDefault
-import snc.openchargingnetwork.node.models.OcnRulesListType
 import snc.openchargingnetwork.node.models.ocpi.*
 import snc.openchargingnetwork.node.tools.generatePrivateKey
 import snc.openchargingnetwork.node.tools.generateUUIDv4Token
@@ -124,6 +122,15 @@ class OcnRulesListEntity(
         )
         @Embedded
         val counterparty: BasicRole,
+
+        @Column(columnDefinition = "boolean default false") var cdrs: Boolean = false,
+        @Column(columnDefinition = "boolean default false") var chargingprofiles: Boolean = false,
+        @Column(columnDefinition = "boolean default false") var commands: Boolean = false,
+        @Column(columnDefinition = "boolean default false") var sessions: Boolean = false,
+        @Column(columnDefinition = "boolean default false") var locations: Boolean = false,
+        @Column(columnDefinition = "boolean default false") var tariffs: Boolean = false,
+        @Column(columnDefinition = "boolean default false") var tokens: Boolean = false,
+
 
         @Id @GeneratedValue val id: Long? = null
 )

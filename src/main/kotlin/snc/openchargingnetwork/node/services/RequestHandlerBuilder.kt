@@ -138,7 +138,7 @@ class RequestHandler<T: Any>(private val request: OcpiRequestVariables,
     fun forwardRequest(proxied: Boolean = false): RequestHandler<T> {
         response = when (routingService.validateReceiver(request.headers.receiver)) {
             Receiver.LOCAL -> {
-                routingService.validateWhitelisted(request.headers.sender, request.headers.receiver)
+                routingService.validateWhitelisted(request.headers.sender, request.headers.receiver, request.module)
                 validateOcnSignature(request.headers.receiver)
                 val (url, headers) = routingService.prepareLocalPlatformRequest(request, proxied)
                 httpService.makeOcpiRequest(url, headers, request)
@@ -179,7 +179,7 @@ class RequestHandler<T: Any>(private val request: OcpiRequestVariables,
         response = when (routingService.validateReceiver(request.headers.receiver)) {
 
             Receiver.LOCAL -> {
-                routingService.validateWhitelisted(request.headers.sender, request.headers.receiver)
+                routingService.validateWhitelisted(request.headers.sender, request.headers.receiver, request.module)
                 validateOcnSignature(request.headers.receiver)
                 // save the original resource (response_url), returning a uid pointing to its location
                 val resourceID = routingService.setProxyResource(responseUrl, request.headers.receiver, request.headers.sender)
