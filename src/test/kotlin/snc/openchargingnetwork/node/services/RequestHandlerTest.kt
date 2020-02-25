@@ -106,7 +106,7 @@ class RequestHandlerTest {
                 body = OcpiResponse(1000))
 
         every { routingService.validateReceiver(variables.headers.receiver) } returns Receiver.LOCAL
-        every { routingService.validateWhitelisted(variables.headers.sender, variables.headers.receiver) } just Runs
+        every { routingService.validateWhitelisted(variables.headers.sender, variables.headers.receiver, variables.module) } just Runs
         every { properties.signatures } returns false
         every { routingService.getPlatformRules(variables.headers.receiver) } returns OcnRules(signatures = false)
         every { routingService.prepareLocalPlatformRequest(variables, false) } returns Pair(recipientUrl, outgoingHeaders)
@@ -150,7 +150,7 @@ class RequestHandlerTest {
                 body = OcpiResponse(1000))
 
         every { routingService.validateReceiver(variables.headers.receiver) } returns Receiver.LOCAL
-        every { routingService.validateWhitelisted(variables.headers.sender, variables.headers.receiver) } just Runs
+        every { routingService.validateWhitelisted(variables.headers.sender, variables.headers.receiver, variables.module) } just Runs
         every { properties.signatures } returns false
         every { routingService.getPlatformRules(variables.headers.receiver) } returns OcnRules(signatures = true)
         every { routingService.prepareLocalPlatformRequest(variables, false) } returns Pair(recipientUrl, outgoingHeaders)

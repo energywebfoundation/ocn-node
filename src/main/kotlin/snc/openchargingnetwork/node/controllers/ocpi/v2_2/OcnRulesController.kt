@@ -23,6 +23,7 @@ import snc.openchargingnetwork.node.models.OcnRules
 import snc.openchargingnetwork.node.models.ocpi.BasicRole
 import snc.openchargingnetwork.node.models.ocpi.OcpiResponse
 import snc.openchargingnetwork.node.services.OcnRulesService
+import snc.openchargingnetwork.node.models.ocpi.WhiteListModules
 
 
 @RestController
@@ -46,7 +47,7 @@ class OcnRulesController(private val ocnRulesService: OcnRulesService) {
     @Transactional
     @PutMapping("/ocpi/receiver/2.2/ocnrules/whitelist")
     fun updateWhitelist(@RequestHeader("authorization") authorization: String,
-                        @RequestBody body: List<BasicRole>): ResponseEntity<OcpiResponse<Unit>> {
+                        @RequestBody body: List<WhiteListModules>): ResponseEntity<OcpiResponse<Unit>> {
 
         ocnRulesService.updateWhitelist(authorization, body)
         return ResponseEntity.ok(OcpiResponse(statusCode = 1000))
