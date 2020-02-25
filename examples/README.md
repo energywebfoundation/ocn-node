@@ -53,24 +53,8 @@ section when we walk through the example requests.
     - node 2 address: `http://localhost:8081`
     - admin API keys for both nodes: `randomkey`
 
-Once the images are built and the containers are running, the following will show in stdout:
-
-```
-ocn-node-1       | [...] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port(s): 8080 (http) with context path ''
-ocn-node-1       | [...] s.o.node.ApplicationKt                   : Started ApplicationKt in 20.76 seconds (JVM running for 22.842)
-ocn-node-2       | [...] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port(s): 8081 (http) with context path ''
-ocn-node-2       | [...] s.o.node.ApplicationKt                   : Started ApplicationKt in 20.448 seconds (JVM running for 22.829)
-```
-
-You will also see the results of a request, for example:
-
-```
-ocn-node-2         | [...] o.s.web.servlet.DispatcherServlet        : GET "/health", parameters={}
-ocn-node-2         | [...] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped to snc.openchargingnetwork.node.controllers.HealthController#getHealth()
-ocn-node-2         | [...] m.m.a.RequestResponseBodyMethodProcessor : Using 'text/plain', given [*/*] and supported [text/plain, */*, text/plain, */*, application/json, application/*+json, application/json, application/*+json]
-ocn-node-2         | [...] m.m.a.RequestResponseBodyMethodProcessor : Writing ["OK"]
-ocn-node-2         | [...] o.s.web.servlet.DispatcherServlet        : Completed 200 OK
-```
+Once the images are built and the containers are running, we will see information about the two nodes displayed
+in stdout, for example its API key, wallet address and public URL. 
 
 The node checks its own health endpoint on start to make sure it is configured correctly. We can also manually ensure 
 that both nodes are running, like so:
@@ -80,7 +64,7 @@ curl localhost:8080/health
 curl localhost:8081/health
 ```
 
-Now leave the network running and open a new tab in your terminal.
+Both requests should return `200 OK`. Now leave the network running and open a new terminal session.
 
 #### 2. Clone the OCN Demo Repository and run the Mock servers 
 
@@ -118,16 +102,16 @@ corner of Postman. This will allow you to easily change common variables across 
 
 ## Tutorial
 
-In this tutorial, we will create an OCPI 2.2 connection with the OCN Node at [http:localhost:8080](http://localhost:8080). If you completed the
-above step, there should be one CPO already registered with our OCN Node and another at [http://localhost:8081](http://localhost:8081), which gives us
-a chance to make different requests across the network.
+In this tutorial, we will create an OCPI 2.2 connection with the OCN Node at [http:localhost:8080](http://localhost:8080). 
+If you completed the above step, there should be one CPO already registered with our OCN Node and another at 
+[http://localhost:8081](http://localhost:8081), which gives us a chance to make different requests across the network.
 
-### 1. Adding an entry to the OCN Registry
+### 1. Adding a Party to the OCN Registry
 
-Before we create a connection to an OCN Node, we must enter our party into the OCN Registry to become visible on the 
-network. To do this, we must sign a transaction which states our party's country code and party IDm as well as the
-public information of the OCN Node we will connect to. The OCN Node information that we need is its Ethereum address and 
-base url.
+Before we create a connection to an OCN Node, we must enter our party into the 
+[OCN Registry](https://bitbucket.org/shareandcharge/ocn-registry) to become visible on the network. To do this, we must 
+sign a transaction which states our party's country code and party ID as well as the public information of the OCN Node 
+we will connect to. The OCN Node information that we need is its Ethereum wallet address.
 
 Provided in the Postman collection is a request `GET Node Info` under the OCN directory. Note that there is no
 authorization needed to make this request and the variable `{{NODE_URL}}` has been configured to `http://localhost:8080`
@@ -137,32 +121,38 @@ to the dropdown menu where you selected the environment. The response should be 
 ```json
 {
     "url": "http://localhost:8080",
-    "address": "<ETHEREUM_ADDRESS>"
+    "address": "0x9bc1169ca09555bf2721a5c9ec6d69c8073bfeb4"
 }
 ```
 
-You might recall briefly seeing the same information printed to stdout when running the local OCN. The above request can 
-be used when registering yourself to a test or production OCN environment. In our local development case, we can skip this 
-manual step and use a script provided in the `ocn-demo` repository to save us some time. 
+You might recall briefly seeing the same information printed to stdout when running the local OCN. As we are also
+running our node, we already know this information. If connecting to a remote node, we can use this request to provide
+the same information. Now that we have the node's wallet address, we can use the OCN Registry Command Line Interface (CLI)
+to add our EMSP party to the Registry, linking it to the node on `http://localhost:8080`. As we already have the 
+registry repository, we can use the CLI from the source code directly:
 
 ```
-cd ocn-demo
-npm run register-msp
+cd ocn-registry
+npm install
+export SIGNER=0x49b2e2b48cfc25fda1d1cbdb2197b83902142c6da502dcf1871c628ea524f11b
+npx ts-node src set-party -c DE MSP -r EMSP -o 0x9bc1169ca09555bf2721a5c9ec6d69c8073bfeb4
 ```
 
-You should see the following output: 
+Here, we are adding a party to the registry with OCPI credentials (`country_code` and `party_id`) DE MSP. Our wallet
+(the signer) has address `0xcb0236B37Ff19001633E38808bd124b60B1fE1ba`. We have one role: EMSP. Our OCN Node operator has
+the wallet address `0x9bc1169ca09555bf2721a5c9ec6d69c8073bfeb4` and has already listed their node in the registry. You 
+can validate node and party listings as follows:
 
+##### Get party by OCPI credentials or wallet address
 ```
-EMSP [DE MSP] has registered to the OCN on node http://localhost:8080 using wallet with address <ETHEREUM_ADDRESS>
+npx ts-node src get-party -c DE MSP
+npx ts-node src get-party -a 0xcb0236B37Ff19001633E38808bd124b60B1fE1ba
 ```
 
-Your EMSP wallet was generated randomly and has already been discarded. Fortunately, you won't need it again for this
-tutorial. Should you wish to move to a different OCN Node (which you might want to in production), you would 
-have to update your listing in the OCN Registry using the same wallet.
-
-The script uses the above node info request under the hood to make sure that the data we are listing in the registry
-is correct. You may inspect the rest of the script (located at `ocn-demo/scripts/register.js`) to see how the 
-transaction was signed and sent to the network. 
+##### Get node by operator address
+```
+npx ts-node src get-node 0x9bc1169ca09555bf2721a5c9ec6d69c8073bfeb4
+```
 
 ### 2. Generating a CREDENTIALS_TOKEN_A
 
@@ -403,5 +393,5 @@ a GET request to this location to verify that the CDR was stored correctly by th
 That marks the end of this tutorial. More examples and use cases will be added to this tutorial in the future, but for 
 now this should be enough to get started on creating an OCPI 2.2 platform that is ready to join the Open Charging Network.
 
-The complete OCPI documentation can be found here: [https://github.com/ocpi/ocpi/tree/develop](https://github.com/ocpi/ocpi/tree/develop) 
-(version 2.2 is contained in the develop branch).
+See the [OCN Node HTTP API documentation](https://shareandcharge.bitbucket.io) for more requests, including a link to
+the full OCPI API. 
