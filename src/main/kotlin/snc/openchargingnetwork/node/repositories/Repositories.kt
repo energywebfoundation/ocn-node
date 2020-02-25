@@ -21,8 +21,6 @@ import snc.openchargingnetwork.node.models.entities.*
 import snc.openchargingnetwork.node.models.ocpi.BasicRole
 import snc.openchargingnetwork.node.models.ocpi.InterfaceRole
 
-interface WalletRepository: CrudRepository<WalletEntity, Long>
-
 interface PlatformRepository: CrudRepository<PlatformEntity, Long> {
     fun existsByAuth_TokenA(tokenA: String?): Boolean
     fun existsByAuth_TokenC(tokenC: String?): Boolean

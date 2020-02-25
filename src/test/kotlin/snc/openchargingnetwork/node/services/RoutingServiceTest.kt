@@ -328,10 +328,10 @@ class RoutingServiceTest {
     fun `isRoleKnownOnNetwork with belongsToMe flag returns true`() {
         val role = BasicRole("XYZ", "CH")
         val serverURL = "https://my.server.com"
-        val serverEthAddress = "0xd13B66e4027cF454A4a1918394425b9969b99daB"
+        val serverEthAddress = "0x9bC1169Ca09555bf2721A5C9eC6D69c8073bfeB4"
         every { registry.getOperatorByOcpi(role.country.toByteArray(), role.id.toByteArray()).sendAsync().get() } returns Tuple2(serverEthAddress, serverURL)
         every { properties.url } returns serverURL
-        every { walletService.address } returns serverEthAddress
+        every { properties.privateKey } returns "0x1c3e5453c0f9aa74a8eb0216310b2b013f017813a648fce364bf41dbc0b37647"
         assertThat(routingService.isRoleKnownOnNetwork(role)).isEqualTo(true)
     }
 

@@ -26,15 +26,6 @@ import javax.persistence.*
 
 
 /**
- * Store the private key of the OCN Node's wallet
- */
-@Entity
-@Table(name = "wallet")
-class WalletEntity(var privateKey: String = generatePrivateKey(),
-                   @Id val id: Long? = 1L)
-
-
-/**
  * Stores an OCPI platform equivalent to a single OCPI connection to an OCN Node
  */
 @Entity

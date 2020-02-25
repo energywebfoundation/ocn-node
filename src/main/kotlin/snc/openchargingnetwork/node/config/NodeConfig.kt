@@ -39,8 +39,7 @@ open class NodeConfig(private val properties: NodeProperties) {
     fun databaseInitializer(platformRepo: PlatformRepository,
                             roleRepo: RoleRepository,
                             endpointRepo: EndpointRepository,
-                            proxyResourceRepository: ProxyResourceRepository,
-                            walletRepo: WalletRepository) = ApplicationRunner {}
+                            proxyResourceRepository: ProxyResourceRepository) = ApplicationRunner {}
 
     @Bean
     fun Registry(): Registry {

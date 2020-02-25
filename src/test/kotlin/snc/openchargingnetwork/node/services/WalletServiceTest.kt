@@ -5,17 +5,15 @@ import io.mockk.every
 import io.mockk.mockk
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpMethod
 import org.web3j.crypto.Credentials
 import org.web3j.crypto.Sign
 import org.web3j.tuples.generated.Tuple2
-import snc.openchargingnetwork.node.models.entities.WalletEntity
 import snc.openchargingnetwork.node.models.exceptions.OcpiHubConnectionProblemException
 import snc.openchargingnetwork.node.models.ocpi.*
-import snc.openchargingnetwork.node.repositories.WalletRepository
 import snc.openchargingnetwork.node.tools.generatePrivateKey
 import snc.openchargingnetwork.contracts.Registry
+import snc.openchargingnetwork.node.config.NodeProperties
 import snc.openchargingnetwork.node.models.OcnHeaders
 
 class WalletServiceTest {
@@ -34,20 +32,14 @@ class WalletServiceTest {
                     sender = BasicRole("XXX", "DE"),
                     receiver = BasicRole("AAA", "DE")))
 
-    private val walletRepo: WalletRepository = mockk()
+    private val properties: NodeProperties = mockk()
     private val registry: Registry = mockk()
 
     private val walletService: WalletService
 
     init {
-        every { walletRepo.findByIdOrNull(1L) } returns WalletEntity(privateKey)
-        walletService = WalletService(walletRepo, registry)
-    }
-
-
-    @Test
-    fun `init credentials`() {
-        assertThat(walletService.credentials.address).isEqualTo(address.toLowerCase())
+        walletService = WalletService(properties, registry)
+        every { properties.privateKey } returns privateKey
     }
 
 

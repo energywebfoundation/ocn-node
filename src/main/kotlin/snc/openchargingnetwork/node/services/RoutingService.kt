@@ -19,6 +19,8 @@ package snc.openchargingnetwork.node.services
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpHeaders
 import org.springframework.stereotype.Service
+import org.web3j.crypto.Credentials
+import org.web3j.crypto.Keys
 import snc.openchargingnetwork.node.config.NodeProperties
 import snc.openchargingnetwork.node.models.*
 import snc.openchargingnetwork.node.models.entities.EndpointEntity
@@ -70,7 +72,8 @@ class RoutingService(private val platformRepo: PlatformRepository,
 
         val (operator, domain) = registry.getOperatorByOcpi(country, id).sendAsync().get()
         if (belongsToMe) {
-            return domain == properties.url && operator == walletService.address
+            val myKey = Credentials.create(properties.privateKey).address
+            return domain == properties.url && Keys.toChecksumAddress(operator) == Keys.toChecksumAddress(myKey)
         }
 
         return domain != ""

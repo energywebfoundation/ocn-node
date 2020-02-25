@@ -20,21 +20,20 @@ import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
+import org.web3j.crypto.Credentials
 import snc.openchargingnetwork.node.config.NodeProperties
-import snc.openchargingnetwork.node.services.WalletService
 import snc.openchargingnetwork.contracts.Registry
 
 @RestController
 // TODO: test for API documentation
 @RequestMapping("/ocn/registry")
-class RegistryController(private val walletService: WalletService,
-                         private val properties: NodeProperties,
+class RegistryController(private val properties: NodeProperties,
                          private val registry: Registry) {
 
     @GetMapping("/node-info")
     fun getMyNodeInfo() = mapOf(
             "url" to properties.url,
-            "address" to walletService.credentials.address)
+            "address" to Credentials.create(properties.privateKey).address)
 
     @GetMapping("/node/{countryCode}/{partyID}")
     fun getNodeOf(@PathVariable countryCode: String,
@@ -42,9 +41,7 @@ class RegistryController(private val walletService: WalletService,
         val countryBytes = countryCode.toUpperCase().toByteArray()
         val idBytes = partyID.toUpperCase().toByteArray()
 
-        println(1)
         val (address, url) = registry.getOperatorByOcpi(countryBytes, idBytes).sendAsync().get()
-        println(2)
 
         if (url == "" || address == "0x0000000000000000000000000000000000000000") {
             return "Party not registered on OCN"

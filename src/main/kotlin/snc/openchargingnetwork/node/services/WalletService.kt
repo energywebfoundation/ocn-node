@@ -16,48 +16,20 @@
 
 package snc.openchargingnetwork.node.services
 
-import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import org.web3j.crypto.Credentials
 import org.web3j.crypto.Keys
 import org.web3j.crypto.Sign
 import org.web3j.utils.Numeric
-import snc.openchargingnetwork.node.models.entities.WalletEntity
 import snc.openchargingnetwork.node.models.exceptions.OcpiHubConnectionProblemException
 import snc.openchargingnetwork.node.models.ocpi.BasicRole
-import snc.openchargingnetwork.node.repositories.WalletRepository
-import snc.openchargingnetwork.node.tools.generatePrivateKey
 import snc.openchargingnetwork.contracts.Registry
+import snc.openchargingnetwork.node.config.NodeProperties
 import java.nio.charset.StandardCharsets
 
 @Service
-class WalletService(walletRepo: WalletRepository,
+class WalletService(private val properties: NodeProperties,
                     private val registry: Registry) {
-
-
-    /**
-     * Load credentials (public-private keypair) using private key stored in DB or by generating new private key
-     *
-     * The OCN Node's credentials are used to sign forwarded requests to other OCN Nodes.
-     */
-    final val credentials: Credentials
-
-    final val address: String
-
-    init {
-        credentials = try {
-            val wallet = walletRepo.findByIdOrNull(1L) ?: throw NoSuchElementException("No wallet found")
-            Credentials.create(wallet.privateKey)
-        } catch (e: NoSuchElementException) {
-            val privateKey = generatePrivateKey()
-            val walletEntity = WalletEntity(privateKey)
-            walletRepo.save(walletEntity)
-            Credentials.create(privateKey)
-        }
-        address = credentials.address
-    }
-
-    val privateKey: String get() = credentials.ecKeyPair.privateKey.toString(16)
 
     /**
      * Take a component of a signature (r,s,v) and convert it to a string to include as an OCN-Signature header
@@ -85,6 +57,7 @@ class WalletService(walletRepo: WalletRepository,
      */
     fun sign(request: String): String {
         val dataToSign = request.toByteArray(StandardCharsets.UTF_8)
+        val credentials = Credentials.create(properties.privateKey)
         val signature = Sign.signPrefixedMessage(dataToSign, credentials.ecKeyPair)
         val r = toHexStringNoPrefix(signature.r)
         val s = toHexStringNoPrefix(signature.s)
