@@ -31,7 +31,7 @@ repositories {
 }
 
 dependencies {
-    implementation("shareandcharge.openchargingnetwork:notary:0.0.1")
+    implementation("shareandcharge.openchargingnetwork:notary:0.3.0-beta4")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")

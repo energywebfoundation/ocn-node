@@ -26,7 +26,6 @@ class Verification(private val properties: NodeProperties) {
 
     @EventListener(ApplicationReadyEvent::class)
     fun testPublicURL() {
-
         val url = URL(this.properties.url)
 
         val inetAddress = try {
@@ -45,7 +44,6 @@ class Verification(private val properties: NodeProperties) {
         }
 
         this.testHealth()
-
     }
 
     private fun testHealth() {

@@ -19,8 +19,6 @@ package snc.openchargingnetwork.node.models
 
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
-import org.springframework.web.bind.annotation.ModelAttribute
-import org.springframework.web.bind.annotation.RequestHeader
 import shareandcharge.openchargingnetwork.notary.OcpiHeaders
 import snc.openchargingnetwork.node.models.ocpi.BasicRole
 

@@ -221,8 +221,11 @@ class RequestHandler<T: Any>(private val request: OcpiRequestVariables,
      */
     fun getResponse(): ResponseEntity<OcpiResponse<T>> {
         val response = validateResponse()
+        val headers = HttpHeaders()
+        response.headers["OCN-Signature"]?.let { headers.set("OCN-Signature", it) }
         return ResponseEntity
                 .status(response.statusCode)
+                .headers(headers)
                 .body(response.body)
     }
 
@@ -258,6 +261,7 @@ class RequestHandler<T: Any>(private val request: OcpiRequestVariables,
                     val resourceId = routingService.setProxyResource(it, request.headers.sender, request.headers.receiver)
                     headers["Location"] = urlJoin(properties.url, proxyPath, resourceId)
                 }
+                response.headers["OCN-Signature"]?.let { headers.set("OCN-Signature", it) }
 
                 ResponseEntity
                         .status(response.statusCode)
@@ -280,6 +284,7 @@ class RequestHandler<T: Any>(private val request: OcpiRequestVariables,
                 response.headers["Link"]?.let { responseHeaders.set("Link", it) }
                 response.headers["X-Total-Count"]?.let { responseHeaders.set("X-Total-Count", it) }
                 response.headers["X-Limit"]?.let { responseHeaders.set("X-Limit", it) }
+                response.headers["OCN-Signature"]?.let { responseHeaders.set("OCN-Signature", it) }
                 ResponseEntity
                         .status(response.statusCode)
                         .headers(responseHeaders)
@@ -335,6 +340,11 @@ class RequestHandler<T: Any>(private val request: OcpiRequestVariables,
      * Check response exists. Throws UnsupportedOperationException if request has not yet been forwarded.
      */
     private fun validateResponse(): HttpResponse<T> {
+        // TODO: here we can check the response signature
+        val notary = Notary.deserialize(response!!.body.signature!!)
+        println(notary.fields[0])
+        println(notary.fields.size)
+        println(notary.signatory)
         return response ?: throw UnsupportedOperationException("Non-canonical method chaining: must call a forwarding method first")
     }
 

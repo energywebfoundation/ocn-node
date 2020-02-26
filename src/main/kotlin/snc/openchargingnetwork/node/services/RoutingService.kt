@@ -333,6 +333,8 @@ class RoutingService(private val platformRepo: PlatformRepository,
         }
         responseHeaders["X-Total-Count"]?.let { headers.set("X-Total-Count", it) }
         responseHeaders["X-Limit"]?.let { headers.set("X-Limit", it) }
+        responseHeaders["OCN-Signature"]?.let { headers.set("OCN-Signature", it) }
+
         return headers
     }
 
