@@ -59,7 +59,13 @@ class RoutingServiceTest {
                 urlPathVariables = "DE/SNC/abc123",
                 urlEncodedParams = mapOf("type" to TokenType.APP_USER))
 
-        every { routingService.getPlatformID(request.headers.receiver) } returns 6L
+        every { roleRepo.findAllByCountryCodeAndPartyIDAllIgnoreCase("CH", "ABC") } returns listOf(
+                RoleEntity(
+                        platformID = 6L,
+                        role = Role.CPO,
+                        businessDetails = BusinessDetails(name = "TestCPO"),
+                        countryCode = "SNC",
+                        partyID = "CH"))
         every { routingService.getPlatformEndpoint(
                 platformID = 6L,
                 module = request.module,
@@ -101,7 +107,13 @@ class RoutingServiceTest {
                         receiver = BasicRole("ABC", "CH")),
                 urlPathVariables = "67")
 
-        every { routingService.getPlatformID(request.headers.receiver) } returns 126L
+        every { roleRepo.findAllByCountryCodeAndPartyIDAllIgnoreCase("CH", "ABC") } returns listOf(
+                RoleEntity(
+                        platformID = 126L,
+                        role = Role.CPO,
+                        businessDetails = BusinessDetails(name = "TestCPO"),
+                        countryCode = "SNC",
+                        partyID = "CH"))
         every { routingService.getProxyResource(
                 id = "67",
                 sender = request.headers.sender,
@@ -348,7 +360,7 @@ class RoutingServiceTest {
     @Test
     fun getPlatformID() {
         val role = RoleEntity(5L, Role.CPO, BusinessDetails("SENDER Co"), "SEN", "DE")
-        every { roleRepo.findByCountryCodeAndPartyIDAllIgnoreCase(role.countryCode, role.partyID) } returns role
+        every { roleRepo.findAllByCountryCodeAndPartyIDAllIgnoreCase(role.countryCode, role.partyID) } returns listOf(role)
         assertThat(routingService.getPlatformID(BasicRole(role.partyID, role.countryCode))).isEqualTo(5L)
     }
 

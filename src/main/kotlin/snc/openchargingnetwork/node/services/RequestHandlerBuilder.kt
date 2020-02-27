@@ -103,10 +103,10 @@ class RequestHandler<T: Any>(private val request: OcpiRequestVariables,
     private var notary: Notary? = null
 
     /**
-     * Is receiver known to this OCN Node?
+     * Is sender/receiver known to this OCN Node?
      */
     private var knownReceiver: Boolean = false
-
+    private var knownSender: Boolean = true
 
     /**
      * Assert the sender is allowed to send OCPI requests to this OCN Node.
@@ -123,6 +123,7 @@ class RequestHandler<T: Any>(private val request: OcpiRequestVariables,
      * If message signing is required, or OCN-Signature header present, verifies the signature.
      */
     fun validateOcnMessage(signature: String): RequestHandler<T> {
+        knownSender = false
         if (!routingService.isRoleKnownOnNetwork(request.headers.sender, belongsToMe = false)) {
             throw OcpiHubUnknownReceiverException("Sending party not registered on Open Charging Network")
         }
@@ -275,6 +276,7 @@ class RequestHandler<T: Any>(private val request: OcpiRequestVariables,
                         headers["Link"] = "$link; rel=\"next\""
 
                         if (isSigningActive(request.headers.sender)) {
+                            response.body.signature = null
                             val valuesToSign = response.copy(headers = headers.toSingleValueMap()).toSignedValues()
                             val rewriteFields = mapOf("$['headers']['link']" to it)
                             response.body.signature = rewriteAndSign(valuesToSign, rewriteFields)
@@ -306,6 +308,7 @@ class RequestHandler<T: Any>(private val request: OcpiRequestVariables,
                     headers["Location"] = newLocation
 
                     if (isSigningActive(request.headers.sender)) {
+                        response.body.signature = null
                         val valuesToSign = response.copy(headers = headers.toSingleValueMap())
                         val rewriteFields = mapOf("$['headers']['location']" to it)
                         response.body.signature = rewriteAndSign(valuesToSign.toSignedValues(), rewriteFields)
@@ -357,6 +360,7 @@ class RequestHandler<T: Any>(private val request: OcpiRequestVariables,
      *
      */
     private fun isSigningActive(recipient: BasicRole? = null): Boolean {
+        println("isSigningActive with knownSender=$knownSender and knownReceiver=$knownReceiver and recipient=$recipient")
         var active = properties.signatures || request.headers.signature != null
         if (recipient != null) {
             val recipientRules = routingService.getPlatformRules(recipient)
@@ -413,15 +417,12 @@ class RequestHandler<T: Any>(private val request: OcpiRequestVariables,
      */
     private fun validateResponse(): HttpResponse<T> {
         return response?.let {
-            // extract signature and delete from response (we don't want to include it in signedValues)
-            val signature = it.body.signature
-            it.body.signature = null
             // set receiver based on if local/remote request
-            val receiver = if (knownReceiver) { request.headers.sender } else { null }
+            val receiver = if (knownSender) { request.headers.sender } else { null }
 
             try {
                 validateOcnSignature(
-                        signature = signature,
+                        signature = it.body.signature,
                         signedValues = it.toSignedValues(),
                         signer = request.headers.receiver,
                         receiver = receiver)

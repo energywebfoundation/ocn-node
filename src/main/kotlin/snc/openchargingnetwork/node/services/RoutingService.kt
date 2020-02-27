@@ -95,7 +95,7 @@ class RoutingService(private val platformRepo: PlatformRepository,
      * get platform ID - used as foreign key in endpoint and roles repositories
      */
     fun getPlatformID(role: BasicRole): Long {
-        return roleRepo.findByCountryCodeAndPartyIDAllIgnoreCase(role.country, role.id)?.platformID
+        return roleRepo.findAllByCountryCodeAndPartyIDAllIgnoreCase(role.country, role.id).firstOrNull()?.platformID
                 ?: throw OcpiHubUnknownReceiverException("Could not find platform ID of $role")
     }
 
