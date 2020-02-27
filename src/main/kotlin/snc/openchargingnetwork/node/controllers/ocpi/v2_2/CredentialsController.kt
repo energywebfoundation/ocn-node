@@ -44,6 +44,17 @@ class CredentialsController(private val platformRepo: PlatformRepository,
                             private val routingService: RoutingService,
                             private val httpService: HttpService) {
 
+    private fun myCredentials(token: String): Credentials {
+        return Credentials(
+                token = token,
+                url = urlJoin(properties.url, "/ocpi/versions"),
+                roles = listOf(CredentialsRole(
+                        role = Role.HUB,
+                        businessDetails = BusinessDetails(name = "Open Charging Network Node"),
+                        partyID = "OCN",
+                        countryCode = "CH")))
+    }
+
     @GetMapping
     fun getCredentials(@RequestHeader("Authorization") authorization: String): OcpiResponse<Credentials> {
 
@@ -53,14 +64,7 @@ class CredentialsController(private val platformRepo: PlatformRepository,
 
             OcpiResponse(
                     statusCode = OcpiStatus.SUCCESS.code,
-                    data = Credentials(
-                            token = it.auth.tokenC!!,
-                            url = urlJoin(properties.url, "/ocpi/versions"),
-                            roles = listOf(CredentialsRole(
-                                    role = Role.HUB,
-                                    businessDetails = BusinessDetails(name = "Share&Charge Message Broker"),
-                                    partyID = "SNC",
-                                    countryCode = "DE"))))
+                    data = myCredentials(it.auth.tokenC!!))
 
         } ?: throw OcpiClientInvalidParametersException("Invalid CREDENTIALS_TOKEN_C")
     }
@@ -132,17 +136,10 @@ class CredentialsController(private val platformRepo: PlatformRepository,
             ))
         }
 
-        // return Broker's platform connection information and role credentials
+        // return OCN's platform connection information and role credentials
         return OcpiResponse(
                 statusCode = OcpiStatus.SUCCESS.code,
-                data = Credentials(
-                        token = tokenC,
-                        url = urlJoin(properties.url, "/ocpi/versions"),
-                        roles = listOf(CredentialsRole(
-                                role = Role.HUB,
-                                businessDetails = BusinessDetails(name = "Open Charging Network Node"),
-                                partyID = "OCN",
-                                countryCode = "DE"))))
+                data = myCredentials(tokenC))
     }
 
     @PutMapping
@@ -203,14 +200,7 @@ class CredentialsController(private val platformRepo: PlatformRepository,
         // return OCN Node's platform connection information and role credentials (same for all nodes)
         return OcpiResponse(
                 statusCode = OcpiStatus.SUCCESS.code,
-                data = Credentials(
-                        token = tokenC,
-                        url = urlJoin(properties.url, "/ocpi/versions"),
-                        roles = listOf(CredentialsRole(
-                                role = Role.HUB,
-                                businessDetails = BusinessDetails(name = "Open Charging Network Node"),
-                                partyID = "OCN",
-                                countryCode = "DE"))))
+                data = myCredentials(tokenC))
     }
 
     @DeleteMapping

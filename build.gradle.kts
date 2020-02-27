@@ -73,7 +73,14 @@ val test: Test by tasks
 test.apply {
     useJUnitPlatform()
     outputs.dir(snippetsDir)
+    exclude("**/integration/**")
 }
+
+tasks.register<Test>("integrationTest") {
+    useJUnitPlatform()
+    include("**/integration/**")
+}
+
 
 val asciidoctor by tasks.getting(AsciidoctorTask::class) {
     inputs.dir(snippetsDir)

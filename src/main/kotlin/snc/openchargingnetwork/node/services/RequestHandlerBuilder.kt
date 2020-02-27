@@ -270,10 +270,11 @@ class RequestHandler<T: Any>(private val request: OcpiRequestVariables,
 
                 response.headers["Link"]?.let {
                     it.extractNextLink()?.let {next ->
+
                         val id = routingService.setProxyResource(next, request.headers.sender, request.headers.receiver)
                         val proxyPaginationEndpoint = "/ocpi/${request.interfaceRole.id}/2.2/${request.module.id}/page"
                         val link = urlJoin(properties.url, proxyPaginationEndpoint, id)
-                        headers["Link"] = "$link; rel=\"next\""
+                        headers["Link"] = "<$link>; rel=\"next\""
 
                         if (isSigningActive(request.headers.sender)) {
                             response.body.signature = null
@@ -360,7 +361,6 @@ class RequestHandler<T: Any>(private val request: OcpiRequestVariables,
      *
      */
     private fun isSigningActive(recipient: BasicRole? = null): Boolean {
-        println("isSigningActive with knownSender=$knownSender and knownReceiver=$knownReceiver and recipient=$recipient")
         var active = properties.signatures || request.headers.signature != null
         if (recipient != null) {
             val recipientRules = routingService.getPlatformRules(recipient)

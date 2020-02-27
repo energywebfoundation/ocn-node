@@ -16,17 +16,18 @@
 
 package snc.openchargingnetwork.node.tools
 
-import khttp.responses.Response
-import snc.openchargingnetwork.node.models.HttpResponse
-
 fun String.extractToken() = split(" ").last()
 
 fun String.extractNextLink(): String? {
     val next = split(", ").find { it.contains("; rel=\"next\"") }
     return next?.let {
-        val start = it.indexOf('<') + 1
-        val end = it.indexOf('>') - 1
-        it.slice(IntRange(start, end))
+        val start = it.indexOf('<')
+        val end = it.indexOf('>')
+        if (start != -1 && end != -1) {
+            it.slice(IntRange(start + 1, end - 1))
+        } else {
+            null
+        }
     }
 }
 

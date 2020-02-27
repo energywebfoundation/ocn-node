@@ -327,29 +327,6 @@ class RoutingService(private val platformRepo: PlatformRepository,
 
 
     /**
-     * Proxy the Link header in paginated requests (i.e. GET sender cdrs, sessions, tariffs, tokens) so that the
-     * requesting platform is able to request the next page without needing authorization on the recipient's
-     * system.
-     */
-    fun proxyPaginationHeaders(request: OcpiRequestVariables, responseHeaders: Map<String, String>): HttpHeaders {
-        val headers = HttpHeaders()
-        responseHeaders["Link"]?.let {
-            it.extractNextLink()?.let {next ->
-                val id = setProxyResource(next, request.headers.sender, request.headers.receiver)
-                val proxyPaginationEndpoint = "/ocpi/${request.interfaceRole.id}/2.2/${request.module.id}/page"
-                val link = urlJoin(properties.url, proxyPaginationEndpoint, id)
-                headers.set("Link", "$link; rel=\"next\"")
-            }
-        }
-        responseHeaders["X-Total-Count"]?.let { headers.set("X-Total-Count", it) }
-        responseHeaders["X-Limit"]?.let { headers.set("X-Limit", it) }
-        responseHeaders["OCN-Signature"]?.let { headers.set("OCN-Signature", it) }
-
-        return headers
-    }
-
-
-    /**
      * Get a generic proxy resource by its ID
      */
     fun getProxyResource(id: String?, sender: BasicRole, receiver: BasicRole): String {
