@@ -55,7 +55,7 @@ data class OcnHeaders(@JsonProperty("Authorization") val authorization: String,
         return map
     }
 
-    fun toNotaryReadableHeaders(): OcpiHeaders {
+    fun toSignedHeaders(): OcpiHeaders {
         return OcpiHeaders(
                 correlationId = correlationID,
                 fromCountryCode = sender.country,
@@ -78,3 +78,5 @@ enum class OcnRulesListType {
     WHITELIST,
     BLACKLIST
 }
+
+data class RegistryPartyDetails(val address: String, val operator: String)

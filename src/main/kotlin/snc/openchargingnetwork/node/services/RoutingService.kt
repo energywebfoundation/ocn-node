@@ -26,6 +26,7 @@ import snc.openchargingnetwork.node.config.NodeProperties
 import snc.openchargingnetwork.node.models.OcnHeaders
 import snc.openchargingnetwork.node.models.OcnMessageHeaders
 import snc.openchargingnetwork.node.models.Receiver
+import snc.openchargingnetwork.node.models.RegistryPartyDetails
 import snc.openchargingnetwork.node.models.entities.*
 import snc.openchargingnetwork.node.models.entities.OcnRules
 import snc.openchargingnetwork.node.models.exceptions.*
@@ -126,6 +127,15 @@ class RoutingService(private val platformRepo: PlatformRepository,
             throw OcpiHubUnknownReceiverException("Recipient not registered on OCN")
         }
         return domain
+    }
+
+
+    /**
+     * Only returns party and operator addresses so far; add as needed
+     */
+    fun getPartyDetails(party: BasicRole): RegistryPartyDetails {
+        val result = registry.getPartyDetailsByOcpi(party.country.toByteArray(), party.id.toByteArray()).sendAsync().get()
+        return RegistryPartyDetails(address = result.component1(), operator = result.component5())
     }
 
 

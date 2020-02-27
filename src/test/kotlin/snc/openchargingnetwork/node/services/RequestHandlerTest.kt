@@ -131,7 +131,7 @@ class RequestHandlerTest {
                 body = exampleLocation1)
 
         val privateKey = generatePrivateKey()
-        val signature = Notary().sign(variables.toNotaryReadableVariables(), privateKey)
+        val signature = Notary().sign(variables.toSignedValues(), privateKey)
         variables.headers.signature = signature.serialize()
 
         val requestHandler = requestHandlerBuilder.build<Unit>(variables)
@@ -211,7 +211,7 @@ class RequestHandlerTest {
                 body = exampleLocation1)
 
         val privateKey = generatePrivateKey()
-        val signature = Notary().sign(variables.toNotaryReadableVariables(), privateKey)
+        val signature = Notary().sign(variables.toSignedValues(), privateKey)
         variables.headers.signature = signature.serialize()
 
         val requestHandler = requestHandlerBuilder.build<Unit>(variables)

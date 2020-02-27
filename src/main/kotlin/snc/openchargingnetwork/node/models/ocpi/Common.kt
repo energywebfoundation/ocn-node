@@ -62,9 +62,9 @@ data class OcpiRequestVariables(@JsonProperty("module") val module: ModuleID,
                                 @JsonProperty("proxy_resource") val proxyResource: String? = null,
                                 @JsonProperty("body") val body: Any? = null) {
 
-    fun toNotaryReadableVariables(): OcpiRequest<*> {
+    fun toSignedValues(): OcpiRequest<*> {
         return OcpiRequest(
-                headers = headers.toNotaryReadableHeaders(),
+                headers = headers.toSignedHeaders(),
                 params = urlEncodedParams,
                 body = body)
         }
@@ -80,7 +80,7 @@ data class OcpiResponse<T>(@JsonProperty("status_code") val statusCode: Int,
                            @JsonProperty("status_message") val statusMessage: String? = null,
                            @JsonProperty("data") val data: T? = null,
                            @JsonProperty("timestamp") val timestamp: String = DateTimeFormatter.ISO_INSTANT.format(Instant.now()),
-                           @JsonProperty("ocn_signature") val signature: String? = null)
+                           @JsonProperty("ocn_signature") var signature: String? = null)
 
 
 @Embeddable

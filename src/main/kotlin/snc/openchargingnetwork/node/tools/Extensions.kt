@@ -16,6 +16,9 @@
 
 package snc.openchargingnetwork.node.tools
 
+import khttp.responses.Response
+import snc.openchargingnetwork.node.models.HttpResponse
+
 fun String.extractToken() = split(" ").last()
 
 fun String.extractNextLink(): String? {

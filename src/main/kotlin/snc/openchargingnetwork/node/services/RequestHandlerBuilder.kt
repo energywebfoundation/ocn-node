@@ -20,15 +20,19 @@ import org.springframework.http.HttpHeaders
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import org.web3j.crypto.Credentials
+import org.web3j.crypto.Keys
 import shareandcharge.openchargingnetwork.notary.Notary
+import shareandcharge.openchargingnetwork.notary.OcpiRequest
 import snc.openchargingnetwork.node.config.NodeProperties
 import snc.openchargingnetwork.node.models.HttpResponse
 import snc.openchargingnetwork.node.models.Receiver
 import snc.openchargingnetwork.node.models.exceptions.OcpiClientInvalidParametersException
 import snc.openchargingnetwork.node.models.exceptions.OcpiHubUnknownReceiverException
+import snc.openchargingnetwork.node.models.exceptions.OcpiServerGenericException
 import snc.openchargingnetwork.node.models.ocpi.BasicRole
 import snc.openchargingnetwork.node.models.ocpi.OcpiRequestVariables
 import snc.openchargingnetwork.node.models.ocpi.OcpiResponse
+import snc.openchargingnetwork.node.tools.extractNextLink
 import snc.openchargingnetwork.node.tools.generateUUIDv4Token
 import snc.openchargingnetwork.node.tools.urlJoin
 
@@ -98,6 +102,11 @@ class RequestHandler<T: Any>(private val request: OcpiRequestVariables,
      */
     private var notary: Notary? = null
 
+    /**
+     * Is receiver known to this OCN Node?
+     */
+    private var knownReceiver: Boolean = false
+
 
     /**
      * Assert the sender is allowed to send OCPI requests to this OCN Node.
@@ -131,7 +140,7 @@ class RequestHandler<T: Any>(private val request: OcpiRequestVariables,
      * Forward the request to the receiver.
      * Checks whether receiver is LOCAL or REMOTE.
      *      - If LOCAL, makes direct request to receiver.
-     *      - If REMOTE, forwards request to reciever's OCN Node as written in the Registry.
+     *      - If REMOTE, forwards request to receiver's OCN Node as written in the Registry.
      *
      * @param proxied tells the RequestHandler that this request requires a proxied resource that was previously
      * saved by the OCN Node.
@@ -139,13 +148,24 @@ class RequestHandler<T: Any>(private val request: OcpiRequestVariables,
     fun forwardRequest(proxied: Boolean = false): RequestHandler<T> {
         response = when (routingService.validateReceiver(request.headers.receiver)) {
             Receiver.LOCAL -> {
-                routingService.validateWhitelisted(request.headers.sender, request.headers.receiver, request.module)
-                validateOcnSignature(request.headers.receiver)
+                knownReceiver = true
+                routingService.validateWhitelisted(
+                        sender = request.headers.sender,
+                        receiver = request.headers.receiver,
+                        module = request.module)
+                validateOcnSignature(
+                        signature = request.headers.signature,
+                        signedValues = request.toSignedValues(),
+                        signer = request.headers.sender,
+                        receiver = request.headers.receiver)
                 val (url, headers) = routingService.prepareLocalPlatformRequest(request, proxied)
                 httpService.makeOcpiRequest(url, headers, request)
             }
             Receiver.REMOTE -> {
-                validateOcnSignature()
+                validateOcnSignature(
+                        signature = request.headers.signature,
+                        signedValues = request.toSignedValues(),
+                        signer = request.headers.sender)
                 val (url, headers, body) = routingService.prepareRemotePlatformRequest(request, proxied)
                 httpService.postOcnMessage(url, headers, body)
             }
@@ -157,7 +177,7 @@ class RequestHandler<T: Any>(private val request: OcpiRequestVariables,
      * Used by the commands module's RECEIVER interface, which requires the modifying of the "response_url".
      * Checks whether receiver is LOCAL or REMOTE.
      *      - If LOCAL, makes direct request to receiver.
-     *      - If REMOTE, forwards request to reciever's OCN Node as written in the Registry.
+     *      - If REMOTE, forwards request to receiver's OCN Node as written in the Registry.
      *
      * @param responseUrl the original response_url as defined by the sender
      * @param modifyRequest callback which allows the request (OcpiRequestVariables) used by this RequestHandler to
@@ -165,29 +185,28 @@ class RequestHandler<T: Any>(private val request: OcpiRequestVariables,
      */
     fun forwardModifiableRequest(responseUrl: String, modifyRequest: (newResponseUrl: String) -> OcpiRequestVariables): RequestHandler<T> {
         val proxyPath = "/ocpi/sender/2.2/commands/${request.urlPathVariables}"
-
-        fun rewriteAndSign(modifiedRequest: OcpiRequestVariables): String? {
-            if (isSigningActive()) {
-                val rewriteFields = mapOf("$['body']['response_url']" to responseUrl)
-                val notary = validateNotary()
-                notary.stash(rewriteFields)
-                notary.sign(modifiedRequest.toNotaryReadableVariables(), Credentials.create(properties.privateKey).address)
-                return notary.serialize()
-            }
-            return null
-        }
+        val rewriteFields = mapOf("$['body']['response_url']" to responseUrl)
 
         response = when (routingService.validateReceiver(request.headers.receiver)) {
 
             Receiver.LOCAL -> {
-                routingService.validateWhitelisted(request.headers.sender, request.headers.receiver, request.module)
-                validateOcnSignature(request.headers.receiver)
+                knownReceiver = true
+                routingService.validateWhitelisted(
+                        sender = request.headers.sender,
+                        receiver = request.headers.receiver,
+                        module = request.module)
+                validateOcnSignature(
+                        signature = request.headers.signature,
+                        signedValues = request.toSignedValues(),
+                        signer = request.headers.sender,
+                        receiver = request.headers.receiver)
+
                 // save the original resource (response_url), returning a uid pointing to its location
                 val resourceID = routingService.setProxyResource(responseUrl, request.headers.receiver, request.headers.sender)
                 // use the callback to modify the original request with the new response_url
                 val modifiedRequest = modifyRequest(urlJoin(properties.url, proxyPath, resourceID))
                 // use the notary to securely modify the request signature
-                modifiedRequest.headers.signature = rewriteAndSign(modifiedRequest)
+                modifiedRequest.headers.signature = rewriteAndSign(modifiedRequest.toSignedValues(), rewriteFields)
                 // send the request with the modified body
                 val (url, headers) = routingService.prepareLocalPlatformRequest(request)
                 httpService.makeOcpiRequest(url, headers, modifiedRequest)
@@ -195,7 +214,10 @@ class RequestHandler<T: Any>(private val request: OcpiRequestVariables,
 
             Receiver.REMOTE -> {
 
-                validateOcnSignature()
+                validateOcnSignature(
+                        signature = request.headers.signature,
+                        signedValues = request.toSignedValues(),
+                        signer = request.headers.sender)
 
                 val (url, headers, body) = routingService.prepareRemotePlatformRequest(request) {
                     // create a uid that will point to the original response_url
@@ -203,7 +225,7 @@ class RequestHandler<T: Any>(private val request: OcpiRequestVariables,
                     // use the callback to modify the original request with the new response_url
                     val modifiedRequest = modifyRequest(urlJoin(it, proxyPath, proxyUID))
                     // use the notary to securely modify the request signature
-                    modifiedRequest.headers.signature = rewriteAndSign(modifiedRequest)
+                    modifiedRequest.headers.signature = rewriteAndSign(modifiedRequest.toSignedValues(), rewriteFields)
                     // add the proxy uid and resource to the outgoing body (read by the recipient's OCN node)
                     modifiedRequest.copy(proxyUID = proxyUID, proxyResource = responseUrl)
                 }
@@ -222,7 +244,6 @@ class RequestHandler<T: Any>(private val request: OcpiRequestVariables,
     fun getResponse(): ResponseEntity<OcpiResponse<T>> {
         val response = validateResponse()
         val headers = HttpHeaders()
-        response.headers["OCN-Signature"]?.let { headers.set("OCN-Signature", it) }
         return ResponseEntity
                 .status(response.statusCode)
                 .headers(headers)
@@ -239,7 +260,28 @@ class RequestHandler<T: Any>(private val request: OcpiRequestVariables,
                 request.urlPathVariables?.let {
                     routingService.deleteProxyResource(it)
                 }
-                val headers = routingService.proxyPaginationHeaders(request, response.headers)
+                // TODO: stash link and update signature
+                val headers = HttpHeaders()
+
+                headers["X-Total-Count"]?.let { headers["X-Total-Count"] = it }
+                headers["X-Limit"]?.let { headers["X-Limit"] = it }
+                headers["OCN-Signature"]?.let { headers["OCN-Signature"] = it }
+
+                response.headers["Link"]?.let {
+                    it.extractNextLink()?.let {next ->
+                        val id = routingService.setProxyResource(next, request.headers.sender, request.headers.receiver)
+                        val proxyPaginationEndpoint = "/ocpi/${request.interfaceRole.id}/2.2/${request.module.id}/page"
+                        val link = urlJoin(properties.url, proxyPaginationEndpoint, id)
+                        headers["Link"] = "$link; rel=\"next\""
+
+                        if (isSigningActive(request.headers.sender)) {
+                            val valuesToSign = response.copy(headers = headers.toSingleValueMap()).toSignedValues()
+                            val rewriteFields = mapOf("$['headers']['link']" to it)
+                            response.body.signature = rewriteAndSign(valuesToSign, rewriteFields)
+                        }
+                    }
+                }
+
                 return ResponseEntity
                         .status(response.statusCode)
                         .headers(headers)
@@ -258,10 +300,17 @@ class RequestHandler<T: Any>(private val request: OcpiRequestVariables,
             true -> {
                 val headers = HttpHeaders()
                 response.headers["Location"]?.let {
+                    // TODO: stash location and update signature
                     val resourceId = routingService.setProxyResource(it, request.headers.sender, request.headers.receiver)
-                    headers["Location"] = urlJoin(properties.url, proxyPath, resourceId)
+                    val newLocation = urlJoin(properties.url, proxyPath, resourceId)
+                    headers["Location"] = newLocation
+
+                    if (isSigningActive(request.headers.sender)) {
+                        val valuesToSign = response.copy(headers = headers.toSingleValueMap())
+                        val rewriteFields = mapOf("$['headers']['location']" to it)
+                        response.body.signature = rewriteAndSign(valuesToSign.toSignedValues(), rewriteFields)
+                    }
                 }
-                response.headers["OCN-Signature"]?.let { headers.set("OCN-Signature", it) }
 
                 ResponseEntity
                         .status(response.statusCode)
@@ -284,7 +333,6 @@ class RequestHandler<T: Any>(private val request: OcpiRequestVariables,
                 response.headers["Link"]?.let { responseHeaders.set("Link", it) }
                 response.headers["X-Total-Count"]?.let { responseHeaders.set("X-Total-Count", it) }
                 response.headers["X-Limit"]?.let { responseHeaders.set("X-Limit", it) }
-                response.headers["OCN-Signature"]?.let { responseHeaders.set("OCN-Signature", it) }
                 ResponseEntity
                         .status(response.statusCode)
                         .headers(responseHeaders)
@@ -320,32 +368,68 @@ class RequestHandler<T: Any>(private val request: OcpiRequestVariables,
     /**
      * Use the OCN Notary to validate a request's "OCN-Signature" header. Only validated if signing is active.
      *
-     * @param recipient if forwarding to a local party, provide the recipient role information to assess whether they
-     * require messages to be signed (overriding the OCN Node preferences).
+     * @param signature the OCN signature contained in the request header or response body
+     * @param signedValues the values signed by the sender
+     * @param signer expected signatory of the signature
+     * @param receiver optional receiver of message (checks their OcnRules for signature verification requirement)
      */
-    private fun validateOcnSignature(recipient: BasicRole? = null) {
-        if (isSigningActive(recipient)) {
-            val result = request.headers.signature?.let {
+    private fun validateOcnSignature(signature: String?, signedValues: OcpiRequest<*>, signer: BasicRole, receiver: BasicRole? = null) {
+        if (isSigningActive(receiver)) {
+            val result = signature?.let {
                 notary = Notary.deserialize(it)
-                notary?.verify(request.toNotaryReadableVariables())
+                notary?.verify(signedValues)
             }
             when {
-                result == null -> throw OcpiClientInvalidParametersException("Missing required header: \"OCN-Signature\"")
-                !result.isValid -> throw OcpiClientInvalidParametersException("Unable to verify signature: ${result.error}")
+                result == null -> throw OcpiClientInvalidParametersException("Missing OCN Signature")
+                !result.isValid -> throw OcpiClientInvalidParametersException("Invalid signature: ${result.error}")
+            }
+
+            val party = routingService.getPartyDetails(signer)
+            val actualSignatory = Keys.toChecksumAddress(notary?.signatory)
+            val signedByParty = actualSignatory == Keys.toChecksumAddress(party.address)
+            val signedByOperator = actualSignatory == Keys.toChecksumAddress(party.operator)
+
+            if (!signedByParty && !signedByOperator) {
+                throw OcpiServerGenericException("Actual signatory ${notary?.signatory} differs from expected signatory ${party.address} (party) or ${party.operator} (operator)")
             }
         }
+    }
+
+    /**
+     * Used by the OCN Node to "stash" and "rewrite" the signature of a request if it needs to modify values
+     */
+    private fun rewriteAndSign(valuesToSign: OcpiRequest<*>, rewriteFields: Map<String, Any?>): String? {
+        if (isSigningActive()) {
+            val notary = validateNotary()
+            notary.stash(rewriteFields)
+            notary.sign(valuesToSign, Credentials.create(properties.privateKey).address)
+            return notary.serialize()
+        }
+        return null
     }
 
     /**
      * Check response exists. Throws UnsupportedOperationException if request has not yet been forwarded.
      */
     private fun validateResponse(): HttpResponse<T> {
-        // TODO: here we can check the response signature
-        val notary = Notary.deserialize(response!!.body.signature!!)
-        println(notary.fields[0])
-        println(notary.fields.size)
-        println(notary.signatory)
-        return response ?: throw UnsupportedOperationException("Non-canonical method chaining: must call a forwarding method first")
+        return response?.let {
+            // extract signature and delete from response (we don't want to include it in signedValues)
+            val signature = it.body.signature
+            it.body.signature = null
+            // set receiver based on if local/remote request
+            val receiver = if (knownReceiver) { request.headers.sender } else { null }
+
+            try {
+                validateOcnSignature(
+                        signature = signature,
+                        signedValues = it.toSignedValues(),
+                        signer = request.headers.receiver,
+                        receiver = receiver)
+            } catch (e: OcpiClientInvalidParametersException) {
+                throw OcpiServerGenericException("Unable to verify response signature: ${e.message}")
+            }
+            it
+        } ?: throw UnsupportedOperationException("Non-canonical method chaining: must call a forwarding method first")
     }
 
     /**
