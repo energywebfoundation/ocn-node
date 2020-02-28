@@ -1,16 +1,17 @@
-package snc.openchargingnetwork.node.integration
+package snc.openchargingnetwork.node.integration.parties
 
 import io.javalin.Javalin
-import org.web3j.crypto.Credentials as KeyPair
+import snc.openchargingnetwork.node.integration.JavalinException
+import snc.openchargingnetwork.node.integration.coerceToJson
+import snc.openchargingnetwork.node.integration.getRegistryInstance
+import snc.openchargingnetwork.node.integration.getTokenA
 import snc.openchargingnetwork.node.models.ocpi.*
-import snc.openchargingnetwork.node.tools.extractToken
 import snc.openchargingnetwork.node.tools.generateUUIDv4Token
 
-class CpoServer(private val party: BasicRole, private val port: Int) {
+open class PartyServer(private val party: BasicRole, private val port: Int) {
 
-    private val app = Javalin.create().start(port)
-    private val tokenB = generateUUIDv4Token()
-
+    val app: Javalin = Javalin.create().start(port)
+    private val tokenB: String = generateUUIDv4Token()
     lateinit var tokenC: String
     lateinit var node: String
 
@@ -18,7 +19,6 @@ class CpoServer(private val party: BasicRole, private val port: Int) {
         app.exception(JavalinException::class.java) { e, ctx ->
             ctx.status(e.httpCode).json(OcpiResponse<Unit>(statusCode = e.ocpiCode, statusMessage = e.message))
         }
-
 
         app.before {
             if (it.header("Authorization") != "Token $tokenB") {
@@ -32,20 +32,9 @@ class CpoServer(private val party: BasicRole, private val port: Int) {
                     data = listOf(Version(version = "2.2", url = urlBuilder("/ocpi/versions/2.2")))
             ))
         }
-
-        app.get("/ocpi/versions/2.2") {
-            it.json(OcpiResponse(
-                    statusCode = 1000,
-                    data = VersionDetail(version = "2.2", endpoints = listOf(
-                            Endpoint(
-                                    identifier = "credentials",
-                                    role = InterfaceRole.RECEIVER,
-                                    url = urlBuilder("/ocpi/cpo/2.2/credentials"))))
-            ))
-        }
     }
 
-    fun setPartyInRegistry(registryAddress: String, credentials: KeyPair, operator: String) {
+    fun setPartyInRegistry(registryAddress: String, credentials: org.web3j.crypto.Credentials, operator: String) {
         val registry = getRegistryInstance(credentials, registryAddress)
         registry.setParty(party.country.toByteArray(), party.id.toByteArray(), listOf(0.toBigInteger()), operator).sendAsync().get()
         node = registry.getNode(operator).sendAsync().get()
@@ -66,8 +55,20 @@ class CpoServer(private val party: BasicRole, private val port: Int) {
         tokenC = response.jsonObject.getJSONObject("data").getString("token")
     }
 
-    private fun urlBuilder(path: String): String {
+    fun urlBuilder(path: String): String {
         return "http://localhost:$port$path"
+    }
+
+    fun getHeaders(to: BasicRole): Map<String, String> {
+        return mapOf(
+                "Authorization" to "Token $tokenC",
+                "X-Request-ID" to generateUUIDv4Token(),
+                "X-Correlation-ID" to generateUUIDv4Token(),
+                "OCPI-From-Country-Code" to party.country,
+                "OCPI-From-Party-Id" to party.id,
+                "OCPI-To-Country-Code" to to.country,
+                "OCPI-To-Party-Id" to to.id
+        )
     }
 
 }

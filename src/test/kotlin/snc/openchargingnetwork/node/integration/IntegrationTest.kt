@@ -1,12 +1,19 @@
 package snc.openchargingnetwork.node.integration
 
+import com.fasterxml.jackson.module.kotlin.readValue
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.web3j.crypto.Credentials
+import snc.openchargingnetwork.node.data.exampleLocation1
+import snc.openchargingnetwork.node.integration.parties.CpoServer
+import snc.openchargingnetwork.node.integration.parties.MspServer
 import snc.openchargingnetwork.node.models.ocpi.BasicRole
+import snc.openchargingnetwork.node.models.ocpi.Location
 
 class IntegrationTest {
+
+    private lateinit var mspServer: MspServer
 
     @BeforeAll
     fun bootStrap() {
@@ -34,7 +41,10 @@ class IntegrationTest {
         cpoServer2.registerCredentials()
 
         // MSP
-
+        val msp = Credentials.create("0x659cbb0e2411a44db63778987b1e22153c086a95eb6b18bdf89de078917abc63")
+        mspServer = MspServer(BasicRole("MSP", "DE"), 8200)
+        mspServer.setPartyInRegistry(registry.contractAddress, msp, node1.address)
+        mspServer.registerCredentials()
     }
 
     @Test
@@ -50,14 +60,42 @@ class IntegrationTest {
 
     @Test
     fun registry() {
-        val response1 = khttp.get("http://localhost:8080/ocn/registry/node/de/cpo")
-        val response2 = khttp.get("http://localhost:8081/ocn/registry/node/de/cpo")
+        val response1 = khttp.get("http://localhost:8080/ocn/registry/node/de/msp")
+        val response2 = khttp.get("http://localhost:8081/ocn/registry/node/de/msp")
 
         assertThat(response1.statusCode).isEqualTo(200)
         assertThat(response2.statusCode).isEqualTo(200)
 
-        assertThat(response1.text).isEqualTo("Party not registered on OCN")
-        assertThat(response2.text).isEqualTo("Party not registered on OCN")
+        val expectedUrl = "http://localhost:8080"
+        val expectedAddress = "0xf17f52151ebef6c7334fad080c5704d77216b732".checksum()
+
+        assertThat(response1.jsonObject.getString("url")).isEqualTo(expectedUrl)
+        assertThat(response1.jsonObject.getString("address").checksum()).isEqualTo(expectedAddress)
+        assertThat(response2.jsonObject.getString("url")).isEqualTo(expectedUrl)
+        assertThat(response2.jsonObject.getString("address").checksum()).isEqualTo(expectedAddress)
     }
+
+    @Test
+    fun get_location_local() {
+        val to = BasicRole("CPA", "CH")
+        val response = mspServer.getLocation(to)
+        val json = response.jsonObject
+
+        assertThat(response.statusCode).isEqualTo(200)
+        assertThat(json.getInt("status_code")).isEqualTo(1000)
+        assertThat(objectMapper.readValue<Location>(json.getJSONObject("data").toString())).isEqualTo(exampleLocation1)
+    }
+
+    @Test
+    fun get_location_remote() {
+        val to = BasicRole("CPB", "CH")
+        val response = mspServer.getLocation(to)
+        val json = response.jsonObject
+
+        assertThat(response.statusCode).isEqualTo(200)
+        assertThat(json.getInt("status_code")).isEqualTo(1000)
+        assertThat(objectMapper.readValue<Location>(json.getJSONObject("data").toString())).isEqualTo(exampleLocation1)
+    }
+
 
 }

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import org.springframework.boot.builder.SpringApplicationBuilder
 import org.web3j.crypto.Credentials
+import org.web3j.crypto.Keys
 import org.web3j.protocol.Web3j
 import org.web3j.protocol.http.HttpService
 import org.web3j.tx.ClientTransactionManager
@@ -56,4 +57,8 @@ fun getTokenA(node: String, parties: List<BasicRole>): String {
 
 fun coerceToJson(obj: Any): Any {
     return objectMapper.readValue(objectMapper.writeValueAsString(obj))
+}
+
+fun String.checksum(): String {
+    return Keys.toChecksumAddress(this)
 }
