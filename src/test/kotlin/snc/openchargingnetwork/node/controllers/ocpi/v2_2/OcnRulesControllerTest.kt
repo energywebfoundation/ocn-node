@@ -9,12 +9,14 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
 import org.springframework.http.MediaType
+import org.springframework.http.ResponseEntity
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
 import snc.openchargingnetwork.node.models.OcnRules
 import snc.openchargingnetwork.node.models.OcnRulesList
 import snc.openchargingnetwork.node.models.ocpi.BasicRole
+import snc.openchargingnetwork.node.models.ocpi.OcpiResponse
 import snc.openchargingnetwork.node.services.OcnRulesService
 import snc.openchargingnetwork.node.models.ocpi.WhiteListModules
 
@@ -30,7 +32,7 @@ class OcnRulesControllerTest(@Autowired val mockMvc: MockMvc) {
         val expected = OcnRules(
                 signatures = false,
                 whitelist = OcnRulesList(false, listOf()),
-                blacklist = OcnRulesList(true, listOf(BasicRole("ABC", "DE"))))
+                blacklist = OcnRulesList(true, listOf(WhiteListModules("ABC", "DE", listOf("cdrs", "sessions")))))
 
         every { ocnRulesService.getRules("Token token-c") } returns expected
 
@@ -43,6 +45,20 @@ class OcnRulesControllerTest(@Autowired val mockMvc: MockMvc) {
                 .andExpect(jsonPath("\$.data.signatures").value(expected.signatures))
                 .andExpect(jsonPath("\$.data.whitelist.active").value(expected.whitelist.active))
                 .andExpect(jsonPath("\$.data.blacklist.active").value(expected.blacklist.active))
+                .andExpect(jsonPath("\$.timestamp").isString)
+    }
+
+    @Test
+    fun enableWhitelist() {
+        every { ocnRulesService.enableWhitelist("Token token-c") } just Runs
+
+        mockMvc.perform(post("/ocpi/receiver/2.2/ocnrules/enableWhitelist")
+                .header("authorization", "Token token-c"))
+                .andExpect(status().isOk)
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("\$.status_code").value(1000))
+                .andExpect(jsonPath("\$.status_message").doesNotExist())
+                .andExpect(jsonPath("\$.data").doesNotExist())
                 .andExpect(jsonPath("\$.timestamp").isString)
     }
 
@@ -66,9 +82,10 @@ class OcnRulesControllerTest(@Autowired val mockMvc: MockMvc) {
 
     @Test
     fun updateBlacklist() {
-        val body = listOf(BasicRole("ABC","DE"), BasicRole("DEF","DE"))
+        val body = listOf(WhiteListModules("ABC", "DE", listOf("cdrs", "sessions")), WhiteListModules("DEF", "DE", listOf("locations", "tariffs")))
 
         every { ocnRulesService.updateBlacklist("Token token-c", body) } just Runs
+
 
         mockMvc.perform(put("/ocpi/receiver/2.2/ocnrules/blacklist")
                 .header("authorization", "Token token-c")
@@ -84,12 +101,15 @@ class OcnRulesControllerTest(@Autowired val mockMvc: MockMvc) {
 
     @Test
     fun appendToWhitelist() {
-        val party = BasicRole("ABC", "DE")
+        val body = WhiteListModules("ABC", "DE", listOf("cdrs", "sessions"))
 
-        every { ocnRulesService.appendToWhitelist("Token token-c", party) } just Runs
+        every { ocnRulesService.appendToWhitelist("Token token-c", body) } just Runs
 
-        mockMvc.perform(post("/ocpi/receiver/2.2/ocnrules/whitelist/de/abc")
-                .header("authorization", "Token token-c"))
+
+        mockMvc.perform(post("/ocpi/receiver/2.2/ocnrules/whitelist")
+                .header("authorization", "Token token-c")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jacksonObjectMapper().writeValueAsString(body)))
                 .andExpect(status().isOk)
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("\$.status_code").value(1000))
@@ -100,12 +120,14 @@ class OcnRulesControllerTest(@Autowired val mockMvc: MockMvc) {
 
     @Test
     fun appendToBlacklist() {
-        val party = BasicRole("ABC","DE")
+        val body = WhiteListModules("ABC","DE", listOf("sessions", "cdrs"))
 
-        every { ocnRulesService.appendToBlacklist("Token token-c", party) } just Runs
+        every { ocnRulesService.appendToBlacklist("Token token-c", body) } just Runs
 
-        mockMvc.perform(post("/ocpi/receiver/2.2/ocnrules/blacklist/de/abc")
-                .header("authorization", "Token token-c"))
+        mockMvc.perform(post("/ocpi/receiver/2.2/ocnrules/blacklist")
+                .header("authorization", "Token token-c")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jacksonObjectMapper().writeValueAsString(body)))
                 .andExpect(status().isOk)
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("\$.status_code").value(1000))

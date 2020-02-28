@@ -45,6 +45,14 @@ class OcnRulesController(private val ocnRulesService: OcnRulesService) {
     }
 
     @Transactional
+    @PostMapping("/ocpi/receiver/2.2/ocnrules/enableWhitelist")
+    fun enableWhitelist(@RequestHeader("authorization") authorization: String): ResponseEntity<OcpiResponse<Unit>> {
+
+        ocnRulesService.enableWhitelist(authorization)
+        return ResponseEntity.ok(OcpiResponse(statusCode = 1000))
+    }
+
+    @Transactional
     @PutMapping("/ocpi/receiver/2.2/ocnrules/whitelist")
     fun updateWhitelist(@RequestHeader("authorization") authorization: String,
                         @RequestBody body: List<WhiteListModules>): ResponseEntity<OcpiResponse<Unit>> {
@@ -56,30 +64,27 @@ class OcnRulesController(private val ocnRulesService: OcnRulesService) {
     @Transactional
     @PutMapping("/ocpi/receiver/2.2/ocnrules/blacklist")
     fun updateBlacklist(@RequestHeader("authorization") authorization: String,
-                        @RequestBody body: List<BasicRole>): ResponseEntity<OcpiResponse<Unit>> {
+                        @RequestBody body: List<WhiteListModules>): ResponseEntity<OcpiResponse<Unit>> {
 
         ocnRulesService.updateBlacklist(authorization, body)
         return ResponseEntity.ok(OcpiResponse(statusCode = 1000))
     }
 
     @Transactional
-    @PostMapping("/ocpi/receiver/2.2/ocnrules/whitelist/{countryCode}/{partyID}")
+    @PostMapping("/ocpi/receiver/2.2/ocnrules/whitelist")
     fun appendToWhitelist(@RequestHeader("authorization") authorization: String,
-                          @PathVariable countryCode: String,
-                          @PathVariable partyID: String): ResponseEntity<OcpiResponse<Unit>> {
+                          @RequestBody body: WhiteListModules  ): ResponseEntity<OcpiResponse<Unit>> {
 
-        val party = BasicRole(country = countryCode, id = partyID).toUpperCase()
-        ocnRulesService.appendToWhitelist(authorization, party)
+        ocnRulesService.appendToWhitelist(authorization, body)
         return ResponseEntity.ok(OcpiResponse(statusCode = 1000))
     }
 
     @Transactional
-    @PostMapping("/ocpi/receiver/2.2/ocnrules/blacklist/{countryCode}/{partyID}")
+    @PostMapping("/ocpi/receiver/2.2/ocnrules/blacklist")
     fun appendToBlacklist(@RequestHeader("authorization") authorization: String,
-                          @PathVariable countryCode: String,
-                          @PathVariable partyID: String): ResponseEntity<OcpiResponse<Unit>> {
-        val party = BasicRole(country = countryCode, id = partyID).toUpperCase()
-        ocnRulesService.appendToBlacklist(authorization, party)
+                          @RequestBody body: WhiteListModules  ): ResponseEntity<OcpiResponse<Unit>> {
+
+        ocnRulesService.appendToBlacklist(authorization, body)
         return ResponseEntity.ok(OcpiResponse(statusCode = 1000))
     }
 

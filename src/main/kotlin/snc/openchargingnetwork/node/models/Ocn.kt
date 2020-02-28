@@ -23,7 +23,7 @@ import org.springframework.web.bind.annotation.ModelAttribute
 import org.springframework.web.bind.annotation.RequestHeader
 import shareandcharge.openchargingnetwork.notary.OcpiHeaders
 import snc.openchargingnetwork.node.models.ocpi.BasicRole
-
+import snc.openchargingnetwork.node.models.ocpi.WhiteListModules
 
 data class OcnMessageHeaders(val requestID: String,
                              val signature: String) {
@@ -73,7 +73,7 @@ enum class Receiver {
     REMOTE,
 }
 
-data class OcnRulesList(val active: Boolean, val list: List<BasicRole>)
+data class OcnRulesList(val active: Boolean, val list: List<WhiteListModules>)
 data class OcnRules(val signatures: Boolean, val whitelist: OcnRulesList, val blacklist: OcnRulesList)
 
 enum class OcnRulesListType {

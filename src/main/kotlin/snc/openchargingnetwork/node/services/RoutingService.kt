@@ -165,11 +165,14 @@ class RoutingService(private val platformRepo: PlatformRepository,
      * Check receiver has allowed sender to send them messages
      */
     fun validateWhitelisted(sender: BasicRole, receiver: BasicRole, module: ModuleID) {
+
         val platform = getPlatform(receiver)
         val rulesList = ocnRulesListRepo.findAllByPlatformID(platform.id)
+
         val whitelisted = when {
             platform.rules.whitelist -> rulesList.any { validateWhiteListWithModule(it, sender, module)  }
-            platform.rules.blacklist -> rulesList.none { it.counterparty == sender }
+
+            platform.rules.blacklist -> rulesList.none {  validateBlackListWithModule(it, sender, module) }
             else -> true
         }
         if (!whitelisted) {
@@ -178,58 +181,113 @@ class RoutingService(private val platformRepo: PlatformRepository,
     }
 
     /**
-     * check receiver has allowed the module of sender to send them message
+     * For whitelist check receiver has allowed the module of sender to send them message
      */
     fun validateWhiteListWithModule (it: OcnRulesListEntity, sender: BasicRole, module: ModuleID): Boolean {
         if(it.counterparty == sender){
             when(module) {
                 ModuleID.CDRS -> {
-                    if( it.cdrs === true) {
+                    if( !it.cdrs ) {
                         throw OcpiClientGenericException("CDRS Module is blocked")
                     }
                     return true
                 }
                 ModuleID.CHARGING_PROFILES -> {
-                    if( it.chargingprofiles === true) {
+                    if( !it.chargingprofiles ) {
                         throw OcpiClientGenericException("Charging Profiles Module is blocked")
                     }
                     return true
                 }
                 ModuleID.COMMANDS -> {
-                    if( it.commands === true) {
+                    if( !it.commands ) {
                         throw OcpiClientGenericException("Commands Module is blocked")
                     }
                     return true
                 }
                 ModuleID.LOCATIONS -> {
-                    if( it.locations === true) {
+                    if( !it.locations ) {
                         throw OcpiClientGenericException("Locations Module is blocked")
                     }
                     return true
                 }
                 ModuleID.SESSIONS -> {
-                    if( it.sessions === true) {
+                    if( !it.sessions ) {
                         throw OcpiClientGenericException("Session Module is blocked")
                     }
                     return true
                 }
                 ModuleID.TARIFFS -> {
-                    if( it.tariffs === true) {
+                    if( !it.tariffs ) {
                         throw OcpiClientGenericException("Tariffs Module is blocked")
                     }
                     return true
                 }
                 ModuleID.TOKENS -> {
-                    if( it.tokens === true) {
+                    if( !it.tokens ) {
                         throw OcpiClientGenericException("Token Module is blocked")
                     }
                     return true
                 }
-                else -> return true
+                else -> return false
             }
         }
         return false;
     }
+
+    /**
+     * For blacklist check receiver has allowed the module of sender to send them message
+     */
+    fun validateBlackListWithModule (it: OcnRulesListEntity, sender: BasicRole, module: ModuleID): Boolean {
+        if(it.counterparty == sender){
+            when(module) {
+                ModuleID.CDRS -> {
+                    if( it.cdrs ) {
+                        throw OcpiClientGenericException("CDRS Module is blocked")
+                    }
+                    return false
+                }
+                ModuleID.CHARGING_PROFILES -> {
+                    if( it.chargingprofiles ) {
+                        throw OcpiClientGenericException("Charging Profiles Module is blocked")
+                    }
+                    return false
+                }
+                ModuleID.COMMANDS -> {
+                    if( it.commands ) {
+                        throw OcpiClientGenericException("Commands Module is blocked")
+                    }
+                    return false
+                }
+                ModuleID.LOCATIONS -> {
+                    if( it.locations ) {
+                        throw OcpiClientGenericException("Locations Module is blocked")
+                    }
+                    return false
+                }
+                ModuleID.SESSIONS -> {
+                    if( it.sessions ) {
+                        throw OcpiClientGenericException("Session Module is blocked")
+                    }
+                    return false
+                }
+                ModuleID.TARIFFS -> {
+                    if( it.tariffs ) {
+                        throw OcpiClientGenericException("Tariffs Module is blocked")
+                    }
+                    return false
+                }
+                ModuleID.TOKENS -> {
+                    if( it.tokens ) {
+                        throw OcpiClientGenericException("Token Module is blocked")
+                    }
+                    return false
+                }
+                else -> return false
+            }
+        }
+        return false;
+    }
+
 
     /**
      * Used after validating a receiver: find the url of the local recipient for the given OCPI module/interface
