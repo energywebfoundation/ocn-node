@@ -14,7 +14,7 @@ plugins {
 }
 
 group = "snc.openchargingnetwork.node"
-version = "0.1.0-SNAPSHOT"
+version = "1.0.0-SNAPSHOT"
 java.sourceCompatibility = JavaVersion.VERSION_1_8
 
 val snippetsDir = "build/generated-snippets"
@@ -74,6 +74,18 @@ test.apply {
     useJUnitPlatform()
     outputs.dir(snippetsDir)
     exclude("**/integration/**")
+}
+
+tasks.register<Exec>("ganache") {
+    commandLine(listOf("/usr/bin/env", "npm", "install", "-g", "ganache-cli"))
+    commandLine(listOf(
+            "/usr/bin/env",
+            "ganache-cli",
+            "-m=candy maple cake sugar pudding cream honey rich smooth crumble sweet treat",
+            "--port=8544",
+            "--accounts=20",
+            "--networkId=9",
+            "--gasLimit=10000000"))
 }
 
 tasks.register<Test>("integrationTest") {
