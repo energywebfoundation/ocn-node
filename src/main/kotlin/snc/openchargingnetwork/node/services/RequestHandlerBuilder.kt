@@ -22,7 +22,7 @@ import org.springframework.stereotype.Service
 import org.web3j.crypto.Credentials
 import org.web3j.crypto.Keys
 import shareandcharge.openchargingnetwork.notary.Notary
-import shareandcharge.openchargingnetwork.notary.OcpiRequest
+import shareandcharge.openchargingnetwork.notary.ValuesToSign
 import snc.openchargingnetwork.node.config.NodeProperties
 import snc.openchargingnetwork.node.models.HttpResponse
 import snc.openchargingnetwork.node.models.Receiver
@@ -377,7 +377,7 @@ class RequestHandler<T: Any>(private val request: OcpiRequestVariables,
      * @param signer expected signatory of the signature
      * @param receiver optional receiver of message (checks their OcnRules for signature verification requirement)
      */
-    private fun validateOcnSignature(signature: String?, signedValues: OcpiRequest<*>, signer: BasicRole, receiver: BasicRole? = null) {
+    private fun validateOcnSignature(signature: String?, signedValues: ValuesToSign<*>, signer: BasicRole, receiver: BasicRole? = null) {
         if (isSigningActive(receiver)) {
             val result = signature?.let {
                 notary = Notary.deserialize(it)
@@ -394,7 +394,7 @@ class RequestHandler<T: Any>(private val request: OcpiRequestVariables,
             val signedByOperator = actualSignatory == Keys.toChecksumAddress(party.operator)
 
             if (!signedByParty && !signedByOperator) {
-                throw OcpiServerGenericException("Actual signatory ${notary?.signatory} differs from expected signatory ${party.address} (party) or ${party.operator} (operator)")
+                throw OcpiClientInvalidParametersException("Actual signatory ${notary?.signatory} differs from expected signatory ${party.address} (party) or ${party.operator} (operator)")
             }
         }
     }
@@ -402,7 +402,7 @@ class RequestHandler<T: Any>(private val request: OcpiRequestVariables,
     /**
      * Used by the OCN Node to "stash" and "rewrite" the signature of a request if it needs to modify values
      */
-    private fun rewriteAndSign(valuesToSign: OcpiRequest<*>, rewriteFields: Map<String, Any?>): String? {
+    private fun rewriteAndSign(valuesToSign: ValuesToSign<*>, rewriteFields: Map<String, Any?>): String? {
         if (isSigningActive()) {
             val notary = validateNotary()
             notary.stash(rewriteFields)

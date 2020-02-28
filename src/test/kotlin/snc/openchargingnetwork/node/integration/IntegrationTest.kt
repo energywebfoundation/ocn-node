@@ -30,20 +30,20 @@ class IntegrationTest {
 
         // CPO 1
         val cpo1 = Credentials.create("0xc88b703fb08cbea894b6aeff5a544fb92e78a18e19814cd85da83b71f772aa6c")
-        val cpoServer1 = CpoServer(BasicRole("CPA", "CH"), 8100)
-        cpoServer1.setPartyInRegistry(registry.contractAddress, cpo1, node1.address)
+        val cpoServer1 = CpoServer(cpo1, BasicRole("CPA", "CH"), 8100)
+        cpoServer1.setPartyInRegistry(registry.contractAddress, node1.address)
         cpoServer1.registerCredentials()
 
         // CPO 2
         val cpo2 = Credentials.create("0x388c684f0ba1ef5017716adb5d21a053ea8e90277d0868337519f97bede61418")
-        val cpoServer2 = CpoServer(BasicRole("CPB", "CH"), 8101)
-        cpoServer2.setPartyInRegistry(registry.contractAddress, cpo2, node2.address)
+        val cpoServer2 = CpoServer(cpo2, BasicRole("CPB", "CH"), 8101)
+        cpoServer2.setPartyInRegistry(registry.contractAddress, node2.address)
         cpoServer2.registerCredentials()
 
         // MSP
         val msp = Credentials.create("0x659cbb0e2411a44db63778987b1e22153c086a95eb6b18bdf89de078917abc63")
-        mspServer = MspServer(BasicRole("MSP", "DE"), 8200)
-        mspServer.setPartyInRegistry(registry.contractAddress, msp, node1.address)
+        mspServer = MspServer(msp, BasicRole("MSP", "DE"), 8200)
+        mspServer.setPartyInRegistry(registry.contractAddress, node1.address)
         mspServer.registerCredentials()
     }
 
@@ -79,6 +79,7 @@ class IntegrationTest {
     fun get_location_local() {
         val to = BasicRole("CPA", "CH")
         val response = mspServer.getLocation(to)
+        println(response.text)
         val json = response.jsonObject
 
         assertThat(response.statusCode).isEqualTo(200)
@@ -90,6 +91,7 @@ class IntegrationTest {
     fun get_location_remote() {
         val to = BasicRole("CPB", "CH")
         val response = mspServer.getLocation(to)
+        println(response.text)
         val json = response.jsonObject
 
         assertThat(response.statusCode).isEqualTo(200)

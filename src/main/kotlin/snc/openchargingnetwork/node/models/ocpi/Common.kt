@@ -19,7 +19,7 @@ package snc.openchargingnetwork.node.models.ocpi
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
 import org.springframework.http.HttpMethod
-import shareandcharge.openchargingnetwork.notary.OcpiRequest
+import shareandcharge.openchargingnetwork.notary.ValuesToSign
 import snc.openchargingnetwork.node.models.OcnHeaders
 import snc.openchargingnetwork.node.models.exceptions.OcpiClientInvalidParametersException
 import java.time.Instant
@@ -62,8 +62,8 @@ data class OcpiRequestVariables(@JsonProperty("module") val module: ModuleID,
                                 @JsonProperty("proxy_resource") val proxyResource: String? = null,
                                 @JsonProperty("body") val body: Any? = null) {
 
-    fun toSignedValues(): OcpiRequest<*> {
-        return OcpiRequest(
+    fun toSignedValues(): ValuesToSign<*> {
+        return ValuesToSign(
                 headers = headers.toSignedHeaders(),
                 params = urlEncodedParams,
                 body = body)

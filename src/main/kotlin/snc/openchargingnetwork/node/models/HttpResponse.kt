@@ -16,16 +16,16 @@
 
 package snc.openchargingnetwork.node.models
 
-import shareandcharge.openchargingnetwork.notary.OcpiHeaders
-import shareandcharge.openchargingnetwork.notary.OcpiRequest
+import shareandcharge.openchargingnetwork.notary.SignableHeaders
+import shareandcharge.openchargingnetwork.notary.ValuesToSign
 import snc.openchargingnetwork.node.models.ocpi.OcpiResponse
 
 data class HttpResponse<T: Any>(val statusCode: Int,
                                 val headers: Map<String, String>,
                                 val body: OcpiResponse<T>) {
-    fun toSignedValues(): OcpiRequest<OcpiResponse<T>> {
-        return OcpiRequest(
-                headers = OcpiHeaders(
+    fun toSignedValues(): ValuesToSign<OcpiResponse<T>> {
+        return ValuesToSign(
+                headers = SignableHeaders(
                         limit = headers["X-Limit"] ?: headers["x-limit"],
                         totalCount = headers["X-Total-Count"] ?: headers["x-total-count"],
                         link = headers["Link"] ?: headers["link"],

@@ -9,9 +9,11 @@ import org.web3j.protocol.Web3j
 import org.web3j.protocol.http.HttpService
 import org.web3j.tx.ClientTransactionManager
 import org.web3j.tx.gas.StaticGasProvider
+import shareandcharge.openchargingnetwork.notary.SignableHeaders
 import snc.openchargingnetwork.contracts.Registry
 import snc.openchargingnetwork.node.Application
 import snc.openchargingnetwork.node.models.ocpi.BasicRole
+import snc.openchargingnetwork.node.tools.generateUUIDv4Token
 
 const val provider = "http://localhost:8544"
 val objectMapper = jacksonObjectMapper()
@@ -36,7 +38,7 @@ fun getRegistryInstance(credentials: Credentials, contractAddress: String): Regi
     return Registry.load(contractAddress, web3, txManager, gasProvider)
 }
 
-fun setUpNode(registryAddress: String, credentials: Credentials, port: Int) {
+fun setUpNode(registryAddress: String, credentials: Credentials, port: Int, signatures: Boolean = true) {
     val domain = "http://localhost:$port"
     SpringApplicationBuilder(Application::class.java)
             .addCommandLineProperties(true)
@@ -44,7 +46,8 @@ fun setUpNode(registryAddress: String, credentials: Credentials, port: Int) {
                     "--ocn.node.url=$domain",
                     "--ocn.node.privatekey=${credentials.ecKeyPair.privateKey.toString(16)}",
                     "--ocn.node.web3.provider=$provider",
-                    "--ocn.node.web3.contracts.registry=$registryAddress")
+                    "--ocn.node.web3.contracts.registry=$registryAddress",
+                    "--ocn.node.signatures=$signatures")
     getRegistryInstance(credentials, registryAddress).setNode(domain).sendAsync().get()
 }
 
@@ -61,4 +64,21 @@ fun coerceToJson(obj: Any): Any {
 
 fun String.checksum(): String {
     return Keys.toChecksumAddress(this)
+}
+
+fun Credentials.privateKey(): String {
+    return ecKeyPair.privateKey.toString(16)
+}
+
+fun SignableHeaders.toMap(tokenC: String, signature: String): Map<String, String> {
+    val map = mutableMapOf<String, String>()
+    map["Authorization"] = "Token $tokenC"
+    map["OCN-Signature"] = signature
+    map["X-Request-ID"] = generateUUIDv4Token()
+    correlationId?.let { map["X-Correlation-ID"] = it }
+    fromCountryCode?.let { map["OCPI-From-Country-Code"] = it }
+    fromPartyId?.let { map["OCPI-From-Party-Id"] = it }
+    toCountryCode?.let { map["OCPI-To-Country-Code"] = it }
+    toPartyId?.let { map["OCPI-To-Party-Id"] = it }
+    return map
 }

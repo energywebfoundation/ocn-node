@@ -1,9 +1,13 @@
 package snc.openchargingnetwork.node.integration.parties
 
+import shareandcharge.openchargingnetwork.notary.Notary
+import shareandcharge.openchargingnetwork.notary.ValuesToSign
+import org.web3j.crypto.Credentials as KeyPair
 import snc.openchargingnetwork.node.data.exampleLocation1
+import snc.openchargingnetwork.node.integration.privateKey
 import snc.openchargingnetwork.node.models.ocpi.*
 
-class CpoServer(party: BasicRole, port: Int): PartyServer(party, port) {
+class CpoServer(credentials: KeyPair, party: BasicRole, port: Int): PartyServer(credentials, party, port) {
 
     init {
         app.get("/ocpi/versions/2.2") {
@@ -23,9 +27,9 @@ class CpoServer(party: BasicRole, port: Int): PartyServer(party, port) {
         }
 
         app.get("/ocpi/sender/2.2/locations/1") {
-            it.json(OcpiResponse(
-                    statusCode = 1000,
-                    data = exampleLocation1))
+            val body = OcpiResponse(statusCode = 1000, data = exampleLocation1)
+            body.signature = Notary().sign(ValuesToSign(body = body), credentials.privateKey()).serialize()
+            it.json(body)
         }
     }
 
