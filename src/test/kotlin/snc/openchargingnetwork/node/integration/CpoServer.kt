@@ -15,10 +15,14 @@ class CpoServer(private val party: BasicRole, private val port: Int) {
     lateinit var node: String
 
     init {
+        app.exception(JavalinException::class.java) { e, ctx ->
+            ctx.status(e.httpCode).json(OcpiResponse<Unit>(statusCode = e.ocpiCode, statusMessage = e.message))
+        }
+
+
         app.before {
-            val auth = it.header("Authorization")
-            if (auth?.extractToken() != tokenB) {
-                it.json(OcpiResponse<Unit>(statusCode = 2001, statusMessage = "Unauthorized"))
+            if (it.header("Authorization") != "Token $tokenB") {
+                throw JavalinException(message = "Unauthorized")
             }
         }
 
