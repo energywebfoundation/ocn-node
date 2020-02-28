@@ -38,7 +38,7 @@ class OcnRulesService(private val platformRepo: PlatformRepository,
     fun getRules(authorization: String): OcnRules {
         val platform = findPlatform(authorization)
 
-        val rulesList = ocnRulesListRepo.findAllByPlatformID(platform.id).map { it.counterparty }
+        val rulesList = ocnRulesListRepo.findAllByPlatformID(platform.id).map { getModules(it) }
 
         return OcnRules(
                 signatures = platform.rules.signatures,
@@ -56,17 +56,73 @@ class OcnRulesService(private val platformRepo: PlatformRepository,
                         }))
     }
 
+    private fun getModules(ocnRulesListEntity: OcnRulesListEntity): WhiteListModules {
+        val basicRole = ocnRulesListEntity.counterparty
+        val modules = mutableListOf<String>()
+
+        if(ocnRulesListEntity.cdrs) {
+            modules.add("cdrs")
+        }
+
+        if(ocnRulesListEntity.chargingprofiles) {
+            modules.add("chargingprofiles")
+        }
+
+        if(ocnRulesListEntity.commands) {
+            modules.add("locations")
+        }
+
+        if(ocnRulesListEntity.locations) {
+            modules.add("locations")
+        }
+
+        if(ocnRulesListEntity.sessions) {
+            modules.add("sessions")
+        }
+
+        if(ocnRulesListEntity.tariffs) {
+            modules.add("tariffs")
+        }
+
+        if(ocnRulesListEntity.tokens) {
+            modules.add("tariffs")
+        }
+
+        return WhiteListModules(
+            id = basicRole.id,
+            country =  basicRole.country,
+            modules = modules
+        )
+    }
+
     fun updateSignatures(authorization: String) {
         val platform = findPlatform(authorization)
         platform.rules.signatures = !platform.rules.signatures
         platformRepo.save(platform)
     }
 
-    fun updateWhitelist(authorization: String, parties: List<WhiteListModules>) {
-        // 1. check token C / find platform
-        val platform = findPlatform(authorization)
+    fun enableWhitelist(authorization: String) {
+        // 1. check C / find platform
+        val platform = findPlatform(authorization);
 
         // 2. determine whether whitelist is active
+        assertListNotActive(platform, OcnRulesListType.BLACKLIST)
+
+        // 3. set the whitelist to true
+        platform.rules.whitelist = true
+
+        // 4. save whitelist option
+        platformRepo.save(platform)
+    }
+
+    fun updateWhitelist(authorization: String, parties: List<WhiteListModules>) {
+        // 1. check if any module of party is not empty
+        checkModuleList(parties)
+
+        // 2. check token C / find platform
+        val platform = findPlatform(authorization)
+
+        // 3. determine whether whitelist is active
         platform.rules.whitelist = when (parties.count()) {
             // set to false if provided list is empty (deletes list)
             0 -> false
@@ -78,11 +134,12 @@ class OcnRulesService(private val platformRepo: PlatformRepository,
             }
         }
 
-        // 3. save whitelist option
+        // 4. save whitelist option
         platformRepo.save(platform)
 
-        // 4. re-apply whitelist
+        // 5. re-apply whitelist
         ocnRulesListRepo.deleteByPlatformID(platform.id)
+
         ocnRulesListRepo.saveAll(parties.map { OcnRulesListEntity(
             platformID = platform.id!!,
             counterparty = BasicRole(it.id, it.country).toUpperCase(),
@@ -96,11 +153,14 @@ class OcnRulesService(private val platformRepo: PlatformRepository,
         )})
     }
 
-    fun updateBlacklist(authorization: String, parties: List<BasicRole>) {
-        // 1. check token C / find platform
+    fun updateBlacklist(authorization: String, parties: List<WhiteListModules>) {
+        // 1. check if any module of party is not empty
+        checkModuleList(parties)
+
+        // 2. check token C / find platform
         val platform = findPlatform(authorization)
 
-        // 2. determine whether blacklist is active
+        // 3. determine whether blacklist is active
         platform.rules.blacklist = when (parties.count()) {
             // set to false if provided list is empty (delete list)
             0 -> false
@@ -112,62 +172,92 @@ class OcnRulesService(private val platformRepo: PlatformRepository,
             }
         }
 
-        // 3. save blacklist option
+        // 4. save blacklist option
         platformRepo.save(platform)
 
-        // 4. re-apply blacklist
+        // 5. re-apply blacklist
         ocnRulesListRepo.deleteByPlatformID(platform.id)
+
         ocnRulesListRepo.saveAll(parties.map { OcnRulesListEntity(
                 platformID = platform.id!!,
-                counterparty = it.toUpperCase()) })
+                counterparty = BasicRole(it.id, it.country).toUpperCase(),
+                cdrs = it.modules.contains("cdrs"),
+                chargingprofiles = it.modules.contains("chargingprofiles"),
+                commands = it.modules.contains("commands"),
+                sessions = it.modules.contains("sessions"),
+                locations= it.modules.contains("locations"),
+                tariffs = it.modules.contains("tariffs"),
+                tokens = it.modules.contains("tokens")
+        )})
     }
 
-    fun appendToWhitelist(authorization: String, body: BasicRole) {
-        // 1. check token C / find platform
+    fun appendToWhitelist(authorization: String, body: WhiteListModules) {
+        // 1. check module of party is not empty
+        checkModule(body.modules)
+
+        // 2. check token C / find platform
         val platform = findPlatform(authorization)
 
-        // 2. check blacklist active
+        // 3. check blacklist active
         assertListNotActive(platform, OcnRulesListType.BLACKLIST)
 
-        // 3. set whitelist to true
+        // 4. set whitelist to true
         platform.rules.whitelist = true
 
-        // 4. check entry does not already exist
-        if (ocnRulesListRepo.existsByCounterparty(body.toUpperCase())) {
+        // 5. check entry does not already exist
+        if (ocnRulesListRepo.existsByCounterparty(BasicRole( id = body.id, country = body.country).toUpperCase())) {
             throw OcpiClientInvalidParametersException("Party already on OCN Rules whitelist")
         }
 
-        // 5. save whitelist option
+        // 6. save whitelist option
         platformRepo.save(platform)
 
-        // 6. add to whitelist
+        // 7. add to whitelist
         ocnRulesListRepo.save(OcnRulesListEntity(
                 platformID = platform.id!!,
-                counterparty = body))
+                counterparty = BasicRole( id = body.id, country = body.country).toUpperCase(),
+                cdrs = body.modules.contains("cdrs"),
+                chargingprofiles = body.modules.contains("chargingprofiles"),
+                commands = body.modules.contains("commands"),
+                sessions = body.modules.contains("sessions"),
+                locations = body.modules.contains("locations"),
+                tariffs = body.modules.contains("tariffs"),
+                tokens = body.modules.contains("tokens")
+        ))
     }
 
-    fun appendToBlacklist (authorization: String, body: BasicRole) {
-        // 1. check token C/ find platform
+    fun appendToBlacklist (authorization: String, body: WhiteListModules) {
+        // 1. check module of party is not empty
+        checkModule(body.modules)
+
+        // 2. check token C/ find platform
         val platform = findPlatform(authorization)
 
-        // 2. check whitelist active
+        // 3. check whitelist active
         assertListNotActive(platform, OcnRulesListType.WHITELIST)
 
-        // 3. set blacklist to true
+        // 4. set blacklist to true
         platform.rules.blacklist = true
 
-        // 4. check entry does not already exist
-        if (ocnRulesListRepo.existsByCounterparty(body.toUpperCase())) {
+        // 5. check entry does not already exist
+        if (ocnRulesListRepo.existsByCounterparty(BasicRole( id = body.id, country = body.country).toUpperCase())) {
             throw OcpiClientInvalidParametersException("Party already on OCN Rules blacklist")
         }
 
-        // 5. save blacklist option
+        // 6. save blacklist option
         platformRepo.save(platform)
 
-        // 6. add to blacklist
+        // 7. add to blacklist
         ocnRulesListRepo.save(OcnRulesListEntity(
                 platformID = platform.id!!,
-                counterparty = body
+                counterparty = BasicRole( id = body.id, country = body.country).toUpperCase(),
+                cdrs = body.modules.contains("cdrs"),
+                chargingprofiles = body.modules.contains("chargingprofiles"),
+                commands = body.modules.contains("commands"),
+                sessions = body.modules.contains("sessions"),
+                locations = body.modules.contains("locations"),
+                tariffs = body.modules.contains("tariffs"),
+                tokens = body.modules.contains("tokens")
         ))
     }
 
@@ -208,6 +298,30 @@ class OcnRulesService(private val platformRepo: PlatformRepository,
     private fun findPlatform(authorization: String): PlatformEntity {
         return platformRepo.findByAuth_TokenC(authorization.extractToken())
                 ?: throw OcpiClientInvalidParametersException("Invalid CREDENTIALS_TOKEN_C")
+    }
+
+    private fun checkModule(modules: List<String>) {
+        val result = modules.any{ it.isNullOrEmpty() }
+
+        if(result) {
+            throw OcpiClientGenericException("Module list is empty")
+        }
+    }
+
+    private fun checkModuleList(parties: List<WhiteListModules>) {
+        // 1. check Module is empty or not
+        var result = parties.any { it.modules.isNullOrEmpty() }
+
+        if(result) {
+            throw OcpiClientGenericException("Module list of one the party is empty")
+        }
+
+        // 2. check each element of module is empty or not
+        result = parties.any { it -> it.modules.any { it.isNullOrEmpty() } }
+
+        if(result) {
+            throw OcpiClientGenericException("One of the element of module list is empty")
+        }
     }
 
     private fun assertListNotActive(platform: PlatformEntity, type: OcnRulesListType) {

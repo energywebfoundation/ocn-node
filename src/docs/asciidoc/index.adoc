@@ -158,22 +158,38 @@ New rules entries are updated by the platform on the OCN Node. Applies to whitel
 
 ====== Request parameters
 
-The following parameters can be provided as URL segments.
+The following parameter can be provided as URL segment.
 
 [cols="3,2,1,10",options="header"]
 |===
 |Parameter |Datatype |Required |Description
 |list_type |<<ocn_rules_list_type_enum,OcnRulesListType>> |yes |The type of list which the new entry applies to.
-|country_code |https://github.com/ocpi/ocpi/blob/master/types.asciidoc#types_cistring_type[CIString](2) |yes |Country code of role to add to the specified list
-|party_id |https://github.com/ocpi/ocpi/blob/master/types.asciidoc#types_cistring_type[CIString](3) |yes |Party ID (Provider ID) of role to add to the specified list
+|===
 
+====== Request Body
+
+Body is required if sending a POST request to `whitelist` or `blacklist` including list of modules.
+
+[cols="3,2,10",options="headers"]
+|===
+|Type |Card. |Description
+|country_code |https://github.com/ocpi/ocpi/blob/master/types.asciidoc#types_cistring_type[CIString](2) |Country code of role to add to the specified list
+|party_id |https://github.com/ocpi/ocpi/blob/master/types.asciidoc#types_cistring_type[CIString](3) |Party ID (Provider ID) of role to add to the specified list
+|<<white_list_modules_class,WhiteListModules>> |* |The counterparty role and list of modules information to add to the specified list.
 |===
 
 ====== Example: add party to blacklist
 
 [source]
 ----
-POST to URL: https://node.ocn.org/ocpi/receiver/2.2/ocnrules/blacklist/NL/XYZ
+POST to URL: https://node.ocn.org/ocpi/receiver/2.2/ocnrules/blacklist
+
+    {
+        "country_code": "DE",
+        "party_id": "ABC",
+        "modules": ["cdrs", "locations"]
+    }
+
 ----
 
 '''
@@ -192,7 +208,7 @@ Updates all rules entries for a platform on the OCN Node. Applies to signatures,
 ====== Request Body
 
 Body is required if sending a PUT request to `whitelist` or `blacklist`. If an empty list is sent, the OCN Node will
-interpret that as the deletion of all rules for the given list. Therefore, the specified list will be deactivated. It is also possible to set which specific module will be blocked/blacklisted for the specific sender. If an empty list of modules is sent then the sender is eligible to use all the modules. If
+interpret that as the deletion of all rules for the given list. Therefore, the specified list will be deactivated. It is also mandatory to set which specific module will be blocked/blacklisted for the specific sender. If an empty list of modules is sent then the sender is eligible to use all the modules. If
 updating `signatures`, then no body is required.
 
 [cols="3,2,10",options="headers"]
