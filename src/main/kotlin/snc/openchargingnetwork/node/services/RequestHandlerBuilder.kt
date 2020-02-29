@@ -264,9 +264,9 @@ class RequestHandler<T: Any>(private val request: OcpiRequestVariables,
                 // TODO: stash link and update signature
                 val headers = HttpHeaders()
 
-                headers["X-Total-Count"]?.let { headers["X-Total-Count"] = it }
-                headers["X-Limit"]?.let { headers["X-Limit"] = it }
-                headers["OCN-Signature"]?.let { headers["OCN-Signature"] = it }
+                response.headers["X-Total-Count"]?.let { headers["X-Total-Count"] = it }
+                response.headers["X-Limit"]?.let { headers["X-Limit"] = it }
+                response.headers["OCN-Signature"]?.let { headers["OCN-Signature"] = it }
 
                 response.headers["Link"]?.let {
                     it.extractNextLink()?.let {next ->
@@ -378,6 +378,7 @@ class RequestHandler<T: Any>(private val request: OcpiRequestVariables,
      * @param receiver optional receiver of message (checks their OcnRules for signature verification requirement)
      */
     private fun validateOcnSignature(signature: String?, signedValues: ValuesToSign<*>, signer: BasicRole, receiver: BasicRole? = null) {
+        println(signedValues)
         if (isSigningActive(receiver)) {
             val result = signature?.let {
                 notary = Notary.deserialize(it)
@@ -406,7 +407,9 @@ class RequestHandler<T: Any>(private val request: OcpiRequestVariables,
         if (isSigningActive()) {
             val notary = validateNotary()
             notary.stash(rewriteFields)
+            println("signing with ${properties.privateKey} with address $${Credentials.create(properties.privateKey).address}")
             notary.sign(valuesToSign, Credentials.create(properties.privateKey).address)
+            println("signatory=${notary.signatory}")
             return notary.serialize()
         }
         return null

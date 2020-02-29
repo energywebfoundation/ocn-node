@@ -5,15 +5,31 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.web3j.crypto.Credentials
+import shareandcharge.openchargingnetwork.notary.Notary
+import shareandcharge.openchargingnetwork.notary.SignableHeaders
+import shareandcharge.openchargingnetwork.notary.ValuesToSign
 import snc.openchargingnetwork.node.data.exampleLocation1
 import snc.openchargingnetwork.node.integration.parties.CpoServer
 import snc.openchargingnetwork.node.integration.parties.MspServer
 import snc.openchargingnetwork.node.models.ocpi.BasicRole
 import snc.openchargingnetwork.node.models.ocpi.Location
+import snc.openchargingnetwork.node.tools.extractNextLink
+import java.util.regex.Pattern
+
 
 class IntegrationTest {
 
     private lateinit var mspServer: MspServer
+
+    private val recipients = listOf(
+            CpoTestCase(
+                    party = BasicRole("CPA", "CH"),
+                    address = "0x821aEa9a577a9b44299B9c15c88cf3087F3b5544",
+                    operator = "0xf17f52151EbEF6C7334FAD080c5704D77216b732"),
+            CpoTestCase(
+                    party = BasicRole("CPB", "CH"),
+                    address = "0x0d1d4e623D10F9FBA5Db95830F7d3839406C6AF2",
+                    operator = "0xC5fdf4076b8F3A5357c5E395ab970B5B54098Fef"))
 
     @BeforeAll
     fun bootStrap() {
@@ -75,29 +91,82 @@ class IntegrationTest {
         assertThat(response2.jsonObject.getString("address").checksum()).isEqualTo(expectedAddress)
     }
 
+    // TODO: proper parameterized tests
     @Test
-    fun get_location_local() {
-        val to = BasicRole("CPA", "CH")
-        val response = mspServer.getLocation(to)
-        println(response.text)
-        val json = response.jsonObject
+    fun basic_request() {
+        for (recipient in recipients) {
+            val response = mspServer.getLocation(recipient.party)
+            println(response.text)
+            val json = response.jsonObject
 
-        assertThat(response.statusCode).isEqualTo(200)
-        assertThat(json.getInt("status_code")).isEqualTo(1000)
-        assertThat(objectMapper.readValue<Location>(json.getJSONObject("data").toString())).isEqualTo(exampleLocation1)
+            assertThat(response.statusCode).isEqualTo(200)
+            assertThat(json.getInt("status_code")).isEqualTo(1000)
+
+            val data: Location = objectMapper.readValue(json.getJSONObject("data").toString())
+            assertThat(data).isEqualTo(exampleLocation1)
+
+            val notary = Notary.deserialize(json.getString("ocn_signature"))
+            val body: Map<String, Any?> = objectMapper.readValue(json.toString())
+            val signedValues = ValuesToSign(body = body)
+            val verifyResult = notary.verify(signedValues)
+            assertThat(verifyResult.isValid).isEqualTo(true)
+            assertThat(notary.signatory.checksum()).isEqualTo(recipient.address)
+        }
     }
 
     @Test
-    fun get_location_remote() {
-        val to = BasicRole("CPB", "CH")
-        val response = mspServer.getLocation(to)
-        println(response.text)
-        val json = response.jsonObject
+    fun paginated_local() {
+        for (recipient in recipients) {
+            val response = mspServer.getLocationList(recipient.party)
 
-        assertThat(response.statusCode).isEqualTo(200)
-        assertThat(json.getInt("status_code")).isEqualTo(1000)
-        assertThat(objectMapper.readValue<Location>(json.getJSONObject("data").toString())).isEqualTo(exampleLocation1)
+            assertThat(response.headers["x-limit"]).isEqualTo("5")
+            assertThat(response.headers["x-total-count"]).isEqualTo("50")
+
+            val pattern = "<http://localhost:8080/ocpi/sender/2.2/locations/page/\\d+>; rel=\"next\"".toPattern()
+            assertThat(response.headers["link"]).containsPattern(pattern)
+
+            val json = response.jsonObject
+            assertThat(json.getInt("status_code")).isEqualTo(1000)
+            assertThat(json.getJSONArray("data").length()).isEqualTo(4)
+
+            val valuesToSign = ValuesToSign(
+                    headers = SignableHeaders(
+                            limit = response.headers["x-limit"],
+                            totalCount = response.headers["x-total-count"],
+                            link = response.headers["link"]),
+                    body = objectMapper.readValue<Map<String, Any?>>(json.toString()))
+
+            val notary = Notary.deserialize(json.getString("ocn_signature"))
+            println(notary)
+            println(notary.signatory)
+            println(recipient.operator)
+            assertThat(notary.signatory.checksum()).isEqualTo(recipient.operator)
+
+            val verifyResult = notary.verify(valuesToSign)
+            assertThat(verifyResult.isValid).isEqualTo(true)
+
+            assertThat(notary.signatory.checksum()).isEqualTo(recipient.operator)
+            assertThat(notary.rewrites.size).isEqualTo(1)
+            assertThat(notary.rewrites[0].signatory).isEqualTo(recipient.address)
+
+            val next = response.headers.getValue("link").extractNextLink()
+
+            val nextResponse = mspServer.getNextLink(recipient.party, next!!)
+            val nextJson = nextResponse.jsonObject
+
+            assertThat(nextJson.getInt("status_code")).isEqualTo(1000)
+            assertThat(nextJson.getJSONArray("data").length()).isEqualTo(5)
+        }
     }
 
+
+    // TODO:
+    // -> send cdr to MSP (check location header)
+    // -> send command (check async command result)
+    // -> sending when whitelisted/blacklisted
+
+    // TODO:
+    // -> proxied resources not being deleted
+    // -> async
 
 }

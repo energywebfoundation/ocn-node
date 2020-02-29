@@ -30,4 +30,21 @@ class MspServer(private val credentials: KeyPair, party: BasicRole, port: Int): 
         return khttp.get("$node/ocpi/sender/2.2/locations/1", headers = headers.toMap(tokenC, signature))
     }
 
+    fun getLocationList(to: BasicRole): Response {
+        val headers = getSignableHeaders(to)
+        val params = mapOf("limit" to "4")
+        val request = ValuesToSign(headers = headers, params = params, body = null)
+        val signature = Notary().sign(request, credentials.privateKey()).serialize()
+        return khttp.get("$node/ocpi/sender/2.2/locations", params=params, headers = headers.toMap(tokenC, signature))
+    }
+
+    fun getNextLink(to: BasicRole, next: String): Response {
+        val headers = getSignableHeaders(to)
+        val params = mapOf("offset" to "4")
+        val request = ValuesToSign(headers = headers, params = params, body = null)
+        println(request)
+        val signature = Notary().sign(request, credentials.privateKey()).serialize()
+        return khttp.get(next, params = params, headers = headers.toMap(tokenC, signature))
+    }
+
 }
