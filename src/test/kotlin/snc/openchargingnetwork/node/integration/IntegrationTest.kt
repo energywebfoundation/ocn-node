@@ -24,12 +24,10 @@ class IntegrationTest {
     private val recipients = listOf(
             CpoTestCase(
                     party = BasicRole("CPA", "CH"),
-                    address = "0x821aEa9a577a9b44299B9c15c88cf3087F3b5544",
-                    operator = "0xf17f52151EbEF6C7334FAD080c5704D77216b732"),
+                    address = "0x821aEa9a577a9b44299B9c15c88cf3087F3b5544"),
             CpoTestCase(
                     party = BasicRole("CPB", "CH"),
-                    address = "0x0d1d4e623D10F9FBA5Db95830F7d3839406C6AF2",
-                    operator = "0xC5fdf4076b8F3A5357c5E395ab970B5B54098Fef"))
+                    address = "0x0d1d4e623D10F9FBA5Db95830F7d3839406C6AF2"))
 
     @BeforeAll
     fun bootStrap() {
@@ -96,7 +94,6 @@ class IntegrationTest {
     fun basic_request() {
         for (recipient in recipients) {
             val response = mspServer.getLocation(recipient.party)
-            println(response.text)
             val json = response.jsonObject
 
             assertThat(response.statusCode).isEqualTo(200)
@@ -137,17 +134,13 @@ class IntegrationTest {
                     body = objectMapper.readValue<Map<String, Any?>>(json.toString()))
 
             val notary = Notary.deserialize(json.getString("ocn_signature"))
-            println(notary)
-            println(notary.signatory)
-            println(recipient.operator)
-            assertThat(notary.signatory.checksum()).isEqualTo(recipient.operator)
 
             val verifyResult = notary.verify(valuesToSign)
             assertThat(verifyResult.isValid).isEqualTo(true)
 
-            assertThat(notary.signatory.checksum()).isEqualTo(recipient.operator)
+            assertThat(notary.signatory.checksum()).isEqualTo("0xf17f52151EbEF6C7334FAD080c5704D77216b732")
             assertThat(notary.rewrites.size).isEqualTo(1)
-            assertThat(notary.rewrites[0].signatory).isEqualTo(recipient.address)
+            assertThat(notary.rewrites[0].signatory.checksum()).isEqualTo(recipient.address)
 
             val next = response.headers.getValue("link").extractNextLink()
 

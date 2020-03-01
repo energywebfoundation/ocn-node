@@ -42,7 +42,6 @@ class MspServer(private val credentials: KeyPair, party: BasicRole, port: Int): 
         val headers = getSignableHeaders(to)
         val params = mapOf("offset" to "4")
         val request = ValuesToSign(headers = headers, params = params, body = null)
-        println(request)
         val signature = Notary().sign(request, credentials.privateKey()).serialize()
         return khttp.get(next, params = params, headers = headers.toMap(tokenC, signature))
     }

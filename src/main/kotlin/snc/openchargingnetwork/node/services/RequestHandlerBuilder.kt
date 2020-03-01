@@ -378,7 +378,7 @@ class RequestHandler<T: Any>(private val request: OcpiRequestVariables,
      * @param receiver optional receiver of message (checks their OcnRules for signature verification requirement)
      */
     private fun validateOcnSignature(signature: String?, signedValues: ValuesToSign<*>, signer: BasicRole, receiver: BasicRole? = null) {
-        println(signedValues)
+
         if (isSigningActive(receiver)) {
             val result = signature?.let {
                 notary = Notary.deserialize(it)
@@ -407,9 +407,7 @@ class RequestHandler<T: Any>(private val request: OcpiRequestVariables,
         if (isSigningActive()) {
             val notary = validateNotary()
             notary.stash(rewriteFields)
-            println("signing with ${properties.privateKey} with address $${Credentials.create(properties.privateKey).address}")
-            notary.sign(valuesToSign, Credentials.create(properties.privateKey).address)
-            println("signatory=${notary.signatory}")
+            notary.sign(valuesToSign, properties.privateKey!!)
             return notary.serialize()
         }
         return null
