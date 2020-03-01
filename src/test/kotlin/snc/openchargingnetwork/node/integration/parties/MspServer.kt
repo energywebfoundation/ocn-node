@@ -1,6 +1,7 @@
 package snc.openchargingnetwork.node.integration.parties
 
 import com.fasterxml.jackson.module.kotlin.readValue
+import io.javalin.http.Context
 import khttp.responses.Response
 import org.web3j.crypto.Credentials as KeyPair
 import shareandcharge.openchargingnetwork.notary.Notary
@@ -16,6 +17,9 @@ import snc.openchargingnetwork.node.models.ocpi.*
 import snc.openchargingnetwork.node.tools.generateUUIDv4Token
 
 class MspServer(private val credentials: KeyPair, val party: BasicRole, port: Int): PartyServer(credentials, party, port) {
+
+    // could be nicer to use e.g. RxJava instead
+    var asyncCommandsResponse: CommandResult? = null
 
     init {
         app.get("/ocpi/versions/2.2") {
@@ -52,6 +56,7 @@ class MspServer(private val credentials: KeyPair, val party: BasicRole, port: In
         }
 
         app.post("/ocpi/msp/2.2/commands/START_SESSION/1") {
+            asyncCommandsResponse = it.body<CommandResult>()
             val body = OcpiResponse(statusCode = 1000, data = null)
             val valuesToSign = ValuesToSign(body = body)
             body.signature = Notary().sign(valuesToSign, credentials.privateKey()).serialize()

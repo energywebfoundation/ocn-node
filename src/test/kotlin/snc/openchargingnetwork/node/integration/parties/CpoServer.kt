@@ -63,20 +63,19 @@ class CpoServer(private val credentials: KeyPair, party: BasicRole, val port: In
         }
 
         app.post("/ocpi/cpo/2.2/commands/START_SESSION") {
-            val body = OcpiResponse(statusCode = 1000, data = CommandResponse(result = CommandResponseType.ACCEPTED, timeout = 30))
+            val body = OcpiResponse(statusCode = 1000, data = CommandResponse(result = CommandResponseType.ACCEPTED, timeout = 10))
             val valuesToSign = ValuesToSign(body = body)
             body.signature = Notary().sign(valuesToSign, credentials.privateKey()).serialize()
 
-            GlobalScope.launch {
-                delay(1000)
-                val url = it.body<StartSession>().responseURL
-                val asyncHeaders = getSignableHeaders(BasicRole("MSP", "DE"))
-                val asyncBody = OcpiResponse(statusCode = 1000, data = CommandResult(result = CommandResultType.ACCEPTED))
-                val asyncValues = ValuesToSign(headers = asyncHeaders, body = asyncBody)
-                val signature = Notary().sign(asyncValues, credentials.privateKey()).serialize()
-                val json: Map<String, Any?> = objectMapper.readValue(objectMapper.writeValueAsString(asyncBody))
-                khttp.async.post(url, headers = asyncHeaders.toMap(tokenC, signature), json = json)
-            }
+            val url = it.body<StartSession>().responseURL
+
+            // send async POST /START_SESSION
+            val asyncHeaders = getSignableHeaders(BasicRole("MSP", "DE"))
+            val asyncBody = CommandResult(result = CommandResultType.ACCEPTED)
+            val asyncValues = ValuesToSign(headers = asyncHeaders, body = asyncBody)
+            val asyncSignature = Notary().sign(asyncValues, credentials.privateKey()).serialize()
+            val asyncJson: Map<String, Any?> = objectMapper.readValue(objectMapper.writeValueAsString(asyncBody))
+            khttp.post(url, headers = asyncHeaders.toMap(tokenC, asyncSignature), json = asyncJson)
 
             it.json(body)
         }

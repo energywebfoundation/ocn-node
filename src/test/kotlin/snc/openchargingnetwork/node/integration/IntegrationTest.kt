@@ -12,10 +12,9 @@ import snc.openchargingnetwork.node.data.exampleCDR
 import snc.openchargingnetwork.node.data.exampleLocation1
 import snc.openchargingnetwork.node.integration.parties.CpoServer
 import snc.openchargingnetwork.node.integration.parties.MspServer
-import snc.openchargingnetwork.node.models.ocpi.BasicRole
-import snc.openchargingnetwork.node.models.ocpi.CDR
-import snc.openchargingnetwork.node.models.ocpi.Location
+import snc.openchargingnetwork.node.models.ocpi.*
 import snc.openchargingnetwork.node.tools.extractNextLink
+import java.lang.Thread.sleep
 
 
 class IntegrationTest {
@@ -223,14 +222,43 @@ class IntegrationTest {
     @Test
     fun async_request() {
         for (cpo in cpos) {
+            // send request to cpo
             val response = mspServer.sendStartSession(cpo.party)
-            println(response.text)
             assertThat(response.statusCode).isEqualTo(200)
+
+            // check body
+            val json = response.jsonObject
+            assertThat(json.getInt("status_code")).isEqualTo(1000)
+            assertThat(json.getJSONObject("data").getString("result")).isEqualTo("ACCEPTED")
+            assertThat(json.getJSONObject("data").getInt("timeout")).isEqualTo(10)
+
+            // check signature
+            val sig = Notary.deserialize(json.getString("ocn_signature"))
+            val signedValues = ValuesToSign(body = objectMapper.readValue<Map<String, Any?>>(json.toString()))
+            val verifyResult = sig.verify(signedValues)
+
+            assertThat(verifyResult.isValid).isEqualTo(true)
+            assertThat(sig.signatory.checksum()).isEqualTo(cpo.address.checksum())
+
+            // check async result
+            val timeout = json.getJSONObject("data").getInt("timeout")
+            for (i in 0..timeout) {
+
+                if (i == timeout) {
+                    throw Exception("Failed to get async result inside timeout window")
+                }
+
+                if (mspServer.asyncCommandsResponse != null) {
+                    assertThat(mspServer.asyncCommandsResponse).isEqualTo(CommandResult(result = CommandResultType.ACCEPTED))
+                    break
+                }
+
+                sleep(1000)
+            }
         }
     }
 
     // TODO:
-    // -> send command (check async command result)
     // -> sending when whitelisted/blacklisted
     // msp/cpo verifying signatures
 
