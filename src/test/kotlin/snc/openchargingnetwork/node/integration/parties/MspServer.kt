@@ -81,10 +81,9 @@ class MspServer(private val credentials: KeyPair, val party: BasicRole, port: In
 
     fun getNextLink(to: BasicRole, next: String): Response {
         val headers = getSignableHeaders(to)
-        val params = mapOf("offset" to "4")
-        val request = ValuesToSign(headers = headers, params = params, body = null)
+        val request = ValuesToSign(headers = headers, body = null)
         val signature = Notary().sign(request, credentials.privateKey()).serialize()
-        return khttp.get(next, params = params, headers = headers.toMap(tokenC, signature))
+        return khttp.get(next, headers = headers.toMap(tokenC, signature))
     }
 
     fun sendStartSession(to: BasicRole): Response {

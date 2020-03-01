@@ -77,24 +77,17 @@ class CdrsController(private val requestHandlerBuilder: RequestHandlerBuilder) {
                                 @RequestHeader("OCPI-from-party-id") fromPartyID: String,
                                 @RequestHeader("OCPI-to-country-code") toCountryCode: String,
                                 @RequestHeader("OCPI-to-party-id") toPartyID: String,
-                                @RequestParam("date_from", required = false) dateFrom: String?,
-                                @RequestParam("date_to", required = false) dateTo: String?,
-                                @RequestParam("offset", required = false) offset: Int?,
-                                @RequestParam("limit", required = false) limit: Int?,
                                 @PathVariable uid: String): ResponseEntity<OcpiResponse<Array<CDR>>> {
 
         val sender = BasicRole(fromPartyID, fromCountryCode)
         val receiver = BasicRole(toPartyID, toCountryCode)
-
-        val params = mapOf("date_from" to dateFrom, "date_to" to dateTo, "offset" to offset, "limit" to limit).filterNull()
 
         val requestVariables = OcpiRequestVariables(
                 module = ModuleID.CDRS,
                 interfaceRole = InterfaceRole.SENDER,
                 method = HttpMethod.GET,
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
-                urlPathVariables = uid,
-                urlEncodedParams = params)
+                urlPathVariables = uid)
 
         val request: RequestHandler<Array<CDR>> = requestHandlerBuilder.build(requestVariables)
         return request

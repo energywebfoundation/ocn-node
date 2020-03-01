@@ -73,9 +73,18 @@ tasks.withType<KotlinCompile> {
 
 val test: Test by tasks
 test.apply {
-    useJUnitPlatform()
+    dependsOn("unitTest", "integrationTest")
     outputs.dir(snippetsDir)
+}
+
+tasks.register<Test>("unitTest") {
+    useJUnitPlatform()
     exclude("**/integration/**")
+}
+
+tasks.register<Test>("integrationTest") {
+    useJUnitPlatform()
+    include("**/integration/**")
 }
 
 tasks.register<Exec>("ganache") {
@@ -89,12 +98,6 @@ tasks.register<Exec>("ganache") {
             "--networkId=9",
             "--gasLimit=10000000"))
 }
-
-tasks.register<Test>("integrationTest") {
-    useJUnitPlatform()
-    include("**/integration/**")
-}
-
 
 val asciidoctor by tasks.getting(AsciidoctorTask::class) {
     inputs.dir(snippetsDir)
