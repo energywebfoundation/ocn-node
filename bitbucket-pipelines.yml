@@ -16,7 +16,7 @@ pipelines:
           # https://docs.gradle.org/current/userguide/gradle_wrapper.html
           - apk add gradle npm
           - npm install -g ganache-cli
-          - ganache-cli -m \"candy maple cake sugar pudding cream honey rich smooth crumble sweet treat\" --port 8544 --accounts 20 --networkId=9 --gasLimit=10000000 > /dev/null &
+          - ganache-cli -m candy maple cake sugar pudding cream honey rich smooth crumble sweet treat --port 8544 --accounts 20 --networkId=9 --gasLimit=10000000 > /dev/null &
           - ./gradlew build
   branches:
     develop:
