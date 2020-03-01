@@ -1,15 +1,22 @@
 package snc.openchargingnetwork.node.integration.parties
 
+import com.fasterxml.jackson.module.kotlin.readValue
+import khttp.responses.Response
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import shareandcharge.openchargingnetwork.notary.Notary
 import shareandcharge.openchargingnetwork.notary.SignableHeaders
 import shareandcharge.openchargingnetwork.notary.ValuesToSign
+import snc.openchargingnetwork.node.data.exampleCDR
 import org.web3j.crypto.Credentials as KeyPair
 import snc.openchargingnetwork.node.data.exampleLocation1
-import snc.openchargingnetwork.node.data.exampleLocation2
+import snc.openchargingnetwork.node.integration.objectMapper
 import snc.openchargingnetwork.node.integration.privateKey
+import snc.openchargingnetwork.node.integration.toMap
 import snc.openchargingnetwork.node.models.ocpi.*
 
-class CpoServer(credentials: KeyPair, party: BasicRole, port: Int): PartyServer(credentials, party, port) {
+class CpoServer(private val credentials: KeyPair, party: BasicRole, val port: Int): PartyServer(credentials, party, port) {
 
     init {
         app.get("/ocpi/versions/2.2") {
@@ -23,20 +30,22 @@ class CpoServer(credentials: KeyPair, party: BasicRole, port: Int): PartyServer(
                             Endpoint(
                                     identifier = "locations",
                                     role = InterfaceRole.SENDER,
-                                    url = urlBuilder("/ocpi/sender/2.2/locations"))
-                    ))
-            ))
+                                    url = urlBuilder("/ocpi/cpo/2.2/locations")),
+                            Endpoint(
+                                    identifier = "commands",
+                                    role = InterfaceRole.RECEIVER,
+                                    url = urlBuilder("/ocpi/cpo/2.2/commands"))))))
         }
 
-        app.get("/ocpi/sender/2.2/locations/1") {
+        app.get("/ocpi/cpo/2.2/locations/1") {
             val body = OcpiResponse(statusCode = 1000, data = exampleLocation1)
             body.signature = Notary().sign(ValuesToSign(body = body), credentials.privateKey()).serialize()
             it.json(body)
         }
 
-        app.get("/ocpi/sender/2.2/locations") {
+        app.get("/ocpi/cpo/2.2/locations") {
             val limit = it.queryParam("limit") ?: "5"
-            val next = urlBuilder("/ocpi/sender/2.2/locations")
+            val next = urlBuilder("/ocpi/cpo/2.2/locations")
             val headers = SignableHeaders(limit = "5", totalCount = "50", link = "<$next>; rel=\"next\"")
             val data = mutableListOf<Location>()
 
@@ -52,6 +61,41 @@ class CpoServer(credentials: KeyPair, party: BasicRole, port: Int): PartyServer(
                     .json(body)
 
         }
+
+        app.post("/ocpi/cpo/2.2/commands/START_SESSION") {
+            val body = OcpiResponse(statusCode = 1000, data = CommandResponse(result = CommandResponseType.ACCEPTED, timeout = 30))
+            val valuesToSign = ValuesToSign(body = body)
+            body.signature = Notary().sign(valuesToSign, credentials.privateKey()).serialize()
+
+            GlobalScope.launch {
+                delay(1000)
+                val url = it.body<StartSession>().responseURL
+                val asyncHeaders = getSignableHeaders(BasicRole("MSP", "DE"))
+                val asyncBody = OcpiResponse(statusCode = 1000, data = CommandResult(result = CommandResultType.ACCEPTED))
+                val asyncValues = ValuesToSign(headers = asyncHeaders, body = asyncBody)
+                val signature = Notary().sign(asyncValues, credentials.privateKey()).serialize()
+                val json: Map<String, Any?> = objectMapper.readValue(objectMapper.writeValueAsString(asyncBody))
+                khttp.async.post(url, headers = asyncHeaders.toMap(tokenC, signature), json = json)
+            }
+
+            it.json(body)
+        }
+
+    }
+
+    fun sendCdr(to: BasicRole): Response {
+        val headers = getSignableHeaders(to)
+        val valuesToSign = ValuesToSign(headers = headers, body = exampleCDR)
+        val signature = Notary().sign(valuesToSign, credentials.privateKey()).serialize()
+        val json: Map<String, Any?> = objectMapper.readValue(objectMapper.writeValueAsString(exampleCDR))
+        return khttp.post("$node/ocpi/receiver/2.2/cdrs", headers = headers.toMap(tokenC, signature), json = json)
+    }
+
+    fun getCdr(to: BasicRole, location: String): Response {
+        val headers = getSignableHeaders(to)
+        val valuesToSign = ValuesToSign(headers = headers, body = null)
+        val signature = Notary().sign(valuesToSign, credentials.privateKey()).serialize()
+        return khttp.get(location, headers = headers.toMap(tokenC, signature))
     }
 
 }

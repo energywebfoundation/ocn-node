@@ -1,14 +1,21 @@
 package snc.openchargingnetwork.node.integration.parties
 
+import com.fasterxml.jackson.module.kotlin.readValue
 import khttp.responses.Response
 import org.web3j.crypto.Credentials as KeyPair
 import shareandcharge.openchargingnetwork.notary.Notary
+import shareandcharge.openchargingnetwork.notary.SignableHeaders
 import shareandcharge.openchargingnetwork.notary.ValuesToSign
+import snc.openchargingnetwork.node.data.exampleCDR
+import snc.openchargingnetwork.node.data.exampleLocation1
+import snc.openchargingnetwork.node.data.exampleToken
+import snc.openchargingnetwork.node.integration.objectMapper
 import snc.openchargingnetwork.node.integration.privateKey
 import snc.openchargingnetwork.node.integration.toMap
 import snc.openchargingnetwork.node.models.ocpi.*
+import snc.openchargingnetwork.node.tools.generateUUIDv4Token
 
-class MspServer(private val credentials: KeyPair, party: BasicRole, port: Int): PartyServer(credentials, party, port) {
+class MspServer(private val credentials: KeyPair, val party: BasicRole, port: Int): PartyServer(credentials, party, port) {
 
     init {
         app.get("/ocpi/versions/2.2") {
@@ -18,8 +25,37 @@ class MspServer(private val credentials: KeyPair, party: BasicRole, port: Int): 
                             Endpoint(
                                     identifier = "credentials",
                                     role = InterfaceRole.RECEIVER,
-                                    url = urlBuilder("/ocpi/cpo/2.2/credentials"))))
-            ))
+                                    url = urlBuilder("/ocpi/msp/2.2/credentials")),
+                            Endpoint(
+                                    identifier = "cdrs",
+                                    role = InterfaceRole.RECEIVER,
+                                    url = urlBuilder("/ocpi/msp/2.2/cdrs")),
+                            Endpoint(
+                                    identifier = "commands",
+                                    role = InterfaceRole.SENDER,
+                                    url = urlBuilder("/ocpi/msp/2.2/commands"))))))
+        }
+
+        app.get("/ocpi/msp/2.2/cdrs/1") {
+            val body = OcpiResponse(statusCode = 1000, data = exampleCDR)
+            val valuesToSign = ValuesToSign(body = body)
+            body.signature = Notary().sign(valuesToSign, credentials.privateKey()).serialize()
+            it.json(body)
+        }
+
+        app.post("/ocpi/msp/2.2/cdrs") {
+            val headers = SignableHeaders(location = urlBuilder("/ocpi/msp/2.2/cdrs/1"))
+            val body = OcpiResponse(statusCode = 1000, data = null)
+            val valuesToSign = ValuesToSign(headers = headers, body = body)
+            body.signature = Notary().sign(valuesToSign, credentials.privateKey()).serialize()
+            it.header("location", headers.location!!).json(body)
+        }
+
+        app.post("/ocpi/msp/2.2/commands/START_SESSION/1") {
+            val body = OcpiResponse(statusCode = 1000, data = null)
+            val valuesToSign = ValuesToSign(body = body)
+            body.signature = Notary().sign(valuesToSign, credentials.privateKey()).serialize()
+            it.json(body)
         }
     }
 
@@ -44,6 +80,19 @@ class MspServer(private val credentials: KeyPair, party: BasicRole, port: Int): 
         val request = ValuesToSign(headers = headers, params = params, body = null)
         val signature = Notary().sign(request, credentials.privateKey()).serialize()
         return khttp.get(next, params = params, headers = headers.toMap(tokenC, signature))
+    }
+
+    fun sendStartSession(to: BasicRole): Response {
+        val body = StartSession(
+                responseURL = urlBuilder("/ocpi/msp/2.2/commands/START_SESSION/1"),
+                token = exampleToken,
+                locationID = exampleLocation1.id,
+                evseUID = exampleLocation1.evses!![0].uid)
+        val headers = getSignableHeaders(to)
+        val request = ValuesToSign(headers = headers, body = body)
+        val signature = Notary().sign(request, credentials.privateKey()).serialize()
+        val json: Map<String, Any?> = objectMapper.readValue(objectMapper.writeValueAsString(body))
+        return khttp.post("$node/ocpi/receiver/2.2/commands/START_SESSION", headers = headers.toMap(tokenC, signature), json = json)
     }
 
 }

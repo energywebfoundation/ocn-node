@@ -303,7 +303,6 @@ class RequestHandler<T: Any>(private val request: OcpiRequestVariables,
             true -> {
                 val headers = HttpHeaders()
                 response.headers["Location"]?.let {
-                    // TODO: stash location and update signature
                     val resourceId = routingService.setProxyResource(it, request.headers.sender, request.headers.receiver)
                     val newLocation = urlJoin(properties.url, proxyPath, resourceId)
                     headers["Location"] = newLocation

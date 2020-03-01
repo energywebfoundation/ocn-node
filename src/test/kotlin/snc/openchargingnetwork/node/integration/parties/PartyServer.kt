@@ -61,18 +61,6 @@ open class PartyServer(private val credentials: KeyPair, private val party: Basi
         return "http://localhost:$port$path"
     }
 
-    fun getHeaders(to: BasicRole): Map<String, String> {
-        return mapOf(
-                "Authorization" to "Token $tokenC",
-                "X-Request-ID" to generateUUIDv4Token(),
-                "X-Correlation-ID" to generateUUIDv4Token(),
-                "OCPI-From-Country-Code" to party.country,
-                "OCPI-From-Party-Id" to party.id,
-                "OCPI-To-Country-Code" to to.country,
-                "OCPI-To-Party-Id" to to.id
-        )
-    }
-
     fun getSignableHeaders(to: BasicRole): SignableHeaders {
         return SignableHeaders(
                 correlationId = generateUUIDv4Token(),
