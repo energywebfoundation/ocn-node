@@ -2,44 +2,59 @@
 
 The Open Charging Network (OCN) node with Open Charge Point Interface (OCPI) v2.2 API. 
 
-**This software is in development.** As such, bugs may be encountered. To see an overview of current and past issues,
-see our [issue tracker](https://bitbucket.org/shareandcharge/ocn-node/issues).  
+This is a community project, aimed at incorporating and building on the open OCPI standard. As with OCPI, contributions 
+are welcome in the form of comments, pull requests and raised issues. Visit our 
+[issue tracker](https://bitbucket.org/shareandcharge/ocn-node/issues) for an overview of current and past issues. 
+Questions may also be asked on [Stack Overflow](https://stackoverflow.com/questions/tagged/shareandcharge), or in the 
+[Gitter community](https://gitter.im/shareandcharge/community). 
 
-As the aim is for this to be a community project, contributions are always welcome in the form of comments, pull 
-requests and raised issues. Questions may also be asked on Stack Overflow using the tag `ShareAndCharge`, or in the
-Gitter [community](https://gitter.im/shareandcharge/community). 
+Before contributing to the source code, please take the time to read over the 
+[Developer Certificate of Origin](https://developercertificate.org/). For more information, see our 
+[contributing guidelines](https://shareandcharge.atlassian.net/wiki/spaces/OCN/pages/360611849/Contributing+to+the+Open+Charging+Network).
 
-Before contributing to the source code, please take the
-time to read over the [Developer Certificate of Origin](https://developercertificate.org/). For more information, 
-see our [contributing guidelines](https://shareandcharge.atlassian.net/wiki/spaces/OCN/pages/360611849/Contributing+to+the+Open+Charging+Network).
+## The Open Charging Network
 
-## Open Charging Network
+The OCN is a decentralized eRoaming hub. To participate in the OCN, a node must be used to broker OCPI requests
+(e.g. start/stop charging requests, POI data retrieval) between parties. A node can be set up and run by anyone, however 
+to connect to a node, two steps are needed: 
 
-To participate in the OCN, a node must be used to broker OCPI requests (e.g. start/stop requests, POI data retrieval) 
-between parties. There are two ways to use a node. Either it is run on-premises by an administrator, or it is provided 
-as a Service by an OCN Node Provider. If the latter scenario is desired, an OCPI party (i.e. eMobility Service Provider
-or Charge Point Operator) needs only to obtain a `CREDENTIALS_TOKEN_A` and versions endpoint from said provider to 
-begin the regular OCPI 2.2 credentials registration process with the provider's OCN Node.  
+1. A registration token (so-called Token A in OCPI terminology) must be generated for the prospective platform by the 
+node administrator.
+2. The platform must register themselves in the [OCN Registry](https://bitbucket.org/shareandcharge/ocn-registry), 
+stating that they are using that particular node.
+
+Once a registration token is obtained and the platform is listed in the registry, the OCPI credentials handshake with 
+the OCN Node can be initiated, providing access to all OCPI modules and interfaces used for peer-to-peer 
+communication<sup>1</sup>. When a counterparty is found (either offline or via the registry), requests are sent to 
+them via the sender's OCN Node<sup>2</sup>.
 
 For more information about the OCN, check out the [wiki](https://bitbucket.org/shareandcharge/ocn-node/wiki/).
+
+<sup>1</sup> The HubClientInfo module will be added in a future release.\
+<sup>2</sup> Sending a request does not guarantee its delivery. Using the _OcnRules_ module, parties are able to whitelist
+and blacklist counterparties. See the subsequent HTTP API documentation for more on this custom module. 
 
 ## HTTP API Documentation
 
 The [HTTP API Documentation](https://shareandcharge.bitbucket.io) for the OCN Node describes endpoints which can be used 
-by administrators and users. Outside of the full OCPI v2.2 API, OCN Nodes provide additional features, such as the custom
-OCPI module, _OcnRules_, as well as ways for admins to restrict use and users to query the OCN Registry.
+by administrators and users (OCPI parties). Outside of the full OCPI v2.2 API, OCN Nodes provide additional features,
+such as the custom OCPI module, _OcnRules_, as well as ways for admins to restrict use and users to query the OCN Registry.
 
 ## Dependencies
 
 The OCN Node is built with Kotlin, targeting the JVM. [OpenJDK 8](https://openjdk.java.net/install/index.html) or higher 
 is needed to build and run the project. Additionally, the node can be run in [Docker](https://docs.docker.com/install/) 
 with the provided Dockerfile, however the build step takes place on the host rather than inside a container.
- 
 
-## Running a Local Open Charging Network
+The choice of operating system is up to the administrator. By and large, the OCN Node has been developed and run on
+Unix-like operating systems, particularly Ubuntu. There is currently no guarantee that it will work on other 
+operating systems.   
 
-Before running a node and connecting it to a local, test or prod environment, it is recommended to become acquainted 
-with how the network operates first. The `docker-compose` file provided spins up a local environment with the OCN
+
+## Tutorial: Running your own Local Open Charging Network
+
+Before running a node and connecting it to a local, test or prod environment, it is recommended to first become 
+acquainted with how the network operates. The provided `docker-compose` file spins up a local environment with the OCN
 Registry and two OCN Nodes pre-configured. A [tutorial](./examples) has been provided to guide administrators and users 
 of an OCN Node alike through various use case examples.  To complete this tutorial it is necessary to install
 [Docker Compose](https://docs.docker.com/compose/install/) in addition to the above dependencies.
@@ -47,7 +62,7 @@ of an OCN Node alike through various use case examples.  To complete this tutori
 ## Running a Node
 
 First of all, clone the repository:
-
+    
 ```
 git clone git@bitbucket.org:shareandcharge/ocn-node.git
 cd ocn-node
@@ -72,24 +87,24 @@ setting the following:
 ocn.node.url = http://localhost:8080
 ``` 
 
-Results in requesting platforms obtaining OCPI module endpoints starting with `http://localhost:8080`, for 
-example `http://localhost:8080/ocpi/2.2/sender/locations` for the locations module's sender interface.
+means that parties receive module enpoints starting with `http://localhost:8080`, for 
+example `http://localhost:8080/ocpi/2.2/sender/locations` (the locations module's sender interface).
  
-Likewise, for a public node on the test network, the url would be `https://server.example.com`. This would translate
-to `https://server.example.com/ocpi/2.2/sender/locations`. Be sure to include the protocol so that connected platforms
-can correctly parse the endpoints provided.
+Likewise, for a public node that accepts outside connections, the url might include the domain name, for example 
+`https://server.example.com`. This would translate to `https://server.example.com/ocpi/2.2/sender/locations`. Be sure 
+to include the protocol so that connected platforms can correctly parse the endpoints provided.
 
-On startup, the OCN client will ensure that the public URL set is reachable. Additionally, there is different
-behaviour within this check depending on which mode the client is running in. See section 1.5 for more details.
+On startup, the OCN client will ensure that the public URL set by the administrator is reachable. Additionally, there is
+different behaviour within this check depending on which mode the client is running in. See section 1.5 for more details.
 
 #### 1.2. Connecting to a Database
 
 The `dev` properties connects the node to an in-memory database, which will not persist data across node restarts.
-If running the node in a test or production environment with Postgres installed, copy from the `psql` properties file 
+If running the node in a test or production environment with Postgres installed, copy from the `prod` properties file 
 instead:
 
 ```
-cp application.psql.properties application.local.properties
+cp application.prod.properties application.prod-edit.properties
 ```
 
 The node may also be connected to a different database. This requires installing the relevant database driver as 
@@ -98,11 +113,15 @@ database server itself.
 
 #### 1.3. Configuring the Network
 
-The network on which any OCN Node is running on depends purely on the OCN Registry smart contract it is connected to.
-These configuration properties belong to `ocn.node.web3`. Currently the `develop` branch is pre-configured (using the
-provided `dev` and `psql` profiles) to use to the Energy Web Foundation's Volta test network, by connecting to a [remote Volta node](https://energyweb.atlassian.net/wiki/spaces/EWF/pages/703201459/Volta+Connecting+to+Remote+RPC) 
-and the OCN Registry smart contract deployed on Volta with address `0x0A5f27Ee1EbDC68034aDbd9446F9375783aeF7DC`. Note
-that subsequent commits may change this address as development of the OCN Registry takes place.
+The network on which any OCN Node is running on depends purely on the OCN Registry smart contract it is connected to,
+defined by the blockchain node and registry contract address configured. These configuration properties have the prefix 
+`ocn.node.web3`. 
+
+Currently there are two environements: 
+[test](https://shareandcharge.atlassian.net/wiki/spaces/OCN/pages/409206816/Public+Test+Network) and
+[production](https://shareandcharge.atlassian.net/wiki/spaces/OCN/pages/409305103/Production+Network).
+
+The pre-configured properties files point to each of these respectively (`dev` to test, `prod` to production).
 
 #### 1.4. Setting the Admin API key [optional]
 
@@ -113,8 +132,8 @@ key can be set in the application's properties, else a new one will be generated
 ocn.node.apikey = randomkey
 ```
 
-The API key will be printed on node start, be it generated or user-specified. Consult the [API documentation](https://shareandcharge.bitbucket.io)
-for more information on how to use the Admin API. 
+The API key will be printed on node start, be it generated or user-specified. Consult the 
+[API documentation](https://shareandcharge.bitbucket.io) for more information on how to use the Admin API. 
 
 #### 1.5 Setting the runtime mode
 
@@ -125,34 +144,64 @@ provided public client URL is reachable over HTTPS and is accessible to the outs
 #### 1.6 Enabling message signing
 
 A feature of the Open Charging Network is it's security. To ensure that requests sent over the OCN are delivered to 
-their recipient as intended, messages are signed by the sender. In some particular cases, an OCN Node may need to 
-rewrite entries in the sender's original requests (such as when providing response URLs in commands requests). The 
-message signing functionality allows for this, as a signature of a modified request must also reference any values
-that have been changed. For more details on how to sign and verify messages, check out the [OCN Notary](https://bitbucket.org/shareandcharge/ocn-notary).
+their recipient as intended, requests are signed by the sender and responses by the receiver. In some particular cases, 
+an OCN Node may need to rewrite entries in the sender's original request (such as when providing response URLs in 
+commands requests). The message signing functionality allows for this, as the signature of a modified request must also 
+reference any values that have been changed. For more details on how to sign and verify messages, check out the 
+[OCN Notary](https://bitbucket.org/shareandcharge/ocn-notary).
 
-During the alpha phase, message signing will not be enabled by default. **Once the OCN is in production, message signing
-will be enabled by default.** To toggle this feature on/off, set `ocn.node.signatures` to true (on) or false (off). 
+By default message signing verification is on. To toggle this feature on/off, set `ocn.node.signatures` to true (on) or 
+false (off). 
+
+In practice, this means that a connected platform will need to send requests including a valid `OCN-Signature` header,
+signed by the private key which they have used to list themselves in the OCN Registry. Likewise the recipient will
+need to sign their response, and include it in the body. As the signature for responses can potentially be large 
+(depending on the amount of data signed), it was decided that they should be placed in the response body. 
 
 Be aware that even if an OCN Node does not require message signing, a recipient may still reject the request if it's
-missing an `OCN-Signature` header. Additionally, the OCN Node will verify signatures if they are present in a request's
-header, regardless of this setting. 
+missing an `OCN-Signature` (either on their own or through the _OcnRules_ module). Additionally, the OCN Node will 
+verify signatures if they are present in a a request/response, regardless of this setting. 
 
-### 2. Running the Node
+#### 1.7 Providing a private key
 
-There are multiple ways to run an OCN Node. First of all, return to the root of the repository:
+An Etheruem public-private keypair is used to identify the node on the network. Commonly, these keypairs are stored 
+in a "wallet". There are a number of ways that a wallet can be created, for example with [Metamask](https://metamask.io/).
 
-```
-cd ../../..
-```
-
-Or you can enter the following shortcut to return to the previous directory, which should be the root if following
-these instructions:
+Once a private key has been created, set the node to use it:
 
 ```
-cd -
+ocn.node.privatekey = 0x1c3e5453c0f9aa74a8eb0216310b2b013f017813a648fce364bf41dbc0b37647
 ```
 
-#### 2.1. Building and Executing a JAR file
+Note that in dev mode, a private key will be set if omitted. As this key is hardcoded and used in a lot of examples
+elsewhere (like above), it is advised to change it if targeting the public test environment. In prod mode, the node
+will refuse to start without a private key.  
+
+### 2. Listing the Node in the OCN Registry
+
+A Node must be listed in the registry for it to be usable on the network. This can be achieved by installing
+the OCN Registry CLI. Either clone the [OCN-Registry](https://bitbucket.org/shareandcharge/ocn-registry) repository
+and follow the instructions in the README, or install the NPM package:
+
+```
+npm i -g @shareandcharge/ocn-registry
+```
+
+Then, add your domain name using the private key as set in the configuration (note that the wallet key must be funded
+and the correct network chosen using the `-n` flag:
+```
+ocn-registry set-node https://server.example.com -n prod -s 0x1c3e5453c0f9aa74a8eb0216310b2b013f017813a648fce364bf41dbc0b37647
+```
+
+If successful the node is now available for prospective platforms to link themselves to in the OCN Registry.
+
+### 3. Running the Node
+
+There are multiple ways to run an OCN Node. 
+
+Note: make sure you are in the root of the repository first.
+
+#### 3.1. Building and Executing a JAR file
 
 To build the node with the desired profile (relating to the `application.<PROFILE>.properties` file), for example a
 `local` profile, run the following:
@@ -171,7 +220,7 @@ Alternatively, a different profile can be selected at runtime, e.g.:
 java -jar -Dspring.config.location=/path/to/application.prod.properties ./build/libs/ocn-node-0.1.0-SNAPSHOT.jar
 ```
 
-#### 2.2. Using the Gradle Wrapper
+#### 3.2. Using the Gradle Wrapper
 
 Especially helpful for development, the node can quickly be run in one step with Gradle using the provided wrapper:
 
@@ -179,7 +228,7 @@ Especially helpful for development, the node can quickly be run in one step with
 ./gradlew -Pprofile=local bootRun
 ```
 
-#### 2.3. Using Docker
+#### 3.3. Using Docker
 
 A Dockerfile is provided which, once built, will run the above command in a container. Firstly, build the OCN Node with
 gradle locally, then build the Docker image with a tag flag so that we can identify it later:
@@ -195,7 +244,7 @@ the outside environment:
 docker run -p 8080:8080 ocn-node 
 ```
 
-### 3. Operating the OCN Node
+### 4. Operating the OCN Node
 
 Once the node is running, test that it is working with the following request:
 
@@ -206,6 +255,39 @@ curl localhost:8080/health
 You should see a 200 OK response.
 
 For further usage documentation, consult the [API Documentation](https://shareandcharge.bitbucket.io).
+
+## Development
+
+Gradle tasks are configured in `build.gradle.kts` using the Kotlin DSL.
+
+### Run unit tests
+
+```
+./gradlew unitTest
+```
+
+### Run integration tests
+
+Integration tests depend on `ganache-cli`, a local development blockchain, which is installed using NPM. In one terminal 
+window, run the following task, which will attempt to install ganache if not already present and then run it:
+```
+./gradlew ganache
+```
+
+Then, run the tests:
+```
+./gradlew integrationTest
+```
+
+### Developing against Ganache
+
+This is helpful for developing without having to worry about funding and managing Ethereum keypairs. With the above
+`ganache` task running in the background, the OCN Node can be configured using the following properties:
+
+```
+ocn.node.web3.provider = http://localhost:8544
+ocn.node.web3.contracts.registry = 0x345ca3e014aaf5dca488057592ee47305d9b3e10
+```
 
 ### Generating new API documentation
 

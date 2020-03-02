@@ -72,7 +72,11 @@ class VersionsController(private val repository: PlatformRepository,
 
         for (module in ModuleID.values()) {
 
-            if (module.id == "credentials" || module.id == "hubclientinfo") {
+            if (module.id == "hubclientinfo") {
+                continue
+            }
+
+            if (module.id == "credentials" /*|| /module.id == "hubclientinfo"*/) {
                 // these modules have only SENDER endpoint (the broker/hub)
                 endpoints.add(Endpoint(
                         identifier = module.id,

@@ -261,7 +261,7 @@ class RequestHandler<T: Any>(private val request: OcpiRequestVariables,
                 request.urlPathVariables?.let {
                     routingService.deleteProxyResource(it)
                 }
-                // TODO: stash link and update signature
+
                 val headers = HttpHeaders()
 
                 response.headers["X-Total-Count"]?.let { headers["X-Total-Count"] = it }
