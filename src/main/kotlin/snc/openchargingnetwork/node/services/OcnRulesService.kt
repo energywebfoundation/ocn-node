@@ -19,13 +19,13 @@ package snc.openchargingnetwork.node.services
 import org.springframework.stereotype.Service
 import snc.openchargingnetwork.node.models.OcnRules
 import snc.openchargingnetwork.node.models.OcnRulesList
+import snc.openchargingnetwork.node.models.OcnRulesListParty
 import snc.openchargingnetwork.node.models.OcnRulesListType
 import snc.openchargingnetwork.node.models.entities.OcnRulesListEntity
 import snc.openchargingnetwork.node.models.entities.PlatformEntity
 import snc.openchargingnetwork.node.models.exceptions.OcpiClientGenericException
 import snc.openchargingnetwork.node.models.exceptions.OcpiClientInvalidParametersException
 import snc.openchargingnetwork.node.models.ocpi.BasicRole
-import snc.openchargingnetwork.node.models.ocpi.WhiteListModules
 import snc.openchargingnetwork.node.repositories.OcnRulesListRepository
 import snc.openchargingnetwork.node.repositories.PlatformRepository
 import snc.openchargingnetwork.node.tools.extractToken
@@ -56,7 +56,7 @@ class OcnRulesService(private val platformRepo: PlatformRepository,
                         }))
     }
 
-    private fun getModules(ocnRulesListEntity: OcnRulesListEntity): WhiteListModules {
+    private fun getModules(ocnRulesListEntity: OcnRulesListEntity): OcnRulesListParty {
         val basicRole = ocnRulesListEntity.counterparty
         val modules = mutableListOf<String>()
 
@@ -69,7 +69,7 @@ class OcnRulesService(private val platformRepo: PlatformRepository,
         }
 
         if(ocnRulesListEntity.commands) {
-            modules.add("locations")
+            modules.add("commands")
         }
 
         if(ocnRulesListEntity.locations) {
@@ -85,10 +85,10 @@ class OcnRulesService(private val platformRepo: PlatformRepository,
         }
 
         if(ocnRulesListEntity.tokens) {
-            modules.add("tariffs")
+            modules.add("tokens")
         }
 
-        return WhiteListModules(
+        return OcnRulesListParty(
             id = basicRole.id,
             country =  basicRole.country,
             modules = modules
@@ -101,21 +101,22 @@ class OcnRulesService(private val platformRepo: PlatformRepository,
         platformRepo.save(platform)
     }
 
-    fun enableWhitelist(authorization: String) {
+    fun blockAll(authorization: String) {
         // 1. check C / find platform
         val platform = findPlatform(authorization);
 
         // 2. determine whether whitelist is active
         assertListNotActive(platform, OcnRulesListType.BLACKLIST)
 
-        // 3. set the whitelist to true
+        // 3. set the whitelist to true with empty list
         platform.rules.whitelist = true
+        ocnRulesListRepo.deleteAll()
 
         // 4. save whitelist option
         platformRepo.save(platform)
     }
 
-    fun updateWhitelist(authorization: String, parties: List<WhiteListModules>) {
+    fun updateWhitelist(authorization: String, parties: List<OcnRulesListParty>) {
         // 1. check if any module of party is not empty
         checkModuleList(parties)
 
@@ -153,7 +154,7 @@ class OcnRulesService(private val platformRepo: PlatformRepository,
         )})
     }
 
-    fun updateBlacklist(authorization: String, parties: List<WhiteListModules>) {
+    fun updateBlacklist(authorization: String, parties: List<OcnRulesListParty>) {
         // 1. check if any module of party is not empty
         checkModuleList(parties)
 
@@ -191,7 +192,7 @@ class OcnRulesService(private val platformRepo: PlatformRepository,
         )})
     }
 
-    fun appendToWhitelist(authorization: String, body: WhiteListModules) {
+    fun appendToWhitelist(authorization: String, body: OcnRulesListParty) {
         // 1. check module of party is not empty
         checkModule(body.modules)
 
@@ -226,7 +227,7 @@ class OcnRulesService(private val platformRepo: PlatformRepository,
         ))
     }
 
-    fun appendToBlacklist (authorization: String, body: WhiteListModules) {
+    fun appendToBlacklist (authorization: String, body: OcnRulesListParty) {
         // 1. check module of party is not empty
         checkModule(body.modules)
 
@@ -308,7 +309,7 @@ class OcnRulesService(private val platformRepo: PlatformRepository,
         }
     }
 
-    private fun checkModuleList(parties: List<WhiteListModules>) {
+    private fun checkModuleList(parties: List<OcnRulesListParty>) {
         // 1. check Module is empty or not
         var result = parties.any { it.modules.isNullOrEmpty() }
 

@@ -98,7 +98,7 @@ class IntegrationTest {
         assertThat(response2.jsonObject.getString("address").checksum()).isEqualTo(expectedAddress)
     }
 
-    // TODO: proper parameterized tests
+    // TODO: all the below should have properly parameterized tests
     @Test
     fun basic_request() {
         for (cpo in cpos) {
@@ -257,14 +257,5 @@ class IntegrationTest {
             }
         }
     }
-
-    // TODO:
-    // -> sending when whitelisted/blacklisted
-    // msp/cpo verifying signatures
-
-    // TODO: for issue tracker
-    // -> pagination params overwritten on /page/n requests?
-    // -> proxied resources not being deleted
-    // -> async
 
 }

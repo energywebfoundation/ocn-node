@@ -46,10 +46,6 @@ data class BasicRole(@JsonProperty("party_id") final val id: String,
     }
 }
 
-data class WhiteListModules(@JsonProperty("party_id") final val id: String,
-                            @JsonProperty("country_code") final val country: String,
-                            @JsonProperty("modules") final val modules: List<String>)
-
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 data class OcpiRequestVariables(@JsonProperty("module") val module: ModuleID,

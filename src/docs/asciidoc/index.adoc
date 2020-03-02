@@ -162,13 +162,13 @@ The following parameter can be provided as URL segment.
 
 [cols="3,2,1,10",options="header"]
 |===
-|Parameter |Datatype |Required |Description
-|list_type |<<ocn_rules_list_type_enum,OcnRulesListType>> |yes |The type of list which the new entry applies to.
+|Parameter |Type |Required |Description
+|create_list_type |<<ocn_rules_list_type_enum,OcnRulesListType>> |yes |The type of list which the new entry applies to.
 |===
 
 ====== Request Body
 
-Body is required if sending a POST request to `whitelist` or `blacklist` including list of modules.
+Body is required if sending a POST request to `whitelist` or `blacklist`.
 
 [cols="3,2,10",options="headers"]
 |===
@@ -201,8 +201,8 @@ Updates all rules entries for a platform on the OCN Node. Applies to signatures,
 
 [cols="3,2,1,10",options="header"]
 |===
-|Parameter |Datatype |Required |Description
-|type |<<ocn_rules_type_enum,OcnRulesType>> |yes |The type of rule to update.
+|Parameter |Type |Required |Description
+|list_type |<<ocn_rules_type_enum,OcnRulesType>> |yes |The type of rule to update.
 |===
 
 ====== Request Body
@@ -214,8 +214,8 @@ updating `signatures`, then no body is required.
 [cols="3,2,10",options="headers"]
 |===
 |Type |Card. |Description
-|<<basic_role_class,BasicRole>> |* |The counterparty role information to add to the specified list.
-|<<white_list_modules_class,WhiteListModules>> |* |The counterparty role and list of modules information to add to the specified list.
+|<<basic_role_class,BasicRole>> |* |The counter-party role information to add to the specified list.
+|<<white_list_modules_class,WhiteListModules>> |* |The counter-party role and list of modules information to add to the specified list.
 |===
 
 ====== Example: update whitelist
@@ -261,7 +261,7 @@ The following parameters can be provided as URL segments.
 
 [cols="3,2,1,10",options="header"]
 |===
-|Parameter |Datatype |Required |Description
+|Parameter |Type |Required |Description
 |list_type |<<ocn_rules_list_type_enum,OcnRulesListType>> |yes |The type of list which the new entry applies to.
 |country_code |https://github.com/ocpi/ocpi/blob/master/types.asciidoc#types_cistring_type[CIString](2) |yes |Country code of role to add to the specified list
 |party_id |https://github.com/ocpi/ocpi/blob/master/types.asciidoc#types_cistring_type[CIString](3) |yes |Party ID (Provider ID) of role to add to the specified list
@@ -335,6 +335,7 @@ DELETE to URL: https://node.ocn.org/ocpi/receiver/2.2/ocnrules/blacklist/NL/XYZ
 |signatures |Parties must include valid OCN Signature header in requests to receiver.
 |whitelist |List of parties allowed to send messages to receiver.
 |blacklist |List of parties not allowed to send messages to receiver.
+|block-all |Enable an empty whitelist, effectively blocking all incoming requests.
 |===
 
 [[ocn_rules_list_type_enum]]

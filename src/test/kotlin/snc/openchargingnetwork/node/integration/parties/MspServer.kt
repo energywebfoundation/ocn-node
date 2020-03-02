@@ -1,7 +1,6 @@
 package snc.openchargingnetwork.node.integration.parties
 
 import com.fasterxml.jackson.module.kotlin.readValue
-import io.javalin.http.Context
 import khttp.responses.Response
 import org.web3j.crypto.Credentials as KeyPair
 import shareandcharge.openchargingnetwork.notary.Notary
@@ -14,7 +13,7 @@ import snc.openchargingnetwork.node.integration.objectMapper
 import snc.openchargingnetwork.node.integration.privateKey
 import snc.openchargingnetwork.node.integration.toMap
 import snc.openchargingnetwork.node.models.ocpi.*
-import snc.openchargingnetwork.node.tools.generateUUIDv4Token
+
 
 class MspServer(private val credentials: KeyPair, val party: BasicRole, port: Int): PartyServer(credentials, party, port) {
 
