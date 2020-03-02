@@ -212,12 +212,12 @@ To build the node with the desired profile (relating to the `application.<PROFIL
 
 Once built, the packaged node can be run using:
 ```
-java -jar ./build/libs/ocn-node-0.1.0-SNAPSHOT.jar
+java -jar ./build/libs/ocn-node-1.0.0.jar
 ```
 
 Alternatively, a different profile can be selected at runtime, e.g.:
 ```
-java -jar -Dspring.config.location=/path/to/application.prod.properties ./build/libs/ocn-node-0.1.0-SNAPSHOT.jar
+java -jar -Dspring.config.location=/path/to/application.prod.properties ./build/libs/ocn-node-1.0.0.jar
 ```
 
 #### 3.2. Using the Gradle Wrapper
