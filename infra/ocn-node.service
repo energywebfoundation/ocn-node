@@ -1,0 +1,13 @@
+[Unit]
+Description=Open Charging Network Node
+After=network-online.target
+
+[Service]
+Type=simple
+User=<USER>
+WorkingDirectory=/home/<USER>/ocn-node
+ExecStart=/usr/bin/java -jar -Dspring.config.location=/home/<USER>/ocn-node/application.properties /home/<USER>/ocn-node/build/libs/ocn-node-1.0.0.jar
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

@@ -3,34 +3,18 @@
 # Only use spaces to indent your .yml configuration.
 # -----
 # You can specify a custom docker image from Docker Hub as your build environment.
-image: openjdk:8
+image: alpine:latest
 
 pipelines:
   default:
     - step:
         caches:
           - gradle
+          - node
         script: # Modify the commands below to build your repository.
           # You must commit the Gradle wrapper to your repository
           # https://docs.gradle.org/current/userguide/gradle_wrapper.html
-          - bash ./gradlew build
-  branches:
-    develop:
-      - step:
-          deployment: test2
-          caches:
-            - gradle
-          script:
-            - bash ./gradlew build
-            - scp -r ./build $HOST:ocn-client/
-            - ssh $HOST 'sh ./ocn-client/restart.sh'
-            - scp -r ./build $ALT_HOST:ocn-client/
-            - ssh $ALT_HOST 'sh ./ocn-client/restart.sh'
-    open-testing:
-      - step:
-          deployment: test
-          caches:
-            - gradle
-          script:
-            - bash ./gradlew build
-            - ssh $BROKER_HOST 'bash ./ocn-client/infra/setup-test.sh'
+          - apk add gradle npm
+          - npm install -g ganache-cli
+          - ganache-cli -m "candy maple cake sugar pudding cream honey rich smooth crumble sweet treat" --port 8544 --accounts 20 --networkId=9 --gasLimit=10000000 > /dev/null &
+          - ./gradlew build
