@@ -19,6 +19,7 @@ package snc.openchargingnetwork.node.services
 import org.springframework.http.HttpHeaders
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
+import org.web3j.crypto.Credentials
 import shareandcharge.openchargingnetwork.notary.Notary
 import snc.openchargingnetwork.node.config.NodeProperties
 import snc.openchargingnetwork.node.models.HttpResponse
@@ -170,7 +171,7 @@ class RequestHandler<T: Any>(private val request: OcpiRequestVariables,
                 val rewriteFields = mapOf("$['body']['response_url']" to responseUrl)
                 val notary = validateNotary()
                 notary.stash(rewriteFields)
-                notary.sign(modifiedRequest.toNotaryReadableVariables(), walletService.privateKey)
+                notary.sign(modifiedRequest.toNotaryReadableVariables(), Credentials.create(properties.privateKey).address)
                 return notary.serialize()
             }
             return null

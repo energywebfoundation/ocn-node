@@ -16,20 +16,31 @@
 
 package snc.openchargingnetwork.node.config
 
+import org.springframework.boot.context.event.ApplicationReadyEvent
+import org.springframework.context.event.EventListener
 import org.springframework.stereotype.Component
-import snc.openchargingnetwork.node.services.WalletService
+import org.web3j.crypto.Credentials
 
 @Component
-class NodeInfoLogger(properties: NodeProperties,
-                     walletService: WalletService) {
+class NodeInfoLogger(private val properties: NodeProperties) {
 
-    init {
+    @EventListener(ApplicationReadyEvent::class)
+    fun log() {
         val borderLength = calculateBorderLength(properties.url.length, properties.apikey.length)
         val border = "=".repeat(borderLength)
+        val address = if (properties.privateKey != null) {
+            Credentials.create(properties.privateKey).address
+        } else {
+            if (properties.dev) {
+                "0x9bC1169Ca09555bf2721A5C9eC6D69c8073bfeB4"
+            } else {
+                ""
+            }
+        }
         println("\n$border\n" +
                 "DEV        | ${properties.dev}\n" +
                 "URL        | ${properties.url}\n" +
-                "ADDRESS    | ${walletService.address}\n" +
+                "ADDRESS    | $address\n" +
                 "APIKEY     | ${properties.apikey}\n" +
                 "SIGNATURES | ${properties.signatures}" +
                 "\n$border\n")

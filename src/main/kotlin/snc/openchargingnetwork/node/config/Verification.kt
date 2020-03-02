@@ -14,6 +14,17 @@ import javax.net.ssl.SSLException
 class Verification(private val properties: NodeProperties) {
 
     @EventListener(ApplicationReadyEvent::class)
+    fun testRegistry() {
+        if (properties.privateKey == null) {
+            if (properties.dev) {
+                properties.privateKey = "0x1c3e5453c0f9aa74a8eb0216310b2b013f017813a648fce364bf41dbc0b37647"
+            } else {
+                throw IllegalStateException("No private key set. Unable to verify registry configuration.")
+            }
+        }
+    }
+
+    @EventListener(ApplicationReadyEvent::class)
     fun testPublicURL() {
 
         val url = URL(this.properties.url)

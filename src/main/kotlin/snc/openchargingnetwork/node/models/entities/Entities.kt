@@ -17,19 +17,9 @@
 package snc.openchargingnetwork.node.models.entities
 
 import snc.openchargingnetwork.node.models.ocpi.*
-import snc.openchargingnetwork.node.tools.generatePrivateKey
 import snc.openchargingnetwork.node.tools.generateUUIDv4Token
 import snc.openchargingnetwork.node.tools.getTimestamp
 import javax.persistence.*
-
-
-/**
- * Store the private key of the OCN Node's wallet
- */
-@Entity
-@Table(name = "wallet")
-class WalletEntity(var privateKey: String = generatePrivateKey(),
-                   @Id val id: Long? = 1L)
 
 
 /**

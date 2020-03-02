@@ -19,19 +19,25 @@ package snc.openchargingnetwork.node.services
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpHeaders
 import org.springframework.stereotype.Service
+import org.web3j.crypto.Credentials
+import org.web3j.crypto.Keys
+import snc.openchargingnetwork.contracts.Registry
 import snc.openchargingnetwork.node.config.NodeProperties
-import snc.openchargingnetwork.node.models.*
-import snc.openchargingnetwork.node.models.ocpi.*
+import snc.openchargingnetwork.node.models.OcnHeaders
+import snc.openchargingnetwork.node.models.OcnMessageHeaders
+import snc.openchargingnetwork.node.models.Receiver
+import snc.openchargingnetwork.node.models.entities.*
+import snc.openchargingnetwork.node.models.entities.OcnRules
+import snc.openchargingnetwork.node.models.exceptions.*
+import snc.openchargingnetwork.node.models.ocpi.BasicRole
+import snc.openchargingnetwork.node.models.ocpi.InterfaceRole
+import snc.openchargingnetwork.node.models.ocpi.ModuleID
+import snc.openchargingnetwork.node.models.ocpi.OcpiRequestVariables
 import snc.openchargingnetwork.node.repositories.*
 import snc.openchargingnetwork.node.tools.extractNextLink
 import snc.openchargingnetwork.node.tools.extractToken
 import snc.openchargingnetwork.node.tools.generateUUIDv4Token
 import snc.openchargingnetwork.node.tools.urlJoin
-import snc.openchargingnetwork.contracts.RegistryFacade
-import snc.openchargingnetwork.node.models.entities.*
-import snc.openchargingnetwork.node.models.entities.OcnRules
-import snc.openchargingnetwork.node.models.exceptions.*
-import java.lang.Exception
 
 @Service
 class RoutingService(private val platformRepo: PlatformRepository,
@@ -39,7 +45,7 @@ class RoutingService(private val platformRepo: PlatformRepository,
                      private val endpointRepo: EndpointRepository,
                      private val proxyResourceRepo: ProxyResourceRepository,
                      private val ocnRulesListRepo: OcnRulesListRepository,
-                     private val registry: RegistryFacade,
+                     private val registry: Registry,
                      private val httpService: HttpService,
                      private val walletService: WalletService,
                      private val properties: NodeProperties) {
@@ -66,13 +72,13 @@ class RoutingService(private val platformRepo: PlatformRepository,
         val country = role.country.toByteArray()
         val id = role.id.toByteArray()
 
-        val nodeServerURL = registry.nodeURLOf(country, id).sendAsync().get()
+        val (operator, domain) = registry.getOperatorByOcpi(country, id).sendAsync().get()
         if (belongsToMe) {
-            val ethAddress = registry.nodeAddressOf(country, id).sendAsync().get()
-            return nodeServerURL == properties.url && ethAddress == walletService.address
+            val myKey = Credentials.create(properties.privateKey).address
+            return domain == properties.url && Keys.toChecksumAddress(operator) == Keys.toChecksumAddress(myKey)
         }
 
-        return nodeServerURL != ""
+        return domain != ""
     }
 
     /**
@@ -115,11 +121,11 @@ class RoutingService(private val platformRepo: PlatformRepository,
      * get the OCN Node URL as registered by the basic role in the OCN Registry
      */
     fun getRemoteNodeUrl(receiver: BasicRole): String {
-        val url = registry.nodeURLOf(receiver.country.toByteArray(), receiver.id.toByteArray()).sendAsync().get()
-        if (url == "") {
+        val (_, domain) = registry.getOperatorByOcpi(receiver.country.toByteArray(), receiver.id.toByteArray()).sendAsync().get()
+        if (domain == "") {
             throw OcpiHubUnknownReceiverException("Recipient not registered on OCN")
         }
-        return url
+        return domain
     }
 
 
