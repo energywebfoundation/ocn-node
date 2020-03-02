@@ -20,10 +20,10 @@ import org.springframework.http.ResponseEntity
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.bind.annotation.*
 import snc.openchargingnetwork.node.models.OcnRules
+import snc.openchargingnetwork.node.models.OcnRulesListParty
 import snc.openchargingnetwork.node.models.ocpi.BasicRole
 import snc.openchargingnetwork.node.models.ocpi.OcpiResponse
 import snc.openchargingnetwork.node.services.OcnRulesService
-import snc.openchargingnetwork.node.models.ocpi.WhiteListModules
 
 
 @RestController
@@ -37,43 +37,9 @@ class OcnRulesController(private val ocnRulesService: OcnRulesService) {
     }
 
     @Transactional
-    @PutMapping("/ocpi/receiver/2.2/ocnrules/signatures")
-    fun updateSignatures(@RequestHeader("authorization") authorization: String): ResponseEntity<OcpiResponse<Unit>> {
-
-        ocnRulesService.updateSignatures(authorization)
-        return ResponseEntity.ok(OcpiResponse(statusCode = 1000))
-    }
-
-    @Transactional
-    @PostMapping("/ocpi/receiver/2.2/ocnrules/enableWhitelist")
-    fun enableWhitelist(@RequestHeader("authorization") authorization: String): ResponseEntity<OcpiResponse<Unit>> {
-
-        ocnRulesService.enableWhitelist(authorization)
-        return ResponseEntity.ok(OcpiResponse(statusCode = 1000))
-    }
-
-    @Transactional
-    @PutMapping("/ocpi/receiver/2.2/ocnrules/whitelist")
-    fun updateWhitelist(@RequestHeader("authorization") authorization: String,
-                        @RequestBody body: List<WhiteListModules>): ResponseEntity<OcpiResponse<Unit>> {
-
-        ocnRulesService.updateWhitelist(authorization, body)
-        return ResponseEntity.ok(OcpiResponse(statusCode = 1000))
-    }
-
-    @Transactional
-    @PutMapping("/ocpi/receiver/2.2/ocnrules/blacklist")
-    fun updateBlacklist(@RequestHeader("authorization") authorization: String,
-                        @RequestBody body: List<WhiteListModules>): ResponseEntity<OcpiResponse<Unit>> {
-
-        ocnRulesService.updateBlacklist(authorization, body)
-        return ResponseEntity.ok(OcpiResponse(statusCode = 1000))
-    }
-
-    @Transactional
     @PostMapping("/ocpi/receiver/2.2/ocnrules/whitelist")
     fun appendToWhitelist(@RequestHeader("authorization") authorization: String,
-                          @RequestBody body: WhiteListModules  ): ResponseEntity<OcpiResponse<Unit>> {
+                          @RequestBody body: OcnRulesListParty): ResponseEntity<OcpiResponse<Unit>> {
 
         ocnRulesService.appendToWhitelist(authorization, body)
         return ResponseEntity.ok(OcpiResponse(statusCode = 1000))
@@ -82,9 +48,43 @@ class OcnRulesController(private val ocnRulesService: OcnRulesService) {
     @Transactional
     @PostMapping("/ocpi/receiver/2.2/ocnrules/blacklist")
     fun appendToBlacklist(@RequestHeader("authorization") authorization: String,
-                          @RequestBody body: WhiteListModules  ): ResponseEntity<OcpiResponse<Unit>> {
+                          @RequestBody body: OcnRulesListParty): ResponseEntity<OcpiResponse<Unit>> {
 
         ocnRulesService.appendToBlacklist(authorization, body)
+        return ResponseEntity.ok(OcpiResponse(statusCode = 1000))
+    }
+
+    @Transactional
+    @PutMapping("/ocpi/receiver/2.2/ocnrules/signatures")
+    fun updateSignatures(@RequestHeader("authorization") authorization: String): ResponseEntity<OcpiResponse<Unit>> {
+
+        ocnRulesService.updateSignatures(authorization)
+        return ResponseEntity.ok(OcpiResponse(statusCode = 1000))
+    }
+
+    @Transactional
+    @PutMapping("/ocpi/receiver/2.2/ocnrules/whitelist")
+    fun updateWhitelist(@RequestHeader("authorization") authorization: String,
+                        @RequestBody body: List<OcnRulesListParty>): ResponseEntity<OcpiResponse<Unit>> {
+
+        ocnRulesService.updateWhitelist(authorization, body)
+        return ResponseEntity.ok(OcpiResponse(statusCode = 1000))
+    }
+
+    @Transactional
+    @PutMapping("/ocpi/receiver/2.2/ocnrules/blacklist")
+    fun updateBlacklist(@RequestHeader("authorization") authorization: String,
+                        @RequestBody body: List<OcnRulesListParty>): ResponseEntity<OcpiResponse<Unit>> {
+
+        ocnRulesService.updateBlacklist(authorization, body)
+        return ResponseEntity.ok(OcpiResponse(statusCode = 1000))
+    }
+
+    @Transactional
+    @PutMapping("/ocpi/receiver/2.2/ocnrules/block-all")
+    fun blockAll(@RequestHeader("authorization") authorization: String): ResponseEntity<OcpiResponse<Unit>> {
+
+        ocnRulesService.blockAll(authorization)
         return ResponseEntity.ok(OcpiResponse(statusCode = 1000))
     }
 

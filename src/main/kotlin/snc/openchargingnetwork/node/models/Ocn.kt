@@ -21,7 +21,6 @@ import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
 import shareandcharge.openchargingnetwork.notary.SignableHeaders
 import snc.openchargingnetwork.node.models.ocpi.BasicRole
-import snc.openchargingnetwork.node.models.ocpi.WhiteListModules
 
 data class OcnMessageHeaders(val requestID: String,
                              val signature: String) {
@@ -71,12 +70,17 @@ enum class Receiver {
     REMOTE,
 }
 
-data class OcnRulesList(val active: Boolean, val list: List<WhiteListModules>)
+
 data class OcnRules(val signatures: Boolean, val whitelist: OcnRulesList, val blacklist: OcnRulesList)
+data class OcnRulesList(val active: Boolean, val list: List<OcnRulesListParty>)
 
 enum class OcnRulesListType {
     WHITELIST,
     BLACKLIST
 }
+
+data class OcnRulesListParty(@JsonProperty("party_id") val id: String,
+                             @JsonProperty("country_code") val country: String,
+                             @JsonProperty("modules") val modules: List<String>)
 
 data class RegistryPartyDetails(val address: String, val operator: String)

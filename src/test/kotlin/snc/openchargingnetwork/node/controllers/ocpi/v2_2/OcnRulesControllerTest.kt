@@ -9,16 +9,14 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
 import org.springframework.http.MediaType
-import org.springframework.http.ResponseEntity
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
 import snc.openchargingnetwork.node.models.OcnRules
 import snc.openchargingnetwork.node.models.OcnRulesList
+import snc.openchargingnetwork.node.models.OcnRulesListParty
 import snc.openchargingnetwork.node.models.ocpi.BasicRole
-import snc.openchargingnetwork.node.models.ocpi.OcpiResponse
 import snc.openchargingnetwork.node.services.OcnRulesService
-import snc.openchargingnetwork.node.models.ocpi.WhiteListModules
 
 
 @WebMvcTest(OcnRulesController::class)
@@ -32,7 +30,7 @@ class OcnRulesControllerTest(@Autowired val mockMvc: MockMvc) {
         val expected = OcnRules(
                 signatures = false,
                 whitelist = OcnRulesList(false, listOf()),
-                blacklist = OcnRulesList(true, listOf(WhiteListModules("ABC", "DE", listOf("cdrs", "sessions")))))
+                blacklist = OcnRulesList(true, listOf(OcnRulesListParty("ABC", "DE", listOf("cdrs", "sessions")))))
 
         every { ocnRulesService.getRules("Token token-c") } returns expected
 
@@ -49,22 +47,8 @@ class OcnRulesControllerTest(@Autowired val mockMvc: MockMvc) {
     }
 
     @Test
-    fun enableWhitelist() {
-        every { ocnRulesService.enableWhitelist("Token token-c") } just Runs
-
-        mockMvc.perform(post("/ocpi/receiver/2.2/ocnrules/enableWhitelist")
-                .header("authorization", "Token token-c"))
-                .andExpect(status().isOk)
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("\$.status_code").value(1000))
-                .andExpect(jsonPath("\$.status_message").doesNotExist())
-                .andExpect(jsonPath("\$.data").doesNotExist())
-                .andExpect(jsonPath("\$.timestamp").isString)
-    }
-
-    @Test
     fun updateWhitelist() {
-        val body = listOf(WhiteListModules("ABC", "DE", listOf("cdrs", "sessions")), WhiteListModules("DEF", "DE", listOf("locations", "tariffs")))
+        val body = listOf(OcnRulesListParty("ABC", "DE", listOf("cdrs", "sessions")), OcnRulesListParty("DEF", "DE", listOf("locations", "tariffs")))
 
         every { ocnRulesService.updateWhitelist("Token token-c", body) } just Runs
 
@@ -82,7 +66,7 @@ class OcnRulesControllerTest(@Autowired val mockMvc: MockMvc) {
 
     @Test
     fun updateBlacklist() {
-        val body = listOf(WhiteListModules("ABC", "DE", listOf("cdrs", "sessions")), WhiteListModules("DEF", "DE", listOf("locations", "tariffs")))
+        val body = listOf(OcnRulesListParty("ABC", "DE", listOf("cdrs", "sessions")), OcnRulesListParty("DEF", "DE", listOf("locations", "tariffs")))
 
         every { ocnRulesService.updateBlacklist("Token token-c", body) } just Runs
 
@@ -100,8 +84,22 @@ class OcnRulesControllerTest(@Autowired val mockMvc: MockMvc) {
     }
 
     @Test
+    fun blockAll() {
+        every { ocnRulesService.blockAll("Token token-c") } just Runs
+
+        mockMvc.perform(put("/ocpi/receiver/2.2/ocnrules/block-all")
+                .header("authorization", "Token token-c"))
+                .andExpect(status().isOk)
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("\$.status_code").value(1000))
+                .andExpect(jsonPath("\$.status_message").doesNotExist())
+                .andExpect(jsonPath("\$.data").doesNotExist())
+                .andExpect(jsonPath("\$.timestamp").isString)
+    }
+
+    @Test
     fun appendToWhitelist() {
-        val body = WhiteListModules("ABC", "DE", listOf("cdrs", "sessions"))
+        val body = OcnRulesListParty("ABC", "DE", listOf("cdrs", "sessions"))
 
         every { ocnRulesService.appendToWhitelist("Token token-c", body) } just Runs
 
@@ -120,7 +118,7 @@ class OcnRulesControllerTest(@Autowired val mockMvc: MockMvc) {
 
     @Test
     fun appendToBlacklist() {
-        val body = WhiteListModules("ABC","DE", listOf("sessions", "cdrs"))
+        val body = OcnRulesListParty("ABC","DE", listOf("sessions", "cdrs"))
 
         every { ocnRulesService.appendToBlacklist("Token token-c", body) } just Runs
 
