@@ -207,7 +207,7 @@ To build the node with the desired profile (relating to the `application.<PROFIL
 `local` profile, run the following:
 
 ```
-./gradlew -Pprofile=local build
+./gradlew -Pprofile=local build -x test
 ```
 
 Once built, the packaged node can be run using:
@@ -234,7 +234,7 @@ A Dockerfile is provided which, once built, will run the above command in a cont
 gradle locally, then build the Docker image with a tag flag so that we can identify it later:
 
 ```
-./gradlew -Pprofile=local build
+./gradlew -Pprofile=local build -x test
 docker build -t ocn-node .
 ```
 
