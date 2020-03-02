@@ -25,14 +25,14 @@ stating that they are using that particular node.
 
 Once a registration token is obtained and the platform is listed in the registry, the OCPI credentials handshake with 
 the OCN Node can be initiated, providing access to all OCPI modules and interfaces used for peer-to-peer 
-communication<sup>1</sup>. When a counterparty is found (either offline or via the registry), requests are sent to 
+communication<sup>1</sup>. When a counter-party is found (either offline or via the registry), requests are sent to 
 them via the sender's OCN Node<sup>2</sup>.
 
 For more information about the OCN, check out the [wiki](https://bitbucket.org/shareandcharge/ocn-node/wiki/).
 
 <sup>1</sup> The HubClientInfo module will be added in a future release.\
 <sup>2</sup> Sending a request does not guarantee its delivery. Using the _OcnRules_ module, parties are able to whitelist
-and blacklist counterparties. See the subsequent HTTP API documentation for more on this custom module. 
+and blacklist counter-parties. See the subsequent HTTP API documentation for more on this custom module. 
 
 ## HTTP API Documentation
 
@@ -87,7 +87,7 @@ setting the following:
 ocn.node.url = http://localhost:8080
 ``` 
 
-means that parties receive module enpoints starting with `http://localhost:8080`, for 
+means that parties receive module endpoints starting with `http://localhost:8080`, for 
 example `http://localhost:8080/ocpi/2.2/sender/locations` (the locations module's sender interface).
  
 Likewise, for a public node that accepts outside connections, the url might include the domain name, for example 
@@ -117,7 +117,7 @@ The network on which any OCN Node is running on depends purely on the OCN Regist
 defined by the blockchain node and registry contract address configured. These configuration properties have the prefix 
 `ocn.node.web3`. 
 
-Currently there are two environements: 
+Currently there are two environments: 
 [test](https://shareandcharge.atlassian.net/wiki/spaces/OCN/pages/409206816/Public+Test+Network) and
 [production](https://shareandcharge.atlassian.net/wiki/spaces/OCN/pages/409305103/Production+Network).
 
@@ -164,7 +164,7 @@ verify signatures if they are present in a a request/response, regardless of thi
 
 #### 1.7 Providing a private key
 
-An Etheruem public-private keypair is used to identify the node on the network. Commonly, these keypairs are stored 
+An Etheruem public-private key-pair is used to identify the node on the network. Commonly, these key-pairs are stored 
 in a "wallet". There are a number of ways that a wallet can be created, for example with [Metamask](https://metamask.io/).
 
 Once a private key has been created, set the node to use it:
