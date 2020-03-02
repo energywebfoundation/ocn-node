@@ -53,7 +53,7 @@ class AdminController(private val platformRepo: PlatformRepository,
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized")
         }
 
-        val role = roleRepo.findByCountryCodeAndPartyIDAllIgnoreCase(countryCode, partyID)
+        val role = roleRepo.findAllByCountryCodeAndPartyIDAllIgnoreCase(countryCode, partyID).firstOrNull()
                 ?: return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Role not found")
 
         val platform = platformRepo.findByIdOrNull(role.platformID)

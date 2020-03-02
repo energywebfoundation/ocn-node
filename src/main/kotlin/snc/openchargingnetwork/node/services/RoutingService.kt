@@ -26,6 +26,7 @@ import snc.openchargingnetwork.node.config.NodeProperties
 import snc.openchargingnetwork.node.models.OcnHeaders
 import snc.openchargingnetwork.node.models.OcnMessageHeaders
 import snc.openchargingnetwork.node.models.Receiver
+import snc.openchargingnetwork.node.models.RegistryPartyDetails
 import snc.openchargingnetwork.node.models.entities.*
 import snc.openchargingnetwork.node.models.entities.OcnRules
 import snc.openchargingnetwork.node.models.exceptions.*
@@ -94,7 +95,7 @@ class RoutingService(private val platformRepo: PlatformRepository,
      * get platform ID - used as foreign key in endpoint and roles repositories
      */
     fun getPlatformID(role: BasicRole): Long {
-        return roleRepo.findByCountryCodeAndPartyIDAllIgnoreCase(role.country, role.id)?.platformID
+        return roleRepo.findAllByCountryCodeAndPartyIDAllIgnoreCase(role.country, role.id).firstOrNull()?.platformID
                 ?: throw OcpiHubUnknownReceiverException("Could not find platform ID of $role")
     }
 
@@ -126,6 +127,15 @@ class RoutingService(private val platformRepo: PlatformRepository,
             throw OcpiHubUnknownReceiverException("Recipient not registered on OCN")
         }
         return domain
+    }
+
+
+    /**
+     * Only returns party and operator addresses so far; add as needed
+     */
+    fun getPartyDetails(party: BasicRole): RegistryPartyDetails {
+        val result = registry.getPartyDetailsByOcpi(party.country.toByteArray(), party.id.toByteArray()).sendAsync().get()
+        return RegistryPartyDetails(address = result.component1(), operator = result.component5())
     }
 
 
@@ -371,27 +381,6 @@ class RoutingService(private val platformRepo: PlatformRepository,
                 signature = walletService.sign(bodyString))
 
         return Triple(url, headers, bodyString)
-    }
-
-
-    /**
-     * Proxy the Link header in paginated requests (i.e. GET sender cdrs, sessions, tariffs, tokens) so that the
-     * requesting platform is able to request the next page without needing authorization on the recipient's
-     * system.
-     */
-    fun proxyPaginationHeaders(request: OcpiRequestVariables, responseHeaders: Map<String, String>): HttpHeaders {
-        val headers = HttpHeaders()
-        responseHeaders["Link"]?.let {
-            it.extractNextLink()?.let {next ->
-                val id = setProxyResource(next, request.headers.sender, request.headers.receiver)
-                val proxyPaginationEndpoint = "/ocpi/${request.interfaceRole.id}/2.2/${request.module.id}/page"
-                val link = urlJoin(properties.url, proxyPaginationEndpoint, id)
-                headers.set("Link", "$link; rel=\"next\"")
-            }
-        }
-        responseHeaders["X-Total-Count"]?.let { headers.set("X-Total-Count", it) }
-        responseHeaders["X-Limit"]?.let { headers.set("X-Limit", it) }
-        return headers
     }
 
 

@@ -19,8 +19,7 @@ package snc.openchargingnetwork.node.models.ocpi
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
 import org.springframework.http.HttpMethod
-import shareandcharge.openchargingnetwork.notary.OcpiRequest
-import shareandcharge.openchargingnetwork.notary.OcpiUrlEncodedParameters
+import shareandcharge.openchargingnetwork.notary.ValuesToSign
 import snc.openchargingnetwork.node.models.OcnHeaders
 import snc.openchargingnetwork.node.models.exceptions.OcpiClientInvalidParametersException
 import java.time.Instant
@@ -63,20 +62,10 @@ data class OcpiRequestVariables(@JsonProperty("module") val module: ModuleID,
                                 @JsonProperty("proxy_resource") val proxyResource: String? = null,
                                 @JsonProperty("body") val body: Any? = null) {
 
-    fun toNotaryReadableVariables(): OcpiRequest<*> {
-        return OcpiRequest(
-                headers = headers.toNotaryReadableHeaders(),
-                params = urlEncodedParams?.run {
-                    OcpiUrlEncodedParameters(
-                            countryCode = get("country_code")?.toString(),
-                            partyId = get("party_id")?.toString(),
-                            tokenUid = get("token_uid")?.toString(),
-                            type = get("type")?.toString(),
-                            dateFrom = get("date_from")?.toString(),
-                            date_to = get("date_to")?.toString(),
-                            offset = get("offset")?.toString(),
-                            limit = get("limit")?.toString())
-                },
+    fun toSignedValues(): ValuesToSign<*> {
+        return ValuesToSign(
+                headers = headers.toSignedHeaders(),
+                params = urlEncodedParams,
                 body = body)
         }
 }
@@ -90,7 +79,8 @@ data class RegistrationInfo(@JsonProperty("token") val token: String,
 data class OcpiResponse<T>(@JsonProperty("status_code") val statusCode: Int,
                            @JsonProperty("status_message") val statusMessage: String? = null,
                            @JsonProperty("data") val data: T? = null,
-                           @JsonProperty("timestamp") val timestamp: String = DateTimeFormatter.ISO_INSTANT.format(Instant.now()))
+                           @JsonProperty("timestamp") val timestamp: String = DateTimeFormatter.ISO_INSTANT.format(Instant.now()),
+                           @JsonProperty("ocn_signature") var signature: String? = null)
 
 
 @Embeddable

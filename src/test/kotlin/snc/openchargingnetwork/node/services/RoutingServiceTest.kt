@@ -59,7 +59,13 @@ class RoutingServiceTest {
                 urlPathVariables = "DE/SNC/abc123",
                 urlEncodedParams = mapOf("type" to TokenType.APP_USER))
 
-        every { routingService.getPlatformID(request.headers.receiver) } returns 6L
+        every { roleRepo.findAllByCountryCodeAndPartyIDAllIgnoreCase("CH", "ABC") } returns listOf(
+                RoleEntity(
+                        platformID = 6L,
+                        role = Role.CPO,
+                        businessDetails = BusinessDetails(name = "TestCPO"),
+                        countryCode = "SNC",
+                        partyID = "CH"))
         every { routingService.getPlatformEndpoint(
                 platformID = 6L,
                 module = request.module,
@@ -101,7 +107,13 @@ class RoutingServiceTest {
                         receiver = BasicRole("ABC", "CH")),
                 urlPathVariables = "67")
 
-        every { routingService.getPlatformID(request.headers.receiver) } returns 126L
+        every { roleRepo.findAllByCountryCodeAndPartyIDAllIgnoreCase("CH", "ABC") } returns listOf(
+                RoleEntity(
+                        platformID = 126L,
+                        role = Role.CPO,
+                        businessDetails = BusinessDetails(name = "TestCPO"),
+                        countryCode = "SNC",
+                        partyID = "CH"))
         every { routingService.getProxyResource(
                 id = "67",
                 sender = request.headers.sender,
@@ -254,43 +266,6 @@ class RoutingServiceTest {
 
 
     @Test
-    fun proxyPaginationHeaders() {
-        val request = OcpiRequestVariables(
-                module = ModuleID.TARIFFS,
-                method = HttpMethod.GET,
-                interfaceRole = InterfaceRole.SENDER,
-                headers = OcnHeaders(
-                        authorization = "Token token-c",
-                        requestID = generateUUIDv4Token(),
-                        correlationID = generateUUIDv4Token(),
-                        sender = BasicRole("SNC", "DE"),
-                        receiver = BasicRole("ABC", "CH")),
-                urlEncodedParams = mapOf("limit" to 25))
-
-        val link = "https://some.link.com/ocpi/tariffs?limit=25&offset=25; rel=\"next\""
-
-        val responseHeaders = mapOf(
-                "Link" to link,
-                "X-Limit" to "25",
-                "X-Total-Count" to "148")
-
-        every { proxyResourceRepo.save<ProxyResourceEntity>(any())
-        } returns ProxyResourceEntity(
-                resource = link,
-                sender = request.headers.sender,
-                receiver = request.headers.receiver,
-                id = 74L)
-
-        every { properties.url } returns "https://some.node.ocn"
-
-        val proxyHeaders = routingService.proxyPaginationHeaders(request, responseHeaders)
-        assertThat(proxyHeaders.getFirst("Link")).isEqualTo("https://some.node.ocn/ocpi/sender/2.2/tariffs/page/74; rel=\"next\"")
-        assertThat(proxyHeaders.getFirst("X-Limit")).isEqualTo("25")
-        assertThat(proxyHeaders.getFirst("X-Total-Count")).isEqualTo("148")
-    }
-
-
-    @Test
     fun getProxyResource() {
         val id = "123"
         val sender = BasicRole("SNC", "DE")
@@ -348,7 +323,7 @@ class RoutingServiceTest {
     @Test
     fun getPlatformID() {
         val role = RoleEntity(5L, Role.CPO, BusinessDetails("SENDER Co"), "SEN", "DE")
-        every { roleRepo.findByCountryCodeAndPartyIDAllIgnoreCase(role.countryCode, role.partyID) } returns role
+        every { roleRepo.findAllByCountryCodeAndPartyIDAllIgnoreCase(role.countryCode, role.partyID) } returns listOf(role)
         assertThat(routingService.getPlatformID(BasicRole(role.partyID, role.countryCode))).isEqualTo(5L)
     }
 

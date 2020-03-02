@@ -88,15 +88,15 @@ class RepositoriesTests @Autowired constructor(
     }
 
     @Test
-    fun roleRepository_findByCountryCodeAndPartyIDAllIgnoreCase() {
+    fun roleRepository_findAllByCountryCodeAndPartyIDAllIgnoreCase() {
         val role = RoleEntity(1L, Role.CPO, BusinessDetails("S&C"), "SNC", "DE")
         entityManager.persistAndFlush(role)
         // find by exact case as entered (uppercase)
-        val exists = roleRepository.findByCountryCodeAndPartyIDAllIgnoreCase(role.countryCode, role.partyID)
-        assertThat(exists).isEqualTo(role)
+        val exists = roleRepository.findAllByCountryCodeAndPartyIDAllIgnoreCase(role.countryCode, role.partyID)
+        assertThat(exists).isEqualTo(listOf(role))
         // find by ignore case (lowercase)
-        val alsoExists = roleRepository.findByCountryCodeAndPartyIDAllIgnoreCase(role.countryCode.toLowerCase(), role.partyID.toLowerCase())
-        assertThat(alsoExists).isEqualTo(role)
+        val alsoExists = roleRepository.findAllByCountryCodeAndPartyIDAllIgnoreCase(role.countryCode.toLowerCase(), role.partyID.toLowerCase())
+        assertThat(alsoExists).isEqualTo(listOf(role))
     }
 
     @Test

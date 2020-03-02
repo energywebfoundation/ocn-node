@@ -16,11 +16,13 @@
 
 package snc.openchargingnetwork.node.services
 
+import com.fasterxml.jackson.core.JsonParseException
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import org.springframework.http.HttpMethod
 import org.springframework.stereotype.Service
 import snc.openchargingnetwork.node.models.*
+import snc.openchargingnetwork.node.models.exceptions.OcpiServerGenericException
 import snc.openchargingnetwork.node.models.exceptions.OcpiServerUnusableApiException
 import snc.openchargingnetwork.node.models.ocpi.*
 import snc.openchargingnetwork.node.tools.urlJoin
@@ -48,10 +50,14 @@ class HttpService {
             else -> throw IllegalStateException("Invalid method: $method")
         }
 
-        return HttpResponse(
-                statusCode = response.statusCode,
-                headers = response.headers,
-                body = mapper.readValue(response.text))
+        try {
+            return HttpResponse(
+                    statusCode = response.statusCode,
+                    headers = response.headers,
+                    body = mapper.readValue(response.text))
+        } catch (e: JsonParseException) {
+            throw OcpiServerGenericException("Could not parse JSON response of forwarded OCPI request: ${e.message}")
+        }
     }
 
 

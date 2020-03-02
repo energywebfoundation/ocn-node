@@ -19,9 +19,7 @@ package snc.openchargingnetwork.node.models
 
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
-import org.springframework.web.bind.annotation.ModelAttribute
-import org.springframework.web.bind.annotation.RequestHeader
-import shareandcharge.openchargingnetwork.notary.OcpiHeaders
+import shareandcharge.openchargingnetwork.notary.SignableHeaders
 import snc.openchargingnetwork.node.models.ocpi.BasicRole
 import snc.openchargingnetwork.node.models.ocpi.WhiteListModules
 
@@ -57,8 +55,8 @@ data class OcnHeaders(@JsonProperty("Authorization") val authorization: String,
         return map
     }
 
-    fun toNotaryReadableHeaders(): OcpiHeaders {
-        return OcpiHeaders(
+    fun toSignedHeaders(): SignableHeaders {
+        return SignableHeaders(
                 correlationId = correlationID,
                 fromCountryCode = sender.country,
                 fromPartyId = sender.id,
@@ -80,3 +78,5 @@ enum class OcnRulesListType {
     WHITELIST,
     BLACKLIST
 }
+
+data class RegistryPartyDetails(val address: String, val operator: String)

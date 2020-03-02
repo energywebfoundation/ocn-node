@@ -13,10 +13,7 @@ import org.springframework.http.HttpMethod
 import shareandcharge.openchargingnetwork.notary.Notary
 import snc.openchargingnetwork.node.config.NodeProperties
 import snc.openchargingnetwork.node.data.exampleLocation1
-import snc.openchargingnetwork.node.models.HttpResponse
-import snc.openchargingnetwork.node.models.OcnHeaders
-import snc.openchargingnetwork.node.models.OcnMessageHeaders
-import snc.openchargingnetwork.node.models.Receiver
+import snc.openchargingnetwork.node.models.*
 import snc.openchargingnetwork.node.models.entities.OcnRules
 import snc.openchargingnetwork.node.models.ocpi.*
 import snc.openchargingnetwork.node.tools.generatePrivateKey
@@ -108,7 +105,7 @@ class RequestHandlerTest {
         every { routingService.validateReceiver(variables.headers.receiver) } returns Receiver.LOCAL
         every { routingService.validateWhitelisted(variables.headers.sender, variables.headers.receiver, variables.module) } just Runs
         every { properties.signatures } returns false
-        every { routingService.getPlatformRules(variables.headers.receiver) } returns OcnRules(signatures = false)
+        every { routingService.getPlatformRules(any()) } returns OcnRules(signatures = false)
         every { routingService.prepareLocalPlatformRequest(variables, false) } returns Pair(recipientUrl, outgoingHeaders)
         every { httpService.makeOcpiRequest<Unit>(recipientUrl, outgoingHeaders, variables) } returns expectedResponse
 
@@ -130,8 +127,8 @@ class RequestHandlerTest {
                         receiver = BasicRole("XYZ", "DE")),
                 body = exampleLocation1)
 
-        val privateKey = generatePrivateKey()
-        val signature = Notary().sign(variables.toNotaryReadableVariables(), privateKey)
+        val senderKey = generatePrivateKey()
+        val signature = Notary().sign(variables.toSignedValues(), senderKey)
         variables.headers.signature = signature.serialize()
 
         val requestHandler = requestHandlerBuilder.build<Unit>(variables)
@@ -149,10 +146,16 @@ class RequestHandlerTest {
                 headers = mapOf(),
                 body = OcpiResponse(1000))
 
+        val receiverKey = generatePrivateKey()
+        val receiverSig = Notary().sign(expectedResponse.toSignedValues(), receiverKey)
+        expectedResponse.body.signature = receiverSig.serialize()
+
         every { routingService.validateReceiver(variables.headers.receiver) } returns Receiver.LOCAL
         every { routingService.validateWhitelisted(variables.headers.sender, variables.headers.receiver, variables.module) } just Runs
         every { properties.signatures } returns false
         every { routingService.getPlatformRules(variables.headers.receiver) } returns OcnRules(signatures = true)
+        every { routingService.getPartyDetails(variables.headers.sender) } returns RegistryPartyDetails(signature.signatory, "0x9bC1169Ca09555bf2721A5C9eC6D69c8073bfeB4")
+        every { routingService.getPartyDetails(variables.headers.receiver) } returns RegistryPartyDetails(receiverSig.signatory, "0x9bC1169Ca09555bf2721A5C9eC6D69c8073bfeB4")
         every { routingService.prepareLocalPlatformRequest(variables, false) } returns Pair(recipientUrl, outgoingHeaders)
         every { httpService.makeOcpiRequest<Unit>(recipientUrl, outgoingHeaders, variables) } returns expectedResponse
 
@@ -211,7 +214,7 @@ class RequestHandlerTest {
                 body = exampleLocation1)
 
         val privateKey = generatePrivateKey()
-        val signature = Notary().sign(variables.toNotaryReadableVariables(), privateKey)
+        val signature = Notary().sign(variables.toSignedValues(), privateKey)
         variables.headers.signature = signature.serialize()
 
         val requestHandler = requestHandlerBuilder.build<Unit>(variables)
@@ -227,8 +230,14 @@ class RequestHandlerTest {
                 headers = mapOf(),
                 body = OcpiResponse(1000))
 
+        val receiverKey = generatePrivateKey()
+        val receiverSig = Notary().sign(expectedResponse.toSignedValues(), receiverKey)
+        expectedResponse.body.signature = receiverSig.serialize()
+
         every { routingService.validateReceiver(variables.headers.receiver) } returns Receiver.REMOTE
         every { properties.signatures } returns true
+        every { routingService.getPartyDetails(variables.headers.sender) } returns RegistryPartyDetails(signature.signatory, "0x7c514d15709fb091243a4dffb649361354a9b038")
+        every { routingService.getPartyDetails(variables.headers.receiver) } returns RegistryPartyDetails(receiverSig.signatory, "0xd49ead20b0ae060161c9ddea9b1bc46bb29b3c58")
         every { routingService.prepareRemotePlatformRequest(variables, false) } returns Triple(recipientUrl, outgoingHeaders, outgoingBody)
         every { httpService.postOcnMessage<Unit>(recipientUrl, outgoingHeaders, outgoingBody) } returns expectedResponse
 

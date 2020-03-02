@@ -28,17 +28,17 @@ class NodeProperties {
 
     var privateKey: String? = null
 
-    var signatures: Boolean = false
+    var signatures: Boolean = true
 
     lateinit var url: String
 
-    val web3 = Web3()
+    var web3 = Web3()
 
     class Web3 {
 
         lateinit var provider: String
 
-        val contracts = Contracts()
+        var contracts = Contracts()
 
         class Contracts {
             lateinit var registry: String

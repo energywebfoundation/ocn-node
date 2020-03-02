@@ -14,7 +14,7 @@ plugins {
 }
 
 group = "snc.openchargingnetwork.node"
-version = "0.1.0-SNAPSHOT"
+version = "1.0.0"
 java.sourceCompatibility = JavaVersion.VERSION_1_8
 
 val snippetsDir = "build/generated-snippets"
@@ -31,7 +31,7 @@ repositories {
 }
 
 dependencies {
-    implementation("shareandcharge.openchargingnetwork:notary:0.0.1")
+    implementation("shareandcharge.openchargingnetwork:notary:0.4.0-beta1")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
@@ -54,6 +54,8 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter-api")
     testImplementation("com.ninja-squad:springmockk:1.1.2")
     testImplementation("org.springframework.restdocs:spring-restdocs-mockmvc:2.0.3.RELEASE")
+    testImplementation("io.javalin:javalin:3.7.0")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.3")
 }
 
 allOpen {
@@ -71,8 +73,30 @@ tasks.withType<KotlinCompile> {
 
 val test: Test by tasks
 test.apply {
-    useJUnitPlatform()
+    dependsOn("unitTest", "integrationTest")
     outputs.dir(snippetsDir)
+}
+
+tasks.register<Test>("unitTest") {
+    useJUnitPlatform()
+    exclude("**/integration/**")
+}
+
+tasks.register<Test>("integrationTest") {
+    useJUnitPlatform()
+    include("**/integration/**")
+}
+
+tasks.register<Exec>("ganache") {
+    commandLine(listOf("/usr/bin/env", "npm", "install", "-g", "ganache-cli"))
+    commandLine(listOf(
+            "/usr/bin/env",
+            "ganache-cli",
+            "-m=candy maple cake sugar pudding cream honey rich smooth crumble sweet treat",
+            "--port=8544",
+            "--accounts=20",
+            "--networkId=9",
+            "--gasLimit=10000000"))
 }
 
 val asciidoctor by tasks.getting(AsciidoctorTask::class) {
