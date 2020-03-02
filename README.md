@@ -123,7 +123,7 @@ Currently there are two environments:
 
 The pre-configured properties files point to each of these respectively (`dev` to test, `prod` to production).
 
-#### 1.4. Setting the Admin API key [optional]
+#### 1.4. Setting the Admin API key
 
 The Admin API allows, for example, generating new OCPI tokens (`CREDENTIALS_TOKEN_A`) for planned platforms. An API
 key can be set in the application's properties, else a new one will be generated on restart:
