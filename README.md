@@ -94,7 +94,7 @@ Likewise, for a public node that accepts outside connections, the url might incl
 `https://server.example.com`. This would translate to `https://server.example.com/ocpi/2.2/sender/locations`. Be sure 
 to include the protocol so that connected platforms can correctly parse the endpoints provided.
 
-On startup, the OCN client will ensure that the public URL set by the administrator is reachable. Additionally, there is
+On startup, the OCN Node will ensure that the public URL set by the administrator is reachable. Additionally, there is
 different behaviour within this check depending on which mode the client is running in. See section 1.5 for more details.
 
 #### 1.2. Connecting to a Database
