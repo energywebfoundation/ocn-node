@@ -208,8 +208,10 @@ Updates all rules entries for a platform on the OCN Node. Applies to signatures,
 ====== Request Body
 
 Body is required if sending a PUT request to `whitelist` or `blacklist`. If an empty list is sent, the OCN Node will
-interpret that as the deletion of all rules for the given list. Therefore, the specified list will be deactivated. It is also mandatory to set which specific module will be blocked/blacklisted for the specific sender. If an empty list of modules is sent then the sender is eligible to use all the modules. If
-updating `signatures`, then no body is required.
+interpret that as the deletion of all rules for the given list. Therefore, the specified list will be deactivated. 
+It is also mandatory to set which modules will be blocked/blacklisted for the sender. If an empty list of modules 
+is sent then the sender is eligible to use all the modules. If updating `signatures` or setting `block-all`, then 
+no body is required.
 
 [cols="3,2,10",options="headers"]
 |===
