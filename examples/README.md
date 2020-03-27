@@ -204,19 +204,23 @@ of endpoints supported by the node. The one we are most interested in for now is
 ### 3. Registering EMSP credentials
 
 Now that we know where to send our credentials, we can open the `POST credentials` request in the credentials directory.
-This request contains a JSON body of our own credentials to be sent to the OCN Node. This includes the token that the 
-OCN Node should use to authorize itself on *our* server, should it need to forward a request to us from a CPO (i.e. if 
-the CPO is pushing session or location updates to us). We also provide a url to  our versions endpoint, such that the 
-OCN Node can go through the same process we just did, in finding a common OCPI version and obtaining a list of the 
-endpoints we have. Lastly, we describe the roles that we employ. Notice how this is an array. OCPI 2.2 adds the ability 
-for a platform operating multiple roles to communicate on a single OCPI connection. Therefore a platform that is both an 
-EMSP and CPO needs not register twice. 
+This request contains a JSON body of our own [credentials](https://github.com/ocpi/ocpi/blob/master/credentials.asciidoc)
+to be sent to the OCN Node. 
+
+This includes the `token` that the OCN Node will use in requests made to our server, for example if it need to forward 
+a request to us from a CPO (like session or location updates). We also provide a `url` to our versions endpoint, such 
+that the OCN Node can go through the same process we did, in finding a common OCPI version and obtaining a list of the 
+endpoints we have. Lastly, we describe the `roles` that we employ. Notice how this is an array. OCPI 2.2 adds the 
+ability for a platform operating multiple roles to communicate on a single OCPI connection. Therefore a platform that 
+is both an EMSP and CPO needs not register twice. 
+
+The response will look like this:
 
 ```json
 {
     "status_code": 1000,
     "data": {
-        "token": "ef4c3b29-5679-4bb9-8a59-4c53fc3dacef",
+        "token": "ef4c3b29-5679-4bb9-8a59-4c53fc3dacef",    // OCPI TOKEN_C - our TOKEN_A is invalidated.
         "url": "http://localhost:8080/ocpi/versions",
         "roles": [
             {
@@ -233,8 +237,8 @@ EMSP and CPO needs not register twice.
 }
 ```
 
-Once sent, you should see the OCN Node's credentials returned to you. There is a new token in the body: this is what's 
-known as token C and will be used to authorize any subsequent OCPI requests you make to your OCN Node. 
+You should see the OCN Node's credentials in the response body. There is a new `token`: this is what's 
+known as TOKEN_C and will be used to authorize any subsequent OCPI requests you make to your OCN Node. 
 The previous token is now discarded and will not be used again, so make sure to save this new token under the 
 environment variable `CREDENTIALS_TOKEN_C`.
 
