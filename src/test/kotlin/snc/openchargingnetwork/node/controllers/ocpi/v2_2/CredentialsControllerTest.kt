@@ -35,6 +35,9 @@ class CredentialsControllerTest(@Autowired val mockMvc: MockMvc) {
 
     @MockkBean
     lateinit var endpointRepo: EndpointRepository
+
+    @MockkBean
+    lateinit var networkClientInfoRepo: NetworkClientInfoRepository
     
     @MockkBean
     lateinit var ocnRulesListRepo: OcnRulesListRepository
@@ -102,10 +105,15 @@ class CredentialsControllerTest(@Autowired val mockMvc: MockMvc) {
                         Endpoint("commands", InterfaceRole.RECEIVER, "https://org.charging.net/commands")))
         every { properties.url } returns "http://my.broker.com"
         every { properties.signatures } returns true
+
         every { routingService.isRoleKnownOnNetwork(BasicRole(role1.partyID, role1.countryCode)) } returns true
+        every { networkClientInfoRepo.existsByPartyAndRole(BasicRole(role1.partyID, role1.countryCode), role1.role) } returns false
         every { roleRepo.existsByCountryCodeAndPartyIDAllIgnoreCase(role1.countryCode, role1.partyID) } returns false
+
         every { routingService.isRoleKnownOnNetwork(BasicRole(role2.partyID, role2.countryCode)) } returns true
         every { roleRepo.existsByCountryCodeAndPartyIDAllIgnoreCase(role2.countryCode, role2.partyID) } returns false
+        every { networkClientInfoRepo.existsByPartyAndRole(BasicRole(role2.partyID, role2.countryCode), role2.role) } returns false
+
         every { platformRepo.save(any<PlatformEntity>()) } returns platform
         every { endpointRepo.save(any<EndpointEntity>()) } returns mockk()
         every { roleRepo.saveAll(any<List<RoleEntity>>())} returns mockk()
@@ -197,6 +205,7 @@ class CredentialsControllerTest(@Autowired val mockMvc: MockMvc) {
         val platform = PlatformEntity(id = 3L, auth = Auth(tokenA = null, tokenB = "123", tokenC = "456"))
         every { platformRepo.findByAuth_TokenC(platform.auth.tokenC) } returns platform
         every { platformRepo.deleteById(platform.id!!) } just Runs
+        every { platformRepo.save(platform) } returns platform
         every { roleRepo.findAllByPlatformID(platform.id) } returns listOf<RoleEntity>()
         every { roleRepo.deleteByPlatformID(platform.id) } just Runs
         every { endpointRepo.deleteByPlatformID(platform.id) } just Runs

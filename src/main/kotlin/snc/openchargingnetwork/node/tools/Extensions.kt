@@ -16,6 +16,8 @@
 
 package snc.openchargingnetwork.node.tools
 
+import org.web3j.crypto.Keys
+
 fun String.extractToken() = split(" ").last()
 
 fun String.extractNextLink(): String? {
@@ -33,4 +35,8 @@ fun String.extractNextLink(): String? {
 
 fun Map<String, Any?>.filterNull(): Map<String, Any?> {
     return filterValues { it != null }
+}
+
+fun String.checksum(): String {
+    return Keys.toChecksumAddress(this)
 }

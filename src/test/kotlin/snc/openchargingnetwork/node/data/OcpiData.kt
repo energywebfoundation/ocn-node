@@ -139,3 +139,10 @@ val exampleToken = Token(
         valid = true,
         whitelist = WhitelistType.ALWAYS,
         lastUpdated = getTimestamp())
+
+val exampleClientInfo = ClientInfo(
+        countryCode = "DE",
+        partyID = "ZUI",
+        lastUpdated = getTimestamp(),
+        role = Role.EMSP,
+        status = ConnectionStatus.CONNECTED)

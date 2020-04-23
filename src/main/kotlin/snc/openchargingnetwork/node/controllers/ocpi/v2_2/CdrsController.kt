@@ -64,7 +64,7 @@ class CdrsController(private val requestHandlerBuilder: RequestHandlerBuilder) {
         return request
                 .validateSender()
                 .forwardRequest()
-                .getResponseWithPaginationHeaders()
+                .getResponseWithPaginationHeaders() // TODO: all pagination response header links should contain original url-encoded parameters
 
     }
 

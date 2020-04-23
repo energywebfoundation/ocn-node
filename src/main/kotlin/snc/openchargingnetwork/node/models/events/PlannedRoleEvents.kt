@@ -14,19 +14,9 @@
     limitations under the License.
 */
 
-package snc.openchargingnetwork.node
+package snc.openchargingnetwork.node.models.events
 
-import org.springframework.boot.autoconfigure.SpringBootApplication
-import org.springframework.boot.context.properties.EnableConfigurationProperties
-import org.springframework.boot.runApplication
-import org.springframework.scheduling.annotation.EnableScheduling
-import snc.openchargingnetwork.node.config.NodeProperties
+import snc.openchargingnetwork.node.models.entities.NetworkClientInfoEntity
 
-@SpringBootApplication
-@EnableConfigurationProperties(NodeProperties::class)
-@EnableScheduling
-class Application
 
-fun main(args: Array<String>) {
-    runApplication<Application>(*args)
-}
+class PlannedRoleFoundDomainEvent(val role: NetworkClientInfoEntity)

@@ -16,9 +16,12 @@
 
 package snc.openchargingnetwork.node.models.entities
 
+import org.springframework.data.domain.AbstractAggregateRoot
+import snc.openchargingnetwork.node.models.events.*
 import snc.openchargingnetwork.node.models.ocpi.*
 import snc.openchargingnetwork.node.tools.generateUUIDv4Token
 import snc.openchargingnetwork.node.tools.getTimestamp
+import java.time.Instant
 import javax.persistence.*
 
 
@@ -33,6 +36,35 @@ class PlatformEntity(var status: ConnectionStatus = ConnectionStatus.PLANNED,
                      @Embedded var auth: Auth = Auth(),
                      @Embedded var rules: OcnRules = OcnRules(),
                      @Id @GeneratedValue var id: Long? = null)
+        : AbstractAggregateRoot<PlatformEntity>() {
+
+        fun register(roles: Iterable<RoleEntity>) {
+                registerEvent(PlatformRegisteredDomainEvent(this, roles))
+        }
+
+        fun unregister(roles: Iterable<RoleEntity>) {
+                this.status = ConnectionStatus.SUSPENDED
+                this.lastUpdated = getTimestamp()
+                registerEvent(PlatformUnregisteredDomainEvent(this, roles))
+        }
+
+        fun renewConnection(connectionInstant: Instant) {
+                this.lastUpdated = getTimestamp(connectionInstant)
+                if (this.status != ConnectionStatus.CONNECTED) {
+                        this.status = ConnectionStatus.CONNECTED
+
+                        registerEvent(PlatformReconnectedDomainEvent(this))
+                }
+        }
+
+        fun disconnect(disconnectionInstant: Instant) {
+                this.lastUpdated = getTimestamp(disconnectionInstant)
+                if (this.status != ConnectionStatus.OFFLINE) {
+                        this.status = ConnectionStatus.OFFLINE
+                        registerEvent(PlatformDisconnectedDomainEvent(this))
+                }
+        }
+}
 
 /**
  * Tokens for authorization on OCPI party servers
@@ -124,3 +156,28 @@ class OcnRulesListEntity(
 
         @Id @GeneratedValue val id: Long? = null
 )
+
+/**
+ * Store the client info object of a party/role from the network (other nodes; planned party from OCN Registry)
+ */
+@Entity
+@Table(name = "network_client_info")
+class NetworkClientInfoEntity(
+
+        @AttributeOverrides(
+                AttributeOverride(name = "id", column = Column(name ="sender_id")),
+                AttributeOverride(name = "country", column = Column(name ="sender_country"))
+        )
+        @Embedded
+        val party: BasicRole,
+
+        @Enumerated(EnumType.STRING) var role: Role,
+        @Enumerated(EnumType.STRING) var status: ConnectionStatus,
+        var lastUpdated: String = getTimestamp(),
+        @Id @GeneratedValue var id: Long? = null
+
+): AbstractAggregateRoot<NetworkClientInfoEntity>() {
+        fun foundNewlyPlannedRole() {
+                registerEvent(PlannedRoleFoundDomainEvent(this))
+        }
+}

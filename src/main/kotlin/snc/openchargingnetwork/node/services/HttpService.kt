@@ -33,6 +33,8 @@ class HttpService {
 
     val mapper = jacksonObjectMapper()
 
+    val configurationModules: List<ModuleID> = listOf(ModuleID.CREDENTIALS, ModuleID.HUB_CLIENT_INFO)
+
     fun convertToRequestVariables(stringBody: String): OcpiRequestVariables = mapper.readValue(stringBody)
 
 
@@ -68,7 +70,9 @@ class HttpService {
                                        headers: OcnHeaders,
                                        requestVariables: OcpiRequestVariables): HttpResponse<T> {
 
-        val headersMap = headers.toMap()
+        // includes or excludes routing headers based on module type (functional or configuration)
+        // TODO: credentials and versions must also include X-Request-ID/X-Correlation-ID
+        val headersMap = headers.toMap(routingHeaders = !configurationModules.contains(requestVariables.module))
 
         var jsonBody: Map<String,Any>? = null
         if (requestVariables.body != null) {
@@ -131,8 +135,8 @@ class HttpService {
      * Used to forward requests to OCPI platforms of which the OCN Node does not share a local connection with
      */
     final fun <T: Any> postOcnMessage(url: String,
-                                headers: OcnMessageHeaders,
-                                body: String): HttpResponse<T> {
+                                      headers: OcnMessageHeaders,
+                                      body: String): HttpResponse<T> {
 
         val headersMap = headers.toMap()
 
@@ -144,6 +148,13 @@ class HttpService {
                 statusCode = response.statusCode,
                 headers = response.headers,
                 body = mapper.readValue(response.text))
+    }
+
+    fun putOcnClientInfo(url: String, signature: String, body: ClientInfo) {
+        val headers = mapOf("OCN-Signature" to signature)
+        val endpoint = urlJoin(url, "/ocn/client-info")
+        val bodyString = mapper.writeValueAsString(body)
+        khttp.put(endpoint, headers, data = bodyString)
     }
 
 }

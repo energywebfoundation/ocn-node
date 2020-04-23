@@ -5,11 +5,8 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager
-import snc.openchargingnetwork.node.models.ocpi.InterfaceRole
-import snc.openchargingnetwork.node.models.ocpi.Role
 import snc.openchargingnetwork.node.models.entities.*
-import snc.openchargingnetwork.node.models.ocpi.BasicRole
-import snc.openchargingnetwork.node.models.ocpi.BusinessDetails
+import snc.openchargingnetwork.node.models.ocpi.*
 import snc.openchargingnetwork.node.tools.generateUUIDv4Token
 
 @DataJpaTest
@@ -18,7 +15,8 @@ class RepositoriesTests @Autowired constructor(
         val platformRepository: PlatformRepository,
         val roleRepository: RoleRepository,
         val endpointRepository: EndpointRepository,
-        val proxyResourceRepository: ProxyResourceRepository) {
+        val proxyResourceRepository: ProxyResourceRepository,
+        val networkClientInfoRepository: NetworkClientInfoRepository) {
 
 
     /**
@@ -187,4 +185,30 @@ class RepositoriesTests @Autowired constructor(
         assertThat(foundResource?.resource).isEqualTo(proxyResource.resource)
     }
 
+    /**
+     * NetworkClientInfoRepository Tests
+     */
+
+    @Test
+    fun networkClientInfoRepository_exists() {
+        val party = BasicRole("SNC", "DE")
+        val networkClientInfo = NetworkClientInfoEntity(party, Role.CPO, ConnectionStatus.PLANNED)
+        entityManager.persistAndFlush(networkClientInfo)
+        val actual = networkClientInfoRepository.existsByPartyAndRole(party, Role.CPO)
+        assertThat(actual).isEqualTo(true)
+    }
+
+    @Test
+    fun networkClientInfoRepository_delete() {
+        val party = BasicRole("SNC", "DE")
+        val networkClientInfo = NetworkClientInfoEntity(party, Role.EMSP, ConnectionStatus.PLANNED)
+        entityManager.persistAndFlush(networkClientInfo)
+        val actual1 = networkClientInfoRepository.existsByPartyAndRole(party, Role.EMSP)
+        assertThat(actual1).isEqualTo(true)
+        networkClientInfoRepository.deleteByPartyAndRole(party, Role.EMSP)
+        val actual2 = networkClientInfoRepository.existsByPartyAndRole(party, Role.EMSP)
+        assertThat(actual2).isEqualTo(false)
+
+
+    }
 }

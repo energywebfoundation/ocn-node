@@ -23,9 +23,10 @@ class RequestHandlerTest {
     private val routingService: RoutingService = mockk()
     private val httpService: HttpService = mockk()
     private val walletService: WalletService = mockk()
+    private val hubClientInfoService: HubClientInfoService = mockk()
     private val properties: NodeProperties = mockk()
 
-    private val requestHandlerBuilder = RequestHandlerBuilder(routingService, httpService, walletService, properties)
+    private val requestHandlerBuilder = RequestHandlerBuilder(routingService, httpService, walletService, hubClientInfoService, properties)
 
     @Test
     fun validateSender() {
@@ -108,6 +109,9 @@ class RequestHandlerTest {
         every { routingService.getPlatformRules(any()) } returns OcnRules(signatures = false)
         every { routingService.prepareLocalPlatformRequest(variables, false) } returns Pair(recipientUrl, outgoingHeaders)
         every { httpService.makeOcpiRequest<Unit>(recipientUrl, outgoingHeaders, variables) } returns expectedResponse
+        every { routingService.isRoleKnown(variables.headers.receiver) } returns true
+        every { hubClientInfoService.renewClientConnection(variables.headers.sender) } just Runs
+        every { hubClientInfoService.renewClientConnection(variables.headers.receiver) } just Runs
 
         val response = requestHandler.forwardRequest().getResponse()
         assertEquals(expectedResponse.statusCode, response.statusCodeValue)
@@ -154,8 +158,8 @@ class RequestHandlerTest {
         every { routingService.validateWhitelisted(variables.headers.sender, variables.headers.receiver, variables.module) } just Runs
         every { properties.signatures } returns false
         every { routingService.getPlatformRules(variables.headers.receiver) } returns OcnRules(signatures = true)
-        every { routingService.getPartyDetails(variables.headers.sender) } returns RegistryPartyDetails(signature.signatory, "0x9bC1169Ca09555bf2721A5C9eC6D69c8073bfeB4")
-        every { routingService.getPartyDetails(variables.headers.receiver) } returns RegistryPartyDetails(receiverSig.signatory, "0x9bC1169Ca09555bf2721A5C9eC6D69c8073bfeB4")
+        every { routingService.getPartyDetails(variables.headers.sender) } returns RegistryPartyDetailsBasic(signature.signatory, "0x9bC1169Ca09555bf2721A5C9eC6D69c8073bfeB4")
+        every { routingService.getPartyDetails(variables.headers.receiver) } returns RegistryPartyDetailsBasic(receiverSig.signatory, "0x9bC1169Ca09555bf2721A5C9eC6D69c8073bfeB4")
         every { routingService.prepareLocalPlatformRequest(variables, false) } returns Pair(recipientUrl, outgoingHeaders)
         every { httpService.makeOcpiRequest<Unit>(recipientUrl, outgoingHeaders, variables) } returns expectedResponse
 
@@ -194,6 +198,8 @@ class RequestHandlerTest {
         every { properties.signatures } returns false
         every { routingService.prepareRemotePlatformRequest(variables, false) } returns Triple(recipientUrl, outgoingHeaders, outgoingBody)
         every { httpService.postOcnMessage<Unit>(recipientUrl, outgoingHeaders, outgoingBody) } returns expectedResponse
+        every { hubClientInfoService.renewClientConnection(variables.headers.sender) } just Runs
+        every { routingService.isRoleKnown(variables.headers.receiver) } returns false
 
         val response = requestHandler.forwardRequest().getResponse()
         assertEquals(expectedResponse.statusCode, response.statusCodeValue)
@@ -236,8 +242,8 @@ class RequestHandlerTest {
 
         every { routingService.validateReceiver(variables.headers.receiver) } returns Receiver.REMOTE
         every { properties.signatures } returns true
-        every { routingService.getPartyDetails(variables.headers.sender) } returns RegistryPartyDetails(signature.signatory, "0x7c514d15709fb091243a4dffb649361354a9b038")
-        every { routingService.getPartyDetails(variables.headers.receiver) } returns RegistryPartyDetails(receiverSig.signatory, "0xd49ead20b0ae060161c9ddea9b1bc46bb29b3c58")
+        every { routingService.getPartyDetails(variables.headers.sender) } returns RegistryPartyDetailsBasic(signature.signatory, "0x7c514d15709fb091243a4dffb649361354a9b038")
+        every { routingService.getPartyDetails(variables.headers.receiver) } returns RegistryPartyDetailsBasic(receiverSig.signatory, "0xd49ead20b0ae060161c9ddea9b1bc46bb29b3c58")
         every { routingService.prepareRemotePlatformRequest(variables, false) } returns Triple(recipientUrl, outgoingHeaders, outgoingBody)
         every { httpService.postOcnMessage<Unit>(recipientUrl, outgoingHeaders, outgoingBody) } returns expectedResponse
 

@@ -22,11 +22,11 @@ class RoutingServiceTest {
     private val platformRepo: PlatformRepository = mockk()
     private val roleRepo: RoleRepository = mockk()
     private val endpointRepo: EndpointRepository = mockk()
-    private val ocnRulesListRepo: OcnRulesListRepository = mockk()
     private val proxyResourceRepo: ProxyResourceRepository = mockk()
     private val httpService: HttpService = mockk()
     private val registry: Registry = mockk()
     private val walletService: WalletService = mockk()
+    private val ocnRulesService: OcnRulesService = mockk()
     private val properties: NodeProperties = mockk()
 
     private val routingService: RoutingService
@@ -37,10 +37,10 @@ class RoutingServiceTest {
                 roleRepo,
                 endpointRepo,
                 proxyResourceRepo,
-                ocnRulesListRepo,
                 registry,
                 httpService,
                 walletService,
+                ocnRulesService,
                 properties)
     }
 
@@ -352,8 +352,7 @@ class RoutingServiceTest {
 
     @Test
     fun `validateSender with auth only`() {
-        val platform = PlatformEntity(id = 3L)
-        every { platformRepo.findByAuth_TokenC("0102030405") } returns platform
+        every { platformRepo.existsByAuth_TokenC("0102030405") } returns true
         routingService.validateSender("Token 0102030405")
     }
 
@@ -382,6 +381,26 @@ class RoutingServiceTest {
         every { roleRepo.existsByCountryCodeAndPartyIDAllIgnoreCase(role.country, role.id) } returns false
         every { registry.getOperatorByOcpi(role.country.toByteArray(), role.id.toByteArray()).sendAsync().get() } returns Tuple2("", "http://localhost:8080")
         assertThat(routingService.validateReceiver(role)).isEqualTo(Receiver.REMOTE)
+    }
+
+    @Test
+    fun getNodesListedInRegistry() {
+        val nodes = listOf(
+                RegistryNode(operator = "0xf17f52151EbEF6C7334FAD080c5704D77216b732", url = "http://localhost:8080"),
+                RegistryNode(operator = "0xC5fdf4076b8F3A5357c5E395ab970B5B54098Fef", url = "http://localhost:8081"))
+
+        every { registry.nodeOperators.sendAsync().get() } returns nodes.map { it.operator }
+
+        for (node in nodes) {
+            every { registry.getNode(node.operator).sendAsync().get() } returns node.url
+        }
+
+        every { properties.privateKey } returns "0xae6ae8e5ccbfb04590405997ee2d52d2b330726137b875053c36d94e974d162f"
+
+        val actual = routingService.getNodesListedInRegistry(omitMine = true)
+        assertThat(actual.size).isEqualTo(1)
+        assertThat(actual[0].operator).isEqualTo(nodes[1].operator)
+        assertThat(actual[0].url).isEqualTo(nodes[1].url)
     }
 
 }

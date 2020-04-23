@@ -81,7 +81,7 @@ class AdminController(private val platformRepo: PlatformRepository,
         }
 
         // generate and store new platform with authorization token
-        //TODO: schedule deletion after 30 days if status still PLANNED
+        //TODO: schedule deletion after 30 days if status still PLANNED (?)
         val tokenA = generateUUIDv4Token()
         val platform = PlatformEntity(auth = Auth(tokenA = tokenA))
         platformRepo.save(platform)

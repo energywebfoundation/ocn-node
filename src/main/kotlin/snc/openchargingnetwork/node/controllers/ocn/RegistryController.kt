@@ -25,7 +25,6 @@ import snc.openchargingnetwork.node.config.NodeProperties
 import snc.openchargingnetwork.contracts.Registry
 
 @RestController
-// TODO: test for API documentation
 @RequestMapping("/ocn/registry")
 class RegistryController(private val properties: NodeProperties,
                          private val registry: Registry) {

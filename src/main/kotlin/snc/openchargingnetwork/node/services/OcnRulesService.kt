@@ -26,6 +26,7 @@ import snc.openchargingnetwork.node.models.entities.PlatformEntity
 import snc.openchargingnetwork.node.models.exceptions.OcpiClientGenericException
 import snc.openchargingnetwork.node.models.exceptions.OcpiClientInvalidParametersException
 import snc.openchargingnetwork.node.models.ocpi.BasicRole
+import snc.openchargingnetwork.node.models.ocpi.ModuleID
 import snc.openchargingnetwork.node.repositories.OcnRulesListRepository
 import snc.openchargingnetwork.node.repositories.PlatformRepository
 import snc.openchargingnetwork.node.tools.extractToken
@@ -35,6 +36,9 @@ import snc.openchargingnetwork.node.tools.extractToken
 class OcnRulesService(private val platformRepo: PlatformRepository,
                       private val ocnRulesListRepo: OcnRulesListRepository) {
 
+    /**
+     * OcnRules GET receiver interface (retrieve list of client-owned rules as saved on node)
+     */
     fun getRules(authorization: String): OcnRules {
         val platform = findPlatform(authorization)
 
@@ -56,6 +60,9 @@ class OcnRulesService(private val platformRepo: PlatformRepository,
                         }))
     }
 
+    /**
+     * Get list of modules?
+     */
     private fun getModules(ocnRulesListEntity: OcnRulesListEntity): OcnRulesListParty {
         val basicRole = ocnRulesListEntity.counterparty
         val modules = mutableListOf<String>()
@@ -95,12 +102,18 @@ class OcnRulesService(private val platformRepo: PlatformRepository,
         )
     }
 
+    /**
+     * OcnRules PUT receiver interface to update signature setting
+     */
     fun updateSignatures(authorization: String) {
         val platform = findPlatform(authorization)
         platform.rules.signatures = !platform.rules.signatures
         platformRepo.save(platform)
     }
 
+    /**
+     * OcnRules PUT receiver interface to blacklist all parties (by setting empty active whitelist)
+     */
     fun blockAll(authorization: String) {
         // 1. check C / find platform
         val platform = findPlatform(authorization);
@@ -116,6 +129,9 @@ class OcnRulesService(private val platformRepo: PlatformRepository,
         platformRepo.save(platform)
     }
 
+    /**
+     * OcnRules PUT receiver interface (updates entire whitelist)
+     */
     fun updateWhitelist(authorization: String, parties: List<OcnRulesListParty>) {
         // 1. check if any module of party is not empty
         checkModuleList(parties)
@@ -154,6 +170,9 @@ class OcnRulesService(private val platformRepo: PlatformRepository,
         )})
     }
 
+    /**
+     * OcnRules PUT receiver interface (updates entire blacklist)
+     */
     fun updateBlacklist(authorization: String, parties: List<OcnRulesListParty>) {
         // 1. check if any module of party is not empty
         checkModuleList(parties)
@@ -192,6 +211,9 @@ class OcnRulesService(private val platformRepo: PlatformRepository,
         )})
     }
 
+    /**
+     * OcnRules POST receiver interface (appends single entry to whitelist)
+     */
     fun appendToWhitelist(authorization: String, body: OcnRulesListParty) {
         // 1. check module of party is not empty
         checkModule(body.modules)
@@ -227,6 +249,9 @@ class OcnRulesService(private val platformRepo: PlatformRepository,
         ))
     }
 
+    /**
+     * OcnRules POST receiver interface (appends single entry to blacklist)
+     */
     fun appendToBlacklist (authorization: String, body: OcnRulesListParty) {
         // 1. check module of party is not empty
         checkModule(body.modules)
@@ -262,6 +287,9 @@ class OcnRulesService(private val platformRepo: PlatformRepository,
         ))
     }
 
+    /**
+     * OcnRules DELETE receiver interface (deletes single entry from whitelist)
+     */
     fun deleteFromWhitelist(authorization: String, party: BasicRole) {
         // 1. check token C / find platform
         val platform = findPlatform(authorization)
@@ -279,6 +307,9 @@ class OcnRulesService(private val platformRepo: PlatformRepository,
         platformRepo.save(platform)
     }
 
+    /**
+     * OcnRules DELETE receiver interface (deletes single entry from blacklist)
+     */
     fun deleteFromBlacklist(authorization: String, party: BasicRole) {
         // 1. check token C / find platform
         val platform = findPlatform(authorization)
@@ -294,6 +325,34 @@ class OcnRulesService(private val platformRepo: PlatformRepository,
         // 4. set activeness
         platform.rules.blacklist = ocnRulesListRepo.findAllByPlatformID(platform.id).count() >= 1
         platformRepo.save(platform)
+    }
+
+    /**
+     * Checks a counter-party has been whitelisted by a connected platform
+     */
+    fun isWhitelisted(platform: PlatformEntity, counterParty: BasicRole): Boolean {
+        val rulesList = ocnRulesListRepo.findAllByPlatformID(platform.id)
+
+        val compareParties = { party: BasicRole -> party.toUpperCase() == counterParty.toUpperCase() }
+
+        return when {
+            platform.rules.whitelist -> rulesList.any { compareParties(it.counterparty) }
+            platform.rules.blacklist -> rulesList.none { compareParties(it.counterparty) }
+            else -> true
+        }
+    }
+
+    /**
+     * Checks a counter-party has been whitelisted with specific module allowed by a connected platform
+     */
+    fun isWhitelisted(platform: PlatformEntity, counterParty: BasicRole, module: ModuleID): Boolean {
+        val rulesList = ocnRulesListRepo.findAllByPlatformID(platform.id)
+
+        return when {
+            platform.rules.whitelist -> rulesList.any { validateWhiteListWithModule(it, counterParty, module) }
+            platform.rules.blacklist -> rulesList.none { validateBlackListWithModule(it, counterParty, module) }
+            else -> true
+        }
     }
 
     private fun findPlatform(authorization: String): PlatformEntity {
@@ -333,6 +392,114 @@ class OcnRulesService(private val platformRepo: PlatformRepository,
         if (list) {
             throw OcpiClientGenericException("OCN Rules whitelist and blacklist cannot be active at same time")
         }
+    }
+
+    /**
+     * For whitelist check receiver has allowed the module of sender to send them message
+     */
+    private fun validateWhiteListWithModule (it: OcnRulesListEntity, sender: BasicRole, module: ModuleID): Boolean {
+        if(it.counterparty == sender){
+            when(module) {
+                ModuleID.CDRS -> {
+                    if( !it.cdrs ) {
+                        throw OcpiClientGenericException("CDRS Module is blocked")
+                    }
+                    return true
+                }
+                ModuleID.CHARGING_PROFILES -> {
+                    if( !it.chargingprofiles ) {
+                        throw OcpiClientGenericException("Charging Profiles Module is blocked")
+                    }
+                    return true
+                }
+                ModuleID.COMMANDS -> {
+                    if( !it.commands ) {
+                        throw OcpiClientGenericException("Commands Module is blocked")
+                    }
+                    return true
+                }
+                ModuleID.LOCATIONS -> {
+                    if( !it.locations ) {
+                        throw OcpiClientGenericException("Locations Module is blocked")
+                    }
+                    return true
+                }
+                ModuleID.SESSIONS -> {
+                    if( !it.sessions ) {
+                        throw OcpiClientGenericException("Session Module is blocked")
+                    }
+                    return true
+                }
+                ModuleID.TARIFFS -> {
+                    if( !it.tariffs ) {
+                        throw OcpiClientGenericException("Tariffs Module is blocked")
+                    }
+                    return true
+                }
+                ModuleID.TOKENS -> {
+                    if( !it.tokens ) {
+                        throw OcpiClientGenericException("Token Module is blocked")
+                    }
+                    return true
+                }
+                else -> return false
+            }
+        }
+        return false;
+    }
+
+    /**
+     * For blacklist check receiver has allowed the module of sender to send them message
+     */
+    private fun validateBlackListWithModule (it: OcnRulesListEntity, sender: BasicRole, module: ModuleID): Boolean {
+        if(it.counterparty == sender){
+            when(module) {
+                ModuleID.CDRS -> {
+                    if( it.cdrs ) {
+                        throw OcpiClientGenericException("CDRS Module is blocked")
+                    }
+                    return false
+                }
+                ModuleID.CHARGING_PROFILES -> {
+                    if( it.chargingprofiles ) {
+                        throw OcpiClientGenericException("Charging Profiles Module is blocked")
+                    }
+                    return false
+                }
+                ModuleID.COMMANDS -> {
+                    if( it.commands ) {
+                        throw OcpiClientGenericException("Commands Module is blocked")
+                    }
+                    return false
+                }
+                ModuleID.LOCATIONS -> {
+                    if( it.locations ) {
+                        throw OcpiClientGenericException("Locations Module is blocked")
+                    }
+                    return false
+                }
+                ModuleID.SESSIONS -> {
+                    if( it.sessions ) {
+                        throw OcpiClientGenericException("Session Module is blocked")
+                    }
+                    return false
+                }
+                ModuleID.TARIFFS -> {
+                    if( it.tariffs ) {
+                        throw OcpiClientGenericException("Tariffs Module is blocked")
+                    }
+                    return false
+                }
+                ModuleID.TOKENS -> {
+                    if( it.tokens ) {
+                        throw OcpiClientGenericException("Token Module is blocked")
+                    }
+                    return false
+                }
+                else -> return false
+            }
+        }
+        return false;
     }
 
 }

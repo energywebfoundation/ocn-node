@@ -22,12 +22,15 @@ import org.springframework.http.HttpMethod
 import shareandcharge.openchargingnetwork.notary.ValuesToSign
 import snc.openchargingnetwork.node.models.OcnHeaders
 import snc.openchargingnetwork.node.models.exceptions.OcpiClientInvalidParametersException
+import java.math.BigInteger
 import java.time.Instant
 import java.time.format.DateTimeFormatter
 import javax.persistence.Embeddable
 import javax.persistence.Embedded
 
 
+// TODO: rename to avoid confusion
+// BasicParty may be a better description
 @Embeddable
 data class BasicRole(@JsonProperty("party_id") final val id: String,
                      @JsonProperty("country_code") final val country: String) {
@@ -152,7 +155,17 @@ enum class Role {
     NAP,
     NSP,
     OTHER,
-    SCSP
+    SCSP;
+
+    companion object {
+        fun getByIndex(index: Int): Role {
+            return values()[index]
+        }
+        fun getByIndex(index: BigInteger): Role {
+            return values()[index.intValueExact()]
+        }
+    }
+
 }
 
 

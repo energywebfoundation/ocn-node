@@ -56,6 +56,14 @@ fun getTimestamp(): String {
     return DateTimeFormatter.ISO_INSTANT.format(Instant.now())
 }
 
+fun getTimestamp(instant: Instant): String {
+    return DateTimeFormatter.ISO_INSTANT.format(instant)
+}
+
+fun getInstant(timeStamp: String): Instant {
+    return Instant.parse(timeStamp)
+}
+
 fun generatePrivateKey(): String {
     val keys = Keys.createEcKeyPair()
     return keys.privateKey.toString(16)

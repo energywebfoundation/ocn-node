@@ -35,6 +35,7 @@ import snc.openchargingnetwork.node.models.ocpi.OcpiResponse
 import snc.openchargingnetwork.node.tools.extractNextLink
 import snc.openchargingnetwork.node.tools.generateUUIDv4Token
 import snc.openchargingnetwork.node.tools.urlJoin
+import kotlin.properties.Delegates.observable
 
 
 /**
@@ -44,13 +45,14 @@ import snc.openchargingnetwork.node.tools.urlJoin
 class RequestHandlerBuilder(private val routingService: RoutingService,
                             private val httpService: HttpService,
                             private val walletService: WalletService,
+                            private val hubClientInfoService: HubClientInfoService,
                             private val properties: NodeProperties) {
 
     /**
      * Build a RequestHandler object from an OcpiRequestVariables object.
      */
     fun <T: Any> build(requestVariables: OcpiRequestVariables): RequestHandler<T> {
-        return RequestHandler(requestVariables, routingService, httpService, walletService, properties)
+        return RequestHandler(requestVariables, routingService, httpService, hubClientInfoService, walletService, properties)
     }
 
     /**
@@ -58,7 +60,7 @@ class RequestHandlerBuilder(private val routingService: RoutingService,
      */
     fun <T: Any> build(requestVariablesString: String): RequestHandler<T> {
         val requestVariables = httpService.convertToRequestVariables(requestVariablesString)
-        return RequestHandler(requestVariables, routingService, httpService, walletService, properties)
+        return RequestHandler(requestVariables, routingService, httpService, hubClientInfoService, walletService, properties)
     }
 
 }
@@ -87,6 +89,7 @@ class RequestHandlerBuilder(private val routingService: RoutingService,
 class RequestHandler<T: Any>(private val request: OcpiRequestVariables,
                              private val routingService: RoutingService,
                              private val httpService: HttpService,
+                             private val hubClientInfoService: HubClientInfoService,
                              private val walletService: WalletService,
                              private val properties: NodeProperties) {
 
@@ -94,7 +97,11 @@ class RequestHandler<T: Any>(private val request: OcpiRequestVariables,
      * HttpResponse object instantiated after forwarding a request.
      * TODO: could operate on response in dedicated ResponseHandler
      */
-    private var response: HttpResponse<T>? = null
+    private var response: HttpResponse<T>? by observable<HttpResponse<T>?>(null) {_, _, _ ->
+        if (isOcpiSuccess() && routingService.isRoleKnown(request.headers.receiver)) { // only renew connection of known recipients
+            hubClientInfoService.renewClientConnection(request.headers.receiver)
+        }
+    }
 
     /**
      * Notary object instantiated after validating a request.
@@ -114,6 +121,7 @@ class RequestHandler<T: Any>(private val request: OcpiRequestVariables,
      */
     fun validateSender(): RequestHandler<T> {
         routingService.validateSender(request.headers.authorization, request.headers.sender)
+        hubClientInfoService.renewClientConnection(request.headers.sender)
         return this
     }
 

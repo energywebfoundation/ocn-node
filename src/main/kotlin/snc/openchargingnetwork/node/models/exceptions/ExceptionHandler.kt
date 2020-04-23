@@ -151,4 +151,13 @@ class ExceptionHandler: ResponseEntityExceptionHandler() {
                 statusMessage = e.message))
     }
 
+    /**
+     * OCN Exceptions
+     */
+
+    @ExceptionHandler(InvalidOcnSignatureException::class)
+    fun handleInvalidOcnSignatureException(e: InvalidOcnSignatureException): ResponseEntity<String> {
+        return ResponseEntity.status(400).body(e.message)
+    }
+
 }

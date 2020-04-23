@@ -2,18 +2,15 @@ package snc.openchargingnetwork.node.integration.parties
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import khttp.responses.Response
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import shareandcharge.openchargingnetwork.notary.Notary
 import shareandcharge.openchargingnetwork.notary.SignableHeaders
 import shareandcharge.openchargingnetwork.notary.ValuesToSign
 import snc.openchargingnetwork.node.data.exampleCDR
 import org.web3j.crypto.Credentials as KeyPair
 import snc.openchargingnetwork.node.data.exampleLocation1
-import snc.openchargingnetwork.node.integration.objectMapper
-import snc.openchargingnetwork.node.integration.privateKey
-import snc.openchargingnetwork.node.integration.toMap
+import snc.openchargingnetwork.node.integration.utils.objectMapper
+import snc.openchargingnetwork.node.integration.utils.privateKey
+import snc.openchargingnetwork.node.integration.utils.toMap
 import snc.openchargingnetwork.node.models.ocpi.*
 
 class CpoServer(private val credentials: KeyPair, party: BasicRole, val port: Int): PartyServer(credentials, party, port) {
@@ -31,6 +28,10 @@ class CpoServer(private val credentials: KeyPair, party: BasicRole, val port: In
                                     identifier = "locations",
                                     role = InterfaceRole.SENDER,
                                     url = urlBuilder("/ocpi/cpo/2.2/locations")),
+                            Endpoint(
+                                    identifier = "hubclientinfo",
+                                    role = InterfaceRole.RECEIVER,
+                                    url = urlBuilder("/ocpi/cpo/2.2/clientinfo")),
                             Endpoint(
                                     identifier = "commands",
                                     role = InterfaceRole.RECEIVER,

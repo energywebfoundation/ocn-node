@@ -9,9 +9,9 @@ import shareandcharge.openchargingnetwork.notary.ValuesToSign
 import snc.openchargingnetwork.node.data.exampleCDR
 import snc.openchargingnetwork.node.data.exampleLocation1
 import snc.openchargingnetwork.node.data.exampleToken
-import snc.openchargingnetwork.node.integration.objectMapper
-import snc.openchargingnetwork.node.integration.privateKey
-import snc.openchargingnetwork.node.integration.toMap
+import snc.openchargingnetwork.node.integration.utils.objectMapper
+import snc.openchargingnetwork.node.integration.utils.privateKey
+import snc.openchargingnetwork.node.integration.utils.toMap
 import snc.openchargingnetwork.node.models.ocpi.*
 
 class MspServer(private val credentials: KeyPair, val party: BasicRole, port: Int): PartyServer(credentials, party, port) {
@@ -32,6 +32,10 @@ class MspServer(private val credentials: KeyPair, val party: BasicRole, port: In
                                     identifier = "cdrs",
                                     role = InterfaceRole.RECEIVER,
                                     url = urlBuilder("/ocpi/msp/2.2/cdrs")),
+                            Endpoint(
+                                    identifier = "hubclientinfo",
+                                    role = InterfaceRole.RECEIVER,
+                                    url = urlBuilder("/ocpi/cpo/2.2/clientinfo")),
                             Endpoint(
                                     identifier = "commands",
                                     role = InterfaceRole.SENDER,
@@ -75,6 +79,14 @@ class MspServer(private val credentials: KeyPair, val party: BasicRole, port: In
         val request = ValuesToSign(headers = headers, params = params, body = null)
         val signature = Notary().sign(request, credentials.privateKey()).serialize()
         return khttp.get("$node/ocpi/sender/2.2/locations", params=params, headers = headers.toMap(tokenC, signature))
+    }
+
+    fun getHubClientInfoList(to: BasicRole): Response {
+        val headers = getSignableHeaders(to)
+        val params = mapOf("limit" to "4")
+        val request = ValuesToSign(headers = headers, params = params, body = null)
+        val signature = Notary().sign(request, credentials.privateKey()).serialize()
+        return khttp.get("$node/ocpi/2.2/hubclientinfo", params=params, headers = headers.toMap(tokenC, signature))
     }
 
     fun getNextLink(to: BasicRole, next: String): Response {

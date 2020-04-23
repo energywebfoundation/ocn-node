@@ -19,13 +19,16 @@ package snc.openchargingnetwork.node.repositories
 import org.springframework.data.repository.CrudRepository
 import snc.openchargingnetwork.node.models.entities.*
 import snc.openchargingnetwork.node.models.ocpi.BasicRole
+import snc.openchargingnetwork.node.models.ocpi.ConnectionStatus
 import snc.openchargingnetwork.node.models.ocpi.InterfaceRole
+import snc.openchargingnetwork.node.models.ocpi.Role
 
 interface PlatformRepository: CrudRepository<PlatformEntity, Long> {
     fun existsByAuth_TokenA(tokenA: String?): Boolean
     fun existsByAuth_TokenC(tokenC: String?): Boolean
     fun findByAuth_TokenA(tokenA: String?): PlatformEntity?
     fun findByAuth_TokenC(tokenC: String?): PlatformEntity?
+    fun findByStatusIn(connectionStatusList: List<ConnectionStatus>): Iterable<PlatformEntity>
 }
 
 interface RoleRepository: CrudRepository<RoleEntity, Long> {
@@ -56,4 +59,10 @@ interface OcnRulesListRepository: CrudRepository<OcnRulesListEntity, Long> {
     fun findAllByPlatformID(platformID: Long?): Iterable<OcnRulesListEntity>
     fun deleteByPlatformID(platformID: Long?)
     fun deleteByPlatformIDAndCounterparty(platformID: Long?, party: BasicRole)
+}
+
+interface NetworkClientInfoRepository: CrudRepository<NetworkClientInfoEntity, Long> {
+    fun existsByPartyAndRole(party: BasicRole, role: Role): Boolean
+    fun findByPartyAndRole(party: BasicRole, role: Role): NetworkClientInfoEntity?
+    fun deleteByPartyAndRole(party: BasicRole, role: Role)
 }

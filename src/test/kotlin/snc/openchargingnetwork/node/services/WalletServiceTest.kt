@@ -15,6 +15,7 @@ import snc.openchargingnetwork.node.tools.generatePrivateKey
 import snc.openchargingnetwork.contracts.Registry
 import snc.openchargingnetwork.node.config.NodeProperties
 import snc.openchargingnetwork.node.models.OcnHeaders
+import snc.openchargingnetwork.node.tools.getTimestamp
 
 class WalletServiceTest {
 
@@ -34,11 +35,12 @@ class WalletServiceTest {
 
     private val properties: NodeProperties = mockk()
     private val registry: Registry = mockk()
+    private val httpService: HttpService = mockk()
 
     private val walletService: WalletService
 
     init {
-        walletService = WalletService(properties, registry)
+        walletService = WalletService(properties, registry, httpService)
         every { properties.privateKey } returns privateKey
     }
 
@@ -47,7 +49,7 @@ class WalletServiceTest {
     fun toByteArray() {
         val sig = "0x9955af11969a2d2a7f860cb00e6a00cfa7c581f5df2dbe8ea16700b33f4b4b9" +
                 "b69f945012f7ea7d3febf11eb1b78e1adc2d1c14c2cf48b25000938cc1860c83e01"
-        val (r, s, v) = walletService.toByteArray(sig)
+        val (r, s, v) = walletService.signatureStringToByteArray(sig)
         assertThat(r.size).isEqualTo(32)
         assertThat(s.size).isEqualTo(32)
         assertThat(v.size).isEqualTo(1)
@@ -81,6 +83,21 @@ class WalletServiceTest {
         } catch (e: OcpiHubConnectionProblemException) {
             assertThat(e.message).isEqualTo("Could not verify OCN-Signature of request")
         }
+    }
+
+    @Test
+    fun verifyClientInfo() {
+        val objectMapper = jacksonObjectMapper()
+
+        val clientInfo = ClientInfo(partyID = "ABC", countryCode = "DE", role = Role.EMSP, status = ConnectionStatus.PLANNED, lastUpdated = getTimestamp())
+        val clientInfoString = objectMapper.writeValueAsString(clientInfo)
+        val signature = walletService.sign(clientInfoString)
+
+        every { httpService.mapper } returns objectMapper
+        every { registry.getPartyDetailsByOcpi(clientInfo.countryCode.toByteArray(), clientInfo.partyID.toByteArray()).sendAsync().get().component5() } returns address
+
+        val actual = walletService.verifyClientInfo(clientInfoString, signature)
+        assertThat(actual).isEqualTo(clientInfo)
     }
 
 

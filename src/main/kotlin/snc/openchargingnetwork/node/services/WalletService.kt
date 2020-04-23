@@ -16,6 +16,7 @@
 
 package snc.openchargingnetwork.node.services
 
+import com.fasterxml.jackson.module.kotlin.readValue
 import org.springframework.stereotype.Service
 import org.web3j.crypto.Credentials
 import org.web3j.crypto.Keys
@@ -25,11 +26,18 @@ import snc.openchargingnetwork.node.models.exceptions.OcpiHubConnectionProblemEx
 import snc.openchargingnetwork.node.models.ocpi.BasicRole
 import snc.openchargingnetwork.contracts.Registry
 import snc.openchargingnetwork.node.config.NodeProperties
+import snc.openchargingnetwork.node.models.exceptions.InvalidOcnSignatureException
+import snc.openchargingnetwork.node.models.ocpi.ClientInfo
+import snc.openchargingnetwork.node.tools.checksum
 import java.nio.charset.StandardCharsets
 
+/**
+ * Provides methods for the node's wallet; sign and verify messages sent between nodes
+ */
 @Service
 class WalletService(private val properties: NodeProperties,
-                    private val registry: Registry) {
+                    private val registry: Registry,
+                    private val httpService: HttpService) {
 
     /**
      * Take a component of a signature (r,s,v) and convert it to a string to include as an OCN-Signature header
@@ -43,7 +51,7 @@ class WalletService(private val properties: NodeProperties,
     /**
      * Reverse an OCN-Signature string to get the original r,s,v values as byte arrays
      */
-    fun toByteArray(signature: String): Triple<ByteArray, ByteArray, ByteArray> {
+    fun signatureStringToByteArray(signature: String): Triple<ByteArray, ByteArray, ByteArray> {
         val cleanSignature = Numeric.cleanHexPrefix(signature)
         val r = Numeric.hexStringToByteArray(cleanSignature.substring(0, 64))
         val s = Numeric.hexStringToByteArray(cleanSignature.substring(64, 128))
@@ -71,13 +79,36 @@ class WalletService(private val properties: NodeProperties,
      */
     fun verify(request: String, signature: String, sender: BasicRole) {
         val dataToVerify = request.toByteArray(StandardCharsets.UTF_8)
-        val (r, s, v) = toByteArray(signature)
+        val (r, s, v) = signatureStringToByteArray(signature)
         val signingKey = Sign.signedPrefixedMessageToKey(dataToVerify, Sign.SignatureData(v, r, s))
         val signingAddress = "0x${Keys.getAddress(signingKey)}"
         val (operator, _) = registry.getOperatorByOcpi(sender.country.toByteArray(), sender.id.toByteArray()).sendAsync().get()
         if (signingAddress.toLowerCase() != operator.toLowerCase()) {
             throw OcpiHubConnectionProblemException("Could not verify OCN-Signature of request")
         }
+    }
+
+    /**
+     * Verify that a ClientInfo update belongs to the correct node of the party
+     */
+    fun verifyClientInfo(clientInfoString: String, signature: String): ClientInfo {
+        val dataToVerify = clientInfoString.toByteArray(StandardCharsets.UTF_8)
+        val (r, s, v) = signatureStringToByteArray(signature)
+        val signingKey = Sign.signedPrefixedMessageToKey(dataToVerify, Sign.SignatureData(v, r, s))
+        val signingAddress = "0x${Keys.getAddress(signingKey)}"
+
+        val clientInfo: ClientInfo = httpService.mapper.readValue(clientInfoString)
+
+        // validate party registered with signer
+        val countryCode = clientInfo.countryCode.toByteArray()
+        val partyID = clientInfo.partyID.toByteArray()
+
+        val operator = registry.getPartyDetailsByOcpi(countryCode, partyID).sendAsync().get().component5()
+
+        if (operator.checksum() != signingAddress.checksum()) {
+            throw InvalidOcnSignatureException("Invalid OCN-Signature header. Client registered with operator $operator but update signed by $signingAddress.")
+        }
+        return clientInfo
     }
 
 }

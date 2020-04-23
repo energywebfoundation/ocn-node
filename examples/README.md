@@ -32,7 +32,7 @@ Then change directory to `ocn-node` and run the network:
 
 ```
 cd ocn-node
-./gradlew -Pprofile=docker -x test build
+./gradlew -Pprofile=docker -x test -x asciidoctor build
 docker-compose up
 ```
 

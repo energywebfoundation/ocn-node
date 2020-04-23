@@ -19,19 +19,23 @@ package snc.openchargingnetwork.node.config
 import org.springframework.boot.ApplicationRunner
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.scheduling.config.IntervalTask
 import org.web3j.protocol.Web3j
-import org.web3j.protocol.http.HttpService
+import org.web3j.protocol.http.HttpService as Web3jHttpService
 import org.web3j.tx.ClientTransactionManager
 import org.web3j.tx.TransactionManager
 import org.web3j.tx.gas.StaticGasProvider
 import snc.openchargingnetwork.node.repositories.*
 import snc.openchargingnetwork.contracts.Registry
+import snc.openchargingnetwork.node.scheduledTasks.HubClientInfoStillAliveCheck
+import snc.openchargingnetwork.node.scheduledTasks.PlannedPartySearch
+import snc.openchargingnetwork.node.services.HttpService as OcnHttpService
 
 
 @Configuration
 open class NodeConfig(private val properties: NodeProperties) {
 
-    private val web3: Web3j = Web3j.build(HttpService(properties.web3.provider))
+    private val web3: Web3j = Web3j.build(Web3jHttpService(properties.web3.provider))
     private val txManager: TransactionManager = ClientTransactionManager(web3, null)
     private val gasProvider = StaticGasProvider(0.toBigInteger(), 0.toBigInteger())
 
@@ -42,13 +46,37 @@ open class NodeConfig(private val properties: NodeProperties) {
                             proxyResourceRepository: ProxyResourceRepository) = ApplicationRunner {}
 
     @Bean
-    fun Registry(): Registry {
+    fun registry(): Registry {
         return Registry.load(
                 properties.web3.contracts.registry,
                 web3,
                 txManager,
                 gasProvider
         )
+    }
+
+    @Bean
+    fun scheduledTasks(registry: Registry,
+                       httpService: OcnHttpService,
+                       platformRepo: PlatformRepository,
+                       roleRepo: RoleRepository,
+                       networkClientInfoRepo: NetworkClientInfoRepository): List<IntervalTask> {
+
+        val taskList = mutableListOf<IntervalTask>()
+        val hasPrivateKey = properties.privateKey !== null
+
+        if (properties.stillAliveEnabled && hasPrivateKey) {
+            val stillAliveTask = HubClientInfoStillAliveCheck(httpService, platformRepo, properties)
+            taskList.add(IntervalTask(stillAliveTask, properties.stillAliveRate.toLong()))
+        }
+
+        //
+        if (properties.plannedPartySearchEnabled && hasPrivateKey) {
+            val plannedPartyTask = PlannedPartySearch(registry, roleRepo, networkClientInfoRepo, properties)
+            taskList.add(IntervalTask(plannedPartyTask, properties.plannedPartySearchRate.toLong()))
+        }
+
+        return taskList.toList()
     }
 
 }
