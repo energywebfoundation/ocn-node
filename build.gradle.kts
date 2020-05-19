@@ -96,7 +96,6 @@ tasks.register<Test>("integrationTest") {
 tasks.register<Exec>("ganache") {
     group = "help"
     description = "Runs a ganache-cli instance for integration testing."
-    commandLine(listOf("/usr/bin/env", "npm", "install", "-g", "ganache-cli"))
     commandLine(listOf(
             "/usr/bin/env",
             "ganache-cli",

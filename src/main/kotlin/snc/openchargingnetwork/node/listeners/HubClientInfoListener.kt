@@ -78,6 +78,7 @@ class HubClientInfoListener(private val hubClientInfoService: HubClientInfoServi
             val parties = hubClientInfoService.getPartiesToNotifyOfClientInfoChange(changedPlatform, updatedClientInfo)
             hubClientInfoService.notifyPartiesOfClientInfoChange(parties, updatedClientInfo)
 
+            // TODO: handle connection issues
             hubClientInfoService.notifyNodesOfClientInfoChange(updatedClientInfo)
         }
     }

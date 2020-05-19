@@ -9,12 +9,10 @@ import shareandcharge.openchargingnetwork.notary.ValuesToSign
 import snc.openchargingnetwork.node.data.exampleCDR
 import snc.openchargingnetwork.node.data.exampleLocation1
 import snc.openchargingnetwork.node.data.exampleToken
-import snc.openchargingnetwork.node.integration.utils.objectMapper
-import snc.openchargingnetwork.node.integration.utils.privateKey
-import snc.openchargingnetwork.node.integration.utils.toMap
+import snc.openchargingnetwork.node.integration.utils.*
 import snc.openchargingnetwork.node.models.ocpi.*
 
-class MspServer(private val credentials: KeyPair, val party: BasicRole, port: Int): PartyServer(credentials, party, port) {
+class MspServer(config: PartyDefinition, contracts: OcnContracts): PartyServer(config, contracts) {
 
     // could be nicer to use e.g. RxJava instead
     var asyncCommandsResponse: CommandResult? = null
@@ -44,55 +42,48 @@ class MspServer(private val credentials: KeyPair, val party: BasicRole, port: In
 
         app.get("/ocpi/msp/2.2/cdrs/1") {
             val body = OcpiResponse(statusCode = 1000, data = exampleCDR)
-            val valuesToSign = ValuesToSign(body = body)
-            body.signature = Notary().sign(valuesToSign, credentials.privateKey()).serialize()
+            body.signature = sign(body = body)
             it.json(body)
         }
 
         app.post("/ocpi/msp/2.2/cdrs") {
             val headers = SignableHeaders(location = urlBuilder("/ocpi/msp/2.2/cdrs/1"))
             val body = OcpiResponse(statusCode = 1000, data = null)
-            val valuesToSign = ValuesToSign(headers = headers, body = body)
-            body.signature = Notary().sign(valuesToSign, credentials.privateKey()).serialize()
+            body.signature = sign(headers = headers, body = body)
             it.header("location", headers.location!!).json(body)
         }
 
         app.post("/ocpi/msp/2.2/commands/START_SESSION/1") {
             asyncCommandsResponse = it.body<CommandResult>()
             val body = OcpiResponse(statusCode = 1000, data = null)
-            val valuesToSign = ValuesToSign(body = body)
-            body.signature = Notary().sign(valuesToSign, credentials.privateKey()).serialize()
+            body.signature = sign(body = body)
             it.json(body)
         }
     }
 
     fun getLocation(to: BasicRole): Response {
         val headers = getSignableHeaders(to)
-        val request = ValuesToSign(headers = headers, body = null)
-        val signature = Notary().sign(request, credentials.privateKey()).serialize()
+        val signature = sign(headers = headers)
         return khttp.get("$node/ocpi/sender/2.2/locations/1", headers = headers.toMap(tokenC, signature))
     }
 
     fun getLocationList(to: BasicRole): Response {
         val headers = getSignableHeaders(to)
         val params = mapOf("limit" to "4")
-        val request = ValuesToSign(headers = headers, params = params, body = null)
-        val signature = Notary().sign(request, credentials.privateKey()).serialize()
+        val signature = sign(headers = headers, params = params)
         return khttp.get("$node/ocpi/sender/2.2/locations", params=params, headers = headers.toMap(tokenC, signature))
     }
 
     fun getHubClientInfoList(to: BasicRole): Response {
         val headers = getSignableHeaders(to)
         val params = mapOf("limit" to "4")
-        val request = ValuesToSign(headers = headers, params = params, body = null)
-        val signature = Notary().sign(request, credentials.privateKey()).serialize()
+        val signature = sign(headers = headers, params = params)
         return khttp.get("$node/ocpi/2.2/hubclientinfo", params=params, headers = headers.toMap(tokenC, signature))
     }
 
     fun getNextLink(to: BasicRole, next: String): Response {
         val headers = getSignableHeaders(to)
-        val request = ValuesToSign(headers = headers, body = null)
-        val signature = Notary().sign(request, credentials.privateKey()).serialize()
+        val signature = sign(headers = headers)
         return khttp.get(next, headers = headers.toMap(tokenC, signature))
     }
 
@@ -103,8 +94,7 @@ class MspServer(private val credentials: KeyPair, val party: BasicRole, port: In
                 locationID = exampleLocation1.id,
                 evseUID = exampleLocation1.evses!![0].uid)
         val headers = getSignableHeaders(to)
-        val request = ValuesToSign(headers = headers, body = body)
-        val signature = Notary().sign(request, credentials.privateKey()).serialize()
+        val signature = sign(headers = headers, body = body)
         val json: Map<String, Any?> = objectMapper.readValue(objectMapper.writeValueAsString(body))
         return khttp.post("$node/ocpi/receiver/2.2/commands/START_SESSION", headers = headers.toMap(tokenC, signature), json = json)
     }

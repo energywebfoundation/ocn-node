@@ -36,13 +36,17 @@ class NodeInfoLogger(private val properties: NodeProperties) {
         val stillAliveText = getStillAliveText()
         val plannedPartyText = getPlannedPartyText()
 
-        println("\n${border.substring(0, 3)} NODE INFO ${border.substring(14)}\n" +
-                " URL      | ${properties.url}\n" +
-                " ADDRESS  | $addressText\n" +
-                " API KEY  | ${properties.apikey}\n" +
-                " ETH RPC  | ${properties.web3.provider}\n" +
-                " REGISTRY | ${properties.web3.contracts.registry} [$registryStage]\n" +
-                "${border.substring(0, 3)} FEATURES ${border.substring(13)}\n" +
+        println("\n${border.substring(0, 3)} NODE INFO ${border.substring(17)}\n" +
+                " URL     | ${properties.url}\n" +
+                " ADDRESS | $addressText\n" +
+                " API KEY | ${properties.apikey}")
+
+        println("${border.substring(0, 3)} NETWORK ${border.substring(15)}\n" +
+                " ETHEREUM RPC | ${properties.web3.provider}\n" +
+                " REGISTRY     | ${properties.web3.contracts.registry} [$registryStage]\n" +
+                " PERMISSIONS  | ${properties.web3.contracts.permissions} [$registryStage]")
+
+        println("${border.substring(0, 3)} FEATURES ${border.substring(16)}\n" +
                 " DEV MODE             | ${properties.dev}\n" +
                 " SIGNATURES           | ${properties.signatures}\n" +
                 " STILL ALIVE CHECK    | $stillAliveText\n" +
@@ -50,7 +54,7 @@ class NodeInfoLogger(private val properties: NodeProperties) {
     }
 
     private fun calculateBorderLength(url: Int, apikey: Int): Int {
-        val baseLength = 22
+        val baseLength = 27
         val address = 42
         return baseLength + when {
             url >= apikey && url >= address -> url

@@ -25,6 +25,7 @@ import org.web3j.protocol.http.HttpService as Web3jHttpService
 import org.web3j.tx.ClientTransactionManager
 import org.web3j.tx.TransactionManager
 import org.web3j.tx.gas.StaticGasProvider
+import snc.openchargingnetwork.contracts.Permissions
 import snc.openchargingnetwork.node.repositories.*
 import snc.openchargingnetwork.contracts.Registry
 import snc.openchargingnetwork.node.scheduledTasks.HubClientInfoStillAliveCheck
@@ -51,8 +52,16 @@ open class NodeConfig(private val properties: NodeProperties) {
                 properties.web3.contracts.registry,
                 web3,
                 txManager,
-                gasProvider
-        )
+                gasProvider)
+    }
+
+    @Bean
+    fun permissions(): Permissions {
+        return Permissions.load(
+                properties.web3.contracts.permissions,
+                web3,
+                txManager,
+                gasProvider)
     }
 
     @Bean

@@ -7,6 +7,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpMethod
 import org.web3j.tuples.generated.Tuple2
+import snc.openchargingnetwork.contracts.Permissions
 import snc.openchargingnetwork.node.config.NodeProperties
 import snc.openchargingnetwork.node.models.*
 import snc.openchargingnetwork.node.models.entities.*
@@ -25,6 +26,7 @@ class RoutingServiceTest {
     private val proxyResourceRepo: ProxyResourceRepository = mockk()
     private val httpService: HttpService = mockk()
     private val registry: Registry = mockk()
+    private val permissions: Permissions = mockk()
     private val walletService: WalletService = mockk()
     private val ocnRulesService: OcnRulesService = mockk()
     private val properties: NodeProperties = mockk()
@@ -38,6 +40,7 @@ class RoutingServiceTest {
                 endpointRepo,
                 proxyResourceRepo,
                 registry,
+                permissions,
                 httpService,
                 walletService,
                 ocnRulesService,

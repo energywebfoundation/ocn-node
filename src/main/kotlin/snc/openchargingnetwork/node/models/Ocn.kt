@@ -21,7 +21,10 @@ import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
 import shareandcharge.openchargingnetwork.notary.SignableHeaders
 import snc.openchargingnetwork.node.models.ocpi.BasicRole
+import snc.openchargingnetwork.node.models.ocpi.InterfaceRole
+import snc.openchargingnetwork.node.models.ocpi.ModuleID
 import snc.openchargingnetwork.node.models.ocpi.Role
+import java.math.BigInteger
 
 data class OcnMessageHeaders(val requestID: String,
                              val signature: String) {
@@ -92,3 +95,20 @@ data class RegistryPartyDetailsBasic(val address: String, val operator: String)
 data class RegistryPartyDetails(val party: BasicRole, val roles: List<Role>, val nodeOperator: String)
 
 data class RegistryNode(val operator: String, val url: String)
+
+enum class OcnAppPermission() {
+    FORWARD_ALL,
+    FORWARD_ALL_SENDER,
+    FORWARD_ALL_RECEIVER;
+
+    companion object {
+        fun getByIndex(index: BigInteger): OcnAppPermission {
+            return values()[index.intValueExact()]
+        }
+    }
+}
+
+fun OcnAppPermission.matches(moduleID: ModuleID, interfaceRole: InterfaceRole): Boolean {
+    // TODO: match based on properties
+    return true
+}

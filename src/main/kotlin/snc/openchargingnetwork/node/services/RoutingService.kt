@@ -17,9 +17,11 @@
 package snc.openchargingnetwork.node.services
 
 import org.springframework.data.repository.findByIdOrNull
+import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
 import org.web3j.crypto.Credentials
 import org.web3j.crypto.Keys
+import snc.openchargingnetwork.contracts.Permissions
 import snc.openchargingnetwork.contracts.Registry
 import snc.openchargingnetwork.node.config.NodeProperties
 import snc.openchargingnetwork.node.models.*
@@ -35,6 +37,7 @@ import snc.openchargingnetwork.node.tools.checksum
 import snc.openchargingnetwork.node.tools.extractToken
 import snc.openchargingnetwork.node.tools.generateUUIDv4Token
 import snc.openchargingnetwork.node.tools.urlJoin
+import java.util.concurrent.CompletableFuture
 
 @Service
 class RoutingService(private val platformRepo: PlatformRepository,
@@ -42,6 +45,7 @@ class RoutingService(private val platformRepo: PlatformRepository,
                      private val endpointRepo: EndpointRepository,
                      private val proxyResourceRepo: ProxyResourceRepository,
                      private val registry: Registry,
+                     private val permissions: Permissions,
                      private val httpService: HttpService,
                      private val walletService: WalletService,
                      private val ocnRulesService: OcnRulesService,
@@ -278,6 +282,32 @@ class RoutingService(private val platformRepo: PlatformRepository,
                 signature = walletService.sign(bodyString))
 
         return Triple(url, headers, bodyString)
+    }
+
+
+    /**
+     * Searches the Permissions contract for additional recipients a request/response could be forwarded to
+     */
+    @Async
+    fun getAdditionalRecipients(party: BasicRole, module: ModuleID, interfaceRole: InterfaceRole): CompletableFuture<List<BasicRole>> {
+        val recipients: MutableList<BasicRole> = mutableListOf()
+        val (senderAddress, _) = getPartyDetails(party)
+        val agreements = permissions.getUserAgreements(senderAddress).sendAsync().get()
+
+        for (agreement in agreements) {
+            val (_, _, needs) = permissions.getApp(agreement as String).sendAsync().get()
+
+            for (need in needs) {
+                if (OcnAppPermission.getByIndex(need).matches(module, interfaceRole)) {
+                    val (country, id) = registry.getPartyDetailsByAddress(agreement).sendAsync().get()
+                    recipients.add(BasicRole(id.toString(), country.toString()))
+                    break
+                }
+            }
+        }
+        // - iterate over agreements: match permissions to <module> and <interfaceRole>
+        // - if match, add to additional recipient list
+        return CompletableFuture.completedFuture(recipients)
     }
 
 
