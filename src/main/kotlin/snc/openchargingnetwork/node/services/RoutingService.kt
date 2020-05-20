@@ -291,20 +291,30 @@ class RoutingService(private val platformRepo: PlatformRepository,
     @Async
     fun getAdditionalRecipients(party: BasicRole, module: ModuleID, interfaceRole: InterfaceRole): CompletableFuture<List<BasicRole>> {
         val recipients: MutableList<BasicRole> = mutableListOf()
-        val (senderAddress, _) = getPartyDetails(party)
-        val agreements = permissions.getUserAgreements(senderAddress).sendAsync().get()
+
+        val agreements = permissions
+                .getUserAgreementsByOcpi(party.country.toByteArray(), party.id.toByteArray())
+                .sendAsync()
+                .get()
+
+        println("agreements=$agreements")
 
         for (agreement in agreements) {
-            val (_, _, needs) = permissions.getApp(agreement as String).sendAsync().get()
+            val (countryCode, partyId, _, _, needs) = permissions.getApp(agreement as String).sendAsync().get()
+
+            println("countryCode=$countryCode")
+            println("partyId=$partyId")
+            println("needs=$needs")
 
             for (need in needs) {
                 if (OcnAppPermission.getByIndex(need).matches(module, interfaceRole)) {
-                    val (country, id) = registry.getPartyDetailsByAddress(agreement).sendAsync().get()
-                    recipients.add(BasicRole(id.toString(), country.toString()))
+                    recipients.add(BasicRole(partyId.toString(), countryCode.toString()))
                     break
                 }
             }
         }
+
+        println("recipients=$recipients")
         // - iterate over agreements: match permissions to <module> and <interfaceRole>
         // - if match, add to additional recipient list
         return CompletableFuture.completedFuture(recipients)

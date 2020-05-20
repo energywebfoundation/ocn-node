@@ -155,7 +155,9 @@ class RequestHandler<T: Any>(private val request: OcpiRequestVariables,
      * saved by the OCN Node.
      */
     fun forwardRequest(proxied: Boolean = false): RequestHandler<T> {
+        // TODO: move
         routingService.getAdditionalRecipients(request.headers.sender, request.module, request.interfaceRole)
+
         response = when (routingService.validateReceiver(request.headers.receiver)) {
             Receiver.LOCAL -> {
                 knownReceiver = true

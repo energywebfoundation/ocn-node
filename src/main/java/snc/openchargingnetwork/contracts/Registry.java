@@ -121,7 +121,7 @@ public class Registry extends Contract {
 
     static {
         _addresses = new HashMap<String, String>();
-        _addresses.put("9", "0x345cA3e014Aaf5dcA488057592ee47305D9B3e10");
+        _addresses.put("9", "0xf204a4Ef082f5c04bB89F7D5E6568B796096735a");
     }
 
     @Deprecated
