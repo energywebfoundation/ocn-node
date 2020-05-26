@@ -16,10 +16,11 @@
 
 package snc.openchargingnetwork.node.services
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.springframework.http.HttpHeaders
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
-import org.web3j.crypto.Credentials
 import org.web3j.crypto.Keys
 import shareandcharge.openchargingnetwork.notary.Notary
 import shareandcharge.openchargingnetwork.notary.ValuesToSign
@@ -46,6 +47,7 @@ class RequestHandlerBuilder(private val routingService: RoutingService,
                             private val httpService: HttpService,
                             private val walletService: WalletService,
                             private val hubClientInfoService: HubClientInfoService,
+                            private val asyncTaskService: AsyncTaskService,
                             private val properties: NodeProperties) {
 
     /**
@@ -92,6 +94,10 @@ class RequestHandler<T: Any>(private val request: OcpiRequestVariables,
                              private val hubClientInfoService: HubClientInfoService,
                              private val walletService: WalletService,
                              private val properties: NodeProperties) {
+
+    companion object {
+        private var logger: Logger = LoggerFactory.getLogger(RequestHandler::class.java)
+    }
 
     /**
      * HttpResponse object instantiated after forwarding a request.
@@ -156,10 +162,13 @@ class RequestHandler<T: Any>(private val request: OcpiRequestVariables,
      */
     fun forwardRequest(proxied: Boolean = false): RequestHandler<T> {
         // TODO: move
-        routingService.getAdditionalRecipients(request.headers.sender, request.module, request.interfaceRole)
+        logger.info("dispatching getAdditionalRecipients async task")
+        val future = routingService.getAdditionalRecipients(request.headers.sender, request.module, request.interfaceRole)
+        logger.info("dispatched task: ${future.isDone}")
 
         response = when (routingService.validateReceiver(request.headers.receiver)) {
             Receiver.LOCAL -> {
+                logger.info("receiver is local")
                 knownReceiver = true
                 routingService.validateWhitelisted(
                         sender = request.headers.sender,
@@ -182,6 +191,10 @@ class RequestHandler<T: Any>(private val request: OcpiRequestVariables,
                 httpService.postOcnMessage(url, headers, body)
             }
         }
+        logger.info("got response, sleeping")
+        Thread.sleep(2000L)
+        logger.info("woke up")
+        logger.info("future: ${future.isDone}")
         return this
     }
 

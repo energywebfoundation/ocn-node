@@ -114,3 +114,10 @@ enum class OcnAppPermission(val matches: (request: BasicRequestType) -> Boolean)
 fun OcnAppPermission.matches(moduleID: ModuleID, interfaceRole: InterfaceRole): Boolean {
     return matches(BasicRequestType(moduleID, interfaceRole))
 }
+
+data class OcnApp(val party: BasicRole, val permissions: List<OcnAppPermission>)
+
+enum class MessageType {
+    REQUEST,
+    RESPONSE
+}

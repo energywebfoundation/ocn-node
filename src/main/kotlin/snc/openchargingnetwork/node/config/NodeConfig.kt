@@ -19,17 +19,19 @@ package snc.openchargingnetwork.node.config
 import org.springframework.boot.ApplicationRunner
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor
 import org.springframework.scheduling.config.IntervalTask
 import org.web3j.protocol.Web3j
-import org.web3j.protocol.http.HttpService as Web3jHttpService
 import org.web3j.tx.ClientTransactionManager
 import org.web3j.tx.TransactionManager
 import org.web3j.tx.gas.StaticGasProvider
 import snc.openchargingnetwork.contracts.Permissions
-import snc.openchargingnetwork.node.repositories.*
 import snc.openchargingnetwork.contracts.Registry
+import snc.openchargingnetwork.node.repositories.*
 import snc.openchargingnetwork.node.scheduledTasks.HubClientInfoStillAliveCheck
 import snc.openchargingnetwork.node.scheduledTasks.PlannedPartySearch
+import java.util.concurrent.Executor
+import org.web3j.protocol.http.HttpService as Web3jHttpService
 import snc.openchargingnetwork.node.services.HttpService as OcnHttpService
 
 

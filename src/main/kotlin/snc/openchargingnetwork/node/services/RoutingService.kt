@@ -16,6 +16,8 @@
 
 package snc.openchargingnetwork.node.services
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
@@ -45,12 +47,14 @@ class RoutingService(private val platformRepo: PlatformRepository,
                      private val endpointRepo: EndpointRepository,
                      private val proxyResourceRepo: ProxyResourceRepository,
                      private val registry: Registry,
-                     private val permissions: Permissions,
                      private val httpService: HttpService,
                      private val walletService: WalletService,
                      private val ocnRulesService: OcnRulesService,
                      private val properties: NodeProperties) {
 
+    companion object {
+        private var logger: Logger = LoggerFactory.getLogger(RoutingService::class.java)
+    }
 
     /**
      * serialize a data class (with @JsonProperty annotations) as a JSON string
@@ -212,6 +216,8 @@ class RoutingService(private val platformRepo: PlatformRepository,
      */
     fun prepareLocalPlatformRequest(request: OcpiRequestVariables, proxied: Boolean = false): Pair<String, OcnHeaders> {
 
+        logger.info("preparing local platform request")
+
         val platformID = getPlatformID(request.headers.receiver)
 
         val url = when {
@@ -248,6 +254,8 @@ class RoutingService(private val platformRepo: PlatformRepository,
 
         val headers = request.headers.copy(authorization = "Token $tokenB", requestID = generateUUIDv4Token())
 
+        logger.info("prepared local platform request")
+
         return Pair(url, headers)
     }
 
@@ -282,42 +290,6 @@ class RoutingService(private val platformRepo: PlatformRepository,
                 signature = walletService.sign(bodyString))
 
         return Triple(url, headers, bodyString)
-    }
-
-
-    /**
-     * Searches the Permissions contract for additional recipients a request/response could be forwarded to
-     */
-    @Async
-    fun getAdditionalRecipients(party: BasicRole, module: ModuleID, interfaceRole: InterfaceRole): CompletableFuture<List<BasicRole>> {
-        val recipients: MutableList<BasicRole> = mutableListOf()
-
-        val agreements = permissions
-                .getUserAgreementsByOcpi(party.country.toByteArray(), party.id.toByteArray())
-                .sendAsync()
-                .get()
-
-        println("agreements=$agreements")
-
-        for (agreement in agreements) {
-            val (countryCode, partyId, _, _, needs) = permissions.getApp(agreement as String).sendAsync().get()
-
-            println("countryCode=$countryCode")
-            println("partyId=$partyId")
-            println("needs=$needs")
-
-            for (need in needs) {
-                if (OcnAppPermission.getByIndex(need).matches(module, interfaceRole)) {
-                    recipients.add(BasicRole(partyId.toString(), countryCode.toString()))
-                    break
-                }
-            }
-        }
-
-        println("recipients=$recipients")
-        // - iterate over agreements: match permissions to <module> and <interfaceRole>
-        // - if match, add to additional recipient list
-        return CompletableFuture.completedFuture(recipients)
     }
 
 

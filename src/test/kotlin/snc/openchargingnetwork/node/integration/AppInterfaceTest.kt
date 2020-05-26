@@ -33,6 +33,11 @@ class AppInterfaceTest {
         cpo2.server.setAppPermissions(listOf(OcnAppPermission.FORWARD_ALL))
         msp.server.agreeToAppPermissions(cpo2.address)
         msp.server.getLocation(cpo1.party)
+        Thread.sleep(1000L)
+        msp.server.getLocation(cpo1.party)
+        Thread.sleep(1000L)
+        msp.server.getLocation(cpo1.party)
+
     }
 
 }
