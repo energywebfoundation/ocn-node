@@ -25,8 +25,6 @@ import snc.openchargingnetwork.node.config.NodeProperties
 
 @SpringBootApplication
 @EnableConfigurationProperties(NodeProperties::class)
-@EnableScheduling
-@EnableAsync
 class Application
 
 fun main(args: Array<String>) {

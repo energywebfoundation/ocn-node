@@ -24,9 +24,11 @@ class RequestHandlerTest {
     private val httpService: HttpService = mockk()
     private val walletService: WalletService = mockk()
     private val hubClientInfoService: HubClientInfoService = mockk()
+    private val asyncTaskService: AsyncTaskService = mockk()
     private val properties: NodeProperties = mockk()
 
-    private val requestHandlerBuilder = RequestHandlerBuilder(routingService, httpService, walletService, hubClientInfoService, properties)
+    private val requestHandlerBuilder = RequestHandlerBuilder(routingService, httpService, walletService,
+            hubClientInfoService, asyncTaskService, properties)
 
     @Test
     fun validateSender() {

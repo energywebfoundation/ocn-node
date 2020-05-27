@@ -54,7 +54,8 @@ class RequestHandlerBuilder(private val routingService: RoutingService,
      * Build a RequestHandler object from an OcpiRequestVariables object.
      */
     fun <T: Any> build(requestVariables: OcpiRequestVariables): RequestHandler<T> {
-        return RequestHandler(requestVariables, routingService, httpService, hubClientInfoService, walletService, properties)
+        return RequestHandler(requestVariables, routingService, httpService, hubClientInfoService, walletService,
+                asyncTaskService, properties)
     }
 
     /**
@@ -62,7 +63,8 @@ class RequestHandlerBuilder(private val routingService: RoutingService,
      */
     fun <T: Any> build(requestVariablesString: String): RequestHandler<T> {
         val requestVariables = httpService.convertToRequestVariables(requestVariablesString)
-        return RequestHandler(requestVariables, routingService, httpService, hubClientInfoService, walletService, properties)
+        return RequestHandler(requestVariables, routingService, httpService, hubClientInfoService, walletService,
+                asyncTaskService, properties)
     }
 
 }
@@ -93,6 +95,7 @@ class RequestHandler<T: Any>(private val request: OcpiRequestVariables,
                              private val httpService: HttpService,
                              private val hubClientInfoService: HubClientInfoService,
                              private val walletService: WalletService,
+                             private val asyncTaskService: AsyncTaskService,
                              private val properties: NodeProperties) {
 
     companion object {
@@ -162,9 +165,9 @@ class RequestHandler<T: Any>(private val request: OcpiRequestVariables,
      */
     fun forwardRequest(proxied: Boolean = false): RequestHandler<T> {
         // TODO: move
-        logger.info("dispatching getAdditionalRecipients async task")
-        val future = routingService.getAdditionalRecipients(request.headers.sender, request.module, request.interfaceRole)
-        logger.info("dispatched task: ${future.isDone}")
+//        logger.info("dispatching getAdditionalRecipients async task")
+//        val future = asyncTaskService.findLinkedApps(request.headers.sender, request.module, request.interfaceRole)
+//        logger.info("dispatched task: ${future.isDone}")
 
         response = when (routingService.validateReceiver(request.headers.receiver)) {
             Receiver.LOCAL -> {
@@ -194,7 +197,7 @@ class RequestHandler<T: Any>(private val request: OcpiRequestVariables,
         logger.info("got response, sleeping")
         Thread.sleep(2000L)
         logger.info("woke up")
-        logger.info("future: ${future.isDone}")
+//        logger.info("future: ${future.isDone}")
         return this
     }
 
