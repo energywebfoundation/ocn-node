@@ -19,8 +19,6 @@ package snc.openchargingnetwork.node.config
 import org.springframework.boot.ApplicationRunner
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.scheduling.annotation.EnableAsync
-import org.springframework.scheduling.annotation.EnableScheduling
 import org.springframework.scheduling.config.IntervalTask
 import org.web3j.protocol.Web3j
 import org.web3j.tx.ClientTransactionManager
@@ -36,8 +34,6 @@ import snc.openchargingnetwork.node.services.HttpService as OcnHttpService
 
 
 @Configuration
-@EnableScheduling
-@EnableAsync
 open class NodeConfig(private val properties: NodeProperties) {
 
     private val web3: Web3j = Web3j.build(Web3jHttpService(properties.web3.provider))
@@ -91,5 +87,14 @@ open class NodeConfig(private val properties: NodeProperties) {
 
         return taskList.toList()
     }
+
+//    // modify the default task executor (runs async tasks, not to be confused with scheduled tasks)
+//    @Bean
+//    fun taskExecutor(): TaskExecutor {
+//        val taskExecutor = ThreadPoolTaskExecutor()
+//        taskExecutor.corePoolSize = 100
+//        taskExecutor.setThreadNamePrefix("worker-")
+//        return taskExecutor
+//    }
 
 }

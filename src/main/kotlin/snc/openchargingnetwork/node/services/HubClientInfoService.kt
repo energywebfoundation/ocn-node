@@ -16,6 +16,7 @@
 
 package snc.openchargingnetwork.node.services
 
+import org.slf4j.LoggerFactory
 import org.springframework.http.HttpMethod
 import org.springframework.stereotype.Service
 import snc.openchargingnetwork.node.models.OcnHeaders
@@ -40,6 +41,10 @@ class HubClientInfoService(private val platformRepo: PlatformRepository,
                            private val routingService: RoutingService,
                            private val walletService: WalletService,
                            private val ocnRulesService: OcnRulesService) {
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(HubClientInfoService::class.java)
+    }
 
     /**
      * Get a HubClientInfo list of local and known network connections
@@ -164,7 +169,12 @@ class HubClientInfoService(private val platformRepo: PlatformRepository,
                     urlPathVariables = "${changedClientInfo.countryCode}/${changedClientInfo.partyID}")
 
             val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables, proxied = false)
-            httpService.makeOcpiRequest<Unit>(url, headers, requestVariables)
+
+            try {
+                httpService.makeOcpiRequest<Unit>(url, headers, requestVariables)
+            } catch (e: Exception) { // fire and forget; catch any error and log
+                logger.warn("Error notifying $receiver of client info change: ${e.message}")
+            }
         }
     }
 
@@ -178,7 +188,11 @@ class HubClientInfoService(private val platformRepo: PlatformRepository,
         val nodes = routingService.getNodesListedInRegistry(omitMine = true)
 
         for (node in nodes) {
-            httpService.putOcnClientInfo(node.url, signature, changedClientInfo)
+            try {
+                httpService.putOcnClientInfo(node.url, signature, changedClientInfo)
+            } catch (e: Exception) { // fire and forget; catch any error and log
+                logger.warn("Error notifying $node of client info change: ${e.message}")
+            }
         }
     }
 

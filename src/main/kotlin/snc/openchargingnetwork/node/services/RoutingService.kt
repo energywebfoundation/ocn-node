@@ -216,8 +216,6 @@ class RoutingService(private val platformRepo: PlatformRepository,
      */
     fun prepareLocalPlatformRequest(request: OcpiRequestVariables, proxied: Boolean = false): Pair<String, OcnHeaders> {
 
-        logger.info("preparing local platform request")
-
         val platformID = getPlatformID(request.headers.receiver)
 
         val url = when {
@@ -253,8 +251,6 @@ class RoutingService(private val platformRepo: PlatformRepository,
         val tokenB = platformRepo.findById(platformID).get().auth.tokenB
 
         val headers = request.headers.copy(authorization = "Token $tokenB", requestID = generateUUIDv4Token())
-
-        logger.info("prepared local platform request")
 
         return Pair(url, headers)
     }

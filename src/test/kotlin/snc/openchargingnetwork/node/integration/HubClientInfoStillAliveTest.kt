@@ -1,12 +1,10 @@
 package snc.openchargingnetwork.node.integration
 
-import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.Awaitility.*
 import org.junit.jupiter.api.*
 import snc.openchargingnetwork.node.integration.utils.*
 import snc.openchargingnetwork.node.models.OcnRulesListType
 import snc.openchargingnetwork.node.models.ocpi.*
-import java.lang.Thread.sleep
 import java.util.concurrent.TimeUnit
 
 
@@ -17,7 +15,8 @@ class HubClientInfoStillAliveTest {
     private lateinit var cpo2: TestCpo
     private lateinit var emsp: TestMsp
 
-    private val hubClientInfoParams = HubClientInfoParams(stillAlive = Scheduler(true))
+    private val rate = 1000L
+    private val hubClientInfoParams = HubClientInfoParams(stillAlive = Scheduler(true, rate))
 
     @BeforeEach
     fun bootStrap() {
@@ -37,16 +36,23 @@ class HubClientInfoStillAliveTest {
      */
     @Test
     fun hubClientInfo_stillAlivePutsOffline() {
-        assertThat(cpo1.server.hubClientInfoStatuses[emsp.party]).isEqualTo(ConnectionStatus.CONNECTED)
-        assertThat(cpo2.server.hubClientInfoStatuses[emsp.party]).isEqualTo(ConnectionStatus.CONNECTED)
+        fun mspIs(expectedStatus: ConnectionStatus): Boolean {
+            // ensure both cpo1 and cpo2 have seen the status update (tests both local and remote node connections)
+            val cpo1matches = cpo1.server.hubClientInfoStatuses[emsp.party] == expectedStatus
+            val cpo2matches = cpo2.server.hubClientInfoStatuses[emsp.party] == expectedStatus
+            return cpo1matches && cpo2matches
+        }
+
+        // need to wait for initial emsp status to be broadcast to cpo2
+        await().atMost(rate, TimeUnit.SECONDS).until { mspIs(ConnectionStatus.CONNECTED) }
 
         emsp.server.stopServer()
 
-        //TODO: ensure that test reliably works without factor of 2 to stillAliveRate
-        await().atMost(hubClientInfoParams.stillAlive.rate * 2, TimeUnit.MILLISECONDS).until{
-            val seenByCpo1 = cpo1.server.hubClientInfoStatuses[emsp.party] == ConnectionStatus.OFFLINE
-            val seenByCpo2 = cpo2.server.hubClientInfoStatuses[emsp.party] == ConnectionStatus.OFFLINE
-            seenByCpo1 && seenByCpo2
+        // TODO: ensure that test reliably works without factor of n to stillAliveRate
+        //   - note: this is caused when the task fetches the disconnected party's Versions endpoint and must wait
+        //           for a "Connection Refused" response, adding ~2 seconds to the test.
+        await().atMost(rate * 4, TimeUnit.MILLISECONDS).until {
+            mspIs(ConnectionStatus.OFFLINE)
         }
     }
 
@@ -55,18 +61,25 @@ class HubClientInfoStillAliveTest {
      */
     @Test
     fun hubClientInfo_stillAliveFilteredByWhitelist() {
-        assertThat(cpo1.server.hubClientInfoStatuses[emsp.party]).isEqualTo(ConnectionStatus.CONNECTED)
-        assertThat(cpo1.server.hubClientInfoStatuses[cpo2.party]).isEqualTo(ConnectionStatus.CONNECTED)
+        fun cpo1Has(emspStatus: ConnectionStatus, cpo2Status: ConnectionStatus): Boolean {
+            val emspSeen = cpo1.server.hubClientInfoStatuses[emsp.party] == emspStatus
+            val cpo2Seen = cpo1.server.hubClientInfoStatuses[cpo2.party] == cpo2Status
+            return emspSeen && cpo2Seen
+        }
+
+        await().atMost(rate, TimeUnit.SECONDS).until {
+            cpo1Has(emspStatus = ConnectionStatus.CONNECTED, cpo2Status = ConnectionStatus.CONNECTED)
+        }
 
         cpo1.server.addToList(OcnRulesListType.WHITELIST, emsp.party)
 
         cpo2.server.stopServer()
         emsp.server.stopServer()
 
-        sleep(hubClientInfoParams.stillAlive.rate * 2)
-
-        assertThat(cpo1.server.hubClientInfoStatuses[emsp.party]).isEqualTo(ConnectionStatus.OFFLINE)
-        assertThat(cpo1.server.hubClientInfoStatuses[cpo2.party]).isEqualTo(ConnectionStatus.CONNECTED) // has not received the updated status as not in whitelist
+        // see test above for timeout reasoning
+        await().atMost(rate * 4, TimeUnit.SECONDS).until {
+            cpo1Has(emspStatus = ConnectionStatus.OFFLINE, cpo2Status = ConnectionStatus.CONNECTED)
+        }
     }
 
 }

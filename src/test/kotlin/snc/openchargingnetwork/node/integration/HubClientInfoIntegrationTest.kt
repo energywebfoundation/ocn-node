@@ -61,16 +61,20 @@ class HubClientInfoIntegrationTest {
 
     /**
      * Tests that HubClientInfo functionality can be disabled
+     * (MSP server is stopped and no OFFLINE update is broadcast)
      */
     @Test
     fun hubClientInfo_stillAliveCanBeDisabled() {
-        assertThat(cpo1.server.hubClientInfoStatuses[msp.party]).isEqualTo(ConnectionStatus.CONNECTED)
-        assertThat(cpo2.server.hubClientInfoStatuses[msp.party]).isEqualTo(ConnectionStatus.CONNECTED)
+        fun mspIsConnected(): Boolean {
+            val cpo1notified = cpo1.server.hubClientInfoStatuses[msp.party] == ConnectionStatus.CONNECTED
+            val cpo2notified = cpo2.server.hubClientInfoStatuses[msp.party] == ConnectionStatus.CONNECTED
+            return cpo1notified && cpo2notified
+        }
+
+        await().atMost(2, TimeUnit.SECONDS).until { mspIsConnected() }
         msp.server.stopServer()
         sleep(hubClientInfoParams.stillAlive.rate * 2)
-        assertThat(cpo1.server.hubClientInfoStatuses[msp.party]).isEqualTo(ConnectionStatus.CONNECTED) //Should still be connected as StillAliveCheck is disabled
-        assertThat(cpo2.server.hubClientInfoStatuses[msp.party]).isEqualTo(ConnectionStatus.CONNECTED)
-
+        await().atMost(2, TimeUnit.SECONDS).until { mspIsConnected() } // should still be connected as still alive disabled
     }
 
     /**
