@@ -22,6 +22,7 @@ import snc.openchargingnetwork.node.models.ocpi.Role
 import snc.openchargingnetwork.node.models.ocpi.OcpiStatus
 import snc.openchargingnetwork.node.models.ocpi.*
 import snc.openchargingnetwork.node.services.HttpService
+import snc.openchargingnetwork.node.services.RegistryService
 import snc.openchargingnetwork.node.services.RoutingService
 
 @WebMvcTest(CredentialsController::class)
@@ -46,7 +47,7 @@ class CredentialsControllerTest(@Autowired val mockMvc: MockMvc) {
     lateinit var properties: NodeProperties
 
     @MockkBean
-    lateinit var routingService: RoutingService
+    lateinit var registryService: RegistryService
 
     @MockkBean
     lateinit var httpService: HttpService
@@ -106,11 +107,11 @@ class CredentialsControllerTest(@Autowired val mockMvc: MockMvc) {
         every { properties.url } returns "http://my.broker.com"
         every { properties.signatures } returns true
 
-        every { routingService.isRoleKnownOnNetwork(BasicRole(role1.partyID, role1.countryCode)) } returns true
+        every { registryService.isRoleKnown(BasicRole(role1.partyID, role1.countryCode)) } returns true
         every { networkClientInfoRepo.existsByPartyAndRole(BasicRole(role1.partyID, role1.countryCode), role1.role) } returns false
         every { roleRepo.existsByCountryCodeAndPartyIDAllIgnoreCase(role1.countryCode, role1.partyID) } returns false
 
-        every { routingService.isRoleKnownOnNetwork(BasicRole(role2.partyID, role2.countryCode)) } returns true
+        every { registryService.isRoleKnown(BasicRole(role2.partyID, role2.countryCode)) } returns true
         every { roleRepo.existsByCountryCodeAndPartyIDAllIgnoreCase(role2.countryCode, role2.partyID) } returns false
         every { networkClientInfoRepo.existsByPartyAndRole(BasicRole(role2.partyID, role2.countryCode), role2.role) } returns false
 

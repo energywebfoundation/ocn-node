@@ -51,7 +51,7 @@ class HubClientInfoControllerTest(@Autowired val mockMvc: MockMvc) {
                 urlEncodedParams = mapOf("date_from" to dateFrom))
 
         every { hubClientInfoService.getList(requestVariables.headers.authorization) } returns listOf(exampleClientInfo)
-        every { routingService.validateSender(requestVariables.headers.authorization, sender) } just Runs
+        every { routingService.checkSenderKnown(requestVariables.headers.authorization, sender) } just Runs
 
         mockMvc.perform(MockMvcRequestBuilders.get("/ocpi/2.2/hubclientinfo")
                 .header("Authorization", "Token token-c")

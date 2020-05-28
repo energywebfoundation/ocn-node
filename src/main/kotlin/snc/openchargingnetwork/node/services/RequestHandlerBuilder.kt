@@ -44,6 +44,7 @@ import kotlin.properties.Delegates.observable
  */
 @Service
 class RequestHandlerBuilder(private val routingService: RoutingService,
+                            private val registryService: RegistryService,
                             private val httpService: HttpService,
                             private val walletService: WalletService,
                             private val hubClientInfoService: HubClientInfoService,
@@ -54,8 +55,8 @@ class RequestHandlerBuilder(private val routingService: RoutingService,
      * Build a RequestHandler object from an OcpiRequestVariables object.
      */
     fun <T: Any> build(requestVariables: OcpiRequestVariables): RequestHandler<T> {
-        return RequestHandler(requestVariables, routingService, httpService, hubClientInfoService, walletService,
-                asyncTaskService, properties)
+        return RequestHandler(requestVariables, routingService, registryService, httpService, hubClientInfoService,
+                walletService, asyncTaskService, properties)
     }
 
     /**
@@ -63,8 +64,8 @@ class RequestHandlerBuilder(private val routingService: RoutingService,
      */
     fun <T: Any> build(requestVariablesString: String): RequestHandler<T> {
         val requestVariables = httpService.convertToRequestVariables(requestVariablesString)
-        return RequestHandler(requestVariables, routingService, httpService, hubClientInfoService, walletService,
-                asyncTaskService, properties)
+        return RequestHandler(requestVariables, routingService, registryService, httpService, hubClientInfoService,
+                walletService, asyncTaskService, properties)
     }
 
 }
@@ -92,6 +93,7 @@ class RequestHandlerBuilder(private val routingService: RoutingService,
  */
 class RequestHandler<T: Any>(private val request: OcpiRequestVariables,
                              private val routingService: RoutingService,
+                             private val registryService: RegistryService,
                              private val httpService: HttpService,
                              private val hubClientInfoService: HubClientInfoService,
                              private val walletService: WalletService,
@@ -121,15 +123,24 @@ class RequestHandler<T: Any>(private val request: OcpiRequestVariables,
     /**
      * Is sender/receiver known to this OCN Node?
      */
-    private var knownReceiver: Boolean = false
     private var knownSender: Boolean = true
+
+    /**
+     * Sender's message is valid (sender, receiver and signature have all been validated)
+     * Once valid, we can run the async task to find ocn apps the request can be forwarded to
+     */
+    private var requestIsValid: Boolean by observable<Boolean>(false) { _, validBefore, validNow ->
+        if (!validBefore && validNow) { // task should only run when requestIsValid becomes true for the first time
+            asyncTaskService.forwardToLinkedApps(request)
+        }
+    }
 
     /**
      * Assert the sender is allowed to send OCPI requests to this OCN Node.
      * If message signing is required, or OCN-Signature header present, verifies the signature.
      */
     fun validateSender(): RequestHandler<T> {
-        routingService.validateSender(request.headers.authorization, request.headers.sender)
+        routingService.checkSenderKnown(request.headers.authorization, request.headers.sender)
         hubClientInfoService.renewClientConnection(request.headers.sender)
         return this
     }
@@ -141,7 +152,7 @@ class RequestHandler<T: Any>(private val request: OcpiRequestVariables,
      */
     fun validateOcnMessage(signature: String): RequestHandler<T> {
         knownSender = false
-        if (!routingService.isRoleKnownOnNetwork(request.headers.sender, belongsToMe = false)) {
+        if (!registryService.isRoleKnown(request.headers.sender, belongsToMe = false)) {
             throw OcpiHubUnknownReceiverException("Sending party not registered on Open Charging Network")
         }
 
@@ -164,40 +175,36 @@ class RequestHandler<T: Any>(private val request: OcpiRequestVariables,
      * saved by the OCN Node.
      */
     fun forwardRequest(proxied: Boolean = false): RequestHandler<T> {
-        // TODO: move
-//        logger.info("dispatching getAdditionalRecipients async task")
-//        val future = asyncTaskService.findLinkedApps(request.headers.sender, request.module, request.interfaceRole)
-//        logger.info("dispatched task: ${future.isDone}")
+        response = when (routingService.getReceiverType(request.headers.receiver)) {
 
-        response = when (routingService.validateReceiver(request.headers.receiver)) {
             Receiver.LOCAL -> {
-                logger.info("receiver is local")
-                knownReceiver = true
-                routingService.validateWhitelisted(
+                routingService.checkSenderWhitelisted(
                         sender = request.headers.sender,
                         receiver = request.headers.receiver,
                         module = request.module)
+
                 validateOcnSignature(
                         signature = request.headers.signature,
                         signedValues = request.toSignedValues(),
                         signer = request.headers.sender,
                         receiver = request.headers.receiver)
                 val (url, headers) = routingService.prepareLocalPlatformRequest(request, proxied)
+
+                requestIsValid = true // trigger side-effect (forward to linked apps)
                 httpService.makeOcpiRequest(url, headers, request)
             }
+
             Receiver.REMOTE -> {
                 validateOcnSignature(
                         signature = request.headers.signature,
                         signedValues = request.toSignedValues(),
                         signer = request.headers.sender)
                 val (url, headers, body) = routingService.prepareRemotePlatformRequest(request, proxied)
+
+                requestIsValid = true // trigger side-effect (forward to linked apps)
                 httpService.postOcnMessage(url, headers, body)
             }
         }
-        logger.info("got response, sleeping")
-        Thread.sleep(2000L)
-        logger.info("woke up")
-//        logger.info("future: ${future.isDone}")
         return this
     }
 
@@ -215,11 +222,10 @@ class RequestHandler<T: Any>(private val request: OcpiRequestVariables,
         val proxyPath = "/ocpi/sender/2.2/commands/${request.urlPathVariables}"
         val rewriteFields = mapOf("$['body']['response_url']" to responseUrl)
 
-        response = when (routingService.validateReceiver(request.headers.receiver)) {
+        response = when (routingService.getReceiverType(request.headers.receiver)) {
 
             Receiver.LOCAL -> {
-                knownReceiver = true
-                routingService.validateWhitelisted(
+                routingService.checkSenderWhitelisted(
                         sender = request.headers.sender,
                         receiver = request.headers.receiver,
                         module = request.module)
@@ -237,11 +243,11 @@ class RequestHandler<T: Any>(private val request: OcpiRequestVariables,
                 modifiedRequest.headers.signature = rewriteAndSign(modifiedRequest.toSignedValues(), rewriteFields)
                 // send the request with the modified body
                 val (url, headers) = routingService.prepareLocalPlatformRequest(request)
+                requestIsValid = true // trigger side-effect (forward to linked apps)
                 httpService.makeOcpiRequest(url, headers, modifiedRequest)
             }
 
             Receiver.REMOTE -> {
-
                 validateOcnSignature(
                         signature = request.headers.signature,
                         signedValues = request.toSignedValues(),
@@ -258,6 +264,7 @@ class RequestHandler<T: Any>(private val request: OcpiRequestVariables,
                     modifiedRequest.copy(proxyUID = proxyUID, proxyResource = responseUrl)
                 }
 
+                requestIsValid = true // trigger side-effect (forward to linked apps)
                 httpService.postOcnMessage(url, headers, body)
             }
 
@@ -415,7 +422,7 @@ class RequestHandler<T: Any>(private val request: OcpiRequestVariables,
                 !result.isValid -> throw OcpiClientInvalidParametersException("Invalid signature: ${result.error}")
             }
 
-            val party = routingService.getPartyDetails(signer)
+            val party = registryService.getPartyDetails(signer)
             val actualSignatory = Keys.toChecksumAddress(notary?.signatory)
             val signedByParty = actualSignatory == Keys.toChecksumAddress(party.address)
             val signedByOperator = actualSignatory == Keys.toChecksumAddress(party.operator)

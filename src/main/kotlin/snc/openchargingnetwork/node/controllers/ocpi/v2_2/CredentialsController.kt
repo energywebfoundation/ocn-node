@@ -30,6 +30,7 @@ import snc.openchargingnetwork.node.models.exceptions.OcpiClientInvalidParameter
 import snc.openchargingnetwork.node.models.exceptions.OcpiServerNoMatchingEndpointsException
 import snc.openchargingnetwork.node.models.ocpi.*
 import snc.openchargingnetwork.node.services.HttpService
+import snc.openchargingnetwork.node.services.RegistryService
 import snc.openchargingnetwork.node.services.RoutingService
 import snc.openchargingnetwork.node.tools.*
 
@@ -42,7 +43,7 @@ class CredentialsController(private val platformRepo: PlatformRepository,
                             private val networkClientInfoRepository: NetworkClientInfoRepository,
                             private val ocnRulesListRepo: OcnRulesListRepository,
                             private val properties: NodeProperties,
-                            private val routingService: RoutingService,
+                            private val registryService: RegistryService,
                             private val httpService: HttpService) {
 
     private fun myCredentials(token: String): Credentials {
@@ -93,7 +94,7 @@ class CredentialsController(private val platformRepo: PlatformRepository,
         // ensure each role does not already exist; delete if planned
         for (role in body.roles) {
             val basicRole = BasicRole(role.partyID, role.countryCode)
-            if (!routingService.isRoleKnownOnNetwork(basicRole)) {
+            if (!registryService.isRoleKnown(basicRole)) {
                 throw OcpiClientInvalidParametersException("Role with party_id=${basicRole.id} and country_code=${basicRole.country} not listed in OCN Registry with my node info!")
             }
             if (roleRepo.existsByCountryCodeAndPartyIDAllIgnoreCase(basicRole.country, basicRole.id)) {

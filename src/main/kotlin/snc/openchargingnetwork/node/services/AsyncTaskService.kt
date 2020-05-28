@@ -3,59 +3,31 @@ package snc.openchargingnetwork.node.services
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
-import snc.openchargingnetwork.contracts.Permissions
-import snc.openchargingnetwork.node.models.OcnAppPermission
-import snc.openchargingnetwork.node.models.matches
-import snc.openchargingnetwork.node.models.ocpi.BasicRole
-import snc.openchargingnetwork.node.models.ocpi.InterfaceRole
-import snc.openchargingnetwork.node.models.ocpi.ModuleID
-import java.util.concurrent.CompletableFuture
+import snc.openchargingnetwork.node.models.ocpi.OcpiRequestVariables
 
 @Service
-class AsyncTaskService(private val permissions: Permissions,
-                       private val httpService: HttpService) {
+class AsyncTaskService(private val registryService: RegistryService) {
 
     companion object {
         private val logger = LoggerFactory.getLogger(AsyncTaskService::class.java)
     }
 
+    /**
+     * Forward request to linked apps
+     * TODO: rename - e.g. findLinkedApps
+     */
     @Async
-    fun findLinkedApps(party: BasicRole, module: ModuleID, interfaceRole: InterfaceRole): CompletableFuture<List<BasicRole>> {
-        /**
-         * TODO: where to run most optimally?
-         *  - runs once we have validated the sender AND receiver on the network AND signature
-         *  - must use routing service to find out where app is located on network
-         *  - request must be modified with new signature containing new recipient
-         *  - fire and forget request
-         */
-
-        val recipients: MutableList<BasicRole> = mutableListOf()
-
-        val agreements = permissions
-                .getUserAgreementsByOcpi(party.country.toByteArray(), party.id.toByteArray())
-                .sendAsync()
-                .get()
-
-        for (agreement in agreements) {
-            val (countryCode, partyId, _, _, needs) = permissions.getApp(agreement as String).sendAsync().get()
-
-            logger.info("needs=$needs")
-
-//            Thread.sleep(5000L)
-
-            for (need in needs) {
-                if (OcnAppPermission.getByIndex(need).matches(module, interfaceRole)) {
-                    recipients.add(BasicRole(
-                            id = partyId.toString(Charsets.UTF_8),
-                            country = countryCode.toString(Charsets.UTF_8)))
-                    logger.info("need $need matched")
-                    break
+    fun forwardToLinkedApps(request: OcpiRequestVariables) {
+        registryService.getAgreementsByInterface(request.headers.sender, request.module, request.interfaceRole)
+                .forEach {
+                    logger.info("forwarding request to ${it.provider}")
+                    // TODO: send to app using requestHandlerBuilder (circular import - could use an event instead)
+                    // e.g. forEach
+                    //          -> fire event containing original request and new recipient
+                    //          -> listener picks up event
+                    //          -> uses builder to create request handler
+                    //          -> forwards modifiable request to new sender (must modify recipient headers and re-sign)
                 }
-                logger.info("need $need not matched")
-            }
-        }
-
-        return CompletableFuture.completedFuture(recipients)
     }
 
 }

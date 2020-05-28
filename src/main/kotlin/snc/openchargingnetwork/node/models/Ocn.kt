@@ -96,6 +96,8 @@ data class RegistryPartyDetails(val party: BasicRole, val roles: List<Role>, val
 
 data class RegistryNode(val operator: String, val url: String)
 
+data class OcnApp(val provider: BasicRole, val permissions: List<OcnAppPermission>)
+
 data class BasicRequestType(val moduleID: ModuleID, val interfaceRole: InterfaceRole)
 
 // each enum value takes a "matcher" which tests a given module/interface
@@ -105,19 +107,16 @@ enum class OcnAppPermission(val matches: (request: BasicRequestType) -> Boolean)
     FORWARD_ALL_RECEIVER({it.interfaceRole == InterfaceRole.RECEIVER});
 
     companion object {
-        fun getByIndex(index: BigInteger): OcnAppPermission {
-            return values()[index.intValueExact()]
+        fun getByIndex(index: BigInteger): OcnAppPermission? {
+            return try {
+                values()[index.intValueExact()]
+            } catch (e: ArrayIndexOutOfBoundsException) {
+                null
+            }
         }
     }
 }
 
 fun OcnAppPermission.matches(moduleID: ModuleID, interfaceRole: InterfaceRole): Boolean {
     return matches(BasicRequestType(moduleID, interfaceRole))
-}
-
-data class OcnApp(val party: BasicRole, val permissions: List<OcnAppPermission>)
-
-enum class MessageType {
-    REQUEST,
-    RESPONSE
 }

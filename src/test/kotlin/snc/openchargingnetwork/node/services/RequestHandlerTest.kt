@@ -21,13 +21,14 @@ import snc.openchargingnetwork.node.tools.generatePrivateKey
 class RequestHandlerTest {
 
     private val routingService: RoutingService = mockk()
+    private val registryService: RegistryService = mockk()
     private val httpService: HttpService = mockk()
     private val walletService: WalletService = mockk()
     private val hubClientInfoService: HubClientInfoService = mockk()
     private val asyncTaskService: AsyncTaskService = mockk()
     private val properties: NodeProperties = mockk()
 
-    private val requestHandlerBuilder = RequestHandlerBuilder(routingService, httpService, walletService,
+    private val requestHandlerBuilder = RequestHandlerBuilder(routingService, registryService, httpService, walletService,
             hubClientInfoService, asyncTaskService, properties)
 
     @Test
@@ -43,7 +44,7 @@ class RequestHandlerTest {
                         sender = BasicRole("ABC", "DE"),
                         receiver = BasicRole("XYZ", "DE")))
 
-        every { routingService.validateSender(variables.headers.authorization, variables.headers.sender) } just Runs
+        every { routingService.checkSenderKnown(variables.headers.authorization, variables.headers.sender) } just Runs
         val requestHandler = requestHandlerBuilder.build<Unit>(variables)
         assertDoesNotThrow { requestHandler.validateSender() }
     }
@@ -67,7 +68,7 @@ class RequestHandlerTest {
 
         val variablesString = jacksonObjectMapper().writeValueAsString(variables)
 
-        every { routingService.isRoleKnownOnNetwork(variables.headers.sender, false) } returns true
+        every { registryService.isRoleKnown(variables.headers.sender, false) } returns true
         every { routingService.isRoleKnown(variables.headers.receiver) } returns true
         every { httpService.mapper.writeValueAsString(variables) } returns variablesString
         every { walletService.verify(variablesString, signature, variables.headers.sender) } just Runs
@@ -105,8 +106,8 @@ class RequestHandlerTest {
                 headers = mapOf(),
                 body = OcpiResponse(1000))
 
-        every { routingService.validateReceiver(variables.headers.receiver) } returns Receiver.LOCAL
-        every { routingService.validateWhitelisted(variables.headers.sender, variables.headers.receiver, variables.module) } just Runs
+        every { routingService.getReceiverType(variables.headers.receiver) } returns Receiver.LOCAL
+        every { routingService.checkSenderWhitelisted(variables.headers.sender, variables.headers.receiver, variables.module) } just Runs
         every { properties.signatures } returns false
         every { routingService.getPlatformRules(any()) } returns OcnRules(signatures = false)
         every { routingService.prepareLocalPlatformRequest(variables, false) } returns Pair(recipientUrl, outgoingHeaders)
@@ -114,6 +115,8 @@ class RequestHandlerTest {
         every { routingService.isRoleKnown(variables.headers.receiver) } returns true
         every { hubClientInfoService.renewClientConnection(variables.headers.sender) } just Runs
         every { hubClientInfoService.renewClientConnection(variables.headers.receiver) } just Runs
+        every { asyncTaskService.forwardToLinkedApps(variables) } just Runs
+        every { registryService.getAgreementsByInterface(variables.headers.sender, variables.module, variables.interfaceRole) } returns sequenceOf()
 
         val response = requestHandler.forwardRequest().getResponse()
         assertEquals(expectedResponse.statusCode, response.statusCodeValue)
@@ -156,14 +159,17 @@ class RequestHandlerTest {
         val receiverSig = Notary().sign(expectedResponse.toSignedValues(), receiverKey)
         expectedResponse.body.signature = receiverSig.serialize()
 
-        every { routingService.validateReceiver(variables.headers.receiver) } returns Receiver.LOCAL
-        every { routingService.validateWhitelisted(variables.headers.sender, variables.headers.receiver, variables.module) } just Runs
+        every { routingService.getReceiverType(variables.headers.receiver) } returns Receiver.LOCAL
+        every { routingService.checkSenderWhitelisted(variables.headers.sender, variables.headers.receiver, variables.module) } just Runs
         every { properties.signatures } returns false
         every { routingService.getPlatformRules(variables.headers.receiver) } returns OcnRules(signatures = true)
-        every { routingService.getPartyDetails(variables.headers.sender) } returns RegistryPartyDetailsBasic(signature.signatory, "0x9bC1169Ca09555bf2721A5C9eC6D69c8073bfeB4")
-        every { routingService.getPartyDetails(variables.headers.receiver) } returns RegistryPartyDetailsBasic(receiverSig.signatory, "0x9bC1169Ca09555bf2721A5C9eC6D69c8073bfeB4")
+        every { registryService.getPartyDetails(variables.headers.sender) } returns RegistryPartyDetailsBasic(
+                signature.signatory, "0x9bC1169Ca09555bf2721A5C9eC6D69c8073bfeB4")
+        every { registryService.getPartyDetails(variables.headers.receiver) } returns RegistryPartyDetailsBasic(
+                receiverSig.signatory, "0x9bC1169Ca09555bf2721A5C9eC6D69c8073bfeB4")
         every { routingService.prepareLocalPlatformRequest(variables, false) } returns Pair(recipientUrl, outgoingHeaders)
         every { httpService.makeOcpiRequest<Unit>(recipientUrl, outgoingHeaders, variables) } returns expectedResponse
+        every { asyncTaskService.forwardToLinkedApps(variables) } just Runs
 
         val response = requestHandler.forwardRequest().getResponse()
         assertEquals(expectedResponse.statusCode, response.statusCodeValue)
@@ -196,12 +202,14 @@ class RequestHandlerTest {
                 headers = mapOf(),
                 body = OcpiResponse(1000))
 
-        every { routingService.validateReceiver(variables.headers.receiver) } returns Receiver.REMOTE
+        every { routingService.getReceiverType(variables.headers.receiver) } returns Receiver.REMOTE
         every { properties.signatures } returns false
-        every { routingService.prepareRemotePlatformRequest(variables, false) } returns Triple(recipientUrl, outgoingHeaders, outgoingBody)
+        every { routingService.prepareRemotePlatformRequest(variables, false) } returns Triple(
+                recipientUrl, outgoingHeaders, outgoingBody)
         every { httpService.postOcnMessage<Unit>(recipientUrl, outgoingHeaders, outgoingBody) } returns expectedResponse
         every { hubClientInfoService.renewClientConnection(variables.headers.sender) } just Runs
         every { routingService.isRoleKnown(variables.headers.receiver) } returns false
+        every { asyncTaskService.forwardToLinkedApps(variables) } just Runs
 
         val response = requestHandler.forwardRequest().getResponse()
         assertEquals(expectedResponse.statusCode, response.statusCodeValue)
@@ -242,12 +250,17 @@ class RequestHandlerTest {
         val receiverSig = Notary().sign(expectedResponse.toSignedValues(), receiverKey)
         expectedResponse.body.signature = receiverSig.serialize()
 
-        every { routingService.validateReceiver(variables.headers.receiver) } returns Receiver.REMOTE
+        every { routingService.getReceiverType(variables.headers.receiver) } returns Receiver.REMOTE
         every { properties.signatures } returns true
-        every { routingService.getPartyDetails(variables.headers.sender) } returns RegistryPartyDetailsBasic(signature.signatory, "0x7c514d15709fb091243a4dffb649361354a9b038")
-        every { routingService.getPartyDetails(variables.headers.receiver) } returns RegistryPartyDetailsBasic(receiverSig.signatory, "0xd49ead20b0ae060161c9ddea9b1bc46bb29b3c58")
-        every { routingService.prepareRemotePlatformRequest(variables, false) } returns Triple(recipientUrl, outgoingHeaders, outgoingBody)
+        every { registryService.getPartyDetails(variables.headers.sender) } returns RegistryPartyDetailsBasic(
+                signature.signatory, "0x7c514d15709fb091243a4dffb649361354a9b038")
+        every { registryService.getPartyDetails(variables.headers.receiver) } returns RegistryPartyDetailsBasic(
+                receiverSig.signatory, "0xd49ead20b0ae060161c9ddea9b1bc46bb29b3c58")
+        every { routingService.prepareRemotePlatformRequest(variables, false) } returns Triple(
+                recipientUrl, outgoingHeaders, outgoingBody)
         every { httpService.postOcnMessage<Unit>(recipientUrl, outgoingHeaders, outgoingBody) } returns expectedResponse
+        every { asyncTaskService.forwardToLinkedApps(variables) } just Runs
+
 
         val response = requestHandler.forwardRequest().getResponse()
         assertEquals(expectedResponse.statusCode, response.statusCodeValue)

@@ -25,10 +25,9 @@ class RoutingServiceTest {
     private val endpointRepo: EndpointRepository = mockk()
     private val proxyResourceRepo: ProxyResourceRepository = mockk()
     private val httpService: HttpService = mockk()
-    private val registry: Registry = mockk()
     private val walletService: WalletService = mockk()
     private val ocnRulesService: OcnRulesService = mockk()
-    private val properties: NodeProperties = mockk()
+    private val registryService: RegistryService = mockk()
 
     private val routingService: RoutingService
 
@@ -38,11 +37,10 @@ class RoutingServiceTest {
                 roleRepo,
                 endpointRepo,
                 proxyResourceRepo,
-                registry,
+                registryService,
                 httpService,
                 walletService,
-                ocnRulesService,
-                properties)
+                ocnRulesService)
     }
 
     @Test
@@ -158,9 +156,7 @@ class RoutingServiceTest {
 
         val modifiedRequest = request.copy(headers = request.headers.copy(authorization = ""))
 
-        every { registry.getOperatorByOcpi(
-                request.headers.receiver.country.toByteArray(),
-                request.headers.receiver.id.toByteArray()).sendAsync().get() } returns Tuple2("", "https://ocn.node.net")
+        every { registryService.getRemoteNodeUrlOf(request.headers.receiver) } returns "https://ocn.node.net"
 
         val jsonString = jacksonObjectMapper().writeValueAsString(modifiedRequest)
         every { httpService.mapper.writeValueAsString(modifiedRequest) } returns jsonString
@@ -196,9 +192,7 @@ class RoutingServiceTest {
                 headers = request.headers.copy(authorization = ""),
                 proxyResource = "https://actual.cpo.com/ocpi/sender/2.2/sessions?limit=10&offset=50; rel =\"next\"")
 
-        every { registry.getOperatorByOcpi(
-                request.headers.receiver.country.toByteArray(),
-                request.headers.receiver.id.toByteArray()).sendAsync().get() } returns Tuple2("", "https://ocn-node.provider.net")
+        every { registryService.getRemoteNodeUrlOf(request.headers.receiver) } returns "https://ocn-node.provider.net"
 
         every { routingService.getProxyResource("45", request.headers.sender, request.headers.receiver) } returns
                 "https://actual.cpo.com/ocpi/sender/2.2/sessions?limit=10&offset=50; rel =\"next\""
@@ -240,9 +234,7 @@ class RoutingServiceTest {
         val sig = "0x9955af11969a2d2a7f860cb00e6a00cfa7c581f5df2dbe8ea16700b33f4b4b9" +
                 "b69f945012f7ea7d3febf11eb1b78e1adc2d1c14c2cf48b25000938cc1860c83e01"
 
-        every { registry.getOperatorByOcpi(
-                request.headers.receiver.country.toByteArray(),
-                request.headers.receiver.id.toByteArray()).sendAsync().get() } returns Tuple2("", "https://ocn-node.provider.net")
+        every { registryService.getRemoteNodeUrlOf(request.headers.receiver) } returns "https://ocn-node.provider.net"
 
         val expectedAlteredBody = request.copy(
                 headers = request.headers.copy(authorization = ""),
@@ -301,27 +293,6 @@ class RoutingServiceTest {
 
 
     @Test
-    fun `isRoleKnownOnNetwork with belongsToMe flag returns true`() {
-        val role = BasicRole("XYZ", "CH")
-        val serverURL = "https://my.server.com"
-        val serverEthAddress = "0x9bC1169Ca09555bf2721A5C9eC6D69c8073bfeB4"
-        every { registry.getOperatorByOcpi(role.country.toByteArray(), role.id.toByteArray()).sendAsync().get() } returns Tuple2(serverEthAddress, serverURL)
-        every { properties.url } returns serverURL
-        every { properties.privateKey } returns "0x1c3e5453c0f9aa74a8eb0216310b2b013f017813a648fce364bf41dbc0b37647"
-        assertThat(routingService.isRoleKnownOnNetwork(role)).isEqualTo(true)
-    }
-
-
-    @Test
-    fun `isRoleKnownOnNetwork without belongsToMe flag returns true`() {
-        val role = BasicRole("XYZ", "CH")
-        val serverURL = "https://my.server.com"
-        every { registry.getOperatorByOcpi(role.country.toByteArray(), role.id.toByteArray()).sendAsync().get() } returns Tuple2("", serverURL)
-        assertThat(routingService.isRoleKnownOnNetwork(role, belongsToMe = false)).isEqualTo(true)
-    }
-
-
-    @Test
     fun getPlatformID() {
         val role = RoleEntity(5L, Role.CPO, BusinessDetails("SENDER Co"), "SEN", "DE")
         every { roleRepo.findAllByCountryCodeAndPartyIDAllIgnoreCase(role.countryCode, role.partyID) } returns listOf(role)
@@ -344,64 +315,36 @@ class RoutingServiceTest {
 
 
     @Test
-    fun getRemoteNodeURL() {
-        val role = BasicRole("XXX", "NL")
-        every { registry.getOperatorByOcpi(role.country.toByteArray(), role.id.toByteArray()).sendAsync().get() } returns Tuple2("", "https://some.node.com")
-        assertThat(routingService.getRemoteNodeUrl(role)).isEqualTo("https://some.node.com")
-    }
-
-
-    @Test
-    fun `validateSender with auth only`() {
+    fun `checkSenderKnown with auth only`() {
         every { platformRepo.existsByAuth_TokenC("0102030405") } returns true
-        routingService.validateSender("Token 0102030405")
+        routingService.checkSenderKnown("Token 0102030405")
     }
 
 
     @Test
-    fun `validateSender with auth and role`() {
+    fun `checkSenderKnown with auth and role`() {
         val role = BasicRole("YUT", "BE")
         val platform = PlatformEntity(id = 3L)
         every { platformRepo.findByAuth_TokenC("0102030405") } returns platform
         every { roleRepo.existsByPlatformIDAndCountryCodeAndPartyIDAllIgnoreCase(3L, role.country, role.id) } returns true
-        routingService.validateSender("Token 0102030405", role)
+        routingService.checkSenderKnown("Token 0102030405", role)
     }
 
 
     @Test
-    fun `validateReceiver should return LOCAL`() {
+    fun `getReceiverType should return LOCAL`() {
         val role = BasicRole("SNC", "DE")
         every { roleRepo.existsByCountryCodeAndPartyIDAllIgnoreCase(role.country, role.id) } returns true
-        assertThat(routingService.validateReceiver(role)).isEqualTo(Receiver.LOCAL)
+        assertThat(routingService.getReceiverType(role)).isEqualTo(Receiver.LOCAL)
     }
 
 
     @Test
-    fun `validateReceiver should return REMOTE`() {
+    fun `getReceiverType should return REMOTE`() {
         val role = BasicRole("SNC", "DE")
         every { roleRepo.existsByCountryCodeAndPartyIDAllIgnoreCase(role.country, role.id) } returns false
-        every { registry.getOperatorByOcpi(role.country.toByteArray(), role.id.toByteArray()).sendAsync().get() } returns Tuple2("", "http://localhost:8080")
-        assertThat(routingService.validateReceiver(role)).isEqualTo(Receiver.REMOTE)
-    }
-
-    @Test
-    fun getNodesListedInRegistry() {
-        val nodes = listOf(
-                RegistryNode(operator = "0xf17f52151EbEF6C7334FAD080c5704D77216b732", url = "http://localhost:8080"),
-                RegistryNode(operator = "0xC5fdf4076b8F3A5357c5E395ab970B5B54098Fef", url = "http://localhost:8081"))
-
-        every { registry.nodeOperators.sendAsync().get() } returns nodes.map { it.operator }
-
-        for (node in nodes) {
-            every { registry.getNode(node.operator).sendAsync().get() } returns node.url
-        }
-
-        every { properties.privateKey } returns "0xae6ae8e5ccbfb04590405997ee2d52d2b330726137b875053c36d94e974d162f"
-
-        val actual = routingService.getNodesListedInRegistry(omitMine = true)
-        assertThat(actual.size).isEqualTo(1)
-        assertThat(actual[0].operator).isEqualTo(nodes[1].operator)
-        assertThat(actual[0].url).isEqualTo(nodes[1].url)
+        every { registryService.isRoleKnown(role, false) } returns true
+        assertThat(routingService.getReceiverType(role)).isEqualTo(Receiver.REMOTE)
     }
 
 }
