@@ -55,10 +55,9 @@ class ChargingProfilesController(private val requestHandlerBuilder: OcpiRequestH
                 urlPathVariables = uid,
                 body = body)
 
-        val request: OcpiRequestHandler<Unit> = requestHandlerBuilder.build(requestVariables)
-        return request
-                .validateSender()
-                .forwardRequest(proxied = true)
+        return requestHandlerBuilder
+                .build<Unit>(requestVariables)
+                .forward(proxied = true) // retrieves proxied response_url
                 .getResponse()
     }
 
@@ -85,10 +84,9 @@ class ChargingProfilesController(private val requestHandlerBuilder: OcpiRequestH
                 urlPathVariables = sessionId,
                 body = body)
 
-        val request: OcpiRequestHandler<Unit> = requestHandlerBuilder.build(requestVariables)
-        return request
-                .validateSender()
-                .forwardRequest()
+        return requestHandlerBuilder
+                .build<Unit>(requestVariables)
+                .forward()
                 .getResponse()
     }
 
@@ -121,10 +119,9 @@ class ChargingProfilesController(private val requestHandlerBuilder: OcpiRequestH
                 urlPathVariables = sessionId,
                 urlEncodedParams = mapOf("duration" to duration, "response_url" to responseUrl))
 
-        val request: OcpiRequestHandler<ChargingProfileResponse> = requestHandlerBuilder.build(requestVariables)
-        return request
-                .validateSender()
-                .forwardModifiableRequest(responseUrl) {
+        return requestHandlerBuilder
+                .build<ChargingProfileResponse>(requestVariables)
+                .forward(responseUrl) {
                     requestVariables.copy(urlEncodedParams = mapOf("duration" to duration, "response_url" to it))
                 }
                 .getResponse()
@@ -153,10 +150,9 @@ class ChargingProfilesController(private val requestHandlerBuilder: OcpiRequestH
                 urlPathVariables = sessionId,
                 body = body)
 
-        val request: OcpiRequestHandler<ChargingProfileResponse> = requestHandlerBuilder.build(requestVariables)
-        return request
-                .validateSender()
-                .forwardModifiableRequest(body.responseUrl) {
+        return requestHandlerBuilder
+                .build<ChargingProfileResponse>(requestVariables)
+                .forward(body.responseUrl) {
                     requestVariables.copy(body = body.copy(responseUrl = it))
                 }
                 .getResponse()
@@ -185,10 +181,9 @@ class ChargingProfilesController(private val requestHandlerBuilder: OcpiRequestH
                 urlPathVariables = sessionId,
                 urlEncodedParams = mapOf("response_url" to responseUrl))
 
-        val request: OcpiRequestHandler<ChargingProfileResponse> = requestHandlerBuilder.build(requestVariables)
-        return request
-                .validateSender()
-                .forwardModifiableRequest(responseUrl) {
+        return requestHandlerBuilder
+                .build<ChargingProfileResponse>(requestVariables)
+                .forward(responseUrl) {
                     requestVariables.copy(urlEncodedParams = mapOf("response_url" to it))
                 }
                 .getResponse()

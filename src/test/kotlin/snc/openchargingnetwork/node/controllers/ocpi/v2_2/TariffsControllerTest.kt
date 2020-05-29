@@ -59,7 +59,7 @@ class TariffsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every { requestHandlerBuilder.build<Array<Tariff>>(requestVariables) } returns mockRequestHandler
 
-        every { mockRequestHandler.validateSender().forwardRequest().getResponseWithPaginationHeaders() } returns ResponseEntity
+        every { mockRequestHandler.forward().getResponseWithPaginationHeaders() } returns ResponseEntity
                 .status(200)
                 .headers(responseHeaders)
                 .body(OcpiResponse(statusCode = 1000, data = arrayOf(exampleTariff)))
@@ -113,7 +113,7 @@ class TariffsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every { requestHandlerBuilder.build<Array<Tariff>>(requestVariables) } returns mockRequestHandler
 
-        every { mockRequestHandler.validateSender().forwardRequest().getResponseWithPaginationHeaders() } returns ResponseEntity
+        every { mockRequestHandler.forward(true).getResponseWithPaginationHeaders() } returns ResponseEntity
                 .status(200)
                 .headers(responseHeaders)
                 .body(OcpiResponse(statusCode = 1000, data = arrayOf(exampleTariff)))
@@ -164,7 +164,7 @@ class TariffsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every { requestHandlerBuilder.build<Tariff>(requestVariables) } returns mockRequestHandler
 
-        every { mockRequestHandler.validateSender().forwardRequest().getResponse() } returns ResponseEntity
+        every { mockRequestHandler.forward().getResponse() } returns ResponseEntity
                 .status(200)
                 .body(OcpiResponse(statusCode = 1000, data = exampleTariff))
 
@@ -210,7 +210,7 @@ class TariffsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every { requestHandlerBuilder.build<Unit>(requestVariables) } returns mockRequestHandler
 
-        every { mockRequestHandler.validateSender().forwardRequest().getResponse() } returns ResponseEntity
+        every { mockRequestHandler.forward().getResponse() } returns ResponseEntity
                 .status(200)
                 .body(OcpiResponse(statusCode = 1000))
 
@@ -256,7 +256,7 @@ class TariffsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every { requestHandlerBuilder.build<Unit>(requestVariables) } returns mockRequestHandler
 
-        every { mockRequestHandler.validateSender().forwardRequest().getResponse() } returns ResponseEntity
+        every { mockRequestHandler.forward().getResponse() } returns ResponseEntity
                 .status(200)
                 .body(OcpiResponse(statusCode = 1000))
 

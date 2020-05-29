@@ -60,12 +60,11 @@ class CdrsController(private val requestHandlerBuilder: OcpiRequestHandlerBuilde
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
                 urlEncodedParams = params)
 
-        val request: OcpiRequestHandler<Array<CDR>> = requestHandlerBuilder.build(requestVariables)
-        return request
-                .validateSender()
-                .forwardRequest()
-                .getResponseWithPaginationHeaders() // TODO: all pagination response header links should contain original url-encoded parameters
-
+        // TODO: all pagination response header links should contain original url-encoded parameters
+        return requestHandlerBuilder
+               .build<Array<CDR>>(requestVariables)
+               .forward()
+               .getResponseWithPaginationHeaders() // proxies the Link response header
     }
 
     @GetMapping("/ocpi/sender/2.2/cdrs/page/{uid}")
@@ -89,10 +88,9 @@ class CdrsController(private val requestHandlerBuilder: OcpiRequestHandlerBuilde
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
                 urlPathVariables = uid)
 
-        val request: OcpiRequestHandler<Array<CDR>> = requestHandlerBuilder.build(requestVariables)
-        return request
-                .validateSender()
-                .forwardRequest(proxied = true)
+        return requestHandlerBuilder
+                .build<Array<CDR>>(requestVariables)
+                .forward(proxied = true) // retrieves proxied Link response header
                 .getResponseWithPaginationHeaders()
     }
 
@@ -122,10 +120,9 @@ class CdrsController(private val requestHandlerBuilder: OcpiRequestHandlerBuilde
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
                 urlPathVariables = cdrID)
 
-        val request: OcpiRequestHandler<CDR> = requestHandlerBuilder.build(requestVariables)
-        return request
-                .validateSender()
-                .forwardRequest(proxied = true)
+        return requestHandlerBuilder
+                .build<CDR>(requestVariables)
+                .forward(proxied = true) // retrieves proxied Location response header
                 .getResponse()
     }
 
@@ -151,10 +148,9 @@ class CdrsController(private val requestHandlerBuilder: OcpiRequestHandlerBuilde
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
                 body = body)
 
-        val request: OcpiRequestHandler<Unit> = requestHandlerBuilder.build(requestVariables)
-        return request
-                .validateSender()
-                .forwardRequest()
+        return requestHandlerBuilder
+                .build<Unit>(requestVariables)
+                .forward()
                 .getResponseWithLocationHeader("/ocpi/receiver/2.2/cdrs")
     }
 

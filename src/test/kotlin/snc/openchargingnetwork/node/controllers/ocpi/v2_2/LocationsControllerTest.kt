@@ -63,7 +63,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every { requestHandlerBuilder.build<Array<Location>>(requestVariables) } returns mockRequestHandler
 
-        every { mockRequestHandler.validateSender().forwardRequest().getResponseWithPaginationHeaders() } returns ResponseEntity
+        every { mockRequestHandler.forward().getResponseWithPaginationHeaders() } returns ResponseEntity
                 .status(200)
                 .headers(responseHeaders)
                 .body(OcpiResponse(
@@ -121,7 +121,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every { requestHandlerBuilder.build<Array<Location>>(requestVariables) } returns mockRequestHandler
 
-        every { mockRequestHandler.validateSender().forwardRequest(true).getResponseWithPaginationHeaders() } returns ResponseEntity
+        every { mockRequestHandler.forward(true).getResponseWithPaginationHeaders() } returns ResponseEntity
                 .status(200)
                 .headers(responseHeaders)
                 .body(OcpiResponse(
@@ -174,7 +174,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every { requestHandlerBuilder.build<Location>(requestVariables) } returns mockRequestHandler
 
-        every { mockRequestHandler.validateSender().forwardRequest().getResponse() } returns ResponseEntity
+        every { mockRequestHandler.forward().getResponse() } returns ResponseEntity
                 .status(200)
                 .body(OcpiResponse(
                         statusCode = 1000,
@@ -222,7 +222,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every { requestHandlerBuilder.build<Evse>(requestVariables) } returns mockRequestHandler
 
-        every { mockRequestHandler.validateSender().forwardRequest().getResponse() } returns ResponseEntity
+        every { mockRequestHandler.forward().getResponse() } returns ResponseEntity
                 .status(200)
                 .body(OcpiResponse(
                         statusCode = 1000,
@@ -271,7 +271,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every { requestHandlerBuilder.build<Connector>(requestVariables) } returns mockRequestHandler
 
-        every { mockRequestHandler.validateSender().forwardRequest().getResponse() } returns ResponseEntity
+        every { mockRequestHandler.forward().getResponse() } returns ResponseEntity
                 .status(200)
                 .body(OcpiResponse(
                         statusCode = 1000,
@@ -318,7 +318,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every { requestHandlerBuilder.build<Location>(requestVariables) } returns mockRequestHandler
 
-        every { mockRequestHandler.validateSender().forwardRequest().getResponse() } returns ResponseEntity
+        every { mockRequestHandler.forward().getResponse() } returns ResponseEntity
                 .status(200)
                 .body(OcpiResponse(
                         statusCode = 1000,
@@ -366,7 +366,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every { requestHandlerBuilder.build<Evse>(requestVariables) } returns mockRequestHandler
 
-        every { mockRequestHandler.validateSender().forwardRequest().getResponse() } returns ResponseEntity
+        every { mockRequestHandler.forward().getResponse() } returns ResponseEntity
                 .status(200)
                 .body(OcpiResponse(
                         statusCode = 1000,
@@ -415,7 +415,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every { requestHandlerBuilder.build<Connector>(requestVariables) } returns mockRequestHandler
 
-        every { mockRequestHandler.validateSender().forwardRequest().getResponse() } returns ResponseEntity
+        every { mockRequestHandler.forward().getResponse() } returns ResponseEntity
                 .status(200)
                 .body(OcpiResponse(
                         statusCode = 1000,
@@ -464,7 +464,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every { requestHandlerBuilder.build<Unit>(requestVariables) } returns mockRequestHandler
 
-        every { mockRequestHandler.validateSender().forwardRequest().getResponse() } returns ResponseEntity
+        every { mockRequestHandler.forward().getResponse() } returns ResponseEntity
                 .status(200)
                 .body(OcpiResponse(statusCode = 1000))
 
@@ -513,7 +513,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every { requestHandlerBuilder.build<Unit>(requestVariables) } returns mockRequestHandler
 
-        every { mockRequestHandler.validateSender().forwardRequest().getResponse() } returns ResponseEntity
+        every { mockRequestHandler.forward().getResponse() } returns ResponseEntity
                 .status(200)
                 .body(OcpiResponse(statusCode = 1000))
 
@@ -563,7 +563,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every { requestHandlerBuilder.build<Unit>(requestVariables) } returns mockRequestHandler
 
-        every { mockRequestHandler.validateSender().forwardRequest().getResponse() } returns ResponseEntity
+        every { mockRequestHandler.forward().getResponse() } returns ResponseEntity
                 .status(200)
                 .body(OcpiResponse(statusCode = 1000))
 
@@ -611,7 +611,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every { requestHandlerBuilder.build<Unit>(requestVariables) } returns mockRequestHandler
 
-        every { mockRequestHandler.validateSender().forwardRequest().getResponse() } returns ResponseEntity
+        every { mockRequestHandler.forward().getResponse() } returns ResponseEntity
                 .status(200)
                 .body(OcpiResponse(statusCode = 1000))
 
@@ -661,7 +661,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every { requestHandlerBuilder.build<Unit>(requestVariables) } returns mockRequestHandler
 
-        every { mockRequestHandler.validateSender().forwardRequest().getResponse() } returns ResponseEntity
+        every { mockRequestHandler.forward().getResponse() } returns ResponseEntity
                 .status(200)
                 .body(OcpiResponse(statusCode = 1000))
 
@@ -712,7 +712,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every { requestHandlerBuilder.build<Unit>(requestVariables) } returns mockRequestHandler
 
-        every { mockRequestHandler.validateSender().forwardRequest().getResponse() } returns ResponseEntity
+        every { mockRequestHandler.forward().getResponse() } returns ResponseEntity
                 .status(200)
                 .body(OcpiResponse(statusCode = 1000))
 

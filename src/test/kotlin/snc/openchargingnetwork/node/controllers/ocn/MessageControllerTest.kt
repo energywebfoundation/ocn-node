@@ -53,8 +53,7 @@ class MessageControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every {
             mockkRequestHandler
-                    .validateOcnMessage("0x1234")
-                    .forwardRequest()
+                    .forward("0x1234")
                     .getResponseWithAllHeaders()
         } returns ResponseEntity
                 .status(200)

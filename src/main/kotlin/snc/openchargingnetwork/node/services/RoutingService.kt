@@ -16,8 +16,6 @@
 
 package snc.openchargingnetwork.node.services
 
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import snc.openchargingnetwork.node.models.*

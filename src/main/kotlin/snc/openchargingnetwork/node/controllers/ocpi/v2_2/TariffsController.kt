@@ -60,11 +60,10 @@ class TariffsController(private val requestHandlerBuilder: OcpiRequestHandlerBui
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
                 urlEncodedParams = params)
 
-        val request: OcpiRequestHandler<Array<Tariff>> = requestHandlerBuilder.build(requestVariables)
-        return request
-                .validateSender()
-                .forwardRequest()
-                .getResponseWithPaginationHeaders()
+        return requestHandlerBuilder
+                .build<Array<Tariff>>(requestVariables)
+                .forward()
+                .getResponseWithPaginationHeaders() // proxies Link response header
     }
 
     @GetMapping("/ocpi/sender/2.2/tariffs/page/{uid}")
@@ -88,10 +87,9 @@ class TariffsController(private val requestHandlerBuilder: OcpiRequestHandlerBui
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
                 urlPathVariables = uid)
 
-        val request: OcpiRequestHandler<Array<Tariff>> = requestHandlerBuilder.build(requestVariables)
-        return request
-                .validateSender()
-                .forwardRequest()
+        return requestHandlerBuilder
+                .build<Array<Tariff>>(requestVariables)
+                .forward(proxied = true) // retrieves proxied Link response header
                 .getResponseWithPaginationHeaders()
     }
 
@@ -123,10 +121,9 @@ class TariffsController(private val requestHandlerBuilder: OcpiRequestHandlerBui
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
                 urlPathVariables = "/$countryCode/$partyID/$tariffID")
 
-        val request: OcpiRequestHandler<Tariff> = requestHandlerBuilder.build(requestVariables)
-        return request
-                .validateSender()
-                .forwardRequest()
+        return requestHandlerBuilder
+                .build<Tariff>(requestVariables)
+                .forward()
                 .getResponse()
     }
 
@@ -156,10 +153,9 @@ class TariffsController(private val requestHandlerBuilder: OcpiRequestHandlerBui
                 urlPathVariables = "/$countryCode/$partyID/$tariffID",
                 body = body)
 
-        val request: OcpiRequestHandler<Unit> = requestHandlerBuilder.build(requestVariables)
-        return request
-                .validateSender()
-                .forwardRequest()
+        return requestHandlerBuilder
+                .build<Unit>(requestVariables)
+                .forward()
                 .getResponse()
     }
 
@@ -187,10 +183,9 @@ class TariffsController(private val requestHandlerBuilder: OcpiRequestHandlerBui
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
                 urlPathVariables = "/$countryCode/$partyID/$tariffID")
 
-        val request: OcpiRequestHandler<Unit> = requestHandlerBuilder.build(requestVariables)
-        return request
-                .validateSender()
-                .forwardRequest()
+        return requestHandlerBuilder
+                .build<Unit>(requestVariables)
+                .forward()
                 .getResponse()
     }
 

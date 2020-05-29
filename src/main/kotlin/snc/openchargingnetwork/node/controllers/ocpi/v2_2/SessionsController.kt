@@ -21,7 +21,6 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import snc.openchargingnetwork.node.models.*
 import snc.openchargingnetwork.node.models.ocpi.*
-import snc.openchargingnetwork.node.components.OcpiRequestHandler
 import snc.openchargingnetwork.node.components.OcpiRequestHandlerBuilder
 import snc.openchargingnetwork.node.tools.filterNull
 
@@ -60,11 +59,10 @@ class SessionsController(private val requestHandlerBuilder: OcpiRequestHandlerBu
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
                 urlEncodedParams = params)
 
-        val request: OcpiRequestHandler<Array<Session>> = requestHandlerBuilder.build(requestVariables)
-        return request
-                .validateSender()
-                .forwardRequest()
-                .getResponseWithPaginationHeaders()
+        return requestHandlerBuilder
+                .build<Array<Session>>(requestVariables)
+                .forward()
+                .getResponseWithPaginationHeaders() // proxies Link response header
     }
 
     @GetMapping("/ocpi/sender/2.2/sessions/page/{uid}")
@@ -88,10 +86,10 @@ class SessionsController(private val requestHandlerBuilder: OcpiRequestHandlerBu
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
                 urlPathVariables = uid)
 
-        val request: OcpiRequestHandler<Array<Session>> = requestHandlerBuilder.build(requestVariables)
-        return request
-                .validateSender()
-                .forwardRequest()
+
+        return requestHandlerBuilder
+                .build<Array<Session>>(requestVariables)
+                .forward(proxied = true) // retrieves proxied Link response header
                 .getResponseWithPaginationHeaders()
     }
 
@@ -118,10 +116,9 @@ class SessionsController(private val requestHandlerBuilder: OcpiRequestHandlerBu
                 urlPathVariables = "/$sessionID/charging_preferences",
                 body = body)
 
-        val request: OcpiRequestHandler<ChargingPreferencesResponse> = requestHandlerBuilder.build(requestVariables)
-        return request
-                .validateSender()
-                .forwardRequest()
+        return requestHandlerBuilder
+                .build<ChargingPreferencesResponse>(requestVariables)
+                .forward()
                 .getResponse()
     }
 
@@ -153,10 +150,9 @@ class SessionsController(private val requestHandlerBuilder: OcpiRequestHandlerBu
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
                 urlPathVariables = "/$countryCode/$partyID/$sessionID")
 
-        val request: OcpiRequestHandler<Session> = requestHandlerBuilder.build(requestVariables)
-        return request
-                .validateSender()
-                .forwardRequest()
+        return requestHandlerBuilder
+                .build<Session>(requestVariables)
+                .forward()
                 .getResponse()
     }
 
@@ -185,10 +181,9 @@ class SessionsController(private val requestHandlerBuilder: OcpiRequestHandlerBu
                 urlPathVariables = "/$countryCode/$partyID/$sessionID",
                 body = body)
 
-        val request: OcpiRequestHandler<Unit> = requestHandlerBuilder.build(requestVariables)
-        return request
-                .validateSender()
-                .forwardRequest()
+        return requestHandlerBuilder
+                .build<Unit>(requestVariables)
+                .forward()
                 .getResponse()
     }
 
@@ -217,10 +212,9 @@ class SessionsController(private val requestHandlerBuilder: OcpiRequestHandlerBu
                 urlPathVariables = "/$countryCode/$partyID/$sessionID",
                 body = body)
 
-        val request: OcpiRequestHandler<Unit> = requestHandlerBuilder.build(requestVariables)
-        return request
-                .validateSender()
-                .forwardRequest()
+        return requestHandlerBuilder
+                .build<Unit>(requestVariables)
+                .forward()
                 .getResponse()
     }
 

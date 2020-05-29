@@ -18,7 +18,6 @@ package snc.openchargingnetwork.node.services
 
 import org.slf4j.LoggerFactory
 import org.springframework.context.ApplicationEventPublisher
-import org.springframework.data.domain.AbstractAggregateRoot
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
 import snc.openchargingnetwork.node.models.events.AppRecipientFoundEvent
@@ -33,11 +32,11 @@ class AsyncTaskService(private val registryService: RegistryService,
     }
 
     /**
-     * Forward request to linked apps
-     * TODO: rename - e.g. findLinkedApps
+     * Finds all apps, linked to a sender, with permissions that grant them access to a given request type.
+     * Once apps have been found, triggers an AppRecipientFoundEvent.
      */
     @Async
-    fun forwardToLinkedApps(request: OcpiRequestVariables) {
+    fun findLinkedApps(request: OcpiRequestVariables) {
         registryService.getAgreementsByInterface(request.headers.sender, request.module, request.interfaceRole)
                 .forEach {
                     logger.info("publishing forward request to ${it.provider}")

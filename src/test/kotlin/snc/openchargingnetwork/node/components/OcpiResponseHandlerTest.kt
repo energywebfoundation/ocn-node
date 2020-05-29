@@ -4,13 +4,11 @@ import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
-import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
-import org.springframework.http.ResponseEntity
 import snc.openchargingnetwork.node.config.NodeProperties
 import snc.openchargingnetwork.node.models.HttpResponse
 import snc.openchargingnetwork.node.models.OcnHeaders
+import snc.openchargingnetwork.node.models.entities.OcnRules
 import snc.openchargingnetwork.node.models.ocpi.*
 import snc.openchargingnetwork.node.services.*
 
@@ -44,6 +42,7 @@ class OcpiResponseHandlerTest {
 
         every { properties.signatures } returns false
         every { routingService.isRoleKnown(request.headers.receiver) } returns false
+        every { routingService.getPlatformRules(request.headers.sender) } returns OcnRules()
 
         val responseHandler = responseHandlerBuilder.build(request, response)
         val actual = responseHandler.getResponse()

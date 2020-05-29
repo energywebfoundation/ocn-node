@@ -19,15 +19,12 @@ package snc.openchargingnetwork.node.controllers.ocpi.v2_2
 import org.springframework.http.HttpMethod
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
-import snc.openchargingnetwork.node.config.NodeProperties
 import snc.openchargingnetwork.node.models.*
 import snc.openchargingnetwork.node.models.ocpi.*
-import snc.openchargingnetwork.node.components.OcpiRequestHandler
 import snc.openchargingnetwork.node.components.OcpiRequestHandlerBuilder
 
 @RestController
-class CommandsController(private val requestHandlerBuilder: OcpiRequestHandlerBuilder,
-                         private val properties: NodeProperties) {
+class CommandsController(private val requestHandlerBuilder: OcpiRequestHandlerBuilder) {
 
 
     /**
@@ -58,10 +55,9 @@ class CommandsController(private val requestHandlerBuilder: OcpiRequestHandlerBu
                 urlPathVariables = uid,
                 body = body)
 
-        val request: OcpiRequestHandler<Unit> = requestHandlerBuilder.build(requestVariables)
-        return request
-                .validateSender()
-                .forwardRequest(proxied = true)
+        return requestHandlerBuilder
+                .build<Unit>(requestVariables)
+                .forward(proxied = true) // retrieves proxied response_url
                 .getResponse()
     }
 
@@ -93,10 +89,11 @@ class CommandsController(private val requestHandlerBuilder: OcpiRequestHandlerBu
                 urlPathVariables = "CANCEL_RESERVATION",
                 body = body)
 
-        val request: OcpiRequestHandler<CommandResponse> = requestHandlerBuilder.build(requestVariables)
-        return request
-                .validateSender()
-                .forwardModifiableRequest(body.responseURL) { requestVariables.copy(body = body.copy(responseURL = it)) }
+        return requestHandlerBuilder
+                .build<CommandResponse>(requestVariables)
+                .forward(body.responseURL) {
+                    requestVariables.copy(body = body.copy(responseURL = it))
+                }
                 .getResponse()
     }
 
@@ -123,10 +120,11 @@ class CommandsController(private val requestHandlerBuilder: OcpiRequestHandlerBu
                 urlPathVariables = "RESERVE_NOW",
                 body = body)
 
-        val request: OcpiRequestHandler<CommandResponse> = requestHandlerBuilder.build(requestVariables)
-        return request
-                .validateSender()
-                .forwardModifiableRequest(body.responseURL) { requestVariables.copy(body = body.copy(responseURL = it)) }
+        return requestHandlerBuilder
+                .build<CommandResponse>(requestVariables)
+                .forward(body.responseURL) {
+                    requestVariables.copy(body = body.copy(responseURL = it))
+                }
                 .getResponse()
     }
 
@@ -153,10 +151,11 @@ class CommandsController(private val requestHandlerBuilder: OcpiRequestHandlerBu
                 urlPathVariables = "START_SESSION",
                 body = body)
 
-        val request: OcpiRequestHandler<CommandResponse> = requestHandlerBuilder.build(requestVariables)
-        return request
-                .validateSender()
-                .forwardModifiableRequest(body.responseURL) { requestVariables.copy(body = body.copy(responseURL = it)) }
+        return requestHandlerBuilder
+                .build<CommandResponse>(requestVariables)
+                .forward(body.responseURL) {
+                    requestVariables.copy(body = body.copy(responseURL = it))
+                }
                 .getResponse()
     }
 
@@ -183,10 +182,11 @@ class CommandsController(private val requestHandlerBuilder: OcpiRequestHandlerBu
                 urlPathVariables = "STOP_SESSION",
                 body = body)
 
-        val request: OcpiRequestHandler<CommandResponse> = requestHandlerBuilder.build(requestVariables)
-        return request
-                .validateSender()
-                .forwardModifiableRequest(body.responseURL) { requestVariables.copy(body = body.copy(responseURL = it)) }
+        return requestHandlerBuilder
+                .build<CommandResponse>(requestVariables)
+                .forward(body.responseURL) {
+                    requestVariables.copy(body = body.copy(responseURL = it))
+                }
                 .getResponse()
     }
 
@@ -213,10 +213,11 @@ class CommandsController(private val requestHandlerBuilder: OcpiRequestHandlerBu
                 urlPathVariables = "UNLOCK_CONNECTOR",
                 body = body)
 
-        val request: OcpiRequestHandler<CommandResponse> = requestHandlerBuilder.build(requestVariables)
-        return request
-                .validateSender()
-                .forwardModifiableRequest(body.responseURL) { requestVariables.copy(body = body.copy(responseURL = it)) }
+        return requestHandlerBuilder
+                .build<CommandResponse>(requestVariables)
+                .forward(body.responseURL) {
+                    requestVariables.copy(body = body.copy(responseURL = it))
+                }
                 .getResponse()
     }
 

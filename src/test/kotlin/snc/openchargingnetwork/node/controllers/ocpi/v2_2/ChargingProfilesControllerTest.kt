@@ -48,7 +48,7 @@ class ChargingProfilesControllerTest(@Autowired val mockMvc: MockMvc) {
         val response = ResponseEntity.status(HttpStatus.ACCEPTED).body(OcpiResponse<Unit>(statusCode = 1000))
 
         every { requestHandlerBuilder.build<Unit>(request) } returns requestHandler
-        every { requestHandler.validateSender().forwardRequest(true).getResponse() } returns response
+        every { requestHandler.forward(true).getResponse() } returns response
 
         mockMvc.perform(post("/ocpi/2.2/sender/chargingprofiles/result/12345")
                 .header("Authorization", "Token token-c")
@@ -94,7 +94,7 @@ class ChargingProfilesControllerTest(@Autowired val mockMvc: MockMvc) {
         val response = ResponseEntity.status(HttpStatus.ACCEPTED).body(OcpiResponse<Unit>(statusCode = 1000))
 
         every { requestHandlerBuilder.build<Unit>(request) } returns requestHandler
-        every { requestHandler.validateSender().forwardRequest().getResponse() } returns response
+        every { requestHandler.forward().getResponse() } returns response
 
         mockMvc.perform(put("/ocpi/2.2/sender/chargingprofiles/1234567890")
                 .header("Authorization", "Token token-c")
@@ -131,7 +131,7 @@ class ChargingProfilesControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every { requestHandlerBuilder.build<ChargingProfileResponse>(request) } returns requestHandler
         every {
-            requestHandler.validateSender().forwardModifiableRequest("https://server.com/profiles/1", any()).getResponse()
+            requestHandler.forward("https://server.com/profiles/1", any()).getResponse()
         } returns ResponseEntity
                 .status(200)
                 .body(OcpiResponse(
@@ -177,7 +177,7 @@ class ChargingProfilesControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every { requestHandlerBuilder.build<ChargingProfileResponse>(request) } returns requestHandler
         every {
-            requestHandler.validateSender().forwardModifiableRequest("https://smart.charging.net/profiles/0102030405", any()).getResponse()
+            requestHandler.forward("https://smart.charging.net/profiles/0102030405", any()).getResponse()
         } returns ResponseEntity
                 .status(200)
                 .body(OcpiResponse(
@@ -220,7 +220,7 @@ class ChargingProfilesControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every { requestHandlerBuilder.build<ChargingProfileResponse>(request) } returns requestHandler
         every {
-            requestHandler.validateSender().forwardModifiableRequest("https://scsp.io/ocpi/callback/369", any()).getResponse()
+            requestHandler.forward("https://scsp.io/ocpi/callback/369", any()).getResponse()
         } returns ResponseEntity
                 .status(200)
                 .body(OcpiResponse(

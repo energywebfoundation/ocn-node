@@ -59,7 +59,7 @@ class CdrsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every { requestHandlerBuilder.build<Array<CDR>>(requestVariables) } returns mockRequestHandler
 
-        every { mockRequestHandler.validateSender().forwardRequest().getResponseWithPaginationHeaders() } returns ResponseEntity
+        every { mockRequestHandler.forward().getResponseWithPaginationHeaders() } returns ResponseEntity
                 .status(200)
                 .headers(responseHeaders)
                 .body(OcpiResponse(statusCode = 1000, data = arrayOf(exampleCDR)))
@@ -112,7 +112,7 @@ class CdrsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every { requestHandlerBuilder.build<Array<CDR>>(requestVariables) } returns mockRequestHandler
 
-        every { mockRequestHandler.validateSender().forwardRequest(true).getResponseWithPaginationHeaders() } returns ResponseEntity
+        every { mockRequestHandler.forward(true).getResponseWithPaginationHeaders() } returns ResponseEntity
                 .status(200)
                 .headers(responseHeaders)
                 .body(OcpiResponse(statusCode = 1000, data = arrayOf(exampleCDR)))
@@ -161,7 +161,7 @@ class CdrsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every { requestHandlerBuilder.build<CDR>(requestVariables) } returns mockRequestHandler
 
-        every { mockRequestHandler.validateSender().forwardRequest(true).getResponse() } returns ResponseEntity
+        every { mockRequestHandler.forward(true).getResponse() } returns ResponseEntity
                 .status(200)
                 .body(OcpiResponse(statusCode = 1000, data = exampleCDR))
 
@@ -207,7 +207,7 @@ class CdrsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every { requestHandlerBuilder.build<Unit>(requestVariables) } returns mockRequestHandler
 
-        every { mockRequestHandler.validateSender().forwardRequest().getResponseWithLocationHeader("/ocpi/receiver/2.2/cdrs") } returns ResponseEntity
+        every { mockRequestHandler.forward().getResponseWithLocationHeader("/ocpi/receiver/2.2/cdrs") } returns ResponseEntity
                 .status(200)
                 .headers(responseHeaders)
                 .body(OcpiResponse(statusCode = 1000))

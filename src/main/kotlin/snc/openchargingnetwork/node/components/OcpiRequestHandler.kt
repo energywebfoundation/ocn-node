@@ -27,11 +27,10 @@ import snc.openchargingnetwork.node.models.ocpi.OcpiRequestVariables
 import snc.openchargingnetwork.node.services.*
 import snc.openchargingnetwork.node.tools.generateUUIDv4Token
 import snc.openchargingnetwork.node.tools.urlJoin
-import kotlin.properties.Delegates.observable
 
 
 /**
- * Spring boot service that instantiates RequestHandler objects.
+ * Spring boot component that instantiates RequestHandler objects.
  */
 @Component
 class OcpiRequestHandlerBuilder(private val routingService: RoutingService,
@@ -64,23 +63,23 @@ class OcpiRequestHandlerBuilder(private val routingService: RoutingService,
 
 
 /**
- * Handle an individual OCPI HTTP request. Instantiated with OcpiRequestVariables. The RequestHandler supports method
- * chaining to cleanly handle incoming messages, however, this comes at the cost of needing to manage/know its state.
+ * Handle an individual OCPI HTTP request, instantiated with OcpiRequestVariables. The RequestHandler supports method
+ * chaining to cleanly handle incoming messages.
  *
- * There is a common way of handling core requests (peer-to-peer OCPI requests).
- *      1. validate the request (authorization, sender, receiver, signature [optional])
- *      2. forward the request
+ * Generally speaking, all incoming peer-to-peer OCPI requests follow a very similar trajectory:
  *
- * To avoid operating on responses that don't exist this order of operations needs to be respected. If not, an
- * UnsupportedOperationException will be raised.
+ *      1. validate the message:
+ *          - sender is registered on this node
+ *          - [optional] sender's signature is valid
  *
- * E.g.
+ *      2. find location of sender on network
  *
- * requestHandler.validateSender().forwardRequest().getResponse()
- * requestHandler.validateSender().forwardRequest(proxied = true).getResponseWithPaginatedHeaders()
- * requestHandler.validateOcnMessage(signature).forwardRequest().getResponseWithAllHeaders()
+ *      3. [optional] modify request (i.e. if containing a response_url which the recipient will be unable to read)
  *
- * @property request the OCPI HTTP request as OcpiRequestVariables.
+ *      4. forward the request
+ *
+ * On a successful forwarding of the request, the handler will return an OcpiResponseHandler which can be used to
+ * validate and extract the response.
  */
 class OcpiRequestHandler<T: Any>(request: OcpiRequestVariables,
                                  routingService: RoutingService,
@@ -97,120 +96,55 @@ class OcpiRequestHandler<T: Any>(request: OcpiRequestVariables,
     }
 
     /**
-     * Is sender/receiver known to this OCN Node?
-     */
-    private var knownSender: Boolean = true
-
-    /**
-     * Sender's message is valid (sender, receiver and signature have all been validated)
-     * Once valid, we can run the async task to find ocn apps the request can be forwarded to
-     */
-    private var requestIsValid: Boolean by observable<Boolean>(false) { _, validBefore, validNow ->
-        if (!validBefore && validNow) { // task should only run when requestIsValid becomes true for the first time
-            asyncTaskService.forwardToLinkedApps(request)
-        }
-    }
-
-    /**
-     * Assert the sender is allowed to send OCPI requests to this OCN Node.
-     * If message signing is required, or OCN-Signature header present, verifies the signature.
-     */
-    fun validateSender(): OcpiRequestHandler<T> {
-        routingService.checkSenderKnown(request.headers.authorization, request.headers.sender)
-        hubClientInfoService.renewClientConnection(request.headers.sender)
-        return this
-    }
-
-    /**
-     * Asserts the sender exists in the Registry and is connected to the OCN Node which has sent the request.
-     * Asserts the receiver is connected to this OCN Node.
-     * If message signing is required, or OCN-Signature header present, verifies the signature.
-     */
-    fun validateOcnMessage(signature: String): OcpiRequestHandler<T> {
-        knownSender = false
-        if (!registryService.isRoleKnown(request.headers.sender, belongsToMe = false)) {
-            throw OcpiHubUnknownReceiverException("Sending party not registered on Open Charging Network")
-        }
-
-        if (!routingService.isRoleKnown(request.headers.receiver)) {
-            throw OcpiHubUnknownReceiverException("Recipient unknown to OCN Node entered in Registry")
-        }
-
-        val requestString = httpService.mapper.writeValueAsString(request)
-        walletService.verify(requestString, signature, request.headers.sender)
-        return this
-    }
-
-    /**
      * Forward the request to the receiver.
-     * Checks whether receiver is LOCAL or REMOTE.
-     *      - If LOCAL, makes direct request to receiver.
-     *      - If REMOTE, forwards request to receiver's OCN Node as written in the Registry.
-     *
      * @param proxied tells the RequestHandler that this request requires a proxied resource that was previously
-     * saved by the OCN Node.
+     * saved by the OCN Node (e.g. a paginated "Link" response header).
      */
-    fun forwardRequest(proxied: Boolean = false): OcpiResponseHandler<T> {
+    fun forward(proxied: Boolean = false, fromLocalPlatform: Boolean = true): OcpiResponseHandler<T> {
+        if (fromLocalPlatform) {
+            assertSenderValid()
+        }
+
         val response: HttpResponse<T> = when (routingService.getReceiverType(request.headers.receiver)) {
 
             Receiver.LOCAL -> {
-                routingService.checkSenderWhitelisted(
-                        sender = request.headers.sender,
-                        receiver = request.headers.receiver,
-                        module = request.module)
-
-                validateOcnSignature(
-                        signature = request.headers.signature,
-                        signedValues = request.toSignedValues(),
-                        signer = request.headers.sender,
-                        receiver = request.headers.receiver)
+                assertWhitelisted()
+                assertValidSignature()
                 val (url, headers) = routingService.prepareLocalPlatformRequest(request, proxied)
 
-                requestIsValid = true // trigger side-effect (forward to linked apps)
+                asyncTaskService.findLinkedApps(request)
                 httpService.makeOcpiRequest(url, headers, request)
             }
 
             Receiver.REMOTE -> {
-                validateOcnSignature(
-                        signature = request.headers.signature,
-                        signedValues = request.toSignedValues(),
-                        signer = request.headers.sender)
+                assertValidSignature(false)
                 val (url, headers, body) = routingService.prepareRemotePlatformRequest(request, proxied)
 
-                requestIsValid = true // trigger side-effect (forward to linked apps)
+                asyncTaskService.findLinkedApps(request)
                 httpService.postOcnMessage(url, headers, body)
             }
         }
 
-        return responseHandlerBuilder.build(request, response)
+        return responseHandlerBuilder.build(request, response, knownSender = fromLocalPlatform)
     }
 
     /**
-     * Used by the commands module's RECEIVER interface, which requires the modifying of the "response_url".
-     * Checks whether receiver is LOCAL or REMOTE.
-     *      - If LOCAL, makes direct request to receiver.
-     *      - If REMOTE, forwards request to receiver's OCN Node as written in the Registry.
-     *
+     * Used by the module interfaces which require the modifying of a "response_url".
      * @param responseUrl the original response_url as defined by the sender
      * @param modifyRequest callback which allows the request (OcpiRequestVariables) used by this RequestHandler to
      * be modified with the new response_url which will be sent to the receiver.
      */
-    fun forwardModifiableRequest(responseUrl: String, modifyRequest: (newResponseUrl: String) -> OcpiRequestVariables): OcpiResponseHandler<T> {
-        val proxyPath = "/ocpi/sender/2.2/commands/${request.urlPathVariables}"
+    fun forward(responseUrl: String, modifyRequest: (newResponseUrl: String) -> OcpiRequestVariables): OcpiResponseHandler<T> {
+        assertSenderValid()
+
+        val proxyPath = "/ocpi/sender/2.2/${request.module.id}/${request.urlPathVariables}"
         val rewriteFields = mapOf("$['body']['response_url']" to responseUrl)
 
         val response: HttpResponse<T> = when (routingService.getReceiverType(request.headers.receiver)) {
 
             Receiver.LOCAL -> {
-                routingService.checkSenderWhitelisted(
-                        sender = request.headers.sender,
-                        receiver = request.headers.receiver,
-                        module = request.module)
-                validateOcnSignature(
-                        signature = request.headers.signature,
-                        signedValues = request.toSignedValues(),
-                        signer = request.headers.sender,
-                        receiver = request.headers.receiver)
+                assertWhitelisted()
+                assertValidSignature()
 
                 // save the original resource (response_url), returning a uid pointing to its location
                 val resourceID = routingService.setProxyResource(responseUrl, request.headers.receiver, request.headers.sender)
@@ -220,15 +154,13 @@ class OcpiRequestHandler<T: Any>(request: OcpiRequestVariables,
                 modifiedRequest.headers.signature = rewriteAndSign(modifiedRequest.toSignedValues(), rewriteFields)
                 // send the request with the modified body
                 val (url, headers) = routingService.prepareLocalPlatformRequest(request)
-                requestIsValid = true // trigger side-effect (forward to linked apps)
+
+                asyncTaskService.findLinkedApps(request)
                 httpService.makeOcpiRequest(url, headers, modifiedRequest)
             }
 
             Receiver.REMOTE -> {
-                validateOcnSignature(
-                        signature = request.headers.signature,
-                        signedValues = request.toSignedValues(),
-                        signer = request.headers.sender)
+                assertValidSignature(false)
 
                 val (url, headers, body) = routingService.prepareRemotePlatformRequest(request) {
                     // create a uid that will point to the original response_url
@@ -241,13 +173,72 @@ class OcpiRequestHandler<T: Any>(request: OcpiRequestVariables,
                     modifiedRequest.copy(proxyUID = proxyUID, proxyResource = responseUrl)
                 }
 
-                requestIsValid = true // trigger side-effect (forward to linked apps)
+                asyncTaskService.findLinkedApps(request)
                 httpService.postOcnMessage(url, headers, body)
             }
 
         }
 
         return responseHandlerBuilder.build(request, response)
+    }
+
+    /**
+     * Forwards a message received over the network (containing an "OCN-Signature" from the sending node)
+     * @param signature the OCN-Signature header received from the sending node
+     */
+    fun forward(signature: String): OcpiResponseHandler<T> {
+        validateOcnMessage(signature)
+        return forward(fromLocalPlatform = false)
+    }
+
+    /**
+     * Assert the sender is allowed to send OCPI requests to this OCN Node.
+     */
+    private fun assertSenderValid() {
+        routingService.checkSenderKnown(request.headers.authorization, request.headers.sender)
+        hubClientInfoService.renewClientConnection(request.headers.sender)
+    }
+
+    /**
+     * Wrapper around RoutingService.checkSenderWhitelisted (asserts sender is allowed to send messages to receiver)
+     */
+    private fun assertWhitelisted() {
+        routingService.checkSenderWhitelisted(
+                sender = request.headers.sender,
+                receiver = request.headers.receiver,
+                module = request.module)
+    }
+
+    /**
+     * Wrapper around OcpiMessageHandler.validateOcnSignature (asserts signature is valid)
+     * @param knownReceiver set to true if the request is to a local platform - this will also check if the receiver
+     * platform requires a signature too.
+     */
+    private fun assertValidSignature(knownReceiver: Boolean = true) {
+        val receiver = if (knownReceiver) { request.headers.receiver } else { null }
+        validateOcnSignature(
+                signature = request.headers.signature,
+                signedValues = request.toSignedValues(),
+                signer = request.headers.sender,
+                receiver = receiver)
+    }
+
+    /**
+     * Asserts the sender exists in the Registry and is connected to the OCN Node which has sent the request.
+     * Asserts the receiver is connected to this OCN Node.
+     */
+    private fun validateOcnMessage(signature: String): OcpiRequestHandler<T> {
+        if (!registryService.isRoleKnown(request.headers.sender, belongsToMe = false)) {
+            throw OcpiHubUnknownReceiverException("Sending party not registered on Open Charging Network")
+        }
+
+        if (!routingService.isRoleKnown(request.headers.receiver)) {
+            throw OcpiHubUnknownReceiverException("Recipient unknown to OCN Node entered in Registry")
+        }
+
+        val requestString = httpService.mapper.writeValueAsString(request)
+        walletService.verify(requestString, signature, request.headers.sender)
+        return this
     }
 
 }

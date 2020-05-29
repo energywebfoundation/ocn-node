@@ -62,7 +62,6 @@ open class OcpiMessageHandler(val request: OcpiRequestVariables,
      * @param receiver optional receiver of message (checks their OcnRules for signature verification requirement)
      */
     fun validateOcnSignature(signature: String?, signedValues: ValuesToSign<*>, signer: BasicRole, receiver: BasicRole? = null) {
-
         if (isSigningActive(receiver)) {
             val result = signature?.let {
                 notary = Notary.deserialize(it)

@@ -44,41 +44,38 @@ class OcpiResponseHandlerBuilder(private val routingService: RoutingService,
                                  private val properties: NodeProperties) {
 
     /**
-     * Build a RequestHandler object from an request (OcpiRequestVariables) and response (HttpResponse) object.
+     * Build a ResponseHandler object from an request (OcpiRequestVariables) and response (HttpResponse) object.
+     *
+     * @param request the OCPI HTTP request as OcpiRequestVariables.
+     * @param response the OCPI HTTP response as HttpResponse<T>
+     * @param knownSender is the sender of the request known to this node?
      */
-    fun <T: Any> build(request: OcpiRequestVariables, response: HttpResponse<T>): OcpiResponseHandler<T> {
-        return OcpiResponseHandler(request, response, routingService, registryService, properties, hubClientInfoService)
+    fun <T: Any> build(request: OcpiRequestVariables,
+                       response: HttpResponse<T>,
+                       knownSender: Boolean = true): OcpiResponseHandler<T> {
+        return OcpiResponseHandler(request, response, knownSender, routingService, registryService, properties,
+                hubClientInfoService)
     }
 
 }
 
 
 /**
- * Handle an individual OCPI HTTP request. Instantiated with OcpiRequestVariables. The RequestHandler supports method
- * chaining to cleanly handle incoming messages, however, this comes at the cost of needing to manage/know its state.
- *
- * There is a common way of handling core requests (peer-to-peer OCPI requests).
- *      1. validate the request (authorization, sender, receiver, signature [optional])
- *      2. forward the request
- *      3. get the response
- *
- * To avoid operating on responses that don't exist this order of operations needs to be respected. If not, an
- * UnsupportedOperationException will be raised.
- *
- * E.g.
- *
- * requestHandler.validateSender().forwardRequest().getResponse()
- * requestHandler.validateSender().forwardRequest(proxied = true).getResponseWithPaginatedHeaders()
- * requestHandler.validateOcnMessage(signature).forwardRequest().getResponseWithAllHeaders()
- *
- * @property request the OCPI HTTP request as OcpiRequestVariables.
+ * Handle an individual OCPI HTTP response, for example after having an OCPI Request Handler forward a request and
+ * received the response. Can be created easily using the above OcpiResponseHandlerBuilder.
  */
 class OcpiResponseHandler<T: Any>(request: OcpiRequestVariables,
                                   private val response: HttpResponse<T>,
+                                  private val knownSender: Boolean,
                                   routingService: RoutingService,
                                   registryService: RegistryService,
                                   properties: NodeProperties,
-                                  hubClientInfoService: HubClientInfoService): OcpiMessageHandler(request, properties, routingService, registryService) {
+                                  hubClientInfoService: HubClientInfoService):
+        OcpiMessageHandler(request, properties, routingService, registryService) {
+
+    companion object {
+        private var logger: Logger = LoggerFactory.getLogger(OcpiResponseHandler::class.java)
+    }
 
     init {
         validateResponseSignature()
@@ -86,15 +83,6 @@ class OcpiResponseHandler<T: Any>(request: OcpiRequestVariables,
             hubClientInfoService.renewClientConnection(request.headers.receiver)
         }
     }
-
-    companion object {
-        private var logger: Logger = LoggerFactory.getLogger(OcpiResponseHandler::class.java)
-    }
-
-    /**
-     * Is sender/receiver known to this OCN Node?
-     */
-    private var knownSender: Boolean = true
 
     /**
      * Get the ResponseEntity object after forwarding the request, expecting no headers from the receiver's response.

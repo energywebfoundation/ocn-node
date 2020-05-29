@@ -59,11 +59,10 @@ class TokensController(private val requestHandlerBuilder: OcpiRequestHandlerBuil
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
                 urlEncodedParams = params)
 
-        val request: OcpiRequestHandler<Array<Token>> = requestHandlerBuilder.build(requestVariables)
-        return request
-                .validateSender()
-                .forwardRequest()
-                .getResponseWithPaginationHeaders()
+        return requestHandlerBuilder
+                .build<Array<Token>>(requestVariables)
+                .forward()
+                .getResponseWithPaginationHeaders() // proxies Link response header
     }
 
     @GetMapping("/ocpi/sender/2.2/tokens/page/{uid}")
@@ -87,10 +86,9 @@ class TokensController(private val requestHandlerBuilder: OcpiRequestHandlerBuil
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
                 urlPathVariables = uid)
 
-        val request: OcpiRequestHandler<Array<Token>> = requestHandlerBuilder.build(requestVariables)
-        return request
-                .validateSender()
-                .forwardRequest()
+        return requestHandlerBuilder
+                .build<Array<Token>>(requestVariables)
+                .forward(proxied = true) // retrieves proxied Link response header
                 .getResponseWithPaginationHeaders()
     }
 
@@ -120,10 +118,9 @@ class TokensController(private val requestHandlerBuilder: OcpiRequestHandlerBuil
                 urlEncodedParams = mapOf("type" to type),
                 body = body)
 
-        val request: OcpiRequestHandler<AuthorizationInfo> = requestHandlerBuilder.build(requestVariables)
-        return request
-                .validateSender()
-                .forwardRequest()
+        return requestHandlerBuilder
+                .build<AuthorizationInfo>(requestVariables)
+                .forward()
                 .getResponse()
     }
 
@@ -157,10 +154,9 @@ class TokensController(private val requestHandlerBuilder: OcpiRequestHandlerBuil
                 urlPathVariables = "/$countryCode/$partyID/$tokenUID",
                 urlEncodedParams = mapOf("type" to type))
 
-        val request: OcpiRequestHandler<Token> = requestHandlerBuilder.build(requestVariables)
-        return request
-                .validateSender()
-                .forwardRequest()
+        return requestHandlerBuilder
+                .build<Token>(requestVariables)
+                .forward()
                 .getResponse()
     }
 
@@ -191,10 +187,9 @@ class TokensController(private val requestHandlerBuilder: OcpiRequestHandlerBuil
                 urlEncodedParams = mapOf("type" to type),
                 body = body)
 
-        val request: OcpiRequestHandler<Unit> = requestHandlerBuilder.build(requestVariables)
-        return request
-                .validateSender()
-                .forwardRequest()
+        return requestHandlerBuilder
+                .build<Unit>(requestVariables)
+                .forward()
                 .getResponse()
     }
 
@@ -225,10 +220,9 @@ class TokensController(private val requestHandlerBuilder: OcpiRequestHandlerBuil
                 urlEncodedParams = mapOf("type" to type),
                 body = body)
 
-        val request: OcpiRequestHandler<Unit> = requestHandlerBuilder.build(requestVariables)
-        return request
-                .validateSender()
-                .forwardRequest()
+        return requestHandlerBuilder
+                .build<Unit>(requestVariables)
+                .forward()
                 .getResponse()
     }
 

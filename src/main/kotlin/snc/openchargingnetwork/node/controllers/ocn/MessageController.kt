@@ -33,11 +33,9 @@ class MessageController(private val requestHandlerBuilder: OcpiRequestHandlerBui
                     @RequestHeader("OCN-Signature") signature: String,
                     @RequestBody body: String): ResponseEntity<OcpiResponse<Any>> {
 
-        val request: OcpiRequestHandler<Any> = requestHandlerBuilder.build(body)
-
-        return request
-                .validateOcnMessage(signature)
-                .forwardRequest()
+        return requestHandlerBuilder
+                .build<Any>(body)
+                .forward(signature)
                 .getResponseWithAllHeaders()
     }
 
