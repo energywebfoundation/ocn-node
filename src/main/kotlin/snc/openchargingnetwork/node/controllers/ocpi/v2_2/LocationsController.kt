@@ -21,13 +21,13 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import snc.openchargingnetwork.node.models.*
 import snc.openchargingnetwork.node.models.ocpi.*
-import snc.openchargingnetwork.node.services.RequestHandler
-import snc.openchargingnetwork.node.services.RequestHandlerBuilder
+import snc.openchargingnetwork.node.components.OcpiRequestHandler
+import snc.openchargingnetwork.node.components.OcpiRequestHandlerBuilder
 import snc.openchargingnetwork.node.tools.filterNull
 
 
 @RestController
-class LocationsController(private val requestHandlerBuilder: RequestHandlerBuilder) {
+class LocationsController(private val requestHandlerBuilder: OcpiRequestHandlerBuilder) {
 
 
     /**
@@ -60,7 +60,7 @@ class LocationsController(private val requestHandlerBuilder: RequestHandlerBuild
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
                 urlEncodedParams = params)
 
-        val request: RequestHandler<Array<Location>> = requestHandlerBuilder.build(requestVariables)
+        val request: OcpiRequestHandler<Array<Location>> = requestHandlerBuilder.build(requestVariables)
         return request
                 .validateSender()
                 .forwardRequest()
@@ -88,7 +88,7 @@ class LocationsController(private val requestHandlerBuilder: RequestHandlerBuild
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
                 urlPathVariables = uid)
 
-        val request: RequestHandler<Array<Location>> = requestHandlerBuilder.build(requestVariables)
+        val request: OcpiRequestHandler<Array<Location>> = requestHandlerBuilder.build(requestVariables)
         return request
                 .validateSender()
                 .forwardRequest(proxied = true)
@@ -116,7 +116,7 @@ class LocationsController(private val requestHandlerBuilder: RequestHandlerBuild
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
                 urlPathVariables = locationID)
 
-        val request: RequestHandler<Location> = requestHandlerBuilder.build(requestVariables)
+        val request: OcpiRequestHandler<Location> = requestHandlerBuilder.build(requestVariables)
         return request
                 .validateSender()
                 .forwardRequest()
@@ -145,7 +145,7 @@ class LocationsController(private val requestHandlerBuilder: RequestHandlerBuild
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
                 urlPathVariables = "/$locationID/$evseUID")
 
-        val request: RequestHandler<Evse> = requestHandlerBuilder.build(requestVariables)
+        val request: OcpiRequestHandler<Evse> = requestHandlerBuilder.build(requestVariables)
         return request
                 .validateSender()
                 .forwardRequest()
@@ -175,7 +175,7 @@ class LocationsController(private val requestHandlerBuilder: RequestHandlerBuild
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
                 urlPathVariables = "/$locationID/$evseUID/$connectorID")
 
-        val request: RequestHandler<Connector> = requestHandlerBuilder.build(requestVariables)
+        val request: OcpiRequestHandler<Connector> = requestHandlerBuilder.build(requestVariables)
         return request
                 .validateSender()
                 .forwardRequest()
@@ -210,7 +210,7 @@ class LocationsController(private val requestHandlerBuilder: RequestHandlerBuild
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
                 urlPathVariables = "/$countryCode/$partyID/$locationID")
 
-        val request: RequestHandler<Location> = requestHandlerBuilder.build(requestVariables)
+        val request: OcpiRequestHandler<Location> = requestHandlerBuilder.build(requestVariables)
         return request
                 .validateSender()
                 .forwardRequest()
@@ -241,7 +241,7 @@ class LocationsController(private val requestHandlerBuilder: RequestHandlerBuild
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
                 urlPathVariables = "/$countryCode/$partyID/$locationID/$evseUID")
 
-        val request: RequestHandler<Evse> = requestHandlerBuilder.build(requestVariables)
+        val request: OcpiRequestHandler<Evse> = requestHandlerBuilder.build(requestVariables)
         return request
                 .validateSender()
                 .forwardRequest()
@@ -273,7 +273,7 @@ class LocationsController(private val requestHandlerBuilder: RequestHandlerBuild
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
                 urlPathVariables = "/$countryCode/$partyID/$locationID/$evseUID/$connectorID")
 
-        val request: RequestHandler<Connector> = requestHandlerBuilder.build(requestVariables)
+        val request: OcpiRequestHandler<Connector> = requestHandlerBuilder.build(requestVariables)
         return request
                 .validateSender()
                 .forwardRequest()
@@ -305,7 +305,7 @@ class LocationsController(private val requestHandlerBuilder: RequestHandlerBuild
                 urlPathVariables = "/$countryCode/$partyID/$locationID",
                 body = body)
 
-        val request: RequestHandler<Unit> = requestHandlerBuilder.build(requestVariables)
+        val request: OcpiRequestHandler<Unit> = requestHandlerBuilder.build(requestVariables)
         return request
                 .validateSender()
                 .forwardRequest()
@@ -338,7 +338,7 @@ class LocationsController(private val requestHandlerBuilder: RequestHandlerBuild
                 urlPathVariables = "/$countryCode/$partyID/$locationID/$evseUID",
                 body = body)
 
-        val request: RequestHandler<Unit> = requestHandlerBuilder.build(requestVariables)
+        val request: OcpiRequestHandler<Unit> = requestHandlerBuilder.build(requestVariables)
         return request
                 .validateSender()
                 .forwardRequest()
@@ -372,7 +372,7 @@ class LocationsController(private val requestHandlerBuilder: RequestHandlerBuild
                 urlPathVariables = "/$countryCode/$partyID/$locationID/$evseUID/$connectorID",
                 body = body)
 
-        val request: RequestHandler<Unit> = requestHandlerBuilder.build(requestVariables)
+        val request: OcpiRequestHandler<Unit> = requestHandlerBuilder.build(requestVariables)
         return request
                 .validateSender()
                 .forwardRequest()
@@ -404,7 +404,7 @@ class LocationsController(private val requestHandlerBuilder: RequestHandlerBuild
                 urlPathVariables = "/$countryCode/$partyID/$locationID",
                 body = body)
 
-        val request: RequestHandler<Unit> = requestHandlerBuilder.build(requestVariables)
+        val request: OcpiRequestHandler<Unit> = requestHandlerBuilder.build(requestVariables)
         return request
                 .validateSender()
                 .forwardRequest()
@@ -437,7 +437,7 @@ class LocationsController(private val requestHandlerBuilder: RequestHandlerBuild
                 urlPathVariables = "/$countryCode/$partyID/$locationID/$evseUID",
                 body = body)
 
-        val request: RequestHandler<Unit> = requestHandlerBuilder.build(requestVariables)
+        val request: OcpiRequestHandler<Unit> = requestHandlerBuilder.build(requestVariables)
         return request
                 .validateSender()
                 .forwardRequest()
@@ -471,7 +471,7 @@ class LocationsController(private val requestHandlerBuilder: RequestHandlerBuild
                 urlPathVariables = "/$countryCode/$partyID/$locationID/$evseUID/$connectorID",
                 body = body)
 
-        val request: RequestHandler<Unit> = requestHandlerBuilder.build(requestVariables)
+        val request: OcpiRequestHandler<Unit> = requestHandlerBuilder.build(requestVariables)
         return request
                 .validateSender()
                 .forwardRequest()

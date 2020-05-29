@@ -18,14 +18,14 @@ package snc.openchargingnetwork.node.controllers.ocn
 
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
-import snc.openchargingnetwork.node.services.RequestHandler
-import snc.openchargingnetwork.node.services.RequestHandlerBuilder
+import snc.openchargingnetwork.node.components.OcpiRequestHandler
+import snc.openchargingnetwork.node.components.OcpiRequestHandlerBuilder
 import snc.openchargingnetwork.node.models.ocpi.OcpiResponse
 
 
 @RestController
 @RequestMapping("/ocn/message")
-class MessageController(private val requestHandlerBuilder: RequestHandlerBuilder) {
+class MessageController(private val requestHandlerBuilder: OcpiRequestHandlerBuilder) {
 
 
     @PostMapping
@@ -33,7 +33,7 @@ class MessageController(private val requestHandlerBuilder: RequestHandlerBuilder
                     @RequestHeader("OCN-Signature") signature: String,
                     @RequestBody body: String): ResponseEntity<OcpiResponse<Any>> {
 
-        val request: RequestHandler<Any> = requestHandlerBuilder.build(body)
+        val request: OcpiRequestHandler<Any> = requestHandlerBuilder.build(body)
 
         return request
                 .validateOcnMessage(signature)

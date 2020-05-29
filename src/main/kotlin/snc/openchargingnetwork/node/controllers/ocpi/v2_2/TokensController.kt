@@ -21,12 +21,12 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import snc.openchargingnetwork.node.models.*
 import snc.openchargingnetwork.node.models.ocpi.*
-import snc.openchargingnetwork.node.services.RequestHandler
-import snc.openchargingnetwork.node.services.RequestHandlerBuilder
+import snc.openchargingnetwork.node.components.OcpiRequestHandler
+import snc.openchargingnetwork.node.components.OcpiRequestHandlerBuilder
 import snc.openchargingnetwork.node.tools.filterNull
 
 @RestController
-class TokensController(private val requestHandlerBuilder: RequestHandlerBuilder) {
+class TokensController(private val requestHandlerBuilder: OcpiRequestHandlerBuilder) {
 
 
     /**
@@ -59,7 +59,7 @@ class TokensController(private val requestHandlerBuilder: RequestHandlerBuilder)
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
                 urlEncodedParams = params)
 
-        val request: RequestHandler<Array<Token>> = requestHandlerBuilder.build(requestVariables)
+        val request: OcpiRequestHandler<Array<Token>> = requestHandlerBuilder.build(requestVariables)
         return request
                 .validateSender()
                 .forwardRequest()
@@ -87,7 +87,7 @@ class TokensController(private val requestHandlerBuilder: RequestHandlerBuilder)
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
                 urlPathVariables = uid)
 
-        val request: RequestHandler<Array<Token>> = requestHandlerBuilder.build(requestVariables)
+        val request: OcpiRequestHandler<Array<Token>> = requestHandlerBuilder.build(requestVariables)
         return request
                 .validateSender()
                 .forwardRequest()
@@ -120,7 +120,7 @@ class TokensController(private val requestHandlerBuilder: RequestHandlerBuilder)
                 urlEncodedParams = mapOf("type" to type),
                 body = body)
 
-        val request: RequestHandler<AuthorizationInfo> = requestHandlerBuilder.build(requestVariables)
+        val request: OcpiRequestHandler<AuthorizationInfo> = requestHandlerBuilder.build(requestVariables)
         return request
                 .validateSender()
                 .forwardRequest()
@@ -157,7 +157,7 @@ class TokensController(private val requestHandlerBuilder: RequestHandlerBuilder)
                 urlPathVariables = "/$countryCode/$partyID/$tokenUID",
                 urlEncodedParams = mapOf("type" to type))
 
-        val request: RequestHandler<Token> = requestHandlerBuilder.build(requestVariables)
+        val request: OcpiRequestHandler<Token> = requestHandlerBuilder.build(requestVariables)
         return request
                 .validateSender()
                 .forwardRequest()
@@ -191,7 +191,7 @@ class TokensController(private val requestHandlerBuilder: RequestHandlerBuilder)
                 urlEncodedParams = mapOf("type" to type),
                 body = body)
 
-        val request: RequestHandler<Unit> = requestHandlerBuilder.build(requestVariables)
+        val request: OcpiRequestHandler<Unit> = requestHandlerBuilder.build(requestVariables)
         return request
                 .validateSender()
                 .forwardRequest()
@@ -225,7 +225,7 @@ class TokensController(private val requestHandlerBuilder: RequestHandlerBuilder)
                 urlEncodedParams = mapOf("type" to type),
                 body = body)
 
-        val request: RequestHandler<Unit> = requestHandlerBuilder.build(requestVariables)
+        val request: OcpiRequestHandler<Unit> = requestHandlerBuilder.build(requestVariables)
         return request
                 .validateSender()
                 .forwardRequest()

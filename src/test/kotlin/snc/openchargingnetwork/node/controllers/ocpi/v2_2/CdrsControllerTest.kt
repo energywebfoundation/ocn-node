@@ -22,15 +22,15 @@ import org.springframework.http.ResponseEntity
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import snc.openchargingnetwork.node.models.*
 import snc.openchargingnetwork.node.models.ocpi.*
-import snc.openchargingnetwork.node.services.RequestHandler
-import snc.openchargingnetwork.node.services.RequestHandlerBuilder
+import snc.openchargingnetwork.node.components.OcpiRequestHandler
+import snc.openchargingnetwork.node.components.OcpiRequestHandlerBuilder
 
 
 @WebMvcTest(CdrsController::class)
 class CdrsControllerTest(@Autowired val mockMvc: MockMvc) {
 
     @MockkBean
-    lateinit var requestHandlerBuilder: RequestHandlerBuilder
+    lateinit var requestHandlerBuilder: OcpiRequestHandlerBuilder
 
 
     @Test
@@ -51,7 +51,7 @@ class CdrsControllerTest(@Autowired val mockMvc: MockMvc) {
                         receiver = receiver),
                 urlEncodedParams = mapOf("limit" to 100))
 
-        val mockRequestHandler = mockk<RequestHandler<Array<CDR>>>()
+        val mockRequestHandler = mockk<OcpiRequestHandler<Array<CDR>>>()
 
         val responseHeaders = HttpHeaders()
         responseHeaders["Link"] = "https://node.ocn.co/ocpi/sender/2.2/cdrs/page/43; rel=\"next\""
@@ -104,7 +104,7 @@ class CdrsControllerTest(@Autowired val mockMvc: MockMvc) {
                         receiver = receiver),
                 urlPathVariables = "67")
 
-        val mockRequestHandler = mockk<RequestHandler<Array<CDR>>>()
+        val mockRequestHandler = mockk<OcpiRequestHandler<Array<CDR>>>()
 
         val responseHeaders = HttpHeaders()
         responseHeaders["Link"] = "https://node.ocn.co/ocpi/sender/2.2/cdrs/page/68; rel=\"next\""
@@ -157,7 +157,7 @@ class CdrsControllerTest(@Autowired val mockMvc: MockMvc) {
                         receiver = receiver),
                 urlPathVariables = "6534")
 
-        val mockRequestHandler = mockk<RequestHandler<CDR>>()
+        val mockRequestHandler = mockk<OcpiRequestHandler<CDR>>()
 
         every { requestHandlerBuilder.build<CDR>(requestVariables) } returns mockRequestHandler
 
@@ -200,7 +200,7 @@ class CdrsControllerTest(@Autowired val mockMvc: MockMvc) {
                         receiver = receiver),
                 body = exampleCDR)
 
-        val mockRequestHandler = mockk<RequestHandler<Unit>>()
+        val mockRequestHandler = mockk<OcpiRequestHandler<Unit>>()
 
         val responseHeaders = HttpHeaders()
         responseHeaders["Location"] = "https://super.hub.net/ocpi/receiver/2.2/cdrs/6545"

@@ -20,8 +20,8 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
 import snc.openchargingnetwork.node.data.exampleTariff
 import snc.openchargingnetwork.node.models.*
 import snc.openchargingnetwork.node.models.ocpi.*
-import snc.openchargingnetwork.node.services.RequestHandler
-import snc.openchargingnetwork.node.services.RequestHandlerBuilder
+import snc.openchargingnetwork.node.components.OcpiRequestHandler
+import snc.openchargingnetwork.node.components.OcpiRequestHandlerBuilder
 import snc.openchargingnetwork.node.tools.generateUUIDv4Token
 
 
@@ -29,7 +29,7 @@ import snc.openchargingnetwork.node.tools.generateUUIDv4Token
 class TariffsControllerTest(@Autowired val mockMvc: MockMvc) {
 
     @MockkBean
-    lateinit var requestHandlerBuilder: RequestHandlerBuilder
+    lateinit var requestHandlerBuilder: OcpiRequestHandlerBuilder
 
 
     @Test
@@ -50,7 +50,7 @@ class TariffsControllerTest(@Autowired val mockMvc: MockMvc) {
                         receiver = receiver),
                 urlEncodedParams = mapOf("limit" to 10))
 
-        val mockRequestHandler = mockk<RequestHandler<Array<Tariff>>>()
+        val mockRequestHandler = mockk<OcpiRequestHandler<Array<Tariff>>>()
 
         val responseHeaders = HttpHeaders()
         responseHeaders["Link"] = "https://node.ocn.co/ocpi/sender/2.2/tariffs/page/39; rel=\"next\""
@@ -105,7 +105,7 @@ class TariffsControllerTest(@Autowired val mockMvc: MockMvc) {
                         receiver = receiver),
                 urlPathVariables = "39")
 
-        val mockRequestHandler = mockk<RequestHandler<Array<Tariff>>>()
+        val mockRequestHandler = mockk<OcpiRequestHandler<Array<Tariff>>>()
 
         val responseHeaders = HttpHeaders()
         responseHeaders["Link"] = "https://client.ocn.co/ocpi/sender/2.2/tariffs/page/40; rel=\"next\""
@@ -160,7 +160,7 @@ class TariffsControllerTest(@Autowired val mockMvc: MockMvc) {
                         receiver = receiver),
                 urlPathVariables = "/${sender.country}/${sender.id}/$tariffID")
 
-        val mockRequestHandler = mockk<RequestHandler<Tariff>>()
+        val mockRequestHandler = mockk<OcpiRequestHandler<Tariff>>()
 
         every { requestHandlerBuilder.build<Tariff>(requestVariables) } returns mockRequestHandler
 
@@ -206,7 +206,7 @@ class TariffsControllerTest(@Autowired val mockMvc: MockMvc) {
                 urlPathVariables = "/${sender.country}/${sender.id}/$tariffID",
                 body = exampleTariff)
 
-        val mockRequestHandler = mockk<RequestHandler<Unit>>()
+        val mockRequestHandler = mockk<OcpiRequestHandler<Unit>>()
 
         every { requestHandlerBuilder.build<Unit>(requestVariables) } returns mockRequestHandler
 
@@ -252,7 +252,7 @@ class TariffsControllerTest(@Autowired val mockMvc: MockMvc) {
                         receiver = receiver),
                 urlPathVariables = "/${sender.country}/${sender.id}/$tariffID")
 
-        val mockRequestHandler = mockk<RequestHandler<Unit>>()
+        val mockRequestHandler = mockk<OcpiRequestHandler<Unit>>()
 
         every { requestHandlerBuilder.build<Unit>(requestVariables) } returns mockRequestHandler
 

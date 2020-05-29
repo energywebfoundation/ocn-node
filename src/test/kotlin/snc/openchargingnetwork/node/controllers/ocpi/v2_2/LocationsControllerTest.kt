@@ -21,8 +21,8 @@ import snc.openchargingnetwork.node.data.exampleLocation1
 import snc.openchargingnetwork.node.data.exampleLocation2
 import snc.openchargingnetwork.node.models.*
 import snc.openchargingnetwork.node.models.ocpi.*
-import snc.openchargingnetwork.node.services.RequestHandler
-import snc.openchargingnetwork.node.services.RequestHandlerBuilder
+import snc.openchargingnetwork.node.components.OcpiRequestHandler
+import snc.openchargingnetwork.node.components.OcpiRequestHandlerBuilder
 import snc.openchargingnetwork.node.tools.generateUUIDv4Token
 import snc.openchargingnetwork.node.tools.getTimestamp
 
@@ -31,7 +31,7 @@ import snc.openchargingnetwork.node.tools.getTimestamp
 class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
 
     @MockkBean
-    lateinit var requestHandlerBuilder: RequestHandlerBuilder
+    lateinit var requestHandlerBuilder: OcpiRequestHandlerBuilder
 
 
     @Test
@@ -54,7 +54,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
                         receiver = receiver),
                 urlEncodedParams = mapOf("date_from" to dateFrom))
 
-        val mockRequestHandler = mockk<RequestHandler<Array<Location>>>()
+        val mockRequestHandler = mockk<OcpiRequestHandler<Array<Location>>>()
 
         val responseHeaders = HttpHeaders()
         responseHeaders["Link"] = "https://node.ocn.co/ocpi/sender/2.2/locations/page/189; rel=\"next\""
@@ -113,7 +113,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
                         receiver = receiver),
                 urlPathVariables = "67")
 
-        val mockRequestHandler = mockk<RequestHandler<Array<Location>>>()
+        val mockRequestHandler = mockk<OcpiRequestHandler<Array<Location>>>()
 
         val responseHeaders = HttpHeaders()
         responseHeaders["Link"] = "https://node.ocn.co/ocpi/sender/2.2/locations/page/68; rel=\"next\""
@@ -170,7 +170,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
                         receiver = receiver),
                 urlPathVariables = locationID)
 
-        val mockRequestHandler = mockk<RequestHandler<Location>>()
+        val mockRequestHandler = mockk<OcpiRequestHandler<Location>>()
 
         every { requestHandlerBuilder.build<Location>(requestVariables) } returns mockRequestHandler
 
@@ -218,7 +218,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
                         receiver = receiver),
                 urlPathVariables = "/$locationID/$evseUID")
 
-        val mockRequestHandler = mockk<RequestHandler<Evse>>()
+        val mockRequestHandler = mockk<OcpiRequestHandler<Evse>>()
 
         every { requestHandlerBuilder.build<Evse>(requestVariables) } returns mockRequestHandler
 
@@ -267,7 +267,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
                         receiver = receiver),
                 urlPathVariables = "/$locationID/$evseUID/$connectorID")
 
-        val mockRequestHandler = mockk<RequestHandler<Connector>>()
+        val mockRequestHandler = mockk<OcpiRequestHandler<Connector>>()
 
         every { requestHandlerBuilder.build<Connector>(requestVariables) } returns mockRequestHandler
 
@@ -314,7 +314,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
                         receiver = receiver),
                 urlPathVariables = "/${sender.country}/${sender.id}/$locationID")
 
-        val mockRequestHandler = mockk<RequestHandler<Location>>()
+        val mockRequestHandler = mockk<OcpiRequestHandler<Location>>()
 
         every { requestHandlerBuilder.build<Location>(requestVariables) } returns mockRequestHandler
 
@@ -362,7 +362,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
                         receiver = receiver),
                 urlPathVariables = "/${sender.country}/${sender.id}/$locationID/$evseUID")
 
-        val mockRequestHandler = mockk<RequestHandler<Evse>>()
+        val mockRequestHandler = mockk<OcpiRequestHandler<Evse>>()
 
         every { requestHandlerBuilder.build<Evse>(requestVariables) } returns mockRequestHandler
 
@@ -411,7 +411,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
                         receiver = receiver),
                 urlPathVariables = "/${sender.country}/${sender.id}/$locationID/$evseUID/$connectorID")
 
-        val mockRequestHandler = mockk<RequestHandler<Connector>>()
+        val mockRequestHandler = mockk<OcpiRequestHandler<Connector>>()
 
         every { requestHandlerBuilder.build<Connector>(requestVariables) } returns mockRequestHandler
 
@@ -460,7 +460,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
                 urlPathVariables = "/${sender.country}/${sender.id}/$locationID",
                 body = exampleLocation2)
 
-        val mockRequestHandler = mockk<RequestHandler<Unit>>()
+        val mockRequestHandler = mockk<OcpiRequestHandler<Unit>>()
 
         every { requestHandlerBuilder.build<Unit>(requestVariables) } returns mockRequestHandler
 
@@ -509,7 +509,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
                 urlPathVariables = "/${sender.country}/${sender.id}/$locationID/$evseUID",
                 body = body)
 
-        val mockRequestHandler = mockk<RequestHandler<Unit>>()
+        val mockRequestHandler = mockk<OcpiRequestHandler<Unit>>()
 
         every { requestHandlerBuilder.build<Unit>(requestVariables) } returns mockRequestHandler
 
@@ -559,7 +559,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
                 urlPathVariables = "/${sender.country}/${sender.id}/$locationID/$evseUID/$connectorID",
                 body = body)
 
-        val mockRequestHandler = mockk<RequestHandler<Unit>>()
+        val mockRequestHandler = mockk<OcpiRequestHandler<Unit>>()
 
         every { requestHandlerBuilder.build<Unit>(requestVariables) } returns mockRequestHandler
 
@@ -607,7 +607,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
                 urlPathVariables = "/${sender.country}/${sender.id}/$locationID",
                 body = body)
 
-        val mockRequestHandler = mockk<RequestHandler<Unit>>()
+        val mockRequestHandler = mockk<OcpiRequestHandler<Unit>>()
 
         every { requestHandlerBuilder.build<Unit>(requestVariables) } returns mockRequestHandler
 
@@ -657,7 +657,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
                 urlPathVariables = "/${sender.country}/${sender.id}/$locationID/$evseUID",
                 body = body)
 
-        val mockRequestHandler = mockk<RequestHandler<Unit>>()
+        val mockRequestHandler = mockk<OcpiRequestHandler<Unit>>()
 
         every { requestHandlerBuilder.build<Unit>(requestVariables) } returns mockRequestHandler
 
@@ -708,7 +708,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
                 urlPathVariables = "/${sender.country}/${sender.id}/$locationID/$evseUID/$connectorID",
                 body = body)
 
-        val mockRequestHandler = mockk<RequestHandler<Unit>>()
+        val mockRequestHandler = mockk<OcpiRequestHandler<Unit>>()
 
         every { requestHandlerBuilder.build<Unit>(requestVariables) } returns mockRequestHandler
 

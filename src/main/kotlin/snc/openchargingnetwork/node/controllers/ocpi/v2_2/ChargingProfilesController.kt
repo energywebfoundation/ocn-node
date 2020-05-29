@@ -21,12 +21,12 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import snc.openchargingnetwork.node.models.OcnHeaders
 import snc.openchargingnetwork.node.models.ocpi.*
-import snc.openchargingnetwork.node.services.RequestHandler
-import snc.openchargingnetwork.node.services.RequestHandlerBuilder
+import snc.openchargingnetwork.node.components.OcpiRequestHandler
+import snc.openchargingnetwork.node.components.OcpiRequestHandlerBuilder
 
 
 @RestController
-class ChargingProfilesController(private val requestHandlerBuilder: RequestHandlerBuilder) {
+class ChargingProfilesController(private val requestHandlerBuilder: OcpiRequestHandlerBuilder) {
 
     /**
      * SENDER INTERFACE
@@ -55,7 +55,7 @@ class ChargingProfilesController(private val requestHandlerBuilder: RequestHandl
                 urlPathVariables = uid,
                 body = body)
 
-        val request: RequestHandler<Unit> = requestHandlerBuilder.build(requestVariables)
+        val request: OcpiRequestHandler<Unit> = requestHandlerBuilder.build(requestVariables)
         return request
                 .validateSender()
                 .forwardRequest(proxied = true)
@@ -85,7 +85,7 @@ class ChargingProfilesController(private val requestHandlerBuilder: RequestHandl
                 urlPathVariables = sessionId,
                 body = body)
 
-        val request: RequestHandler<Unit> = requestHandlerBuilder.build(requestVariables)
+        val request: OcpiRequestHandler<Unit> = requestHandlerBuilder.build(requestVariables)
         return request
                 .validateSender()
                 .forwardRequest()
@@ -121,7 +121,7 @@ class ChargingProfilesController(private val requestHandlerBuilder: RequestHandl
                 urlPathVariables = sessionId,
                 urlEncodedParams = mapOf("duration" to duration, "response_url" to responseUrl))
 
-        val request: RequestHandler<ChargingProfileResponse> = requestHandlerBuilder.build(requestVariables)
+        val request: OcpiRequestHandler<ChargingProfileResponse> = requestHandlerBuilder.build(requestVariables)
         return request
                 .validateSender()
                 .forwardModifiableRequest(responseUrl) {
@@ -153,7 +153,7 @@ class ChargingProfilesController(private val requestHandlerBuilder: RequestHandl
                 urlPathVariables = sessionId,
                 body = body)
 
-        val request: RequestHandler<ChargingProfileResponse> = requestHandlerBuilder.build(requestVariables)
+        val request: OcpiRequestHandler<ChargingProfileResponse> = requestHandlerBuilder.build(requestVariables)
         return request
                 .validateSender()
                 .forwardModifiableRequest(body.responseUrl) {
@@ -185,7 +185,7 @@ class ChargingProfilesController(private val requestHandlerBuilder: RequestHandl
                 urlPathVariables = sessionId,
                 urlEncodedParams = mapOf("response_url" to responseUrl))
 
-        val request: RequestHandler<ChargingProfileResponse> = requestHandlerBuilder.build(requestVariables)
+        val request: OcpiRequestHandler<ChargingProfileResponse> = requestHandlerBuilder.build(requestVariables)
         return request
                 .validateSender()
                 .forwardModifiableRequest(responseUrl) {

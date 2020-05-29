@@ -22,11 +22,11 @@ import org.springframework.web.bind.annotation.*
 import snc.openchargingnetwork.node.config.NodeProperties
 import snc.openchargingnetwork.node.models.*
 import snc.openchargingnetwork.node.models.ocpi.*
-import snc.openchargingnetwork.node.services.RequestHandler
-import snc.openchargingnetwork.node.services.RequestHandlerBuilder
+import snc.openchargingnetwork.node.components.OcpiRequestHandler
+import snc.openchargingnetwork.node.components.OcpiRequestHandlerBuilder
 
 @RestController
-class CommandsController(private val requestHandlerBuilder: RequestHandlerBuilder,
+class CommandsController(private val requestHandlerBuilder: OcpiRequestHandlerBuilder,
                          private val properties: NodeProperties) {
 
 
@@ -58,7 +58,7 @@ class CommandsController(private val requestHandlerBuilder: RequestHandlerBuilde
                 urlPathVariables = uid,
                 body = body)
 
-        val request: RequestHandler<Unit> = requestHandlerBuilder.build(requestVariables)
+        val request: OcpiRequestHandler<Unit> = requestHandlerBuilder.build(requestVariables)
         return request
                 .validateSender()
                 .forwardRequest(proxied = true)
@@ -93,7 +93,7 @@ class CommandsController(private val requestHandlerBuilder: RequestHandlerBuilde
                 urlPathVariables = "CANCEL_RESERVATION",
                 body = body)
 
-        val request: RequestHandler<CommandResponse> = requestHandlerBuilder.build(requestVariables)
+        val request: OcpiRequestHandler<CommandResponse> = requestHandlerBuilder.build(requestVariables)
         return request
                 .validateSender()
                 .forwardModifiableRequest(body.responseURL) { requestVariables.copy(body = body.copy(responseURL = it)) }
@@ -123,7 +123,7 @@ class CommandsController(private val requestHandlerBuilder: RequestHandlerBuilde
                 urlPathVariables = "RESERVE_NOW",
                 body = body)
 
-        val request: RequestHandler<CommandResponse> = requestHandlerBuilder.build(requestVariables)
+        val request: OcpiRequestHandler<CommandResponse> = requestHandlerBuilder.build(requestVariables)
         return request
                 .validateSender()
                 .forwardModifiableRequest(body.responseURL) { requestVariables.copy(body = body.copy(responseURL = it)) }
@@ -153,7 +153,7 @@ class CommandsController(private val requestHandlerBuilder: RequestHandlerBuilde
                 urlPathVariables = "START_SESSION",
                 body = body)
 
-        val request: RequestHandler<CommandResponse> = requestHandlerBuilder.build(requestVariables)
+        val request: OcpiRequestHandler<CommandResponse> = requestHandlerBuilder.build(requestVariables)
         return request
                 .validateSender()
                 .forwardModifiableRequest(body.responseURL) { requestVariables.copy(body = body.copy(responseURL = it)) }
@@ -183,7 +183,7 @@ class CommandsController(private val requestHandlerBuilder: RequestHandlerBuilde
                 urlPathVariables = "STOP_SESSION",
                 body = body)
 
-        val request: RequestHandler<CommandResponse> = requestHandlerBuilder.build(requestVariables)
+        val request: OcpiRequestHandler<CommandResponse> = requestHandlerBuilder.build(requestVariables)
         return request
                 .validateSender()
                 .forwardModifiableRequest(body.responseURL) { requestVariables.copy(body = body.copy(responseURL = it)) }
@@ -213,7 +213,7 @@ class CommandsController(private val requestHandlerBuilder: RequestHandlerBuilde
                 urlPathVariables = "UNLOCK_CONNECTOR",
                 body = body)
 
-        val request: RequestHandler<CommandResponse> = requestHandlerBuilder.build(requestVariables)
+        val request: OcpiRequestHandler<CommandResponse> = requestHandlerBuilder.build(requestVariables)
         return request
                 .validateSender()
                 .forwardModifiableRequest(body.responseURL) { requestVariables.copy(body = body.copy(responseURL = it)) }

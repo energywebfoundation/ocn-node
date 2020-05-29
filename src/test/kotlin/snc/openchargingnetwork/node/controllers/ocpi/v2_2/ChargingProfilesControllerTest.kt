@@ -16,8 +16,8 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers
 import snc.openchargingnetwork.node.models.OcnHeaders
 import snc.openchargingnetwork.node.models.ocpi.*
-import snc.openchargingnetwork.node.services.RequestHandler
-import snc.openchargingnetwork.node.services.RequestHandlerBuilder
+import snc.openchargingnetwork.node.components.OcpiRequestHandler
+import snc.openchargingnetwork.node.components.OcpiRequestHandlerBuilder
 import snc.openchargingnetwork.node.tools.getTimestamp
 
 
@@ -25,7 +25,7 @@ import snc.openchargingnetwork.node.tools.getTimestamp
 class ChargingProfilesControllerTest(@Autowired val mockMvc: MockMvc) {
 
     @MockkBean
-    private lateinit var requestHandlerBuilder: RequestHandlerBuilder
+    private lateinit var requestHandlerBuilder: OcpiRequestHandlerBuilder
 
 
     @Test
@@ -43,7 +43,7 @@ class ChargingProfilesControllerTest(@Autowired val mockMvc: MockMvc) {
                 urlPathVariables = "12345",
                 body = GenericChargingProfileResult(result = ChargingProfileResultType.ACCEPTED))
 
-        val requestHandler: RequestHandler<Unit> = mockk()
+        val requestHandler: OcpiRequestHandler<Unit> = mockk()
 
         val response = ResponseEntity.status(HttpStatus.ACCEPTED).body(OcpiResponse<Unit>(statusCode = 1000))
 
@@ -89,7 +89,7 @@ class ChargingProfilesControllerTest(@Autowired val mockMvc: MockMvc) {
                                         startPeriod = 0,
                                         limit = 64f)))))
 
-        val requestHandler: RequestHandler<Unit> = mockk()
+        val requestHandler: OcpiRequestHandler<Unit> = mockk()
 
         val response = ResponseEntity.status(HttpStatus.ACCEPTED).body(OcpiResponse<Unit>(statusCode = 1000))
 
@@ -127,7 +127,7 @@ class ChargingProfilesControllerTest(@Autowired val mockMvc: MockMvc) {
                 urlPathVariables = "0987654321",
                 urlEncodedParams = mapOf("duration" to 30, "response_url" to "https://server.com/profiles/1"))
 
-        val requestHandler: RequestHandler<ChargingProfileResponse> = mockk()
+        val requestHandler: OcpiRequestHandler<ChargingProfileResponse> = mockk()
 
         every { requestHandlerBuilder.build<ChargingProfileResponse>(request) } returns requestHandler
         every {
@@ -173,7 +173,7 @@ class ChargingProfilesControllerTest(@Autowired val mockMvc: MockMvc) {
                         responseUrl = "https://smart.charging.net/profiles/0102030405"
                 ))
 
-        val requestHandler: RequestHandler<ChargingProfileResponse> = mockk()
+        val requestHandler: OcpiRequestHandler<ChargingProfileResponse> = mockk()
 
         every { requestHandlerBuilder.build<ChargingProfileResponse>(request) } returns requestHandler
         every {
@@ -216,7 +216,7 @@ class ChargingProfilesControllerTest(@Autowired val mockMvc: MockMvc) {
                 urlPathVariables = "333666999",
                 urlEncodedParams = mapOf("response_url" to "https://scsp.io/ocpi/callback/369"))
 
-        val requestHandler: RequestHandler<ChargingProfileResponse> = mockk()
+        val requestHandler: OcpiRequestHandler<ChargingProfileResponse> = mockk()
 
         every { requestHandlerBuilder.build<ChargingProfileResponse>(request) } returns requestHandler
         every {

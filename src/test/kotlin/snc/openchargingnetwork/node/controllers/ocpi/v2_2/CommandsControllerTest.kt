@@ -16,8 +16,8 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPat
 import snc.openchargingnetwork.node.data.exampleToken
 import snc.openchargingnetwork.node.models.*
 import snc.openchargingnetwork.node.models.ocpi.*
-import snc.openchargingnetwork.node.services.RequestHandler
-import snc.openchargingnetwork.node.services.RequestHandlerBuilder
+import snc.openchargingnetwork.node.components.OcpiRequestHandler
+import snc.openchargingnetwork.node.components.OcpiRequestHandlerBuilder
 import snc.openchargingnetwork.node.tools.generateUUIDv4Token
 import snc.openchargingnetwork.node.tools.getTimestamp
 
@@ -26,7 +26,7 @@ import snc.openchargingnetwork.node.tools.getTimestamp
 class CommandsControllerTest(@Autowired val mockMvc: MockMvc) {
 
     @MockkBean
-    lateinit var requestHandlerBuilder: RequestHandlerBuilder
+    lateinit var requestHandlerBuilder: OcpiRequestHandlerBuilder
 
 
     @Test
@@ -51,7 +51,7 @@ class CommandsControllerTest(@Autowired val mockMvc: MockMvc) {
                 urlPathVariables = uid,
                 body = body)
 
-        val mockRequestHandler = mockk<RequestHandler<Unit>>()
+        val mockRequestHandler = mockk<OcpiRequestHandler<Unit>>()
 
         every { requestHandlerBuilder.build<Unit>(requestVariables) } returns mockRequestHandler
 
@@ -98,7 +98,7 @@ class CommandsControllerTest(@Autowired val mockMvc: MockMvc) {
                 urlPathVariables = "CANCEL_RESERVATION",
                 body = body)
 
-        val mockRequestHandler = mockk<RequestHandler<CommandResponse>>()
+        val mockRequestHandler = mockk<OcpiRequestHandler<CommandResponse>>()
 
         every { requestHandlerBuilder.build<CommandResponse>(requestVariables) } returns mockRequestHandler
 
@@ -154,7 +154,7 @@ class CommandsControllerTest(@Autowired val mockMvc: MockMvc) {
                 urlPathVariables = "RESERVE_NOW",
                 body = body)
 
-        val mockRequestHandler = mockk<RequestHandler<CommandResponse>>()
+        val mockRequestHandler = mockk<OcpiRequestHandler<CommandResponse>>()
 
         every { requestHandlerBuilder.build<CommandResponse>(requestVariables) } returns mockRequestHandler
 
@@ -208,7 +208,7 @@ class CommandsControllerTest(@Autowired val mockMvc: MockMvc) {
                 urlPathVariables = "START_SESSION",
                 body = body)
 
-        val mockRequestHandler = mockk<RequestHandler<CommandResponse>>()
+        val mockRequestHandler = mockk<OcpiRequestHandler<CommandResponse>>()
 
         every { requestHandlerBuilder.build<CommandResponse>(requestVariables) } returns mockRequestHandler
 
@@ -261,7 +261,7 @@ class CommandsControllerTest(@Autowired val mockMvc: MockMvc) {
                 urlPathVariables = "STOP_SESSION",
                 body = body)
 
-        val mockRequestHandler = mockk<RequestHandler<CommandResponse>>()
+        val mockRequestHandler = mockk<OcpiRequestHandler<CommandResponse>>()
 
         every { requestHandlerBuilder.build<CommandResponse>(requestVariables) } returns mockRequestHandler
 
@@ -316,7 +316,7 @@ class CommandsControllerTest(@Autowired val mockMvc: MockMvc) {
                 urlPathVariables = "UNLOCK_CONNECTOR",
                 body = body)
 
-        val mockRequestHandler = mockk<RequestHandler<CommandResponse>>()
+        val mockRequestHandler = mockk<OcpiRequestHandler<CommandResponse>>()
 
         every { requestHandlerBuilder.build<CommandResponse>(requestVariables) } returns mockRequestHandler
 

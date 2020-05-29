@@ -21,13 +21,13 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import snc.openchargingnetwork.node.models.*
 import snc.openchargingnetwork.node.models.ocpi.*
-import snc.openchargingnetwork.node.services.RequestHandler
-import snc.openchargingnetwork.node.services.RequestHandlerBuilder
+import snc.openchargingnetwork.node.components.OcpiRequestHandler
+import snc.openchargingnetwork.node.components.OcpiRequestHandlerBuilder
 import snc.openchargingnetwork.node.tools.filterNull
 
 
 @RestController
-class SessionsController(private val requestHandlerBuilder: RequestHandlerBuilder) {
+class SessionsController(private val requestHandlerBuilder: OcpiRequestHandlerBuilder) {
 
 
     /**
@@ -60,7 +60,7 @@ class SessionsController(private val requestHandlerBuilder: RequestHandlerBuilde
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
                 urlEncodedParams = params)
 
-        val request: RequestHandler<Array<Session>> = requestHandlerBuilder.build(requestVariables)
+        val request: OcpiRequestHandler<Array<Session>> = requestHandlerBuilder.build(requestVariables)
         return request
                 .validateSender()
                 .forwardRequest()
@@ -88,7 +88,7 @@ class SessionsController(private val requestHandlerBuilder: RequestHandlerBuilde
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
                 urlPathVariables = uid)
 
-        val request: RequestHandler<Array<Session>> = requestHandlerBuilder.build(requestVariables)
+        val request: OcpiRequestHandler<Array<Session>> = requestHandlerBuilder.build(requestVariables)
         return request
                 .validateSender()
                 .forwardRequest()
@@ -118,7 +118,7 @@ class SessionsController(private val requestHandlerBuilder: RequestHandlerBuilde
                 urlPathVariables = "/$sessionID/charging_preferences",
                 body = body)
 
-        val request: RequestHandler<ChargingPreferencesResponse> = requestHandlerBuilder.build(requestVariables)
+        val request: OcpiRequestHandler<ChargingPreferencesResponse> = requestHandlerBuilder.build(requestVariables)
         return request
                 .validateSender()
                 .forwardRequest()
@@ -153,7 +153,7 @@ class SessionsController(private val requestHandlerBuilder: RequestHandlerBuilde
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
                 urlPathVariables = "/$countryCode/$partyID/$sessionID")
 
-        val request: RequestHandler<Session> = requestHandlerBuilder.build(requestVariables)
+        val request: OcpiRequestHandler<Session> = requestHandlerBuilder.build(requestVariables)
         return request
                 .validateSender()
                 .forwardRequest()
@@ -185,7 +185,7 @@ class SessionsController(private val requestHandlerBuilder: RequestHandlerBuilde
                 urlPathVariables = "/$countryCode/$partyID/$sessionID",
                 body = body)
 
-        val request: RequestHandler<Unit> = requestHandlerBuilder.build(requestVariables)
+        val request: OcpiRequestHandler<Unit> = requestHandlerBuilder.build(requestVariables)
         return request
                 .validateSender()
                 .forwardRequest()
@@ -217,7 +217,7 @@ class SessionsController(private val requestHandlerBuilder: RequestHandlerBuilde
                 urlPathVariables = "/$countryCode/$partyID/$sessionID",
                 body = body)
 
-        val request: RequestHandler<Unit> = requestHandlerBuilder.build(requestVariables)
+        val request: OcpiRequestHandler<Unit> = requestHandlerBuilder.build(requestVariables)
         return request
                 .validateSender()
                 .forwardRequest()

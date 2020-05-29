@@ -21,13 +21,13 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import snc.openchargingnetwork.node.models.*
 import snc.openchargingnetwork.node.models.ocpi.*
-import snc.openchargingnetwork.node.services.RequestHandler
-import snc.openchargingnetwork.node.services.RequestHandlerBuilder
+import snc.openchargingnetwork.node.components.OcpiRequestHandler
+import snc.openchargingnetwork.node.components.OcpiRequestHandlerBuilder
 import snc.openchargingnetwork.node.tools.filterNull
 
 
 @RestController
-class CdrsController(private val requestHandlerBuilder: RequestHandlerBuilder) {
+class CdrsController(private val requestHandlerBuilder: OcpiRequestHandlerBuilder) {
 
 
     /**
@@ -60,7 +60,7 @@ class CdrsController(private val requestHandlerBuilder: RequestHandlerBuilder) {
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
                 urlEncodedParams = params)
 
-        val request: RequestHandler<Array<CDR>> = requestHandlerBuilder.build(requestVariables)
+        val request: OcpiRequestHandler<Array<CDR>> = requestHandlerBuilder.build(requestVariables)
         return request
                 .validateSender()
                 .forwardRequest()
@@ -89,7 +89,7 @@ class CdrsController(private val requestHandlerBuilder: RequestHandlerBuilder) {
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
                 urlPathVariables = uid)
 
-        val request: RequestHandler<Array<CDR>> = requestHandlerBuilder.build(requestVariables)
+        val request: OcpiRequestHandler<Array<CDR>> = requestHandlerBuilder.build(requestVariables)
         return request
                 .validateSender()
                 .forwardRequest(proxied = true)
@@ -122,7 +122,7 @@ class CdrsController(private val requestHandlerBuilder: RequestHandlerBuilder) {
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
                 urlPathVariables = cdrID)
 
-        val request: RequestHandler<CDR> = requestHandlerBuilder.build(requestVariables)
+        val request: OcpiRequestHandler<CDR> = requestHandlerBuilder.build(requestVariables)
         return request
                 .validateSender()
                 .forwardRequest(proxied = true)
@@ -151,7 +151,7 @@ class CdrsController(private val requestHandlerBuilder: RequestHandlerBuilder) {
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
                 body = body)
 
-        val request: RequestHandler<Unit> = requestHandlerBuilder.build(requestVariables)
+        val request: OcpiRequestHandler<Unit> = requestHandlerBuilder.build(requestVariables)
         return request
                 .validateSender()
                 .forwardRequest()

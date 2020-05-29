@@ -14,7 +14,7 @@
     limitations under the License.
 */
 
-package snc.openchargingnetwork.node.listeners
+package snc.openchargingnetwork.node.components.listeners
 
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Component
