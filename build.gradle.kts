@@ -20,7 +20,7 @@ java.sourceCompatibility = JavaVersion.VERSION_1_8
 
 val snippetsDir = "build/generated-snippets"
 
-val developmentOnly by configurations.creating
+val developmentOnly: Configuration by configurations.creating
 configurations {
     runtimeClasspath {
         extendsFrom(developmentOnly)

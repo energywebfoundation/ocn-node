@@ -6,16 +6,16 @@ import io.mockk.mockk
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpMethod
-import org.web3j.tuples.generated.Tuple2
-import snc.openchargingnetwork.contracts.Permissions
-import snc.openchargingnetwork.node.config.NodeProperties
-import snc.openchargingnetwork.node.models.*
+import snc.openchargingnetwork.node.models.OcnHeaders
+import snc.openchargingnetwork.node.models.Receiver
 import snc.openchargingnetwork.node.models.entities.*
 import snc.openchargingnetwork.node.models.ocpi.*
-import snc.openchargingnetwork.node.repositories.*
+import snc.openchargingnetwork.node.repositories.EndpointRepository
+import snc.openchargingnetwork.node.repositories.PlatformRepository
+import snc.openchargingnetwork.node.repositories.ProxyResourceRepository
+import snc.openchargingnetwork.node.repositories.RoleRepository
 import snc.openchargingnetwork.node.tools.generateUUIDv4Token
 import snc.openchargingnetwork.node.tools.urlJoin
-import snc.openchargingnetwork.contracts.Registry
 
 
 class RoutingServiceTest {
@@ -275,7 +275,7 @@ class RoutingServiceTest {
         val resource = "https://some.co/ocpi/tokens?limit=10; rel=\"next\""
         val sender = BasicRole("SNC", "DE")
         val receiver = BasicRole("DIY", "UK")
-        every { proxyResourceRepo.save(any<ProxyResourceEntity>()) } returns ProxyResourceEntity(
+        every { proxyResourceRepo.save<ProxyResourceEntity>(any()) } returns ProxyResourceEntity(
                 resource = resource,
                 sender = sender,
                 receiver = receiver,

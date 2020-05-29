@@ -18,21 +18,21 @@ package snc.openchargingnetwork.node.controllers.ocpi.v2_2
 
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.bind.annotation.*
-import snc.openchargingnetwork.node.repositories.*
 import snc.openchargingnetwork.node.config.NodeProperties
-import snc.openchargingnetwork.node.models.ocpi.ConnectionStatus
-import snc.openchargingnetwork.node.models.ocpi.Role
-import snc.openchargingnetwork.node.models.ocpi.OcpiStatus
 import snc.openchargingnetwork.node.models.entities.Auth
 import snc.openchargingnetwork.node.models.entities.EndpointEntity
 import snc.openchargingnetwork.node.models.entities.RoleEntity
 import snc.openchargingnetwork.node.models.exceptions.OcpiClientInvalidParametersException
 import snc.openchargingnetwork.node.models.exceptions.OcpiServerNoMatchingEndpointsException
 import snc.openchargingnetwork.node.models.ocpi.*
+import snc.openchargingnetwork.node.models.ocpi.Role
+import snc.openchargingnetwork.node.repositories.*
 import snc.openchargingnetwork.node.services.HttpService
 import snc.openchargingnetwork.node.services.RegistryService
-import snc.openchargingnetwork.node.services.RoutingService
-import snc.openchargingnetwork.node.tools.*
+import snc.openchargingnetwork.node.tools.extractToken
+import snc.openchargingnetwork.node.tools.generateUUIDv4Token
+import snc.openchargingnetwork.node.tools.getTimestamp
+import snc.openchargingnetwork.node.tools.urlJoin
 
 
 @RestController

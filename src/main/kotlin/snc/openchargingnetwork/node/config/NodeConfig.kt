@@ -34,7 +34,7 @@ import snc.openchargingnetwork.node.services.HttpService as OcnHttpService
 
 
 @Configuration
-open class NodeConfig(private val properties: NodeProperties) {
+class NodeConfig(private val properties: NodeProperties) {
 
     private val web3: Web3j = Web3j.build(Web3jHttpService(properties.web3.provider))
     private val txManager: TransactionManager = ClientTransactionManager(web3, null)

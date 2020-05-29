@@ -7,7 +7,6 @@ import io.mockk.just
 import io.mockk.mockk
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertDoesNotThrow
 import org.springframework.http.HttpMethod
 import org.springframework.http.ResponseEntity
 import shareandcharge.openchargingnetwork.notary.Notary
