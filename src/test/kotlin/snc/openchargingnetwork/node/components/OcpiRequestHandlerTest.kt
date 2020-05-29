@@ -1,26 +1,25 @@
-package snc.openchargingnetwork.node.services
+package snc.openchargingnetwork.node.components
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
-import org.junit.jupiter.api.assertThrows
 import org.springframework.http.HttpMethod
+import org.springframework.http.ResponseEntity
 import shareandcharge.openchargingnetwork.notary.Notary
 import snc.openchargingnetwork.node.config.NodeProperties
 import snc.openchargingnetwork.node.data.exampleLocation1
-import snc.openchargingnetwork.node.components.OcpiRequestHandlerBuilder
-import snc.openchargingnetwork.node.components.OcpiResponseHandlerBuilder
 import snc.openchargingnetwork.node.models.*
 import snc.openchargingnetwork.node.models.entities.OcnRules
 import snc.openchargingnetwork.node.models.ocpi.*
+import snc.openchargingnetwork.node.services.*
 import snc.openchargingnetwork.node.tools.generatePrivateKey
 
-class RequestHandlerTest {
+class OcpiRequestHandlerTest {
 
     private val routingService: RoutingService = mockk()
     private val registryService: RegistryService = mockk()
@@ -109,6 +108,8 @@ class RequestHandlerTest {
                 headers = mapOf(),
                 body = OcpiResponse(1000))
 
+        val responseHandler: OcpiResponseHandler<Unit> = mockk()
+
         every { routingService.getReceiverType(variables.headers.receiver) } returns Receiver.LOCAL
         every { routingService.checkSenderWhitelisted(variables.headers.sender, variables.headers.receiver, variables.module) } just Runs
         every { properties.signatures } returns false
@@ -120,9 +121,11 @@ class RequestHandlerTest {
         every { hubClientInfoService.renewClientConnection(variables.headers.receiver) } just Runs
         every { asyncTaskService.forwardToLinkedApps(variables) } just Runs
         every { registryService.getAgreementsByInterface(variables.headers.sender, variables.module, variables.interfaceRole) } returns sequenceOf()
+        every { responseHandlerBuilder.build(variables, expectedResponse) } returns responseHandler
+        every { responseHandler.getResponse() } returns ResponseEntity.ok(expectedResponse.body)
 
         val response = requestHandler.forwardRequest().getResponse()
-        assertEquals(expectedResponse.statusCode, response.statusCodeValue)
+        Assertions.assertEquals(expectedResponse.statusCode, response.statusCodeValue)
     }
 
     @Test
@@ -162,6 +165,8 @@ class RequestHandlerTest {
         val receiverSig = Notary().sign(expectedResponse.toSignedValues(), receiverKey)
         expectedResponse.body.signature = receiverSig.serialize()
 
+        val responseHandler: OcpiResponseHandler<Unit> = mockk()
+
         every { routingService.getReceiverType(variables.headers.receiver) } returns Receiver.LOCAL
         every { routingService.checkSenderWhitelisted(variables.headers.sender, variables.headers.receiver, variables.module) } just Runs
         every { properties.signatures } returns false
@@ -173,9 +178,11 @@ class RequestHandlerTest {
         every { routingService.prepareLocalPlatformRequest(variables, false) } returns Pair(recipientUrl, outgoingHeaders)
         every { httpService.makeOcpiRequest<Unit>(recipientUrl, outgoingHeaders, variables) } returns expectedResponse
         every { asyncTaskService.forwardToLinkedApps(variables) } just Runs
+        every { responseHandlerBuilder.build(variables, expectedResponse) } returns responseHandler
+        every { responseHandler.getResponse() } returns ResponseEntity.ok(expectedResponse.body)
 
         val response = requestHandler.forwardRequest().getResponse()
-        assertEquals(expectedResponse.statusCode, response.statusCodeValue)
+        Assertions.assertEquals(expectedResponse.statusCode, response.statusCodeValue)
     }
 
     @Test
@@ -205,6 +212,8 @@ class RequestHandlerTest {
                 headers = mapOf(),
                 body = OcpiResponse(1000))
 
+        val responseHandler: OcpiResponseHandler<Unit> = mockk()
+
         every { routingService.getReceiverType(variables.headers.receiver) } returns Receiver.REMOTE
         every { properties.signatures } returns false
         every { routingService.prepareRemotePlatformRequest(variables, false) } returns Triple(
@@ -213,9 +222,11 @@ class RequestHandlerTest {
         every { hubClientInfoService.renewClientConnection(variables.headers.sender) } just Runs
         every { routingService.isRoleKnown(variables.headers.receiver) } returns false
         every { asyncTaskService.forwardToLinkedApps(variables) } just Runs
+        every { responseHandlerBuilder.build(variables, expectedResponse) } returns responseHandler
+        every { responseHandler.getResponse() } returns ResponseEntity.ok(expectedResponse.body)
 
         val response = requestHandler.forwardRequest().getResponse()
-        assertEquals(expectedResponse.statusCode, response.statusCodeValue)
+        Assertions.assertEquals(expectedResponse.statusCode, response.statusCodeValue)
     }
 
     @Test
@@ -253,6 +264,8 @@ class RequestHandlerTest {
         val receiverSig = Notary().sign(expectedResponse.toSignedValues(), receiverKey)
         expectedResponse.body.signature = receiverSig.serialize()
 
+        val responseHandler: OcpiResponseHandler<Unit> = mockk()
+
         every { routingService.getReceiverType(variables.headers.receiver) } returns Receiver.REMOTE
         every { properties.signatures } returns true
         every { registryService.getPartyDetails(variables.headers.sender) } returns RegistryPartyDetailsBasic(
@@ -263,31 +276,11 @@ class RequestHandlerTest {
                 recipientUrl, outgoingHeaders, outgoingBody)
         every { httpService.postOcnMessage<Unit>(recipientUrl, outgoingHeaders, outgoingBody) } returns expectedResponse
         every { asyncTaskService.forwardToLinkedApps(variables) } just Runs
-
+        every { responseHandlerBuilder.build(variables, expectedResponse) } returns responseHandler
+        every { responseHandler.getResponse() } returns ResponseEntity.ok(expectedResponse.body)
 
         val response = requestHandler.forwardRequest().getResponse()
-        assertEquals(expectedResponse.statusCode, response.statusCodeValue)
+        Assertions.assertEquals(expectedResponse.statusCode, response.statusCodeValue)
     }
-
-//    @Test
-//    fun validateResponse() {
-//        val variables = OcpiRequestVariables(
-//                module = ModuleID.LOCATIONS,
-//                interfaceRole = InterfaceRole.RECEIVER,
-//                method = HttpMethod.GET,
-//                headers = OcnHeaders(
-//                        authorization = "",
-//                        requestID = "123",
-//                        correlationID = "456",
-//                        sender = BasicRole("ABC", "DE"),
-//                        receiver = BasicRole("XYZ", "DE")))
-//
-//        val requestHandler = requestHandlerBuilder.build<Unit>(variables)
-//
-//        assertThrows<UnsupportedOperationException> { requestHandler.getResponse() }
-//        assertThrows<UnsupportedOperationException> { requestHandler.getResponseWithPaginationHeaders() }
-//        assertThrows<UnsupportedOperationException> { requestHandler.getResponseWithLocationHeader("/proxy") }
-//        assertThrows<UnsupportedOperationException> { requestHandler.getResponseWithAllHeaders() }
-//    }
 
 }

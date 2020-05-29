@@ -81,7 +81,7 @@ class OcpiResponseHandler<T: Any>(request: OcpiRequestVariables,
                                   hubClientInfoService: HubClientInfoService): OcpiMessageHandler(request, properties, routingService, registryService) {
 
     init {
-        validateResponse()
+        validateResponseSignature()
         if (isOcpiSuccess() && routingService.isRoleKnown(request.headers.receiver)) { // only renew connection of known recipients
             hubClientInfoService.renewClientConnection(request.headers.receiver)
         }
@@ -208,7 +208,7 @@ class OcpiResponseHandler<T: Any>(request: OcpiRequestVariables,
     /**
      * Check response exists. Throws UnsupportedOperationException if request has not yet been forwarded.
      */
-    private fun validateResponse() {
+    private fun validateResponseSignature() {
         // set receiver based on if local/remote request
         val receiver = if (knownSender) { request.headers.sender } else { null }
 
