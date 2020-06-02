@@ -113,7 +113,7 @@ class OcpiRequestHandler<T: Any>(request: OcpiRequestVariables,
                 assertValidSignature()
                 val (url, headers) = routingService.prepareLocalPlatformRequest(request, proxied)
 
-                asyncTaskService.findLinkedApps(this)
+                asyncTaskService.forwardOcpiRequestToLinkedApps(this, fromLocalPlatform)
                 httpService.makeOcpiRequest(url, headers, request)
             }
 
@@ -121,7 +121,7 @@ class OcpiRequestHandler<T: Any>(request: OcpiRequestVariables,
                 assertValidSignature(false)
                 val (url, headers, body) = routingService.prepareRemotePlatformRequest(request, proxied)
 
-                asyncTaskService.findLinkedApps(this)
+                asyncTaskService.forwardOcpiRequestToLinkedApps(this, fromLocalPlatform)
                 httpService.postOcnMessage(url, headers, body)
             }
         }
@@ -157,7 +157,7 @@ class OcpiRequestHandler<T: Any>(request: OcpiRequestVariables,
                 // send the request with the modified body
                 val (url, headers) = routingService.prepareLocalPlatformRequest(request)
 
-                asyncTaskService.findLinkedApps(this)
+                asyncTaskService.forwardOcpiRequestToLinkedApps(this)
                 httpService.makeOcpiRequest(url, headers, modifiedRequest)
             }
 
@@ -175,7 +175,7 @@ class OcpiRequestHandler<T: Any>(request: OcpiRequestVariables,
                     modifiedRequest.copy(proxyUID = proxyUID, proxyResource = responseUrl)
                 }
 
-                asyncTaskService.findLinkedApps(this)
+                asyncTaskService.forwardOcpiRequestToLinkedApps(this)
                 httpService.postOcnMessage(url, headers, body)
             }
 
@@ -200,20 +200,17 @@ class OcpiRequestHandler<T: Any>(request: OcpiRequestVariables,
     fun forwardAgain(newRecipient: BasicRole): OcpiResponseHandler<T> {
         val modifiedRequest = request.copy(headers = request.headers.copy(receiver = newRecipient))
         val rewriteFields = mapOf(
-                "$['headers']['ocpi-to-country-code']" to modifiedRequest.headers.receiver.country,
-                "$['headers']['ocpi-to-party-id']" to modifiedRequest.headers.receiver.id)
+                "$['headers']['ocpi-to-country-code']" to request.headers.receiver.country,
+                "$['headers']['ocpi-to-party-id']" to request.headers.receiver.id)
 
-        // TODO: stash and re-sign
         modifiedRequest.headers.signature = rewriteAndSign(modifiedRequest.toSignedValues(), rewriteFields)
 
         val response: HttpResponse<T> = when (routingService.getReceiverType(newRecipient)) {
             Receiver.LOCAL -> {
-                // TODO: prepare local platform request
                 val (url, headers) = routingService.prepareLocalPlatformRequest(modifiedRequest)
                 httpService.makeOcpiRequest(url, headers, modifiedRequest)
             }
             Receiver.REMOTE -> {
-                // TODO: prepare remote platform request
                 val (url, headers, body) = routingService.prepareRemotePlatformRequest(modifiedRequest)
                 httpService.postOcnMessage(url, headers, body)
             }

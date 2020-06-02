@@ -30,8 +30,11 @@ class AppInterfaceTest {
 
     @Test
     fun fowardsRequestToApp() {
+        println("CPO2 ${cpo2.party} is the App Provider")
         cpo2.server.setAppPermissions(listOf(OcnAppPermission.FORWARD_ALL))
+        println("MSP ${msp.party} is the App User")
         msp.server.agreeToAppPermissions(cpo2.address)
+        println("MSP fetches CPO1 ${cpo1.party} location, thereby forwarding to CPO2")
         msp.server.getLocation(cpo1.party)
         Thread.sleep(5000L)
     }

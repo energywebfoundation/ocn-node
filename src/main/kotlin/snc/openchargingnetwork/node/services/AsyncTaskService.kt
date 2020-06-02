@@ -17,15 +17,12 @@
 package snc.openchargingnetwork.node.services
 
 import org.slf4j.LoggerFactory
-import org.springframework.context.ApplicationEventPublisher
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
 import snc.openchargingnetwork.node.components.OcpiRequestHandler
-import snc.openchargingnetwork.node.models.events.AppRecipientFoundEvent
 
 @Service
-class AsyncTaskService(private val registryService: RegistryService,
-                       private val applicationEventPublisher: ApplicationEventPublisher) {
+class AsyncTaskService(private val registryService: RegistryService) {
 
     companion object {
         private val logger = LoggerFactory.getLogger(AsyncTaskService::class.java)
@@ -33,16 +30,26 @@ class AsyncTaskService(private val registryService: RegistryService,
 
     /**
      * Finds all apps, linked to a sender, with permissions that grant them access to a given request type.
-     * Once apps have been found, triggers an AppRecipientFoundEvent.
+     * Once apps have been found, sends via provided request handler.
      */
     @Async
-    fun findLinkedApps(requestHandler: OcpiRequestHandler<*>) {
-        val request = requestHandler.request
-        registryService.getAgreementsByInterface(request.headers.sender, request.module, request.interfaceRole)
-                .forEach {
-                    logger.info("publishing forward request to ${it.provider}")
-                    applicationEventPublisher.publishEvent(AppRecipientFoundEvent(requestHandler, it.provider))
-                }
+    fun forwardOcpiRequestToLinkedApps(requestHandler: OcpiRequestHandler<*>, fromLocalPlatform: Boolean = true) {
+        if (fromLocalPlatform) {
+            val request = requestHandler.request
+            registryService.getAgreementsByInterface(request.headers.sender, request.module, request.interfaceRole)
+                    .forEach {
+                        try {
+                            requestHandler.forwardAgain(it.provider)
+                        } catch (e: Exception) {
+                            // fire and forget
+                            logger.warn("Error forwarding request to app ${it.provider}: ${e.message}")
+                        }
+                    }
+
+            // TODO: add tests
+            //  - AppInterfaceTest
+            //  - OcpiRequestHandlerTest.forwardAgain
+        }
     }
 
 }
