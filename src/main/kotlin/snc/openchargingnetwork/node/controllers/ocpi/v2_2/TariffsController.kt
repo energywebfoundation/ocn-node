@@ -61,7 +61,7 @@ class TariffsController(private val requestHandlerBuilder: OcpiRequestHandlerBui
 
         return requestHandlerBuilder
                 .build<Array<Tariff>>(requestVariables)
-                .forward()
+                .forwardDefault()
                 .getResponseWithPaginationHeaders() // proxies Link response header
     }
 
@@ -88,7 +88,7 @@ class TariffsController(private val requestHandlerBuilder: OcpiRequestHandlerBui
 
         return requestHandlerBuilder
                 .build<Array<Tariff>>(requestVariables)
-                .forward(proxied = true) // retrieves proxied Link response header
+                .forwardDefault(proxied = true) // retrieves proxied Link response header
                 .getResponseWithPaginationHeaders()
     }
 
@@ -122,7 +122,7 @@ class TariffsController(private val requestHandlerBuilder: OcpiRequestHandlerBui
 
         return requestHandlerBuilder
                 .build<Tariff>(requestVariables)
-                .forward()
+                .forwardDefault()
                 .getResponse()
     }
 
@@ -154,7 +154,7 @@ class TariffsController(private val requestHandlerBuilder: OcpiRequestHandlerBui
 
         return requestHandlerBuilder
                 .build<Unit>(requestVariables)
-                .forward()
+                .forwardDefault()
                 .getResponse()
     }
 
@@ -184,7 +184,7 @@ class TariffsController(private val requestHandlerBuilder: OcpiRequestHandlerBui
 
         return requestHandlerBuilder
                 .build<Unit>(requestVariables)
-                .forward()
+                .forwardDefault()
                 .getResponse()
     }
 

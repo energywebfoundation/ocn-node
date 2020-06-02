@@ -57,7 +57,7 @@ class TokensControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every { requestHandlerBuilder.build<Array<Token>>(requestVariables) } returns mockRequestHandler
 
-        every { mockRequestHandler.forward().getResponseWithPaginationHeaders() } returns ResponseEntity
+        every { mockRequestHandler.forwardDefault().getResponseWithPaginationHeaders() } returns ResponseEntity
                 .status(200)
                 .headers(responseHeaders)
                 .body(OcpiResponse(statusCode = 1000, data = arrayOf(exampleToken)))
@@ -114,7 +114,7 @@ class TokensControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every { requestHandlerBuilder.build<Array<Token>>(requestVariables) } returns mockRequestHandler
 
-        every { mockRequestHandler.forward(true).getResponseWithPaginationHeaders() } returns ResponseEntity
+        every { mockRequestHandler.forwardDefault(true).getResponseWithPaginationHeaders() } returns ResponseEntity
                 .status(200)
                 .headers(responseHeaders)
                 .body(OcpiResponse(statusCode = 1000, data = arrayOf(exampleToken)))
@@ -168,7 +168,7 @@ class TokensControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every { requestHandlerBuilder.build<AuthorizationInfo>(requestVariables) } returns mockRequestHandler
 
-        every { mockRequestHandler.forward().getResponse() } returns ResponseEntity
+        every { mockRequestHandler.forwardDefault().getResponse() } returns ResponseEntity
                 .status(200)
                 .body(OcpiResponse(statusCode = 1000, data = AuthorizationInfo(
                         allowed = Allowed.ALLOWED,
@@ -219,7 +219,7 @@ class TokensControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every { requestHandlerBuilder.build<Token>(requestVariables) } returns mockRequestHandler
 
-        every { mockRequestHandler.forward().getResponse() } returns ResponseEntity
+        every { mockRequestHandler.forwardDefault().getResponse() } returns ResponseEntity
                 .status(200)
                 .body(OcpiResponse(statusCode = 1000, data = exampleToken))
 
@@ -267,7 +267,7 @@ class TokensControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every { requestHandlerBuilder.build<Unit>(requestVariables) } returns mockRequestHandler
 
-        every { mockRequestHandler.forward().getResponse() } returns ResponseEntity
+        every { mockRequestHandler.forwardDefault().getResponse() } returns ResponseEntity
                 .status(200)
                 .body(OcpiResponse(statusCode = 1000))
 
@@ -319,7 +319,7 @@ class TokensControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every { requestHandlerBuilder.build<Unit>(requestVariables) } returns mockRequestHandler
 
-        every { mockRequestHandler.forward().getResponse() } returns ResponseEntity
+        every { mockRequestHandler.forwardDefault().getResponse() } returns ResponseEntity
                 .status(200)
                 .body(OcpiResponse(statusCode = 1000))
 

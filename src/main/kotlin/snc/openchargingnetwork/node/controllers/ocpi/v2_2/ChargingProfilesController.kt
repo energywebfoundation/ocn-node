@@ -56,7 +56,7 @@ class ChargingProfilesController(private val requestHandlerBuilder: OcpiRequestH
 
         return requestHandlerBuilder
                 .build<Unit>(requestVariables)
-                .forward(proxied = true) // retrieves proxied response_url
+                .forwardDefault(proxied = true) // retrieves proxied response_url
                 .getResponse()
     }
 
@@ -85,7 +85,7 @@ class ChargingProfilesController(private val requestHandlerBuilder: OcpiRequestH
 
         return requestHandlerBuilder
                 .build<Unit>(requestVariables)
-                .forward()
+                .forwardDefault()
                 .getResponse()
     }
 
@@ -120,7 +120,7 @@ class ChargingProfilesController(private val requestHandlerBuilder: OcpiRequestH
 
         return requestHandlerBuilder
                 .build<ChargingProfileResponse>(requestVariables)
-                .forward(responseUrl) {
+                .forwardAsync(responseUrl) {
                     requestVariables.copy(urlEncodedParams = mapOf("duration" to duration, "response_url" to it))
                 }
                 .getResponse()
@@ -151,7 +151,7 @@ class ChargingProfilesController(private val requestHandlerBuilder: OcpiRequestH
 
         return requestHandlerBuilder
                 .build<ChargingProfileResponse>(requestVariables)
-                .forward(body.responseUrl) {
+                .forwardAsync(body.responseUrl) {
                     requestVariables.copy(body = body.copy(responseUrl = it))
                 }
                 .getResponse()
@@ -182,7 +182,7 @@ class ChargingProfilesController(private val requestHandlerBuilder: OcpiRequestH
 
         return requestHandlerBuilder
                 .build<ChargingProfileResponse>(requestVariables)
-                .forward(responseUrl) {
+                .forwardAsync(responseUrl) {
                     requestVariables.copy(urlEncodedParams = mapOf("response_url" to it))
                 }
                 .getResponse()

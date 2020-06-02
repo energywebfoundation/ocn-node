@@ -61,7 +61,7 @@ class SessionsController(private val requestHandlerBuilder: OcpiRequestHandlerBu
 
         return requestHandlerBuilder
                 .build<Array<Session>>(requestVariables)
-                .forward()
+                .forwardDefault()
                 .getResponseWithPaginationHeaders() // proxies Link response header
     }
 
@@ -89,7 +89,7 @@ class SessionsController(private val requestHandlerBuilder: OcpiRequestHandlerBu
 
         return requestHandlerBuilder
                 .build<Array<Session>>(requestVariables)
-                .forward(proxied = true) // retrieves proxied Link response header
+                .forwardDefault(proxied = true) // retrieves proxied Link response header
                 .getResponseWithPaginationHeaders()
     }
 
@@ -118,7 +118,7 @@ class SessionsController(private val requestHandlerBuilder: OcpiRequestHandlerBu
 
         return requestHandlerBuilder
                 .build<ChargingPreferencesResponse>(requestVariables)
-                .forward()
+                .forwardDefault()
                 .getResponse()
     }
 
@@ -152,7 +152,7 @@ class SessionsController(private val requestHandlerBuilder: OcpiRequestHandlerBu
 
         return requestHandlerBuilder
                 .build<Session>(requestVariables)
-                .forward()
+                .forwardDefault()
                 .getResponse()
     }
 
@@ -183,7 +183,7 @@ class SessionsController(private val requestHandlerBuilder: OcpiRequestHandlerBu
 
         return requestHandlerBuilder
                 .build<Unit>(requestVariables)
-                .forward()
+                .forwardDefault()
                 .getResponse()
     }
 
@@ -214,7 +214,7 @@ class SessionsController(private val requestHandlerBuilder: OcpiRequestHandlerBu
 
         return requestHandlerBuilder
                 .build<Unit>(requestVariables)
-                .forward()
+                .forwardDefault()
                 .getResponse()
     }
 

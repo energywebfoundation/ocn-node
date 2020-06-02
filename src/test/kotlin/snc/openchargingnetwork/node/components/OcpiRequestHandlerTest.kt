@@ -73,12 +73,12 @@ class OcpiRequestHandlerTest {
         every { routingService.isRoleKnown(variables.headers.receiver) } returns true
         every { hubClientInfoService.renewClientConnection(variables.headers.sender) } just Runs
         every { hubClientInfoService.renewClientConnection(variables.headers.receiver) } just Runs
-        every { asyncTaskService.findLinkedApps(variables) } just Runs
+        every { asyncTaskService.findLinkedApps(requestHandler) } just Runs
         every { registryService.getAgreementsByInterface(variables.headers.sender, variables.module, variables.interfaceRole) } returns sequenceOf()
         every { responseHandlerBuilder.build(variables, expectedResponse) } returns responseHandler
         every { responseHandler.getResponse() } returns ResponseEntity.ok(expectedResponse.body)
 
-        val response = requestHandler.forward().getResponse()
+        val response = requestHandler.forwardDefault().getResponse()
         Assertions.assertEquals(expectedResponse.statusCode, response.statusCodeValue)
     }
 
@@ -132,11 +132,11 @@ class OcpiRequestHandlerTest {
                 receiverSig.signatory, "0x9bC1169Ca09555bf2721A5C9eC6D69c8073bfeB4")
         every { routingService.prepareLocalPlatformRequest(variables, false) } returns Pair(recipientUrl, outgoingHeaders)
         every { httpService.makeOcpiRequest<Unit>(recipientUrl, outgoingHeaders, variables) } returns expectedResponse
-        every { asyncTaskService.findLinkedApps(variables) } just Runs
+        every { asyncTaskService.findLinkedApps(requestHandler) } just Runs
         every { responseHandlerBuilder.build(variables, expectedResponse) } returns responseHandler
         every { responseHandler.getResponse() } returns ResponseEntity.ok(expectedResponse.body)
 
-        val response = requestHandler.forward().getResponse()
+        val response = requestHandler.forwardDefault().getResponse()
         Assertions.assertEquals(expectedResponse.statusCode, response.statusCodeValue)
     }
 
@@ -177,11 +177,11 @@ class OcpiRequestHandlerTest {
         every { httpService.postOcnMessage<Unit>(recipientUrl, outgoingHeaders, outgoingBody) } returns expectedResponse
         every { hubClientInfoService.renewClientConnection(variables.headers.sender) } just Runs
         every { routingService.isRoleKnown(variables.headers.receiver) } returns false
-        every { asyncTaskService.findLinkedApps(variables) } just Runs
+        every { asyncTaskService.findLinkedApps(requestHandler) } just Runs
         every { responseHandlerBuilder.build(variables, expectedResponse) } returns responseHandler
         every { responseHandler.getResponse() } returns ResponseEntity.ok(expectedResponse.body)
 
-        val response = requestHandler.forward().getResponse()
+        val response = requestHandler.forwardDefault().getResponse()
         Assertions.assertEquals(expectedResponse.statusCode, response.statusCodeValue)
     }
 
@@ -232,11 +232,11 @@ class OcpiRequestHandlerTest {
         every { routingService.prepareRemotePlatformRequest(variables, false) } returns Triple(
                 recipientUrl, outgoingHeaders, outgoingBody)
         every { httpService.postOcnMessage<Unit>(recipientUrl, outgoingHeaders, outgoingBody) } returns expectedResponse
-        every { asyncTaskService.findLinkedApps(variables) } just Runs
+        every { asyncTaskService.findLinkedApps(requestHandler) } just Runs
         every { responseHandlerBuilder.build(variables, expectedResponse) } returns responseHandler
         every { responseHandler.getResponse() } returns ResponseEntity.ok(expectedResponse.body)
 
-        val response = requestHandler.forward().getResponse()
+        val response = requestHandler.forwardDefault().getResponse()
         Assertions.assertEquals(expectedResponse.statusCode, response.statusCodeValue)
     }
 

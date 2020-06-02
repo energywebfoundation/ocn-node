@@ -23,6 +23,7 @@ import snc.openchargingnetwork.node.config.NodeProperties
 import snc.openchargingnetwork.node.models.HttpResponse
 import snc.openchargingnetwork.node.models.Receiver
 import snc.openchargingnetwork.node.models.exceptions.OcpiHubUnknownReceiverException
+import snc.openchargingnetwork.node.models.ocpi.BasicRole
 import snc.openchargingnetwork.node.models.ocpi.OcpiRequestVariables
 import snc.openchargingnetwork.node.services.*
 import snc.openchargingnetwork.node.tools.generateUUIDv4Token
@@ -96,11 +97,11 @@ class OcpiRequestHandler<T: Any>(request: OcpiRequestVariables,
     }
 
     /**
-     * Forward the request to the receiver.
+     * Forward an incoming request to the specified receiver.
      * @param proxied tells the RequestHandler that this request requires a proxied resource that was previously
      * saved by the OCN Node (e.g. a paginated "Link" response header).
      */
-    fun forward(proxied: Boolean = false, fromLocalPlatform: Boolean = true): OcpiResponseHandler<T> {
+    fun forwardDefault(proxied: Boolean = false, fromLocalPlatform: Boolean = true): OcpiResponseHandler<T> {
         if (fromLocalPlatform) {
             assertSenderValid()
         }
@@ -112,7 +113,7 @@ class OcpiRequestHandler<T: Any>(request: OcpiRequestVariables,
                 assertValidSignature()
                 val (url, headers) = routingService.prepareLocalPlatformRequest(request, proxied)
 
-                asyncTaskService.findLinkedApps(request)
+                asyncTaskService.findLinkedApps(this)
                 httpService.makeOcpiRequest(url, headers, request)
             }
 
@@ -120,7 +121,7 @@ class OcpiRequestHandler<T: Any>(request: OcpiRequestVariables,
                 assertValidSignature(false)
                 val (url, headers, body) = routingService.prepareRemotePlatformRequest(request, proxied)
 
-                asyncTaskService.findLinkedApps(request)
+                asyncTaskService.findLinkedApps(this)
                 httpService.postOcnMessage(url, headers, body)
             }
         }
@@ -129,12 +130,13 @@ class OcpiRequestHandler<T: Any>(request: OcpiRequestVariables,
     }
 
     /**
-     * Used by the module interfaces which require the modifying of a "response_url".
+     * Forward requests from module interfaces which require the modifying of a "response_url" (i.e. commands, charging
+     * profiles).
      * @param responseUrl the original response_url as defined by the sender
      * @param modifyRequest callback which allows the request (OcpiRequestVariables) used by this RequestHandler to
      * be modified with the new response_url which will be sent to the receiver.
      */
-    fun forward(responseUrl: String, modifyRequest: (newResponseUrl: String) -> OcpiRequestVariables): OcpiResponseHandler<T> {
+    fun forwardAsync(responseUrl: String, modifyRequest: (newResponseUrl: String) -> OcpiRequestVariables): OcpiResponseHandler<T> {
         assertSenderValid()
 
         val proxyPath = "/ocpi/sender/2.2/${request.module.id}/${request.urlPathVariables}"
@@ -155,7 +157,7 @@ class OcpiRequestHandler<T: Any>(request: OcpiRequestVariables,
                 // send the request with the modified body
                 val (url, headers) = routingService.prepareLocalPlatformRequest(request)
 
-                asyncTaskService.findLinkedApps(request)
+                asyncTaskService.findLinkedApps(this)
                 httpService.makeOcpiRequest(url, headers, modifiedRequest)
             }
 
@@ -173,7 +175,7 @@ class OcpiRequestHandler<T: Any>(request: OcpiRequestVariables,
                     modifiedRequest.copy(proxyUID = proxyUID, proxyResource = responseUrl)
                 }
 
-                asyncTaskService.findLinkedApps(request)
+                asyncTaskService.findLinkedApps(this)
                 httpService.postOcnMessage(url, headers, body)
             }
 
@@ -184,11 +186,40 @@ class OcpiRequestHandler<T: Any>(request: OcpiRequestVariables,
 
     /**
      * Forwards a message received over the network (containing an "OCN-Signature" from the sending node)
-     * @param signature the OCN-Signature header received from the sending node
+     * @param sendingNodeSignature the OCN-Signature header received from the sending node
      */
-    fun forward(signature: String): OcpiResponseHandler<T> {
-        validateOcnMessage(signature)
-        return forward(fromLocalPlatform = false)
+    fun forwardFromOcn(sendingNodeSignature: String): OcpiResponseHandler<T> {
+        validateOcnMessage(sendingNodeSignature)
+        return forwardDefault(fromLocalPlatform = false)
+    }
+
+    /**
+     * Forwards a message to another recipient (i.e. an App with the appropriate permissions).
+     * @param newRecipient country_code and party_id of the App
+     */
+    fun forwardAgain(newRecipient: BasicRole): OcpiResponseHandler<T> {
+        val modifiedRequest = request.copy(headers = request.headers.copy(receiver = newRecipient))
+        val rewriteFields = mapOf(
+                "$['headers']['ocpi-to-country-code']" to modifiedRequest.headers.receiver.country,
+                "$['headers']['ocpi-to-party-id']" to modifiedRequest.headers.receiver.id)
+
+        // TODO: stash and re-sign
+        modifiedRequest.headers.signature = rewriteAndSign(modifiedRequest.toSignedValues(), rewriteFields)
+
+        val response: HttpResponse<T> = when (routingService.getReceiverType(newRecipient)) {
+            Receiver.LOCAL -> {
+                // TODO: prepare local platform request
+                val (url, headers) = routingService.prepareLocalPlatformRequest(modifiedRequest)
+                httpService.makeOcpiRequest(url, headers, modifiedRequest)
+            }
+            Receiver.REMOTE -> {
+                // TODO: prepare remote platform request
+                val (url, headers, body) = routingService.prepareRemotePlatformRequest(modifiedRequest)
+                httpService.postOcnMessage(url, headers, body)
+            }
+        }
+
+        return responseHandlerBuilder.build(modifiedRequest, response)
     }
 
     /**

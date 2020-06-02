@@ -55,7 +55,7 @@ class CommandsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every { requestHandlerBuilder.build<Unit>(requestVariables) } returns mockRequestHandler
 
-        every { mockRequestHandler.forward(true).getResponse() } returns ResponseEntity
+        every { mockRequestHandler.forwardDefault(true).getResponse() } returns ResponseEntity
                 .status(200)
                 .body(OcpiResponse(statusCode = 1000))
 
@@ -103,7 +103,7 @@ class CommandsControllerTest(@Autowired val mockMvc: MockMvc) {
         every { requestHandlerBuilder.build<CommandResponse>(requestVariables) } returns mockRequestHandler
 
         every { mockRequestHandler
-                .forward(body.responseURL, any())
+                .forwardAsync(body.responseURL, any())
                 .getResponse() } returns ResponseEntity
                     .status(200)
                     .body(OcpiResponse(
@@ -158,7 +158,7 @@ class CommandsControllerTest(@Autowired val mockMvc: MockMvc) {
         every { requestHandlerBuilder.build<CommandResponse>(requestVariables) } returns mockRequestHandler
 
         every { mockRequestHandler
-                .forward(body.responseURL, any())
+                .forwardAsync(body.responseURL, any())
                 .getResponse() } returns ResponseEntity
                 .status(200)
                 .body(OcpiResponse(
@@ -211,7 +211,7 @@ class CommandsControllerTest(@Autowired val mockMvc: MockMvc) {
         every { requestHandlerBuilder.build<CommandResponse>(requestVariables) } returns mockRequestHandler
 
         every { mockRequestHandler
-                .forward(body.responseURL, any())
+                .forwardAsync(body.responseURL, any())
                 .getResponse() } returns ResponseEntity
                 .status(200)
                 .body(OcpiResponse(
@@ -263,7 +263,7 @@ class CommandsControllerTest(@Autowired val mockMvc: MockMvc) {
         every { requestHandlerBuilder.build<CommandResponse>(requestVariables) } returns mockRequestHandler
 
         every { mockRequestHandler
-                .forward(body.responseURL, any())
+                .forwardAsync(body.responseURL, any())
                 .getResponse() } returns ResponseEntity
                 .status(200)
                 .body(OcpiResponse(
@@ -317,7 +317,7 @@ class CommandsControllerTest(@Autowired val mockMvc: MockMvc) {
         every { requestHandlerBuilder.build<CommandResponse>(requestVariables) } returns mockRequestHandler
 
         every { mockRequestHandler
-                .forward(body.responseURL, any())
+                .forwardAsync(body.responseURL, any())
                 .getResponse() } returns ResponseEntity
                 .status(200)
                 .body(OcpiResponse(

@@ -61,7 +61,7 @@ class LocationsController(private val requestHandlerBuilder: OcpiRequestHandlerB
 
         return requestHandlerBuilder
                 .build<Array<Location>>(requestVariables)
-                .forward()
+                .forwardDefault()
                 .getResponseWithPaginationHeaders() // proxies Link response header
     }
 
@@ -88,7 +88,7 @@ class LocationsController(private val requestHandlerBuilder: OcpiRequestHandlerB
 
         return requestHandlerBuilder
                 .build<Array<Location>>(requestVariables)
-                .forward(proxied = true) // retrieves proxied Link response header
+                .forwardDefault(proxied = true) // retrieves proxied Link response header
                 .getResponseWithPaginationHeaders()
     }
 
@@ -115,7 +115,7 @@ class LocationsController(private val requestHandlerBuilder: OcpiRequestHandlerB
 
         return requestHandlerBuilder
                 .build<Location>(requestVariables)
-                .forward()
+                .forwardDefault()
                 .getResponse()
     }
 
@@ -143,7 +143,7 @@ class LocationsController(private val requestHandlerBuilder: OcpiRequestHandlerB
 
         return requestHandlerBuilder
                 .build<Evse>(requestVariables)
-                .forward()
+                .forwardDefault()
                 .getResponse()
     }
 
@@ -172,7 +172,7 @@ class LocationsController(private val requestHandlerBuilder: OcpiRequestHandlerB
 
         return requestHandlerBuilder
                 .build<Connector>(requestVariables)
-                .forward()
+                .forwardDefault()
                 .getResponse()
     }
 
@@ -206,7 +206,7 @@ class LocationsController(private val requestHandlerBuilder: OcpiRequestHandlerB
 
         return requestHandlerBuilder
                 .build<Location>(requestVariables)
-                .forward()
+                .forwardDefault()
                 .getResponse()
     }
 
@@ -236,7 +236,7 @@ class LocationsController(private val requestHandlerBuilder: OcpiRequestHandlerB
 
         return requestHandlerBuilder
                 .build<Evse>(requestVariables)
-                .forward()
+                .forwardDefault()
                 .getResponse()
     }
 
@@ -267,7 +267,7 @@ class LocationsController(private val requestHandlerBuilder: OcpiRequestHandlerB
 
         return requestHandlerBuilder
                 .build<Connector>(requestVariables)
-                .forward()
+                .forwardDefault()
                 .getResponse()
     }
 
@@ -298,7 +298,7 @@ class LocationsController(private val requestHandlerBuilder: OcpiRequestHandlerB
 
         return requestHandlerBuilder
                 .build<Unit>(requestVariables)
-                .forward()
+                .forwardDefault()
                 .getResponse()
     }
 
@@ -330,7 +330,7 @@ class LocationsController(private val requestHandlerBuilder: OcpiRequestHandlerB
 
         return requestHandlerBuilder
                 .build<Unit>(requestVariables)
-                .forward()
+                .forwardDefault()
                 .getResponse()
     }
 
@@ -363,7 +363,7 @@ class LocationsController(private val requestHandlerBuilder: OcpiRequestHandlerB
 
         return requestHandlerBuilder
                 .build<Unit>(requestVariables)
-                .forward()
+                .forwardDefault()
                 .getResponse()
     }
 
@@ -394,7 +394,7 @@ class LocationsController(private val requestHandlerBuilder: OcpiRequestHandlerB
 
         return requestHandlerBuilder
                 .build<Unit>(requestVariables)
-                .forward()
+                .forwardDefault()
                 .getResponse()
     }
 
@@ -426,7 +426,7 @@ class LocationsController(private val requestHandlerBuilder: OcpiRequestHandlerB
 
         return requestHandlerBuilder
                 .build<Unit>(requestVariables)
-                .forward()
+                .forwardDefault()
                 .getResponse()
     }
 
@@ -459,7 +459,7 @@ class LocationsController(private val requestHandlerBuilder: OcpiRequestHandlerB
 
         return requestHandlerBuilder
                 .build<Unit>(requestVariables)
-                .forward()
+                .forwardDefault()
                 .getResponse()
     }
 

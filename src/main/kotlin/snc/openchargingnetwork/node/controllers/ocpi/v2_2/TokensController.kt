@@ -60,7 +60,7 @@ class TokensController(private val requestHandlerBuilder: OcpiRequestHandlerBuil
 
         return requestHandlerBuilder
                 .build<Array<Token>>(requestVariables)
-                .forward()
+                .forwardDefault()
                 .getResponseWithPaginationHeaders() // proxies Link response header
     }
 
@@ -87,7 +87,7 @@ class TokensController(private val requestHandlerBuilder: OcpiRequestHandlerBuil
 
         return requestHandlerBuilder
                 .build<Array<Token>>(requestVariables)
-                .forward(proxied = true) // retrieves proxied Link response header
+                .forwardDefault(proxied = true) // retrieves proxied Link response header
                 .getResponseWithPaginationHeaders()
     }
 
@@ -119,7 +119,7 @@ class TokensController(private val requestHandlerBuilder: OcpiRequestHandlerBuil
 
         return requestHandlerBuilder
                 .build<AuthorizationInfo>(requestVariables)
-                .forward()
+                .forwardDefault()
                 .getResponse()
     }
 
@@ -155,7 +155,7 @@ class TokensController(private val requestHandlerBuilder: OcpiRequestHandlerBuil
 
         return requestHandlerBuilder
                 .build<Token>(requestVariables)
-                .forward()
+                .forwardDefault()
                 .getResponse()
     }
 
@@ -188,7 +188,7 @@ class TokensController(private val requestHandlerBuilder: OcpiRequestHandlerBuil
 
         return requestHandlerBuilder
                 .build<Unit>(requestVariables)
-                .forward()
+                .forwardDefault()
                 .getResponse()
     }
 
@@ -221,7 +221,7 @@ class TokensController(private val requestHandlerBuilder: OcpiRequestHandlerBuil
 
         return requestHandlerBuilder
                 .build<Unit>(requestVariables)
-                .forward()
+                .forwardDefault()
                 .getResponse()
     }
 

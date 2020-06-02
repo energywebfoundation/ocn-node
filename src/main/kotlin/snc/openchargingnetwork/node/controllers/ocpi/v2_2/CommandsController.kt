@@ -57,7 +57,7 @@ class CommandsController(private val requestHandlerBuilder: OcpiRequestHandlerBu
 
         return requestHandlerBuilder
                 .build<Unit>(requestVariables)
-                .forward(proxied = true) // retrieves proxied response_url
+                .forwardDefault(proxied = true) // retrieves proxied response_url
                 .getResponse()
     }
 
@@ -91,7 +91,7 @@ class CommandsController(private val requestHandlerBuilder: OcpiRequestHandlerBu
 
         return requestHandlerBuilder
                 .build<CommandResponse>(requestVariables)
-                .forward(body.responseURL) {
+                .forwardAsync(body.responseURL) {
                     requestVariables.copy(body = body.copy(responseURL = it))
                 }
                 .getResponse()
@@ -122,7 +122,7 @@ class CommandsController(private val requestHandlerBuilder: OcpiRequestHandlerBu
 
         return requestHandlerBuilder
                 .build<CommandResponse>(requestVariables)
-                .forward(body.responseURL) {
+                .forwardAsync(body.responseURL) {
                     requestVariables.copy(body = body.copy(responseURL = it))
                 }
                 .getResponse()
@@ -153,7 +153,7 @@ class CommandsController(private val requestHandlerBuilder: OcpiRequestHandlerBu
 
         return requestHandlerBuilder
                 .build<CommandResponse>(requestVariables)
-                .forward(body.responseURL) {
+                .forwardAsync(body.responseURL) {
                     requestVariables.copy(body = body.copy(responseURL = it))
                 }
                 .getResponse()
@@ -184,7 +184,7 @@ class CommandsController(private val requestHandlerBuilder: OcpiRequestHandlerBu
 
         return requestHandlerBuilder
                 .build<CommandResponse>(requestVariables)
-                .forward(body.responseURL) {
+                .forwardAsync(body.responseURL) {
                     requestVariables.copy(body = body.copy(responseURL = it))
                 }
                 .getResponse()
@@ -215,7 +215,7 @@ class CommandsController(private val requestHandlerBuilder: OcpiRequestHandlerBu
 
         return requestHandlerBuilder
                 .build<CommandResponse>(requestVariables)
-                .forward(body.responseURL) {
+                .forwardAsync(body.responseURL) {
                     requestVariables.copy(body = body.copy(responseURL = it))
                 }
                 .getResponse()

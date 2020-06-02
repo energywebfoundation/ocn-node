@@ -18,7 +18,6 @@ package snc.openchargingnetwork.node.controllers.ocn
 
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
-import snc.openchargingnetwork.node.components.OcpiRequestHandler
 import snc.openchargingnetwork.node.components.OcpiRequestHandlerBuilder
 import snc.openchargingnetwork.node.models.ocpi.OcpiResponse
 
@@ -35,7 +34,7 @@ class MessageController(private val requestHandlerBuilder: OcpiRequestHandlerBui
 
         return requestHandlerBuilder
                 .build<Any>(body)
-                .forward(signature)
+                .forwardFromOcn(signature)
                 .getResponseWithAllHeaders()
     }
 
