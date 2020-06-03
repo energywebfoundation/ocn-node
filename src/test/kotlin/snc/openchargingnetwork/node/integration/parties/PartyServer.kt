@@ -20,7 +20,9 @@ open class PartyServer(val config: PartyDefinition, deployedContracts: OcnContra
     lateinit var tokenC: String
     lateinit var node: String
 
-    val hubClientInfoStatuses = mutableMapOf<BasicRole, ConnectionStatus>()
+    val hubClientInfoStatuses = mutableMapOf<BasicRole, ConnectionStatus>() // store received hubclientinfo updates
+
+    val messageStore = mutableListOf<ReceivedMessage>() // store any received messages
 
     // replace deployed contract instances with own party's transaction manager
     private val txManager = ClientTransactionManager(web3, config.credentials.address)

@@ -1,12 +1,15 @@
 package snc.openchargingnetwork.node.integration.utils
 
 import org.springframework.context.ConfigurableApplicationContext
+import org.springframework.http.HttpMethod
 import org.web3j.crypto.Credentials
 import snc.openchargingnetwork.contracts.Permissions
 import snc.openchargingnetwork.contracts.Registry
 import snc.openchargingnetwork.node.integration.parties.CpoServer
 import snc.openchargingnetwork.node.integration.parties.MspServer
 import snc.openchargingnetwork.node.models.ocpi.BasicRole
+import snc.openchargingnetwork.node.models.ocpi.InterfaceRole
+import snc.openchargingnetwork.node.models.ocpi.ModuleID
 
 class JavalinException(val httpCode: Int = 200, val ocpiCode: Int = 2001, message: String): Exception(message)
 
@@ -34,3 +37,5 @@ data class Scheduler(val enabled: Boolean, val rate: Long = 2000)
 
 data class HubClientInfoParams(val stillAlive: Scheduler = Scheduler(false),
                                val plannedPartySearch: Scheduler = Scheduler(false))
+
+data class ReceivedMessage(val module: ModuleID, val interfaceRole: InterfaceRole, val method: HttpMethod, val sender: BasicRole)

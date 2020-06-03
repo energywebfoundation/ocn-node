@@ -2,13 +2,11 @@ package snc.openchargingnetwork.node.integration.parties
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import khttp.responses.Response
+import org.springframework.http.HttpMethod
 import shareandcharge.openchargingnetwork.notary.SignableHeaders
 import snc.openchargingnetwork.node.data.exampleCDR
 import snc.openchargingnetwork.node.data.exampleLocation1
-import snc.openchargingnetwork.node.integration.utils.OcnContracts
-import snc.openchargingnetwork.node.integration.utils.PartyDefinition
-import snc.openchargingnetwork.node.integration.utils.objectMapper
-import snc.openchargingnetwork.node.integration.utils.toMap
+import snc.openchargingnetwork.node.integration.utils.*
 import snc.openchargingnetwork.node.models.ocpi.*
 
 class CpoServer(config: PartyDefinition, contracts: OcnContracts): PartyServer(config, contracts) {
@@ -37,6 +35,14 @@ class CpoServer(config: PartyDefinition, contracts: OcnContracts): PartyServer(c
         }
 
         app.get("/ocpi/cpo/2.2/locations/1") {
+            messageStore.add(ReceivedMessage(
+                    module = ModuleID.LOCATIONS,
+                    interfaceRole = InterfaceRole.SENDER,
+                    method = HttpMethod.GET,
+                    sender = BasicRole(
+                            id = it.req.getHeader("ocpi-from-party-id"),
+                            country = it.req.getHeader("ocpi-from-country-code"))))
+
             val body = OcpiResponse(statusCode = 1000, data = exampleLocation1)
             body.signature = sign(body = body)
             it.json(body)

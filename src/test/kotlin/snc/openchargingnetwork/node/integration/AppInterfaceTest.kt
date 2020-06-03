@@ -1,10 +1,15 @@
 package snc.openchargingnetwork.node.integration
 
+import org.awaitility.kotlin.await
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.springframework.http.HttpMethod
 import snc.openchargingnetwork.node.integration.utils.*
 import snc.openchargingnetwork.node.models.OcnAppPermission
+import snc.openchargingnetwork.node.models.ocpi.InterfaceRole
+import snc.openchargingnetwork.node.models.ocpi.ModuleID
+import java.util.concurrent.TimeUnit
 
 class AppInterfaceTest {
 
@@ -28,15 +33,40 @@ class AppInterfaceTest {
         stopPartyServers(networkComponents)
     }
 
+    private fun seenByBothCpos(): Boolean {
+        val message = ReceivedMessage(
+                module = ModuleID.LOCATIONS,
+                interfaceRole = InterfaceRole.SENDER,
+                method = HttpMethod.GET,
+                sender = msp.party)
+        val cpo1Seen = cpo1.server.messageStore.contains(message)
+        val cpo2Seen = cpo2.server.messageStore.contains(message)
+        return cpo1Seen && cpo2Seen
+    }
+
     @Test
-    fun fowardsRequestToApp() {
-        println("CPO2 ${cpo2.party} is the App Provider")
+    fun fowardsRequestToApp_Local() {
+        // CPO1 is the App Provider
+        cpo1.server.setAppPermissions(listOf(OcnAppPermission.FORWARD_ALL))
+        // MSP is the App User
+        msp.server.agreeToAppPermissions(cpo1.address)
+        // MSP sends request to CPO2 which should also be forwarded to CPO1
+        msp.server.getLocation(cpo2.party)
+
+        await.atMost(2L, TimeUnit.SECONDS).until { seenByBothCpos() }
+
+    }
+
+    @Test
+    fun fowardsRequestToApp_Remote() {
+        // CPO2 is the App Provider
         cpo2.server.setAppPermissions(listOf(OcnAppPermission.FORWARD_ALL))
-        println("MSP ${msp.party} is the App User")
+        // MSP is the App User
         msp.server.agreeToAppPermissions(cpo2.address)
-        println("MSP fetches CPO1 ${cpo1.party} location, thereby forwarding to CPO2")
+        // MSP sends request to CPO1 which should also be forwarded to CPO2
         msp.server.getLocation(cpo1.party)
-        Thread.sleep(5000L)
+
+        await.atMost(2L, TimeUnit.SECONDS).until { seenByBothCpos() }
     }
 
 }
