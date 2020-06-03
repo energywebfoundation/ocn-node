@@ -45,10 +45,6 @@ class AsyncTaskService(private val registryService: RegistryService) {
                             logger.warn("Error forwarding request to app ${it.provider}: ${e.message}")
                         }
                     }
-
-            // TODO: add tests
-            //  - AppInterfaceTest
-            //  - OcpiRequestHandlerTest.forwardAgain
         }
     }
 
