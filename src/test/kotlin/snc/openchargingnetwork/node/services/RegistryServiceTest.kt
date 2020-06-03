@@ -93,7 +93,7 @@ class RegistryServiceTest {
                 provider.id.toByteArray(),
                 "Hungry Hippo Charging",
                 "https://hungry-hip.pos.io",
-                listOf(BigInteger.TWO)
+                listOf(BigInteger("2"))
         )
 
         val actual = registryService.getAgreementsByInterface(user, ModuleID.TARIFFS, InterfaceRole.RECEIVER)
