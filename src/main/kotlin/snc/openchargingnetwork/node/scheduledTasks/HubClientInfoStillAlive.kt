@@ -16,7 +16,6 @@
 
 package snc.openchargingnetwork.node.scheduledTasks
 
-import org.springframework.scheduling.annotation.Async
 import snc.openchargingnetwork.node.config.NodeProperties
 import snc.openchargingnetwork.node.models.entities.PlatformEntity
 import snc.openchargingnetwork.node.models.exceptions.OcpiServerUnusableApiException
@@ -43,7 +42,6 @@ class HubClientInfoStillAliveCheck(private val httpService: HttpService,
     /**
      * Update a client's connection status based on its availability if status is stale (i.e. if the platform hasn't been heard from in the set amount of time)
      */
-    @Async
     private fun updateClientStatus(client: PlatformEntity, lastUpdatedCutoff: Instant, newUpdatedTime: Instant) {
         val clientLastUpdated = getInstant(client.lastUpdated)
         if (clientLastUpdated < lastUpdatedCutoff) {
@@ -69,7 +67,7 @@ class HubClientInfoStillAliveCheck(private val httpService: HttpService,
             // If no exception thrown during versions request, assume that request was successful
             httpService.getVersions(client.versionsUrl!!, client.auth.tokenB!!)
             return true
-        } catch (e: OcpiServerUnusableApiException){
+        } catch (e: OcpiServerUnusableApiException) {
             return false
         }
     }

@@ -46,7 +46,7 @@ class HubClientInfoController(private val routingService: RoutingService,
         // for now we ignore requests to paginate, only responding with required "last page" pagination headers
 
         val sender = BasicRole(fromPartyID, fromCountryCode)
-        routingService.validateSender(authorization, sender)
+        routingService.checkSenderKnown(authorization, sender)
 
         // val params = PaginatedRequest(dateFrom, dateTo, offset, limit).encode()
 

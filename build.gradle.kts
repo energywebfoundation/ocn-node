@@ -15,12 +15,12 @@ plugins {
 }
 
 group = "snc.openchargingnetwork.node"
-version = "1.1.0-rc0"
+version = "1.1.0-rc1"
 java.sourceCompatibility = JavaVersion.VERSION_1_8
 
 val snippetsDir = "build/generated-snippets"
 
-val developmentOnly by configurations.creating
+val developmentOnly: Configuration by configurations.creating
 configurations {
     runtimeClasspath {
         extendsFrom(developmentOnly)
@@ -32,7 +32,7 @@ repositories {
 }
 
 dependencies {
-    implementation("shareandcharge.openchargingnetwork:notary:1.0.0")
+    implementation("shareandcharge.openchargingnetwork:notary:1.0.1-beta1")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
@@ -96,7 +96,6 @@ tasks.register<Test>("integrationTest") {
 tasks.register<Exec>("ganache") {
     group = "help"
     description = "Runs a ganache-cli instance for integration testing."
-    commandLine(listOf("/usr/bin/env", "npm", "install", "-g", "ganache-cli"))
     commandLine(listOf(
             "/usr/bin/env",
             "ganache-cli",

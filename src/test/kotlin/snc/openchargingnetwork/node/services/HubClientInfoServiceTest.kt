@@ -25,6 +25,7 @@ class HubClientInfoServiceTest {
     private val routingService: RoutingService = mockk()
     private val walletService: WalletService = mockk()
     private val ocnRulesService: OcnRulesService = mockk()
+    private val registryService: RegistryService = mockk()
 
     private val hubClientInfoService: HubClientInfoService
 
@@ -37,7 +38,8 @@ class HubClientInfoServiceTest {
                 httpService,
                 routingService,
                 walletService,
-                ocnRulesService)
+                ocnRulesService,
+                registryService)
     }
 
     @Test

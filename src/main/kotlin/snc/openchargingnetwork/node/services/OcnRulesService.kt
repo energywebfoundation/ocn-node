@@ -116,7 +116,7 @@ class OcnRulesService(private val platformRepo: PlatformRepository,
      */
     fun blockAll(authorization: String) {
         // 1. check C / find platform
-        val platform = findPlatform(authorization);
+        val platform = findPlatform(authorization)
 
         // 2. determine whether whitelist is active
         assertListNotActive(platform, OcnRulesListType.BLACKLIST)
@@ -361,7 +361,7 @@ class OcnRulesService(private val platformRepo: PlatformRepository,
     }
 
     private fun checkModule(modules: List<String>) {
-        val result = modules.any{ it.isNullOrEmpty() }
+        val result = modules.any{ it.isEmpty() }
 
         if(result) {
             throw OcpiClientGenericException("Module list is empty")
@@ -377,7 +377,7 @@ class OcnRulesService(private val platformRepo: PlatformRepository,
         }
 
         // 2. check each element of module is empty or not
-        result = parties.any { it -> it.modules.any { it.isNullOrEmpty() } }
+        result = parties.any { it -> it.modules.any { it.isEmpty() } }
 
         if(result) {
             throw OcpiClientGenericException("One of the element of module list is empty")
@@ -445,7 +445,7 @@ class OcnRulesService(private val platformRepo: PlatformRepository,
                 else -> return false
             }
         }
-        return false;
+        return false
     }
 
     /**
@@ -499,7 +499,7 @@ class OcnRulesService(private val platformRepo: PlatformRepository,
                 else -> return false
             }
         }
-        return false;
+        return false
     }
 
 }

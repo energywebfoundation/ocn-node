@@ -3,10 +3,9 @@ package snc.openchargingnetwork.node.integration
 import com.fasterxml.jackson.module.kotlin.readValue
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.Awaitility.await
-import org.junit.jupiter.api.AfterAll
-import org.junit.jupiter.api.BeforeAll
-import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.*
 import org.web3j.crypto.Credentials
+import snc.openchargingnetwork.node.integration.parties.PartyServer
 import snc.openchargingnetwork.node.integration.utils.*
 import snc.openchargingnetwork.node.models.OcnRulesListType
 import snc.openchargingnetwork.node.models.ocpi.*
@@ -23,7 +22,7 @@ class HubClientInfoIntegrationTest {
 
     private val hubClientInfoParams = HubClientInfoParams(plannedPartySearch = Scheduler(true))
 
-    @BeforeAll
+    @BeforeEach
     fun bootStrap() {
         networkComponents = setupNetwork(hubClientInfoParams)
         val cpos = networkComponents.cpos
@@ -32,7 +31,7 @@ class HubClientInfoIntegrationTest {
         msp = networkComponents.msps.first()
     }
 
-    @AfterAll
+    @AfterEach
     fun stopTestParties() {
         stopPartyServers(networkComponents)
     }
@@ -44,13 +43,13 @@ class HubClientInfoIntegrationTest {
     fun hubClientInfo_partyRegisteredNotification() {
         val newCpoDefinition = PartyDefinition(
                 nodeNumber = 1,
-                port = 8102,
+                port = 8301,
                 party = BasicRole("CPC", "CH"),
                 credentials = Credentials.create("0x82d052c865f5763aad42add438569276c00d3d88a2d062d36b2bae914d58b8c8"))
         val newCpo = setUpCpo(
                 newCpoDefinition,
                 networkComponents.nodes.first { d -> d.definition.nodeNumber == newCpoDefinition.nodeNumber }.definition,
-                networkComponents.registry)
+                networkComponents.contracts)
 
         // The assumption is that cpo1 is also connected to node1
         await().atMost(2, TimeUnit.SECONDS).until{cpo1.server.hubClientInfoStatuses.containsKey(newCpoDefinition.party)}
@@ -62,16 +61,20 @@ class HubClientInfoIntegrationTest {
 
     /**
      * Tests that HubClientInfo functionality can be disabled
+     * (MSP server is stopped and no OFFLINE update is broadcast)
      */
     @Test
     fun hubClientInfo_stillAliveCanBeDisabled() {
-        assertThat(cpo1.server.hubClientInfoStatuses[msp.party]).isEqualTo(ConnectionStatus.CONNECTED)
-        assertThat(cpo2.server.hubClientInfoStatuses[msp.party]).isEqualTo(ConnectionStatus.CONNECTED)
+        fun mspIsConnected(): Boolean {
+            val cpo1notified = cpo1.server.hubClientInfoStatuses[msp.party] == ConnectionStatus.CONNECTED
+            val cpo2notified = cpo2.server.hubClientInfoStatuses[msp.party] == ConnectionStatus.CONNECTED
+            return cpo1notified && cpo2notified
+        }
+
+        await().atMost(2, TimeUnit.SECONDS).until { mspIsConnected() }
         msp.server.stopServer()
         sleep(hubClientInfoParams.stillAlive.rate * 2)
-        assertThat(cpo1.server.hubClientInfoStatuses[msp.party]).isEqualTo(ConnectionStatus.CONNECTED) //Should still be connected as StillAliveCheck is disabled
-        assertThat(cpo2.server.hubClientInfoStatuses[msp.party]).isEqualTo(ConnectionStatus.CONNECTED)
-
+        await().atMost(2, TimeUnit.SECONDS).until { mspIsConnected() } // should still be connected as still alive disabled
     }
 
     /**
@@ -106,11 +109,15 @@ class HubClientInfoIntegrationTest {
 
     @Test
     fun hubClientInfo_returnsPlannedParties() {
-        val newParty = Credentials.create("0x49b2e2b48cfc25fda1d1cbdb2197b83902142c6da502dcf1871c628ea524f11b")
-        val registry = getRegistryInstance(newParty, networkComponents.registry.contractAddress)
-
-        val operator = networkComponents.nodes[0].definition.credentials.address
-        registry.setParty("GB".toByteArray(), "TON".toByteArray(), listOf(1.toBigInteger()), operator).sendAsync().get()
+        val newParty = PartyServer(
+                config = PartyDefinition(
+                        nodeNumber = 0,
+                        port = 8302,
+                        party = BasicRole("TON", "GB"),
+                        credentials = Credentials.create("0x49b2e2b48cfc25fda1d1cbdb2197b83902142c6da502dcf1871c628ea524f11b")),
+                deployedContracts = networkComponents.contracts)
+        val nodeAddress = networkComponents.nodes[newParty.config.nodeNumber].definition.credentials.address
+        newParty.setPartyInRegistry(nodeAddress, Role.EMSP)
 
         sleep(hubClientInfoParams.plannedPartySearch.rate * 2)
 

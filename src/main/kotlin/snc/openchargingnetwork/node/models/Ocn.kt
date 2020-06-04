@@ -21,7 +21,10 @@ import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
 import shareandcharge.openchargingnetwork.notary.SignableHeaders
 import snc.openchargingnetwork.node.models.ocpi.BasicRole
+import snc.openchargingnetwork.node.models.ocpi.InterfaceRole
+import snc.openchargingnetwork.node.models.ocpi.ModuleID
 import snc.openchargingnetwork.node.models.ocpi.Role
+import java.math.BigInteger
 
 data class OcnMessageHeaders(val requestID: String,
                              val signature: String) {
@@ -92,3 +95,28 @@ data class RegistryPartyDetailsBasic(val address: String, val operator: String)
 data class RegistryPartyDetails(val party: BasicRole, val roles: List<Role>, val nodeOperator: String)
 
 data class RegistryNode(val operator: String, val url: String)
+
+data class OcnApp(val provider: BasicRole, val permissions: List<OcnAppPermission>)
+
+data class BasicRequestType(val moduleID: ModuleID, val interfaceRole: InterfaceRole)
+
+// each enum value takes a "matcher" which tests a given module/interface
+enum class OcnAppPermission(val matches: (request: BasicRequestType) -> Boolean) {
+    FORWARD_ALL({true}),
+    FORWARD_ALL_SENDER({it.interfaceRole == InterfaceRole.SENDER}),
+    FORWARD_ALL_RECEIVER({it.interfaceRole == InterfaceRole.RECEIVER});
+
+    companion object {
+        fun getByIndex(index: BigInteger): OcnAppPermission? {
+            return try {
+                values()[index.intValueExact()]
+            } catch (e: ArrayIndexOutOfBoundsException) {
+                null
+            }
+        }
+    }
+}
+
+fun OcnAppPermission.matches(moduleID: ModuleID, interfaceRole: InterfaceRole): Boolean {
+    return matches(BasicRequestType(moduleID, interfaceRole))
+}

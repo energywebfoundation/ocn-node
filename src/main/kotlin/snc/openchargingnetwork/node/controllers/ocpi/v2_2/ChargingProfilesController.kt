@@ -19,14 +19,13 @@ package snc.openchargingnetwork.node.controllers.ocpi.v2_2
 import org.springframework.http.HttpMethod
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
+import snc.openchargingnetwork.node.components.OcpiRequestHandlerBuilder
 import snc.openchargingnetwork.node.models.OcnHeaders
 import snc.openchargingnetwork.node.models.ocpi.*
-import snc.openchargingnetwork.node.services.RequestHandler
-import snc.openchargingnetwork.node.services.RequestHandlerBuilder
 
 
 @RestController
-class ChargingProfilesController(private val requestHandlerBuilder: RequestHandlerBuilder) {
+class ChargingProfilesController(private val requestHandlerBuilder: OcpiRequestHandlerBuilder) {
 
     /**
      * SENDER INTERFACE
@@ -55,10 +54,9 @@ class ChargingProfilesController(private val requestHandlerBuilder: RequestHandl
                 urlPathVariables = uid,
                 body = body)
 
-        val request: RequestHandler<Unit> = requestHandlerBuilder.build(requestVariables)
-        return request
-                .validateSender()
-                .forwardRequest(proxied = true)
+        return requestHandlerBuilder
+                .build<Unit>(requestVariables)
+                .forwardDefault(proxied = true) // retrieves proxied response_url
                 .getResponse()
     }
 
@@ -85,10 +83,9 @@ class ChargingProfilesController(private val requestHandlerBuilder: RequestHandl
                 urlPathVariables = sessionId,
                 body = body)
 
-        val request: RequestHandler<Unit> = requestHandlerBuilder.build(requestVariables)
-        return request
-                .validateSender()
-                .forwardRequest()
+        return requestHandlerBuilder
+                .build<Unit>(requestVariables)
+                .forwardDefault()
                 .getResponse()
     }
 
@@ -121,10 +118,9 @@ class ChargingProfilesController(private val requestHandlerBuilder: RequestHandl
                 urlPathVariables = sessionId,
                 urlEncodedParams = mapOf("duration" to duration, "response_url" to responseUrl))
 
-        val request: RequestHandler<ChargingProfileResponse> = requestHandlerBuilder.build(requestVariables)
-        return request
-                .validateSender()
-                .forwardModifiableRequest(responseUrl) {
+        return requestHandlerBuilder
+                .build<ChargingProfileResponse>(requestVariables)
+                .forwardAsync(responseUrl) {
                     requestVariables.copy(urlEncodedParams = mapOf("duration" to duration, "response_url" to it))
                 }
                 .getResponse()
@@ -153,10 +149,9 @@ class ChargingProfilesController(private val requestHandlerBuilder: RequestHandl
                 urlPathVariables = sessionId,
                 body = body)
 
-        val request: RequestHandler<ChargingProfileResponse> = requestHandlerBuilder.build(requestVariables)
-        return request
-                .validateSender()
-                .forwardModifiableRequest(body.responseUrl) {
+        return requestHandlerBuilder
+                .build<ChargingProfileResponse>(requestVariables)
+                .forwardAsync(body.responseUrl) {
                     requestVariables.copy(body = body.copy(responseUrl = it))
                 }
                 .getResponse()
@@ -185,10 +180,9 @@ class ChargingProfilesController(private val requestHandlerBuilder: RequestHandl
                 urlPathVariables = sessionId,
                 urlEncodedParams = mapOf("response_url" to responseUrl))
 
-        val request: RequestHandler<ChargingProfileResponse> = requestHandlerBuilder.build(requestVariables)
-        return request
-                .validateSender()
-                .forwardModifiableRequest(responseUrl) {
+        return requestHandlerBuilder
+                .build<ChargingProfileResponse>(requestVariables)
+                .forwardAsync(responseUrl) {
                     requestVariables.copy(urlEncodedParams = mapOf("response_url" to it))
                 }
                 .getResponse()

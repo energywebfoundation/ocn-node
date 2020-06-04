@@ -16,7 +16,9 @@
 
 package snc.openchargingnetwork.node.services
 
+import org.slf4j.LoggerFactory
 import org.springframework.http.HttpMethod
+import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
 import snc.openchargingnetwork.node.models.OcnHeaders
 import snc.openchargingnetwork.node.models.entities.NetworkClientInfoEntity
@@ -39,7 +41,12 @@ class HubClientInfoService(private val platformRepo: PlatformRepository,
                            private val httpService: HttpService,
                            private val routingService: RoutingService,
                            private val walletService: WalletService,
-                           private val ocnRulesService: OcnRulesService) {
+                           private val ocnRulesService: OcnRulesService,
+                           private val registryService: RegistryService) {
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(HubClientInfoService::class.java)
+    }
 
     /**
      * Get a HubClientInfo list of local and known network connections
@@ -164,7 +171,12 @@ class HubClientInfoService(private val platformRepo: PlatformRepository,
                     urlPathVariables = "${changedClientInfo.countryCode}/${changedClientInfo.partyID}")
 
             val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables, proxied = false)
-            httpService.makeOcpiRequest<Unit>(url, headers, requestVariables)
+
+            try {
+                httpService.makeOcpiRequest<Unit>(url, headers, requestVariables)
+            } catch (e: Exception) { // fire and forget; catch any error and log
+                logger.warn("Error notifying $receiver of client info change: ${e.message}")
+            }
         }
     }
 
@@ -175,18 +187,25 @@ class HubClientInfoService(private val platformRepo: PlatformRepository,
         val requestBodyString = httpService.mapper.writeValueAsString(changedClientInfo)
         val signature = walletService.sign(requestBodyString)
 
-        val nodes = routingService.getNodesListedInRegistry(omitMine = true)
+        val nodes = registryService.getNodes(omitMine = true)
 
         for (node in nodes) {
-            httpService.putOcnClientInfo(node.url, signature, changedClientInfo)
+            try {
+                httpService.putOcnClientInfo(node.url, signature, changedClientInfo)
+            } catch (e: Exception) { // fire and forget; catch any error and log
+                logger.warn("Error notifying $node of client info change: ${e.message}")
+            }
         }
     }
 
     /**
      * Confirm the online status of the client corresponding to a role
      */
+    @Async
     fun renewClientConnection(sender: BasicRole) {
-        val role = roleRepo.findByCountryCodeAndPartyIDAllIgnoreCase(countryCode = sender.country, partyID = sender.id) ?: throw IllegalArgumentException("sender could not be found")
+        val role = roleRepo.findByCountryCodeAndPartyIDAllIgnoreCase(countryCode = sender.country, partyID = sender.id)
+                ?: throw IllegalArgumentException("sender could not be found")
+
         val client = platformRepo.findById(role.platformID).get()
         client.renewConnection(Instant.now())
         platformRepo.save(client)

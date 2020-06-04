@@ -18,14 +18,14 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import snc.openchargingnetwork.node.data.exampleLocation2
 import snc.openchargingnetwork.node.models.*
 import snc.openchargingnetwork.node.models.ocpi.*
-import snc.openchargingnetwork.node.services.RequestHandler
-import snc.openchargingnetwork.node.services.RequestHandlerBuilder
+import snc.openchargingnetwork.node.components.OcpiRequestHandler
+import snc.openchargingnetwork.node.components.OcpiRequestHandlerBuilder
 
 @WebMvcTest(MessageController::class)
 class MessageControllerTest(@Autowired val mockMvc: MockMvc) {
 
     @MockkBean
-    lateinit var requestHandlerBuilder: RequestHandlerBuilder
+    lateinit var requestHandlerBuilder: OcpiRequestHandlerBuilder
 
     @Test
     fun `When POST OCN message should forward the request to local recipient and return their OCPI response`() {
@@ -47,14 +47,13 @@ class MessageControllerTest(@Autowired val mockMvc: MockMvc) {
 
         val requestVariablesString = jacksonObjectMapper().writeValueAsString(requestVariables)
 
-        val mockkRequestHandler = mockk<RequestHandler<Location>>()
+        val mockkRequestHandler = mockk<OcpiRequestHandler<Location>>()
 
         every { requestHandlerBuilder.build<Location>(requestVariablesString) } returns mockkRequestHandler
 
         every {
             mockkRequestHandler
-                    .validateOcnMessage("0x1234")
-                    .forwardRequest()
+                    .forwardFromOcn("0x1234")
                     .getResponseWithAllHeaders()
         } returns ResponseEntity
                 .status(200)

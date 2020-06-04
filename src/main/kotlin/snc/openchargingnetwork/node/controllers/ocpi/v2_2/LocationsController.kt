@@ -21,13 +21,12 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import snc.openchargingnetwork.node.models.*
 import snc.openchargingnetwork.node.models.ocpi.*
-import snc.openchargingnetwork.node.services.RequestHandler
-import snc.openchargingnetwork.node.services.RequestHandlerBuilder
+import snc.openchargingnetwork.node.components.OcpiRequestHandlerBuilder
 import snc.openchargingnetwork.node.tools.filterNull
 
 
 @RestController
-class LocationsController(private val requestHandlerBuilder: RequestHandlerBuilder) {
+class LocationsController(private val requestHandlerBuilder: OcpiRequestHandlerBuilder) {
 
 
     /**
@@ -60,11 +59,10 @@ class LocationsController(private val requestHandlerBuilder: RequestHandlerBuild
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
                 urlEncodedParams = params)
 
-        val request: RequestHandler<Array<Location>> = requestHandlerBuilder.build(requestVariables)
-        return request
-                .validateSender()
-                .forwardRequest()
-                .getResponseWithPaginationHeaders()
+        return requestHandlerBuilder
+                .build<Array<Location>>(requestVariables)
+                .forwardDefault()
+                .getResponseWithPaginationHeaders() // proxies Link response header
     }
 
     @GetMapping("/ocpi/sender/2.2/locations/page/{uid}")
@@ -88,10 +86,9 @@ class LocationsController(private val requestHandlerBuilder: RequestHandlerBuild
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
                 urlPathVariables = uid)
 
-        val request: RequestHandler<Array<Location>> = requestHandlerBuilder.build(requestVariables)
-        return request
-                .validateSender()
-                .forwardRequest(proxied = true)
+        return requestHandlerBuilder
+                .build<Array<Location>>(requestVariables)
+                .forwardDefault(proxied = true) // retrieves proxied Link response header
                 .getResponseWithPaginationHeaders()
     }
 
@@ -116,10 +113,9 @@ class LocationsController(private val requestHandlerBuilder: RequestHandlerBuild
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
                 urlPathVariables = locationID)
 
-        val request: RequestHandler<Location> = requestHandlerBuilder.build(requestVariables)
-        return request
-                .validateSender()
-                .forwardRequest()
+        return requestHandlerBuilder
+                .build<Location>(requestVariables)
+                .forwardDefault()
                 .getResponse()
     }
 
@@ -145,10 +141,9 @@ class LocationsController(private val requestHandlerBuilder: RequestHandlerBuild
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
                 urlPathVariables = "/$locationID/$evseUID")
 
-        val request: RequestHandler<Evse> = requestHandlerBuilder.build(requestVariables)
-        return request
-                .validateSender()
-                .forwardRequest()
+        return requestHandlerBuilder
+                .build<Evse>(requestVariables)
+                .forwardDefault()
                 .getResponse()
     }
 
@@ -175,10 +170,9 @@ class LocationsController(private val requestHandlerBuilder: RequestHandlerBuild
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
                 urlPathVariables = "/$locationID/$evseUID/$connectorID")
 
-        val request: RequestHandler<Connector> = requestHandlerBuilder.build(requestVariables)
-        return request
-                .validateSender()
-                .forwardRequest()
+        return requestHandlerBuilder
+                .build<Connector>(requestVariables)
+                .forwardDefault()
                 .getResponse()
     }
 
@@ -210,10 +204,9 @@ class LocationsController(private val requestHandlerBuilder: RequestHandlerBuild
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
                 urlPathVariables = "/$countryCode/$partyID/$locationID")
 
-        val request: RequestHandler<Location> = requestHandlerBuilder.build(requestVariables)
-        return request
-                .validateSender()
-                .forwardRequest()
+        return requestHandlerBuilder
+                .build<Location>(requestVariables)
+                .forwardDefault()
                 .getResponse()
     }
 
@@ -241,10 +234,9 @@ class LocationsController(private val requestHandlerBuilder: RequestHandlerBuild
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
                 urlPathVariables = "/$countryCode/$partyID/$locationID/$evseUID")
 
-        val request: RequestHandler<Evse> = requestHandlerBuilder.build(requestVariables)
-        return request
-                .validateSender()
-                .forwardRequest()
+        return requestHandlerBuilder
+                .build<Evse>(requestVariables)
+                .forwardDefault()
                 .getResponse()
     }
 
@@ -273,10 +265,9 @@ class LocationsController(private val requestHandlerBuilder: RequestHandlerBuild
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
                 urlPathVariables = "/$countryCode/$partyID/$locationID/$evseUID/$connectorID")
 
-        val request: RequestHandler<Connector> = requestHandlerBuilder.build(requestVariables)
-        return request
-                .validateSender()
-                .forwardRequest()
+        return requestHandlerBuilder
+                .build<Connector>(requestVariables)
+                .forwardDefault()
                 .getResponse()
     }
 
@@ -305,10 +296,9 @@ class LocationsController(private val requestHandlerBuilder: RequestHandlerBuild
                 urlPathVariables = "/$countryCode/$partyID/$locationID",
                 body = body)
 
-        val request: RequestHandler<Unit> = requestHandlerBuilder.build(requestVariables)
-        return request
-                .validateSender()
-                .forwardRequest()
+        return requestHandlerBuilder
+                .build<Unit>(requestVariables)
+                .forwardDefault()
                 .getResponse()
     }
 
@@ -338,10 +328,9 @@ class LocationsController(private val requestHandlerBuilder: RequestHandlerBuild
                 urlPathVariables = "/$countryCode/$partyID/$locationID/$evseUID",
                 body = body)
 
-        val request: RequestHandler<Unit> = requestHandlerBuilder.build(requestVariables)
-        return request
-                .validateSender()
-                .forwardRequest()
+        return requestHandlerBuilder
+                .build<Unit>(requestVariables)
+                .forwardDefault()
                 .getResponse()
     }
 
@@ -372,10 +361,9 @@ class LocationsController(private val requestHandlerBuilder: RequestHandlerBuild
                 urlPathVariables = "/$countryCode/$partyID/$locationID/$evseUID/$connectorID",
                 body = body)
 
-        val request: RequestHandler<Unit> = requestHandlerBuilder.build(requestVariables)
-        return request
-                .validateSender()
-                .forwardRequest()
+        return requestHandlerBuilder
+                .build<Unit>(requestVariables)
+                .forwardDefault()
                 .getResponse()
     }
 
@@ -404,10 +392,9 @@ class LocationsController(private val requestHandlerBuilder: RequestHandlerBuild
                 urlPathVariables = "/$countryCode/$partyID/$locationID",
                 body = body)
 
-        val request: RequestHandler<Unit> = requestHandlerBuilder.build(requestVariables)
-        return request
-                .validateSender()
-                .forwardRequest()
+        return requestHandlerBuilder
+                .build<Unit>(requestVariables)
+                .forwardDefault()
                 .getResponse()
     }
 
@@ -437,10 +424,9 @@ class LocationsController(private val requestHandlerBuilder: RequestHandlerBuild
                 urlPathVariables = "/$countryCode/$partyID/$locationID/$evseUID",
                 body = body)
 
-        val request: RequestHandler<Unit> = requestHandlerBuilder.build(requestVariables)
-        return request
-                .validateSender()
-                .forwardRequest()
+        return requestHandlerBuilder
+                .build<Unit>(requestVariables)
+                .forwardDefault()
                 .getResponse()
     }
 
@@ -471,10 +457,9 @@ class LocationsController(private val requestHandlerBuilder: RequestHandlerBuild
                 urlPathVariables = "/$countryCode/$partyID/$locationID/$evseUID/$connectorID",
                 body = body)
 
-        val request: RequestHandler<Unit> = requestHandlerBuilder.build(requestVariables)
-        return request
-                .validateSender()
-                .forwardRequest()
+        return requestHandlerBuilder
+                .build<Unit>(requestVariables)
+                .forwardDefault()
                 .getResponse()
     }
 

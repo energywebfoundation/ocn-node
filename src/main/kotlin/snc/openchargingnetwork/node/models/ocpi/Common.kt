@@ -29,7 +29,7 @@ import javax.persistence.Embeddable
 import javax.persistence.Embedded
 
 
-// TODO: rename to avoid confusion
+// TODO: rename to avoid confusion?
 // BasicParty may be a better description
 @Embeddable
 data class BasicRole(@JsonProperty("party_id") final val id: String,

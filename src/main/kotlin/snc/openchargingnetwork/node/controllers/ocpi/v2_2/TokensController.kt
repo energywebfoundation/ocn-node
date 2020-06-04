@@ -19,14 +19,13 @@ package snc.openchargingnetwork.node.controllers.ocpi.v2_2
 import org.springframework.http.HttpMethod
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
-import snc.openchargingnetwork.node.models.*
+import snc.openchargingnetwork.node.components.OcpiRequestHandlerBuilder
+import snc.openchargingnetwork.node.models.OcnHeaders
 import snc.openchargingnetwork.node.models.ocpi.*
-import snc.openchargingnetwork.node.services.RequestHandler
-import snc.openchargingnetwork.node.services.RequestHandlerBuilder
 import snc.openchargingnetwork.node.tools.filterNull
 
 @RestController
-class TokensController(private val requestHandlerBuilder: RequestHandlerBuilder) {
+class TokensController(private val requestHandlerBuilder: OcpiRequestHandlerBuilder) {
 
 
     /**
@@ -59,11 +58,10 @@ class TokensController(private val requestHandlerBuilder: RequestHandlerBuilder)
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
                 urlEncodedParams = params)
 
-        val request: RequestHandler<Array<Token>> = requestHandlerBuilder.build(requestVariables)
-        return request
-                .validateSender()
-                .forwardRequest()
-                .getResponseWithPaginationHeaders()
+        return requestHandlerBuilder
+                .build<Array<Token>>(requestVariables)
+                .forwardDefault()
+                .getResponseWithPaginationHeaders() // proxies Link response header
     }
 
     @GetMapping("/ocpi/sender/2.2/tokens/page/{uid}")
@@ -87,10 +85,9 @@ class TokensController(private val requestHandlerBuilder: RequestHandlerBuilder)
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
                 urlPathVariables = uid)
 
-        val request: RequestHandler<Array<Token>> = requestHandlerBuilder.build(requestVariables)
-        return request
-                .validateSender()
-                .forwardRequest()
+        return requestHandlerBuilder
+                .build<Array<Token>>(requestVariables)
+                .forwardDefault(proxied = true) // retrieves proxied Link response header
                 .getResponseWithPaginationHeaders()
     }
 
@@ -120,10 +117,9 @@ class TokensController(private val requestHandlerBuilder: RequestHandlerBuilder)
                 urlEncodedParams = mapOf("type" to type),
                 body = body)
 
-        val request: RequestHandler<AuthorizationInfo> = requestHandlerBuilder.build(requestVariables)
-        return request
-                .validateSender()
-                .forwardRequest()
+        return requestHandlerBuilder
+                .build<AuthorizationInfo>(requestVariables)
+                .forwardDefault()
                 .getResponse()
     }
 
@@ -157,10 +153,9 @@ class TokensController(private val requestHandlerBuilder: RequestHandlerBuilder)
                 urlPathVariables = "/$countryCode/$partyID/$tokenUID",
                 urlEncodedParams = mapOf("type" to type))
 
-        val request: RequestHandler<Token> = requestHandlerBuilder.build(requestVariables)
-        return request
-                .validateSender()
-                .forwardRequest()
+        return requestHandlerBuilder
+                .build<Token>(requestVariables)
+                .forwardDefault()
                 .getResponse()
     }
 
@@ -191,10 +186,9 @@ class TokensController(private val requestHandlerBuilder: RequestHandlerBuilder)
                 urlEncodedParams = mapOf("type" to type),
                 body = body)
 
-        val request: RequestHandler<Unit> = requestHandlerBuilder.build(requestVariables)
-        return request
-                .validateSender()
-                .forwardRequest()
+        return requestHandlerBuilder
+                .build<Unit>(requestVariables)
+                .forwardDefault()
                 .getResponse()
     }
 
@@ -225,10 +219,9 @@ class TokensController(private val requestHandlerBuilder: RequestHandlerBuilder)
                 urlEncodedParams = mapOf("type" to type),
                 body = body)
 
-        val request: RequestHandler<Unit> = requestHandlerBuilder.build(requestVariables)
-        return request
-                .validateSender()
-                .forwardRequest()
+        return requestHandlerBuilder
+                .build<Unit>(requestVariables)
+                .forwardDefault()
                 .getResponse()
     }
 

@@ -21,13 +21,12 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import snc.openchargingnetwork.node.models.*
 import snc.openchargingnetwork.node.models.ocpi.*
-import snc.openchargingnetwork.node.services.RequestHandler
-import snc.openchargingnetwork.node.services.RequestHandlerBuilder
+import snc.openchargingnetwork.node.components.OcpiRequestHandlerBuilder
 import snc.openchargingnetwork.node.tools.filterNull
 
 
 @RestController
-class SessionsController(private val requestHandlerBuilder: RequestHandlerBuilder) {
+class SessionsController(private val requestHandlerBuilder: OcpiRequestHandlerBuilder) {
 
 
     /**
@@ -60,11 +59,10 @@ class SessionsController(private val requestHandlerBuilder: RequestHandlerBuilde
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
                 urlEncodedParams = params)
 
-        val request: RequestHandler<Array<Session>> = requestHandlerBuilder.build(requestVariables)
-        return request
-                .validateSender()
-                .forwardRequest()
-                .getResponseWithPaginationHeaders()
+        return requestHandlerBuilder
+                .build<Array<Session>>(requestVariables)
+                .forwardDefault()
+                .getResponseWithPaginationHeaders() // proxies Link response header
     }
 
     @GetMapping("/ocpi/sender/2.2/sessions/page/{uid}")
@@ -88,10 +86,10 @@ class SessionsController(private val requestHandlerBuilder: RequestHandlerBuilde
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
                 urlPathVariables = uid)
 
-        val request: RequestHandler<Array<Session>> = requestHandlerBuilder.build(requestVariables)
-        return request
-                .validateSender()
-                .forwardRequest()
+
+        return requestHandlerBuilder
+                .build<Array<Session>>(requestVariables)
+                .forwardDefault(proxied = true) // retrieves proxied Link response header
                 .getResponseWithPaginationHeaders()
     }
 
@@ -118,10 +116,9 @@ class SessionsController(private val requestHandlerBuilder: RequestHandlerBuilde
                 urlPathVariables = "/$sessionID/charging_preferences",
                 body = body)
 
-        val request: RequestHandler<ChargingPreferencesResponse> = requestHandlerBuilder.build(requestVariables)
-        return request
-                .validateSender()
-                .forwardRequest()
+        return requestHandlerBuilder
+                .build<ChargingPreferencesResponse>(requestVariables)
+                .forwardDefault()
                 .getResponse()
     }
 
@@ -153,10 +150,9 @@ class SessionsController(private val requestHandlerBuilder: RequestHandlerBuilde
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
                 urlPathVariables = "/$countryCode/$partyID/$sessionID")
 
-        val request: RequestHandler<Session> = requestHandlerBuilder.build(requestVariables)
-        return request
-                .validateSender()
-                .forwardRequest()
+        return requestHandlerBuilder
+                .build<Session>(requestVariables)
+                .forwardDefault()
                 .getResponse()
     }
 
@@ -185,10 +181,9 @@ class SessionsController(private val requestHandlerBuilder: RequestHandlerBuilde
                 urlPathVariables = "/$countryCode/$partyID/$sessionID",
                 body = body)
 
-        val request: RequestHandler<Unit> = requestHandlerBuilder.build(requestVariables)
-        return request
-                .validateSender()
-                .forwardRequest()
+        return requestHandlerBuilder
+                .build<Unit>(requestVariables)
+                .forwardDefault()
                 .getResponse()
     }
 
@@ -217,10 +212,9 @@ class SessionsController(private val requestHandlerBuilder: RequestHandlerBuilde
                 urlPathVariables = "/$countryCode/$partyID/$sessionID",
                 body = body)
 
-        val request: RequestHandler<Unit> = requestHandlerBuilder.build(requestVariables)
-        return request
-                .validateSender()
-                .forwardRequest()
+        return requestHandlerBuilder
+                .build<Unit>(requestVariables)
+                .forwardDefault()
                 .getResponse()
     }
 

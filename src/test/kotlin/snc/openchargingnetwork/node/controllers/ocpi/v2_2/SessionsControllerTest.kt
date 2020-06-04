@@ -20,8 +20,8 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
 import snc.openchargingnetwork.node.data.exampleSession
 import snc.openchargingnetwork.node.models.*
 import snc.openchargingnetwork.node.models.ocpi.*
-import snc.openchargingnetwork.node.services.RequestHandler
-import snc.openchargingnetwork.node.services.RequestHandlerBuilder
+import snc.openchargingnetwork.node.components.OcpiRequestHandler
+import snc.openchargingnetwork.node.components.OcpiRequestHandlerBuilder
 import snc.openchargingnetwork.node.tools.generateUUIDv4Token
 import snc.openchargingnetwork.node.tools.getTimestamp
 
@@ -30,7 +30,7 @@ import snc.openchargingnetwork.node.tools.getTimestamp
 class SessionsControllerTest(@Autowired val mockMvc: MockMvc) {
 
     @MockkBean
-    lateinit var requestHandlerBuilder: RequestHandlerBuilder
+    lateinit var requestHandlerBuilder: OcpiRequestHandlerBuilder
 
 
     @Test
@@ -53,7 +53,7 @@ class SessionsControllerTest(@Autowired val mockMvc: MockMvc) {
                         receiver = receiver),
                 urlEncodedParams = mapOf("date_from" to dateFrom, "limit" to 20))
 
-        val mockRequestHandler = mockk<RequestHandler<Array<Session>>>()
+        val mockRequestHandler = mockk<OcpiRequestHandler<Array<Session>>>()
 
         val responseHeaders = HttpHeaders()
         responseHeaders["Link"] = "https://client.ocn.co/ocpi/sender/2.2/sessions/page/2247; rel=\"next\""
@@ -62,7 +62,7 @@ class SessionsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every { requestHandlerBuilder.build<Array<Session>>(requestVariables) } returns mockRequestHandler
 
-        every { mockRequestHandler.validateSender().forwardRequest().getResponseWithPaginationHeaders() } returns ResponseEntity
+        every { mockRequestHandler.forwardDefault().getResponseWithPaginationHeaders() } returns ResponseEntity
                 .status(200)
                 .headers(responseHeaders)
                 .body(OcpiResponse(statusCode = 1000, data = arrayOf(exampleSession)))
@@ -109,7 +109,7 @@ class SessionsControllerTest(@Autowired val mockMvc: MockMvc) {
                         receiver = receiver),
                 urlPathVariables = "2247")
 
-        val mockRequestHandler = mockk<RequestHandler<Array<Session>>>()
+        val mockRequestHandler = mockk<OcpiRequestHandler<Array<Session>>>()
 
         val responseHeaders = HttpHeaders()
         responseHeaders["Link"] = "https://client.ocn.co/ocpi/sender/2.2/sessions/page/2248; rel=\"next\""
@@ -118,7 +118,7 @@ class SessionsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every { requestHandlerBuilder.build<Array<Session>>(requestVariables) } returns mockRequestHandler
 
-        every { mockRequestHandler.validateSender().forwardRequest().getResponseWithPaginationHeaders() } returns ResponseEntity
+        every { mockRequestHandler.forwardDefault(true).getResponseWithPaginationHeaders() } returns ResponseEntity
                 .status(200)
                 .headers(responseHeaders)
                 .body(OcpiResponse(statusCode = 1000, data = arrayOf(exampleSession)))
@@ -166,11 +166,11 @@ class SessionsControllerTest(@Autowired val mockMvc: MockMvc) {
                 urlPathVariables = "/2247/charging_preferences",
                 body = body)
 
-        val mockRequestHandler = mockk<RequestHandler<ChargingPreferencesResponse>>()
+        val mockRequestHandler = mockk<OcpiRequestHandler<ChargingPreferencesResponse>>()
 
         every { requestHandlerBuilder.build<ChargingPreferencesResponse>(requestVariables) } returns mockRequestHandler
 
-        every { mockRequestHandler.validateSender().forwardRequest().getResponse() } returns ResponseEntity
+        every { mockRequestHandler.forwardDefault().getResponse() } returns ResponseEntity
                 .status(200)
                 .body(OcpiResponse(statusCode = 1000, data = ChargingPreferencesResponse.NOT_POSSIBLE))
 
@@ -212,11 +212,11 @@ class SessionsControllerTest(@Autowired val mockMvc: MockMvc) {
                         receiver = receiver),
                 urlPathVariables = "/${sender.country}/${sender.id}/$sessionID")
 
-        val mockRequestHandler = mockk<RequestHandler<Session>>()
+        val mockRequestHandler = mockk<OcpiRequestHandler<Session>>()
 
         every { requestHandlerBuilder.build<Session>(requestVariables) } returns mockRequestHandler
 
-        every { mockRequestHandler.validateSender().forwardRequest().getResponse() } returns ResponseEntity
+        every { mockRequestHandler.forwardDefault().getResponse() } returns ResponseEntity
                 .status(200)
                 .body(OcpiResponse(statusCode = 1000, data = exampleSession))
 
@@ -259,11 +259,11 @@ class SessionsControllerTest(@Autowired val mockMvc: MockMvc) {
                 urlPathVariables = "/${sender.country}/${sender.id}/$sessionID",
                 body = body)
 
-        val mockRequestHandler = mockk<RequestHandler<Unit>>()
+        val mockRequestHandler = mockk<OcpiRequestHandler<Unit>>()
 
         every { requestHandlerBuilder.build<Unit>(requestVariables) } returns mockRequestHandler
 
-        every { mockRequestHandler.validateSender().forwardRequest().getResponse() } returns ResponseEntity
+        every { mockRequestHandler.forwardDefault().getResponse() } returns ResponseEntity
                 .status(200)
                 .body(OcpiResponse(statusCode = 1000))
 
@@ -307,11 +307,11 @@ class SessionsControllerTest(@Autowired val mockMvc: MockMvc) {
                 urlPathVariables = "/${sender.country}/${sender.id}/$sessionID",
                 body = body)
 
-        val mockRequestHandler = mockk<RequestHandler<Unit>>()
+        val mockRequestHandler = mockk<OcpiRequestHandler<Unit>>()
 
         every { requestHandlerBuilder.build<Unit>(requestVariables) } returns mockRequestHandler
 
-        every { mockRequestHandler.validateSender().forwardRequest().getResponse() } returns ResponseEntity
+        every { mockRequestHandler.forwardDefault().getResponse() } returns ResponseEntity
                 .status(200)
                 .body(OcpiResponse(statusCode = 1000))
 

@@ -14,7 +14,7 @@
     limitations under the License.
 */
 
-package snc.openchargingnetwork.node.listeners
+package snc.openchargingnetwork.node.components.listeners
 
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Component
@@ -78,6 +78,7 @@ class HubClientInfoListener(private val hubClientInfoService: HubClientInfoServi
             val parties = hubClientInfoService.getPartiesToNotifyOfClientInfoChange(changedPlatform, updatedClientInfo)
             hubClientInfoService.notifyPartiesOfClientInfoChange(parties, updatedClientInfo)
 
+            // TODO: handle connection issues
             hubClientInfoService.notifyNodesOfClientInfoChange(updatedClientInfo)
         }
     }
