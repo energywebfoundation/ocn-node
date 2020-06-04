@@ -138,13 +138,25 @@ enum class ModuleID(val id: String) {
     LOCATIONS("locations"),
     SESSIONS("sessions"),
     TARIFFS("tariffs"),
-    TOKENS("tokens")
+    TOKENS("tokens"),
+    CUSTOM("custom")
 }
 
 
 enum class InterfaceRole(val id: String) {
     SENDER(id = "sender"),
-    RECEIVER(id = "receiver")
+    RECEIVER(id = "receiver");
+
+    companion object {
+        fun values(): List<InterfaceRole> {
+            return listOf(SENDER, RECEIVER)
+        }
+        fun resolve(role: String): InterfaceRole {
+            val values = values()
+            return values.find { it.id.toLowerCase() == role }
+                    ?: throw OcpiClientInvalidParametersException("No interface $role found. Expected one of $values.")
+        }
+    }
 }
 
 
