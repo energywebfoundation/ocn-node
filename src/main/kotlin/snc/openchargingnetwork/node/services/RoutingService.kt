@@ -77,8 +77,9 @@ class RoutingService(private val platformRepo: PlatformRepository,
     /**
      * get OCPI platform endpoint information using platform ID (from above)
      */
-    fun getPlatformEndpoint(platformID: Long?, module: ModuleID, interfaceRole: InterfaceRole): EndpointEntity {
-        return endpointRepo.findByPlatformIDAndIdentifierAndRole(platformID, module.id, interfaceRole)
+    fun getPlatformEndpoint(platformID: Long?, module: ModuleID, interfaceRole: InterfaceRole, customModuleId: String? = null): EndpointEntity {
+        val moduleId = if (customModuleId !== null) { customModuleId } else { module.id }
+        return endpointRepo.findByPlatformIDAndIdentifierAndRole(platformID, moduleId, interfaceRole)
                 ?: throw OcpiClientInvalidParametersException("Receiver does not support the requested module")
     }
 
@@ -165,7 +166,7 @@ class RoutingService(private val platformRepo: PlatformRepository,
 
             // return standard OCPI module URL of recipient
             else -> {
-                val endpoint = getPlatformEndpoint(platformID, request.module, request.interfaceRole)
+                val endpoint = getPlatformEndpoint(platformID, request.module, request.interfaceRole, request.customModuleId) // could replace with request.resolveModuleId()...
                 urlJoin(endpoint.url, request.urlPathVariables)
             }
 

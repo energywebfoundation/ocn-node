@@ -59,7 +59,17 @@ data class OcpiRequestVariables(@JsonProperty("module") val module: ModuleID,
                                 @JsonProperty("url_encoded_params") val urlEncodedParams: Map<String, Any?>? = null,
                                 @JsonProperty("proxy_uid") val proxyUID: String? = null,
                                 @JsonProperty("proxy_resource") val proxyResource: String? = null,
+                                @JsonProperty("custom_module_id") val customModuleId: String? = null,
                                 @JsonProperty("body") val body: Any? = null) {
+
+    init {
+        if (module != ModuleID.CUSTOM && customModuleId != null) {
+            throw IllegalStateException("customModuleId defined but module is not CUSTOM")
+        }
+        if (module == ModuleID.CUSTOM && customModuleId == null) {
+            throw IllegalStateException("customModuleId not defined but module is CUSTOM")
+        }
+    }
 
     fun toSignedValues(): ValuesToSign<*> {
         return ValuesToSign(

@@ -20,6 +20,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
 import snc.openchargingnetwork.node.components.OcpiRequestHandler
+import snc.openchargingnetwork.node.models.ocpi.ModuleID
 
 @Service
 class AsyncTaskService(private val registryService: RegistryService) {
@@ -34,7 +35,11 @@ class AsyncTaskService(private val registryService: RegistryService) {
      */
     @Async
     fun forwardOcpiRequestToLinkedApps(requestHandler: OcpiRequestHandler<*>, fromLocalPlatform: Boolean = true) {
-        if (fromLocalPlatform) {
+        // we only want to forward to apps if the module is one of the default OCPI modules,
+        // and only if the sender is a local platform (to avoid repeat forwarding on the recipient node)
+        val isDefaultModule = requestHandler.request.module != ModuleID.CUSTOM
+
+        if (isDefaultModule && fromLocalPlatform) {
             val request = requestHandler.request
             registryService.getAgreementsByInterface(request.headers.sender, request.module, request.interfaceRole)
                     .forEach {

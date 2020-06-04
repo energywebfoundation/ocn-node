@@ -1,26 +1,17 @@
 package snc.openchargingnetwork.node.controllers.ocpi.v2_2
 
 import org.springframework.http.HttpMethod
+import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
+import snc.openchargingnetwork.node.components.OcpiRequestHandlerBuilder
 import snc.openchargingnetwork.node.models.OcnHeaders
-import snc.openchargingnetwork.node.models.ocpi.BasicRole
-import snc.openchargingnetwork.node.models.ocpi.InterfaceRole
-import snc.openchargingnetwork.node.models.ocpi.ModuleID
-import snc.openchargingnetwork.node.models.ocpi.OcpiRequestVariables
+import snc.openchargingnetwork.node.models.ocpi.*
+import snc.openchargingnetwork.node.tools.toQueryMap
 import javax.servlet.http.HttpServletRequest
-
-fun String.toQueryMap(): Map<String, Any> {
-    val queryMap = mutableMapOf<String, Any>()
-    split("&").forEach {
-        val (key, value) = it.split("=")
-        queryMap[key] = value
-    }
-    return queryMap
-}
 
 @RestController
 @RequestMapping("/ocpi/custom")
-class CustomModulesController {
+class CustomModulesController(private val requestHandlerBuilder: OcpiRequestHandlerBuilder) {
 
     @RequestMapping("/{module}/{interfaceRole}/**/*")
     fun customModuleMapping(@RequestHeader("authorization") authorization: String,
@@ -34,12 +25,7 @@ class CustomModulesController {
                             @PathVariable module: String,
                             @PathVariable interfaceRole: String,
                             @RequestBody body: String?,
-                            request: HttpServletRequest): String {
-        // TODO:
-        //  - sender is registered with this node
-        //  - recipient is found (local/remote)
-        //  - local recipient supports this module/interface
-        //  - send to...
+                            request: HttpServletRequest): ResponseEntity<OcpiResponse<Any>> {
 
         val sender = BasicRole(fromPartyID, fromCountryCode).toUpperCase()
         val receiver = BasicRole(toPartyID, toCountryCode).toUpperCase()
@@ -48,6 +34,7 @@ class CustomModulesController {
 
         val requestVariables = OcpiRequestVariables(
                 module = ModuleID.CUSTOM,
+                customModuleId = module,
                 interfaceRole = InterfaceRole.resolve(interfaceRole),
                 method = HttpMethod.valueOf(request.method),
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
@@ -55,9 +42,10 @@ class CustomModulesController {
                 urlEncodedParams = request.queryString.toQueryMap(),
                 body = body)
 
-
-
-        return "OK"
+        return requestHandlerBuilder
+                .build<Any>(requestVariables)
+                .forwardDefault()
+                .getResponseWithAllHeaders()
     }
 
 }
