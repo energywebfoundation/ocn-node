@@ -124,9 +124,9 @@ class RoutingService(private val platformRepo: PlatformRepository,
     /**
      * Check receiver has allowed sender to send them messages
      */
-    fun checkSenderWhitelisted(sender: BasicRole, receiver: BasicRole, module: ModuleID) {
+    fun checkSenderWhitelisted(sender: BasicRole, receiver: BasicRole, moduleID: String) {
         val platform = getPlatform(receiver)
-        val whitelisted = ocnRulesService.isWhitelisted(platform, sender, module)
+        val whitelisted = ocnRulesService.isWhitelisted(platform, sender, moduleID)
         if (!whitelisted) {
             throw OcpiClientGenericException("Message receiver not in sender's whitelist.")
         }

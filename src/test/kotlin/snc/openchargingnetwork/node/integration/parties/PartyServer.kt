@@ -48,7 +48,7 @@ open class PartyServer(val config: PartyDefinition, deployedContracts: OcnContra
             ))
         }
 
-        app.put("ocpi/cpo/2.2/clientinfo/:countryCode/:partyID") {
+        app.put("ocpi/2.2/clientinfo/:countryCode/:partyID") {
             this.hubClientInfoStatuses[BasicRole(id = it.pathParam("partyID"), country = it.pathParam("countryCode"))] = it.body<ClientInfo>().status
             val body = OcpiResponse(statusCode = 1000, data = "")
             body.signature = sign(body = body)
@@ -80,6 +80,7 @@ open class PartyServer(val config: PartyDefinition, deployedContracts: OcnContra
     }
 
     fun registerCredentials() {
+        // TODO: could also request versions and store endpoints in memory
         val tokenA = getTokenA(node, listOf(config.party))
         val response = khttp.post("$node/ocpi/2.2/credentials",
                 headers = mapOf("Authorization" to "Token $tokenA"),
@@ -112,14 +113,10 @@ open class PartyServer(val config: PartyDefinition, deployedContracts: OcnContra
                 toPartyId = to.id)
     }
 
-    fun addToList(type: OcnRulesListType, party: BasicRole) {
-        val typeString = when (type) {
-            OcnRulesListType.WHITELIST -> "whitelist"
-            OcnRulesListType.BLACKLIST -> "blacklist"
-        }
-        khttp.post("$node/ocpi/receiver/2.2/ocnrules/$typeString",
+    fun addToList(type: OcnRulesListType, party: BasicRole, modules: List<String>? = listOf()) {
+        khttp.post("$node/ocpi/receiver/2.2/ocnrules/${type.toString().toLowerCase()}",
                 headers = mapOf("Authorization" to "Token $tokenC"),
-                json = mapOf("country_code" to party.country, "party_id" to party.id, "modules" to listOf<String>()))
+                json = mapOf("country_code" to party.country, "party_id" to party.id, "modules" to modules))
     }
 
     fun stopServer() {

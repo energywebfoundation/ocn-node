@@ -145,14 +145,7 @@ class OcnRulesListEntity(
         @Embedded
         val counterparty: BasicRole,
 
-        @Column(columnDefinition = "boolean default false") var cdrs: Boolean = false,
-        @Column(columnDefinition = "boolean default false") var chargingprofiles: Boolean = false,
-        @Column(columnDefinition = "boolean default false") var commands: Boolean = false,
-        @Column(columnDefinition = "boolean default false") var sessions: Boolean = false,
-        @Column(columnDefinition = "boolean default false") var locations: Boolean = false,
-        @Column(columnDefinition = "boolean default false") var tariffs: Boolean = false,
-        @Column(columnDefinition = "boolean default false") var tokens: Boolean = false,
-
+        @ElementCollection(fetch = FetchType.EAGER) val modules: List<String> = listOf(),
 
         @Id @GeneratedValue val id: Long? = null
 )

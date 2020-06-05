@@ -28,6 +28,9 @@ import org.springframework.web.bind.annotation.ControllerAdvice
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.context.request.WebRequest
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler
+import shareandcharge.openchargingnetwork.notary.Notary
+import shareandcharge.openchargingnetwork.notary.ValuesToSign
+import snc.openchargingnetwork.node.config.NodeProperties
 import snc.openchargingnetwork.node.models.ocpi.OcpiStatus
 import snc.openchargingnetwork.node.models.ocpi.OcpiResponse
 import java.net.ConnectException
@@ -35,121 +38,134 @@ import java.net.SocketTimeoutException
 
 @Order(Ordered.HIGHEST_PRECEDENCE)
 @ControllerAdvice
-class ExceptionHandler: ResponseEntityExceptionHandler() {
+class ExceptionHandler(private val properties: NodeProperties): ResponseEntityExceptionHandler() {
 
-    override fun handleHttpMessageNotReadable(e: HttpMessageNotReadableException, headers: HttpHeaders, status: HttpStatus, request: WebRequest): ResponseEntity<Any> {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(OcpiResponse<Nothing>(
-                statusCode = OcpiStatus.CLIENT_INVALID_PARAMETERS.code,
-                statusMessage = e.message))
+    private fun signError(body: OcpiResponse<Unit>): String {
+        return Notary().sign(ValuesToSign(body = body), properties.privateKey!!).serialize()
+    }
+
+    /**
+     * GENERIC EXCEPTIONS
+     */
+
+    override fun handleHttpMessageNotReadable(e: HttpMessageNotReadableException,
+                                              headers: HttpHeaders,
+                                              status: HttpStatus,
+                                              request: WebRequest): ResponseEntity<Any> {
+        val body = OcpiResponse<Unit>(statusCode = OcpiStatus.CLIENT_INVALID_PARAMETERS.code, statusMessage = e.message)
+        body.signature = signError(body)
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body)
     }
 
     override fun handleMissingServletRequestParameter(e: MissingServletRequestParameterException, headers: HttpHeaders, status: HttpStatus, request: WebRequest): ResponseEntity<Any> {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(OcpiResponse<Nothing>(
-                statusCode = OcpiStatus.CLIENT_INVALID_PARAMETERS.code,
-                statusMessage = e.message))
+        val body = OcpiResponse<Unit>(statusCode = OcpiStatus.CLIENT_INVALID_PARAMETERS.code, statusMessage = e.message)
+        body.signature = signError(body)
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body)
     }
 
     @ExceptionHandler(MissingRequestHeaderException::class)
-    fun handleMissingRequestHeaderException(e: MissingRequestHeaderException): ResponseEntity<OcpiResponse<Nothing>> {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(OcpiResponse(
+    fun handleMissingRequestHeaderException(e: MissingRequestHeaderException): ResponseEntity<OcpiResponse<Unit>> {
+        val body = OcpiResponse<Unit>(
                 statusCode = OcpiStatus.CLIENT_INVALID_PARAMETERS.code,
-                statusMessage = e.message))
+                statusMessage = e.message)
+        body.signature = signError(body)
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body)
     }
 
     @ExceptionHandler(SocketTimeoutException::class)
-    fun handleSocketTimeoutException(e: SocketTimeoutException): ResponseEntity<OcpiResponse<Nothing>> {
-        return ResponseEntity.status(HttpStatus.OK).body(OcpiResponse(
+    fun handleSocketTimeoutException(e: SocketTimeoutException): ResponseEntity<OcpiResponse<Unit>> {
+        val body = OcpiResponse<Unit>(
                 statusCode = OcpiStatus.HUB_REQUEST_TIMEOUT.code,
-                statusMessage = e.message))
+                statusMessage = e.message)
+        body.signature = signError(body)
+        return ResponseEntity.status(HttpStatus.OK).body(body)
     }
 
     @ExceptionHandler(ConnectException::class)
-    fun handleConnectException(e: ConnectException): ResponseEntity<OcpiResponse<Nothing>> {
-        return ResponseEntity.status(HttpStatus.OK).body(OcpiResponse(
+    fun handleConnectException(e: ConnectException): ResponseEntity<OcpiResponse<Unit>> {
+        val body = OcpiResponse<Unit>(
                 statusCode = OcpiStatus.HUB_CONNECTION_PROBLEM.code,
-                statusMessage = e.message))
+                statusMessage = e.message)
+        body.signature = signError(body)
+        return ResponseEntity.status(HttpStatus.OK).body(body)
     }
 
     /**
      * OCPI EXCEPTIONS
      */
 
-    @ExceptionHandler(OcpiClientGenericException::class)
-    fun handleOcpiClientGenericException(e: OcpiClientGenericException): ResponseEntity<OcpiResponse<Nothing>> {
-        return ResponseEntity.status(e.httpStatus).body(OcpiResponse(
-                statusCode = e.ocpiStatus.code,
-                statusMessage = e.message))
+    private fun ocpiErrorToResponseEntity(httpStatus: HttpStatus, ocpiStatus: OcpiStatus, message: String?)
+            : ResponseEntity<OcpiResponse<Unit>> {
+        val body = OcpiResponse<Unit>(statusCode = ocpiStatus.code, statusMessage = message)
+        body.signature = signError(body)
+        return ResponseEntity.status(httpStatus).body(body)
     }
+
+    @ExceptionHandler(OcpiClientGenericException::class)
+    fun handleOcpiClientGenericException(e: OcpiClientGenericException) = ocpiErrorToResponseEntity(
+            httpStatus = e.httpStatus,
+            ocpiStatus = e.ocpiStatus,
+            message = e.message)
 
     @ExceptionHandler(OcpiClientInvalidParametersException::class)
-    fun handleOcpiClientInvalidParametersException(e: OcpiClientInvalidParametersException): ResponseEntity<OcpiResponse<Nothing>> {
-        return ResponseEntity.status(e.httpStatus).body(OcpiResponse(
-                statusCode = e.ocpiStatus.code,
-                statusMessage = e.message))
-    }
+    fun handleOcpiClientInvalidParametersException(e: OcpiClientInvalidParametersException) = ocpiErrorToResponseEntity(
+            httpStatus = e.httpStatus,
+            ocpiStatus = e.ocpiStatus,
+            message = e.message)
 
     @ExceptionHandler(OcpiClientNotEnoughInformationException::class)
-    fun handleOcpiClientNotEnoughInformationException(e: OcpiClientNotEnoughInformationException): ResponseEntity<OcpiResponse<Nothing>> {
-        return ResponseEntity.status(e.httpStatus).body(OcpiResponse(
-                statusCode = e.ocpiStatus.code,
-                statusMessage = e.message))
-    }
+    fun handleOcpiClientNotEnoughInformationException(e: OcpiClientNotEnoughInformationException) = ocpiErrorToResponseEntity(
+            httpStatus = e.httpStatus,
+            ocpiStatus = e.ocpiStatus,
+            message = e.message)
 
     @ExceptionHandler(OcpiClientUnknownLocationException::class)
-    fun handleOcpiClientUnknownLocationException(e: OcpiClientUnknownLocationException): ResponseEntity<OcpiResponse<Nothing>> {
-        return ResponseEntity.status(e.httpStatus).body(OcpiResponse(
-                statusCode = e.ocpiStatus.code,
-                statusMessage = e.message))
-    }
+    fun handleOcpiClientUnknownLocationException(e: OcpiClientUnknownLocationException) = ocpiErrorToResponseEntity(
+            httpStatus = e.httpStatus,
+            ocpiStatus = e.ocpiStatus,
+            message = e.message)
 
     @ExceptionHandler(OcpiServerGenericException::class)
-    fun handleOcpiServerGenericException(e: OcpiServerGenericException): ResponseEntity<OcpiResponse<Nothing>> {
-        return ResponseEntity.status(e.httpStatus).body(OcpiResponse(
-                statusCode = e.ocpiStatus.code,
-                statusMessage = e.message))
-    }
+    fun handleOcpiServerGenericException(e: OcpiServerGenericException) = ocpiErrorToResponseEntity(
+            httpStatus = e.httpStatus,
+            ocpiStatus = e.ocpiStatus,
+            message = e.message)
 
     @ExceptionHandler(OcpiServerUnusableApiException::class)
-    fun handleOcpiServerUnusableApiException(e: OcpiServerUnusableApiException): ResponseEntity<OcpiResponse<Nothing>> {
-        return ResponseEntity.status(e.httpStatus).body(OcpiResponse(
-                statusCode = e.ocpiStatus.code,
-                statusMessage = e.message))
-    }
+    fun handleOcpiServerUnusableApiException(e: OcpiServerUnusableApiException) = ocpiErrorToResponseEntity(
+            httpStatus = e.httpStatus,
+            ocpiStatus = e.ocpiStatus,
+            message = e.message)
 
     @ExceptionHandler(OcpiServerNoMatchingEndpointsException::class)
-    fun handleOcpiServerNoMatchingEndpointsException(e: OcpiServerNoMatchingEndpointsException): ResponseEntity<OcpiResponse<Nothing>> {
-        return ResponseEntity.status(e.httpStatus).body(OcpiResponse(
-                statusCode = e.ocpiStatus.code,
-                statusMessage = e.message))
-    }
+    fun handleOcpiServerNoMatchingEndpointsException(e: OcpiServerNoMatchingEndpointsException) = ocpiErrorToResponseEntity(
+            httpStatus = e.httpStatus,
+            ocpiStatus = e.ocpiStatus,
+            message = e.message)
 
     @ExceptionHandler(OcpiServerUnsupportedVersionException::class)
-    fun handleOcpiServerUnsupportedVersionException(e: OcpiServerUnsupportedVersionException): ResponseEntity<OcpiResponse<Nothing>> {
-        return ResponseEntity.status(e.httpStatus).body(OcpiResponse(
-                statusCode = e.ocpiStatus.code,
-                statusMessage = e.message))
-    }
+    fun handleOcpiServerUnsupportedVersionException(e: OcpiServerUnsupportedVersionException) = ocpiErrorToResponseEntity(
+            httpStatus = e.httpStatus,
+            ocpiStatus = e.ocpiStatus,
+            message = e.message)
 
     @ExceptionHandler(OcpiHubConnectionProblemException::class)
-    fun handleOcpiHubConnectionProblemException(e: OcpiHubConnectionProblemException): ResponseEntity<OcpiResponse<Nothing>> {
-        return ResponseEntity.status(e.httpStatus).body(OcpiResponse(
-                statusCode = e.ocpiStatus.code,
-                statusMessage = e.message))
-    }
+    fun handleOcpiHubConnectionProblemException(e: OcpiHubConnectionProblemException) = ocpiErrorToResponseEntity(
+            httpStatus = e.httpStatus,
+            ocpiStatus = e.ocpiStatus,
+            message = e.message)
 
     @ExceptionHandler(OcpiHubTimeoutOnRequestException::class)
-    fun handleOcpiHubTimeoutOnRequestException(e: OcpiHubTimeoutOnRequestException): ResponseEntity<OcpiResponse<Nothing>> {
-        return ResponseEntity.status(e.httpStatus).body(OcpiResponse(
-                statusCode = e.ocpiStatus.code,
-                statusMessage = e.message))
-    }
+    fun handleOcpiHubTimeoutOnRequestException(e: OcpiHubTimeoutOnRequestException) = ocpiErrorToResponseEntity(
+            httpStatus = e.httpStatus,
+            ocpiStatus = e.ocpiStatus,
+            message = e.message)
 
     @ExceptionHandler(OcpiHubUnknownReceiverException::class)
-    fun handleOcpiHubUnknownReceiverException(e: OcpiHubUnknownReceiverException): ResponseEntity<OcpiResponse<Nothing>> {
-        return ResponseEntity.status(e.httpStatus).body(OcpiResponse(
-                statusCode = e.ocpiStatus.code,
-                statusMessage = e.message))
-    }
+    fun handleOcpiHubUnknownReceiverException(e: OcpiHubUnknownReceiverException) = ocpiErrorToResponseEntity(
+            httpStatus = e.httpStatus,
+            ocpiStatus = e.ocpiStatus,
+            message = e.message)
 
     /**
      * OCN Exceptions

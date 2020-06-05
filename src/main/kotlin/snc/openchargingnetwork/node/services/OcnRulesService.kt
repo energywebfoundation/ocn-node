@@ -42,7 +42,12 @@ class OcnRulesService(private val platformRepo: PlatformRepository,
     fun getRules(authorization: String): OcnRules {
         val platform = findPlatform(authorization)
 
-        val rulesList = ocnRulesListRepo.findAllByPlatformID(platform.id).map { getModules(it) }
+        val rulesList = ocnRulesListRepo.findAllByPlatformID(platform.id)
+                .map { OcnRulesListParty(
+                        id = it.counterparty.id,
+                        country = it.counterparty.country,
+                        modules = it.modules)
+                }
 
         return OcnRules(
                 signatures = platform.rules.signatures,
@@ -58,48 +63,6 @@ class OcnRulesService(private val platformRepo: PlatformRepository,
                             true -> rulesList
                             false -> listOf()
                         }))
-    }
-
-    /**
-     * Get list of modules?
-     */
-    private fun getModules(ocnRulesListEntity: OcnRulesListEntity): OcnRulesListParty {
-        val basicRole = ocnRulesListEntity.counterparty
-        val modules = mutableListOf<String>()
-
-        if(ocnRulesListEntity.cdrs) {
-            modules.add("cdrs")
-        }
-
-        if(ocnRulesListEntity.chargingprofiles) {
-            modules.add("chargingprofiles")
-        }
-
-        if(ocnRulesListEntity.commands) {
-            modules.add("commands")
-        }
-
-        if(ocnRulesListEntity.locations) {
-            modules.add("locations")
-        }
-
-        if(ocnRulesListEntity.sessions) {
-            modules.add("sessions")
-        }
-
-        if(ocnRulesListEntity.tariffs) {
-            modules.add("tariffs")
-        }
-
-        if(ocnRulesListEntity.tokens) {
-            modules.add("tokens")
-        }
-
-        return OcnRulesListParty(
-            id = basicRole.id,
-            country =  basicRole.country,
-            modules = modules
-        )
     }
 
     /**
@@ -160,14 +123,8 @@ class OcnRulesService(private val platformRepo: PlatformRepository,
         ocnRulesListRepo.saveAll(parties.map { OcnRulesListEntity(
             platformID = platform.id!!,
             counterparty = BasicRole(it.id, it.country).toUpperCase(),
-            cdrs = it.modules.contains("cdrs"),
-            chargingprofiles = it.modules.contains("chargingprofiles"),
-            commands = it.modules.contains("commands"),
-            sessions = it.modules.contains("sessions"),
-            locations= it.modules.contains("locations"),
-            tariffs = it.modules.contains("tariffs"),
-            tokens = it.modules.contains("tokens")
-        )})
+            modules = it.modules)
+        })
     }
 
     /**
@@ -201,14 +158,7 @@ class OcnRulesService(private val platformRepo: PlatformRepository,
         ocnRulesListRepo.saveAll(parties.map { OcnRulesListEntity(
                 platformID = platform.id!!,
                 counterparty = BasicRole(it.id, it.country).toUpperCase(),
-                cdrs = it.modules.contains("cdrs"),
-                chargingprofiles = it.modules.contains("chargingprofiles"),
-                commands = it.modules.contains("commands"),
-                sessions = it.modules.contains("sessions"),
-                locations= it.modules.contains("locations"),
-                tariffs = it.modules.contains("tariffs"),
-                tokens = it.modules.contains("tokens")
-        )})
+                modules = it.modules)})
     }
 
     /**
@@ -239,14 +189,7 @@ class OcnRulesService(private val platformRepo: PlatformRepository,
         ocnRulesListRepo.save(OcnRulesListEntity(
                 platformID = platform.id!!,
                 counterparty = BasicRole( id = body.id, country = body.country).toUpperCase(),
-                cdrs = body.modules.contains("cdrs"),
-                chargingprofiles = body.modules.contains("chargingprofiles"),
-                commands = body.modules.contains("commands"),
-                sessions = body.modules.contains("sessions"),
-                locations = body.modules.contains("locations"),
-                tariffs = body.modules.contains("tariffs"),
-                tokens = body.modules.contains("tokens")
-        ))
+                modules = body.modules))
     }
 
     /**
@@ -277,14 +220,7 @@ class OcnRulesService(private val platformRepo: PlatformRepository,
         ocnRulesListRepo.save(OcnRulesListEntity(
                 platformID = platform.id!!,
                 counterparty = BasicRole( id = body.id, country = body.country).toUpperCase(),
-                cdrs = body.modules.contains("cdrs"),
-                chargingprofiles = body.modules.contains("chargingprofiles"),
-                commands = body.modules.contains("commands"),
-                sessions = body.modules.contains("sessions"),
-                locations = body.modules.contains("locations"),
-                tariffs = body.modules.contains("tariffs"),
-                tokens = body.modules.contains("tokens")
-        ))
+                modules = body.modules))
     }
 
     /**
@@ -345,12 +281,12 @@ class OcnRulesService(private val platformRepo: PlatformRepository,
     /**
      * Checks a counter-party has been whitelisted with specific module allowed by a connected platform
      */
-    fun isWhitelisted(platform: PlatformEntity, counterParty: BasicRole, module: ModuleID): Boolean {
+    fun isWhitelisted(platform: PlatformEntity, counterParty: BasicRole, moduleID: String): Boolean {
         val rulesList = ocnRulesListRepo.findAllByPlatformID(platform.id)
 
         return when {
-            platform.rules.whitelist -> rulesList.any { validateWhiteListWithModule(it, counterParty, module) }
-            platform.rules.blacklist -> rulesList.none { validateBlackListWithModule(it, counterParty, module) }
+            platform.rules.whitelist -> rulesList.any { validateWhiteListWithModule(it, counterParty, moduleID) }
+            platform.rules.blacklist -> rulesList.none { validateBlackListWithModule(it, counterParty, moduleID) }
             else -> true
         }
     }
@@ -397,53 +333,12 @@ class OcnRulesService(private val platformRepo: PlatformRepository,
     /**
      * For whitelist check receiver has allowed the module of sender to send them message
      */
-    private fun validateWhiteListWithModule (it: OcnRulesListEntity, sender: BasicRole, module: ModuleID): Boolean {
-        if(it.counterparty == sender){
-            when(module) {
-                ModuleID.CDRS -> {
-                    if( !it.cdrs ) {
-                        throw OcpiClientGenericException("CDRS Module is blocked")
-                    }
-                    return true
-                }
-                ModuleID.CHARGING_PROFILES -> {
-                    if( !it.chargingprofiles ) {
-                        throw OcpiClientGenericException("Charging Profiles Module is blocked")
-                    }
-                    return true
-                }
-                ModuleID.COMMANDS -> {
-                    if( !it.commands ) {
-                        throw OcpiClientGenericException("Commands Module is blocked")
-                    }
-                    return true
-                }
-                ModuleID.LOCATIONS -> {
-                    if( !it.locations ) {
-                        throw OcpiClientGenericException("Locations Module is blocked")
-                    }
-                    return true
-                }
-                ModuleID.SESSIONS -> {
-                    if( !it.sessions ) {
-                        throw OcpiClientGenericException("Session Module is blocked")
-                    }
-                    return true
-                }
-                ModuleID.TARIFFS -> {
-                    if( !it.tariffs ) {
-                        throw OcpiClientGenericException("Tariffs Module is blocked")
-                    }
-                    return true
-                }
-                ModuleID.TOKENS -> {
-                    if( !it.tokens ) {
-                        throw OcpiClientGenericException("Token Module is blocked")
-                    }
-                    return true
-                }
-                else -> return false
+    private fun validateWhiteListWithModule (rule: OcnRulesListEntity, sender: BasicRole, moduleID: String): Boolean {
+        if (rule.counterparty == sender) {
+            if (!rule.modules.contains(moduleID)) {
+                throw OcpiClientGenericException("Sender not whitelisted to request $moduleID from receiver.")
             }
+            return true
         }
         return false
     }
@@ -451,53 +346,14 @@ class OcnRulesService(private val platformRepo: PlatformRepository,
     /**
      * For blacklist check receiver has allowed the module of sender to send them message
      */
-    private fun validateBlackListWithModule (it: OcnRulesListEntity, sender: BasicRole, module: ModuleID): Boolean {
-        if(it.counterparty == sender){
-            when(module) {
-                ModuleID.CDRS -> {
-                    if( it.cdrs ) {
-                        throw OcpiClientGenericException("CDRS Module is blocked")
-                    }
-                    return false
-                }
-                ModuleID.CHARGING_PROFILES -> {
-                    if( it.chargingprofiles ) {
-                        throw OcpiClientGenericException("Charging Profiles Module is blocked")
-                    }
-                    return false
-                }
-                ModuleID.COMMANDS -> {
-                    if( it.commands ) {
-                        throw OcpiClientGenericException("Commands Module is blocked")
-                    }
-                    return false
-                }
-                ModuleID.LOCATIONS -> {
-                    if( it.locations ) {
-                        throw OcpiClientGenericException("Locations Module is blocked")
-                    }
-                    return false
-                }
-                ModuleID.SESSIONS -> {
-                    if( it.sessions ) {
-                        throw OcpiClientGenericException("Session Module is blocked")
-                    }
-                    return false
-                }
-                ModuleID.TARIFFS -> {
-                    if( it.tariffs ) {
-                        throw OcpiClientGenericException("Tariffs Module is blocked")
-                    }
-                    return false
-                }
-                ModuleID.TOKENS -> {
-                    if( it.tokens ) {
-                        throw OcpiClientGenericException("Token Module is blocked")
-                    }
-                    return false
-                }
-                else -> return false
+    private fun validateBlackListWithModule (rule: OcnRulesListEntity, sender: BasicRole, moduleID: String): Boolean {
+        println("sender = $sender")
+        println("rule = ${rule.counterparty} ${rule.modules}}")
+        if (rule.counterparty == sender) {
+            if (rule.modules.contains(moduleID)) {
+                throw OcpiClientGenericException("Sender not whitelisted to request $moduleID from receiver.")
             }
+            return true
         }
         return false
     }

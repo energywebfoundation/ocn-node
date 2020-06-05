@@ -234,7 +234,7 @@ class OcpiRequestHandler<T: Any>(request: OcpiRequestVariables,
         routingService.checkSenderWhitelisted(
                 sender = request.headers.sender,
                 receiver = request.headers.receiver,
-                module = request.module)
+                moduleID = request.resolveModuleId())
     }
 
     /**

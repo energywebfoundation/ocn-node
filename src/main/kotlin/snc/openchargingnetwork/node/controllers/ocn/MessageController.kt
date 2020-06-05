@@ -26,7 +26,6 @@ import snc.openchargingnetwork.node.models.ocpi.OcpiResponse
 @RequestMapping("/ocn/message")
 class MessageController(private val requestHandlerBuilder: OcpiRequestHandlerBuilder) {
 
-
     @PostMapping
     fun postMessage(@RequestHeader("X-Request-ID") requestID: String,
                     @RequestHeader("OCN-Signature") signature: String,

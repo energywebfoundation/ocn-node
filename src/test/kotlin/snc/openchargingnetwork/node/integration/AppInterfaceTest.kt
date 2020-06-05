@@ -44,29 +44,22 @@ class AppInterfaceTest {
         return cpo1Seen && cpo2Seen
     }
 
+    private fun testForwarding(recipient: TestCpo, app: TestCpo) {
+        app.server.setAppPermissions(listOf(OcnAppPermission.FORWARD_ALL))
+        msp.server.agreeToAppPermissions(app.address)
+        msp.server.getLocation(recipient.party)
+        await.atMost(2L, TimeUnit.SECONDS).until { seenByBothCpos() }
+    }
+
     @Test
     fun fowardsRequestToApp_Local() {
-        // CPO1 is the App Provider
-        cpo1.server.setAppPermissions(listOf(OcnAppPermission.FORWARD_ALL))
-        // MSP is the App User
-        msp.server.agreeToAppPermissions(cpo1.address)
-        // MSP sends request to CPO2 which should also be forwarded to CPO1
-        msp.server.getLocation(cpo2.party)
-
-        await.atMost(2L, TimeUnit.SECONDS).until { seenByBothCpos() }
+        testForwarding(recipient = cpo2, app = cpo1)
 
     }
 
     @Test
     fun fowardsRequestToApp_Remote() {
-        // CPO2 is the App Provider
-        cpo2.server.setAppPermissions(listOf(OcnAppPermission.FORWARD_ALL))
-        // MSP is the App User
-        msp.server.agreeToAppPermissions(cpo2.address)
-        // MSP sends request to CPO1 which should also be forwarded to CPO2
-        msp.server.getLocation(cpo1.party)
-
-        await.atMost(2L, TimeUnit.SECONDS).until { seenByBothCpos() }
+        testForwarding(recipient = cpo1, app = cpo2)
     }
 
 }

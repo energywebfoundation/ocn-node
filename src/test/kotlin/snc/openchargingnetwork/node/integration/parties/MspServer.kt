@@ -33,11 +33,17 @@ class MspServer(config: PartyDefinition, contracts: OcnContracts): PartyServer(c
                             Endpoint(
                                     identifier = "hubclientinfo",
                                     role = InterfaceRole.RECEIVER,
-                                    url = urlBuilder("/ocpi/cpo/2.2/clientinfo")),
+                                    url = urlBuilder("/ocpi/2.2/clientinfo")),
                             Endpoint(
                                     identifier = "commands",
                                     role = InterfaceRole.SENDER,
-                                    url = urlBuilder("/ocpi/msp/2.2/commands"))))))
+                                    url = urlBuilder("/ocpi/msp/2.2/commands")),
+                            Endpoint(
+                                    identifier = "enriched-tariffs",
+                                    role = InterfaceRole.RECEIVER,
+                                    url = urlBuilder("/ocpi/msp/2.2/enriched-tariffs")
+                            )
+                    ))))
         }
 
         app.get("/ocpi/msp/2.2/cdrs/1") {
@@ -97,6 +103,12 @@ class MspServer(config: PartyDefinition, contracts: OcnContracts): PartyServer(c
         val signature = sign(headers = headers, body = body)
         val json: Map<String, Any?> = objectMapper.readValue(objectMapper.writeValueAsString(body))
         return khttp.post("$node/ocpi/receiver/2.2/commands/START_SESSION", headers = headers.toMap(tokenC, signature), json = json)
+    }
+
+    fun sendCustomModuleRequest(to: BasicRole): Response { // TODO: test with different parameters (path, query, json)
+        val headers = getSignableHeaders(to)
+        val signature = sign(headers = headers)
+        return khttp.get("$node/ocpi/custom/lite-locations/sender", headers = headers.toMap(tokenC, signature))
     }
 
 }

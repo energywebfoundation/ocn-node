@@ -65,7 +65,7 @@ class OcpiRequestHandlerTest {
 
         every { routingService.checkSenderKnown(variables.headers.authorization, variables.headers.sender) } just Runs
         every { routingService.getReceiverType(variables.headers.receiver) } returns Receiver.LOCAL
-        every { routingService.checkSenderWhitelisted(variables.headers.sender, variables.headers.receiver, variables.module) } just Runs
+        every { routingService.checkSenderWhitelisted(variables.headers.sender, variables.headers.receiver, variables.resolveModuleId()) } just Runs
         every { properties.signatures } returns false
         every { routingService.getPlatformRules(any()) } returns OcnRules(signatures = false)
         every { routingService.prepareLocalPlatformRequest(variables, false) } returns Pair(recipientUrl, outgoingHeaders)
@@ -123,7 +123,7 @@ class OcpiRequestHandlerTest {
 
         every { routingService.checkSenderKnown(variables.headers.authorization, variables.headers.sender) } just Runs
         every { routingService.getReceiverType(variables.headers.receiver) } returns Receiver.LOCAL
-        every { routingService.checkSenderWhitelisted(variables.headers.sender, variables.headers.receiver, variables.module) } just Runs
+        every { routingService.checkSenderWhitelisted(variables.headers.sender, variables.headers.receiver, variables.resolveModuleId()) } just Runs
         every { properties.signatures } returns false
         every { routingService.getPlatformRules(variables.headers.receiver) } returns OcnRules(signatures = true)
         every { registryService.getPartyDetails(variables.headers.sender) } returns RegistryPartyDetailsBasic(

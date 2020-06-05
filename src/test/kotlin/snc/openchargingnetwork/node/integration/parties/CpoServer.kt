@@ -27,11 +27,16 @@ class CpoServer(config: PartyDefinition, contracts: OcnContracts): PartyServer(c
                             Endpoint(
                                     identifier = "hubclientinfo",
                                     role = InterfaceRole.RECEIVER,
-                                    url = urlBuilder("/ocpi/cpo/2.2/clientinfo")),
+                                    url = urlBuilder("/ocpi/2.2/clientinfo")),
                             Endpoint(
                                     identifier = "commands",
                                     role = InterfaceRole.RECEIVER,
-                                    url = urlBuilder("/ocpi/cpo/2.2/commands"))))))
+                                    url = urlBuilder("/ocpi/cpo/2.2/commands")),
+                            Endpoint(
+                                    identifier = "lite-locations",
+                                    role = InterfaceRole.SENDER,
+                                    url = urlBuilder("/ocpi/cpo/2.2/lite-locations"))
+                    ))))
         }
 
         app.get("/ocpi/cpo/2.2/locations/1") {
@@ -80,6 +85,18 @@ class CpoServer(config: PartyDefinition, contracts: OcnContracts): PartyServer(c
             val asyncJson: Map<String, Any?> = objectMapper.readValue(objectMapper.writeValueAsString(asyncBody))
             khttp.post(url, headers = asyncHeaders.toMap(tokenC, asyncSignature), json = asyncJson)
 
+            it.json(body)
+        }
+
+        app.get("/ocpi/cpo/2.2/lite-locations") {
+            val body = OcpiResponse(statusCode = 1000, data = listOf(
+                    mapOf(
+                            "id" to "999",
+                            "overall_free" to true,
+                            "evses" to mapOf("free" to 1, "total" to 2),
+                            "coordinates" to listOf("50.387", "1.651"))
+            ))
+            body.signature = sign(body = body)
             it.json(body)
         }
 

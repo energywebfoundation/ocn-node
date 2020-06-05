@@ -12,7 +12,7 @@ import javax.servlet.http.HttpServletRequest
 @RequestMapping("/ocpi/custom")
 class CustomModulesController(private val requestHandlerBuilder: OcpiRequestHandlerBuilder) {
 
-    @RequestMapping("/{module}/{interfaceRole}/**/*")
+    @RequestMapping("/{module}/{interfaceRole}", "/{module}/{interfaceRole}/**/*")
     fun customModuleMapping(@RequestHeader("authorization") authorization: String,
                             @RequestHeader("OCN-Signature") signature: String? = null,
                             @RequestHeader("X-Request-ID") requestID: String,
@@ -23,14 +23,18 @@ class CustomModulesController(private val requestHandlerBuilder: OcpiRequestHand
                             @RequestHeader("OCPI-to-party-id") toPartyID: String,
                             @PathVariable module: String,
                             @PathVariable interfaceRole: String,
-                            @RequestParam params: Map<String, Any>,
+                            @RequestParam queryParams: Map<String, Any>,
                             @RequestBody body: String?,
                             request: HttpServletRequest): ResponseEntity<OcpiResponse<Any>> {
 
         val sender = BasicRole(fromPartyID, fromCountryCode)
         val receiver = BasicRole(toPartyID, toCountryCode)
 
-        val pathWildcards = request.pathInfo.replace("/ocpi/custom/${module}/${interfaceRole}", "")
+        val urlPath = try {
+            request.pathInfo.replace("/ocpi/custom/${module}/${interfaceRole}", "")
+        } catch (e: IllegalStateException) { // catch IllegalStateException: request.pathInfo must not be null
+            null
+        }
 
         val requestVariables = OcpiRequestVariables(
                 module = ModuleID.CUSTOM,
@@ -38,8 +42,8 @@ class CustomModulesController(private val requestHandlerBuilder: OcpiRequestHand
                 interfaceRole = InterfaceRole.resolve(interfaceRole),
                 method = HttpMethod.valueOf(request.method),
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
-                urlPath = pathWildcards,
-                queryParams = params,
+                urlPath = urlPath,
+                queryParams = queryParams,
                 body = body)
 
         return requestHandlerBuilder
