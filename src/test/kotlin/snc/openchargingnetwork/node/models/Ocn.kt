@@ -33,6 +33,118 @@ class OcnAppPermissionsTest {
                 Arguments.of(PermissionsMatcherTestCase(
                         request = BasicRequestType(ModuleID.COMMANDS, InterfaceRole.RECEIVER),
                         permission = OcnAppPermission.FORWARD_ALL_SENDER,
+                        expected = false)),
+                Arguments.of(PermissionsMatcherTestCase(
+                        request = BasicRequestType(ModuleID.LOCATIONS, InterfaceRole.SENDER),
+                        permission = OcnAppPermission.FORWARD_MODULE_LOCATIONS_SENDER,
+                        expected = true)),
+                Arguments.of(PermissionsMatcherTestCase(
+                        request = BasicRequestType(ModuleID.LOCATIONS, InterfaceRole.RECEIVER),
+                        permission = OcnAppPermission.FORWARD_MODULE_LOCATIONS_SENDER,
+                        expected = false)),
+                Arguments.of(PermissionsMatcherTestCase(
+                        request = BasicRequestType(ModuleID.LOCATIONS, InterfaceRole.RECEIVER),
+                        permission = OcnAppPermission.FORWARD_MODULE_LOCATIONS_RECEIVER,
+                        expected = true)),
+                Arguments.of(PermissionsMatcherTestCase(
+                        request = BasicRequestType(ModuleID.LOCATIONS, InterfaceRole.SENDER),
+                        permission = OcnAppPermission.FORWARD_MODULE_LOCATIONS_RECEIVER,
+                        expected = false)),
+                Arguments.of(PermissionsMatcherTestCase(
+                        request = BasicRequestType(ModuleID.SESSIONS, InterfaceRole.SENDER),
+                        permission = OcnAppPermission.FORWARD_MODULE_SESSIONS_SENDER,
+                        expected = true)),
+                Arguments.of(PermissionsMatcherTestCase(
+                        request = BasicRequestType(ModuleID.SESSIONS, InterfaceRole.RECEIVER),
+                        permission = OcnAppPermission.FORWARD_MODULE_SESSIONS_SENDER,
+                        expected = false)),
+                Arguments.of(PermissionsMatcherTestCase(
+                        request = BasicRequestType(ModuleID.SESSIONS, InterfaceRole.RECEIVER),
+                        permission = OcnAppPermission.FORWARD_MODULE_SESSIONS_RECEIVER,
+                        expected = true)),
+                Arguments.of(PermissionsMatcherTestCase(
+                        request = BasicRequestType(ModuleID.SESSIONS, InterfaceRole.SENDER),
+                        permission = OcnAppPermission.FORWARD_MODULE_SESSIONS_RECEIVER,
+                        expected = false)),
+                Arguments.of(PermissionsMatcherTestCase(
+                        request = BasicRequestType(ModuleID.CDRS, InterfaceRole.SENDER),
+                        permission = OcnAppPermission.FORWARD_MODULE_CDRS_SENDER,
+                        expected = true)),
+                Arguments.of(PermissionsMatcherTestCase(
+                        request = BasicRequestType(ModuleID.CDRS, InterfaceRole.RECEIVER),
+                        permission = OcnAppPermission.FORWARD_MODULE_CDRS_SENDER,
+                        expected = false)),
+                Arguments.of(PermissionsMatcherTestCase(
+                        request = BasicRequestType(ModuleID.CDRS, InterfaceRole.RECEIVER),
+                        permission = OcnAppPermission.FORWARD_MODULE_CDRS_RECEIVER,
+                        expected = true)),
+                Arguments.of(PermissionsMatcherTestCase(
+                        request = BasicRequestType(ModuleID.CDRS, InterfaceRole.SENDER),
+                        permission = OcnAppPermission.FORWARD_MODULE_CDRS_RECEIVER,
+                        expected = false)),
+                Arguments.of(PermissionsMatcherTestCase(
+                        request = BasicRequestType(ModuleID.TARIFFS, InterfaceRole.SENDER),
+                        permission = OcnAppPermission.FORWARD_MODULE_TARIFFS_SENDER,
+                        expected = true)),
+                Arguments.of(PermissionsMatcherTestCase(
+                        request = BasicRequestType(ModuleID.TARIFFS, InterfaceRole.RECEIVER),
+                        permission = OcnAppPermission.FORWARD_MODULE_TARIFFS_SENDER,
+                        expected = false)),
+                Arguments.of(PermissionsMatcherTestCase(
+                        request = BasicRequestType(ModuleID.TARIFFS, InterfaceRole.RECEIVER),
+                        permission = OcnAppPermission.FORWARD_MODULE_TARIFFS_RECEIVER,
+                        expected = true)),
+                Arguments.of(PermissionsMatcherTestCase(
+                        request = BasicRequestType(ModuleID.TARIFFS, InterfaceRole.SENDER),
+                        permission = OcnAppPermission.FORWARD_MODULE_TARIFFS_RECEIVER,
+                        expected = false)),
+                Arguments.of(PermissionsMatcherTestCase(
+                        request = BasicRequestType(ModuleID.TOKENS, InterfaceRole.SENDER),
+                        permission = OcnAppPermission.FORWARD_MODULE_TOKENS_SENDER,
+                        expected = true)),
+                Arguments.of(PermissionsMatcherTestCase(
+                        request = BasicRequestType(ModuleID.TOKENS, InterfaceRole.RECEIVER),
+                        permission = OcnAppPermission.FORWARD_MODULE_TOKENS_SENDER,
+                        expected = false)),
+                Arguments.of(PermissionsMatcherTestCase(
+                        request = BasicRequestType(ModuleID.TOKENS, InterfaceRole.RECEIVER),
+                        permission = OcnAppPermission.FORWARD_MODULE_TOKENS_RECEIVER,
+                        expected = true)),
+                Arguments.of(PermissionsMatcherTestCase(
+                        request = BasicRequestType(ModuleID.TOKENS, InterfaceRole.SENDER),
+                        permission = OcnAppPermission.FORWARD_MODULE_TOKENS_RECEIVER,
+                        expected = false)),
+                Arguments.of(PermissionsMatcherTestCase(
+                        request = BasicRequestType(ModuleID.COMMANDS, InterfaceRole.SENDER),
+                        permission = OcnAppPermission.FORWARD_MODULE_COMMANDS_SENDER,
+                        expected = true)),
+                Arguments.of(PermissionsMatcherTestCase(
+                        request = BasicRequestType(ModuleID.COMMANDS, InterfaceRole.RECEIVER),
+                        permission = OcnAppPermission.FORWARD_MODULE_COMMANDS_SENDER,
+                        expected = false)),
+                Arguments.of(PermissionsMatcherTestCase(
+                        request = BasicRequestType(ModuleID.COMMANDS, InterfaceRole.RECEIVER),
+                        permission = OcnAppPermission.FORWARD_MODULE_COMMANDS_RECEIVER,
+                        expected = true)),
+                Arguments.of(PermissionsMatcherTestCase(
+                        request = BasicRequestType(ModuleID.COMMANDS, InterfaceRole.SENDER),
+                        permission = OcnAppPermission.FORWARD_MODULE_COMMANDS_RECEIVER,
+                        expected = false)),
+                Arguments.of(PermissionsMatcherTestCase(
+                        request = BasicRequestType(ModuleID.CHARGING_PROFILES, InterfaceRole.SENDER),
+                        permission = OcnAppPermission.FORWARD_MODULE_CHARGINGPROFILES_SENDER,
+                        expected = true)),
+                Arguments.of(PermissionsMatcherTestCase(
+                        request = BasicRequestType(ModuleID.CHARGING_PROFILES, InterfaceRole.RECEIVER),
+                        permission = OcnAppPermission.FORWARD_MODULE_CHARGINGPROFILES_SENDER,
+                        expected = false)),
+                Arguments.of(PermissionsMatcherTestCase(
+                        request = BasicRequestType(ModuleID.CHARGING_PROFILES, InterfaceRole.RECEIVER),
+                        permission = OcnAppPermission.FORWARD_MODULE_CHARGINGPROFILES_RECEIVER,
+                        expected = true)),
+                Arguments.of(PermissionsMatcherTestCase(
+                        request = BasicRequestType(ModuleID.CHARGING_PROFILES, InterfaceRole.SENDER),
+                        permission = OcnAppPermission.FORWARD_MODULE_CHARGINGPROFILES_RECEIVER,
                         expected = false))
         )
     }
