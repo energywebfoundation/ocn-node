@@ -57,7 +57,7 @@ class LocationsController(private val requestHandlerBuilder: OcpiRequestHandlerB
                 interfaceRole = InterfaceRole.SENDER,
                 method = HttpMethod.GET,
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
-                urlEncodedParams = params)
+                queryParams = params)
 
         return requestHandlerBuilder
                 .build<Array<Location>>(requestVariables)
@@ -84,7 +84,7 @@ class LocationsController(private val requestHandlerBuilder: OcpiRequestHandlerB
                 interfaceRole = InterfaceRole.SENDER,
                 method = HttpMethod.GET,
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
-                urlPathVariables = uid)
+                urlPath = uid)
 
         return requestHandlerBuilder
                 .build<Array<Location>>(requestVariables)
@@ -111,7 +111,7 @@ class LocationsController(private val requestHandlerBuilder: OcpiRequestHandlerB
                 interfaceRole = InterfaceRole.SENDER,
                 method = HttpMethod.GET,
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
-                urlPathVariables = locationID)
+                urlPath = locationID)
 
         return requestHandlerBuilder
                 .build<Location>(requestVariables)
@@ -139,7 +139,7 @@ class LocationsController(private val requestHandlerBuilder: OcpiRequestHandlerB
                 interfaceRole = InterfaceRole.SENDER,
                 method = HttpMethod.GET,
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
-                urlPathVariables = "/$locationID/$evseUID")
+                urlPath = "/$locationID/$evseUID")
 
         return requestHandlerBuilder
                 .build<Evse>(requestVariables)
@@ -168,7 +168,7 @@ class LocationsController(private val requestHandlerBuilder: OcpiRequestHandlerB
                 interfaceRole = InterfaceRole.SENDER,
                 method = HttpMethod.GET,
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
-                urlPathVariables = "/$locationID/$evseUID/$connectorID")
+                urlPath = "/$locationID/$evseUID/$connectorID")
 
         return requestHandlerBuilder
                 .build<Connector>(requestVariables)
@@ -202,7 +202,7 @@ class LocationsController(private val requestHandlerBuilder: OcpiRequestHandlerB
                 interfaceRole = InterfaceRole.RECEIVER,
                 method = HttpMethod.GET,
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
-                urlPathVariables = "/$countryCode/$partyID/$locationID")
+                urlPath = "/$countryCode/$partyID/$locationID")
 
         return requestHandlerBuilder
                 .build<Location>(requestVariables)
@@ -232,7 +232,7 @@ class LocationsController(private val requestHandlerBuilder: OcpiRequestHandlerB
                 interfaceRole = InterfaceRole.RECEIVER,
                 method = HttpMethod.GET,
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
-                urlPathVariables = "/$countryCode/$partyID/$locationID/$evseUID")
+                urlPath = "/$countryCode/$partyID/$locationID/$evseUID")
 
         return requestHandlerBuilder
                 .build<Evse>(requestVariables)
@@ -263,7 +263,7 @@ class LocationsController(private val requestHandlerBuilder: OcpiRequestHandlerB
                 interfaceRole = InterfaceRole.RECEIVER,
                 method = HttpMethod.GET,
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
-                urlPathVariables = "/$countryCode/$partyID/$locationID/$evseUID/$connectorID")
+                urlPath = "/$countryCode/$partyID/$locationID/$evseUID/$connectorID")
 
         return requestHandlerBuilder
                 .build<Connector>(requestVariables)
@@ -293,7 +293,7 @@ class LocationsController(private val requestHandlerBuilder: OcpiRequestHandlerB
                 interfaceRole = InterfaceRole.RECEIVER,
                 method = HttpMethod.PUT,
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
-                urlPathVariables = "/$countryCode/$partyID/$locationID",
+                urlPath = "/$countryCode/$partyID/$locationID",
                 body = body)
 
         return requestHandlerBuilder
@@ -325,7 +325,7 @@ class LocationsController(private val requestHandlerBuilder: OcpiRequestHandlerB
                 interfaceRole = InterfaceRole.RECEIVER,
                 method = HttpMethod.PUT,
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
-                urlPathVariables = "/$countryCode/$partyID/$locationID/$evseUID",
+                urlPath = "/$countryCode/$partyID/$locationID/$evseUID",
                 body = body)
 
         return requestHandlerBuilder
@@ -358,7 +358,7 @@ class LocationsController(private val requestHandlerBuilder: OcpiRequestHandlerB
                 interfaceRole = InterfaceRole.RECEIVER,
                 method = HttpMethod.PUT,
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
-                urlPathVariables = "/$countryCode/$partyID/$locationID/$evseUID/$connectorID",
+                urlPath = "/$countryCode/$partyID/$locationID/$evseUID/$connectorID",
                 body = body)
 
         return requestHandlerBuilder
@@ -389,7 +389,7 @@ class LocationsController(private val requestHandlerBuilder: OcpiRequestHandlerB
                 interfaceRole = InterfaceRole.RECEIVER,
                 method = HttpMethod.PATCH,
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
-                urlPathVariables = "/$countryCode/$partyID/$locationID",
+                urlPath = "/$countryCode/$partyID/$locationID",
                 body = body)
 
         return requestHandlerBuilder
@@ -421,7 +421,7 @@ class LocationsController(private val requestHandlerBuilder: OcpiRequestHandlerB
                 interfaceRole = InterfaceRole.RECEIVER,
                 method = HttpMethod.PATCH,
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
-                urlPathVariables = "/$countryCode/$partyID/$locationID/$evseUID",
+                urlPath = "/$countryCode/$partyID/$locationID/$evseUID",
                 body = body)
 
         return requestHandlerBuilder
@@ -454,7 +454,7 @@ class LocationsController(private val requestHandlerBuilder: OcpiRequestHandlerB
                 interfaceRole = InterfaceRole.RECEIVER,
                 method = HttpMethod.PATCH,
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
-                urlPathVariables = "/$countryCode/$partyID/$locationID/$evseUID/$connectorID",
+                urlPath = "/$countryCode/$partyID/$locationID/$evseUID/$connectorID",
                 body = body)
 
         return requestHandlerBuilder

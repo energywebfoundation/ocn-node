@@ -6,7 +6,6 @@ import org.springframework.web.bind.annotation.*
 import snc.openchargingnetwork.node.components.OcpiRequestHandlerBuilder
 import snc.openchargingnetwork.node.models.OcnHeaders
 import snc.openchargingnetwork.node.models.ocpi.*
-import snc.openchargingnetwork.node.tools.toQueryMap
 import javax.servlet.http.HttpServletRequest
 
 @RestController
@@ -24,13 +23,14 @@ class CustomModulesController(private val requestHandlerBuilder: OcpiRequestHand
                             @RequestHeader("OCPI-to-party-id") toPartyID: String,
                             @PathVariable module: String,
                             @PathVariable interfaceRole: String,
+                            @RequestParam params: Map<String, Any>,
                             @RequestBody body: String?,
                             request: HttpServletRequest): ResponseEntity<OcpiResponse<Any>> {
 
-        val sender = BasicRole(fromPartyID, fromCountryCode).toUpperCase()
-        val receiver = BasicRole(toPartyID, toCountryCode).toUpperCase()
+        val sender = BasicRole(fromPartyID, fromCountryCode)
+        val receiver = BasicRole(toPartyID, toCountryCode)
 
-        val pathWildcards = request.pathInfo.replace("/ocpi/custom/${module}/${interfaceRole}/", "")
+        val pathWildcards = request.pathInfo.replace("/ocpi/custom/${module}/${interfaceRole}", "")
 
         val requestVariables = OcpiRequestVariables(
                 module = ModuleID.CUSTOM,
@@ -38,8 +38,8 @@ class CustomModulesController(private val requestHandlerBuilder: OcpiRequestHand
                 interfaceRole = InterfaceRole.resolve(interfaceRole),
                 method = HttpMethod.valueOf(request.method),
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
-                urlPathVariables = pathWildcards,
-                urlEncodedParams = request.queryString.toQueryMap(),
+                urlPath = pathWildcards,
+                queryParams = params,
                 body = body)
 
         return requestHandlerBuilder

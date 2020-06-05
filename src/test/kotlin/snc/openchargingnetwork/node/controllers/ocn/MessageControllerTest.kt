@@ -37,7 +37,7 @@ class MessageControllerTest(@Autowired val mockMvc: MockMvc) {
                 method = HttpMethod.GET,
                 module = ModuleID.LOCATIONS,
                 interfaceRole = InterfaceRole.SENDER,
-                urlPathVariables = "LOC2",
+                urlPath = "LOC2",
                 headers = OcnHeaders(
                         authorization = "",
                         requestID = "123",

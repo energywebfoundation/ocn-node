@@ -56,7 +56,7 @@ class TokensController(private val requestHandlerBuilder: OcpiRequestHandlerBuil
                 interfaceRole = InterfaceRole.SENDER,
                 method = HttpMethod.GET,
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
-                urlEncodedParams = params)
+                queryParams = params)
 
         return requestHandlerBuilder
                 .build<Array<Token>>(requestVariables)
@@ -83,7 +83,7 @@ class TokensController(private val requestHandlerBuilder: OcpiRequestHandlerBuil
                 interfaceRole = InterfaceRole.SENDER,
                 method = HttpMethod.GET,
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
-                urlPathVariables = uid)
+                urlPath = uid)
 
         return requestHandlerBuilder
                 .build<Array<Token>>(requestVariables)
@@ -113,8 +113,8 @@ class TokensController(private val requestHandlerBuilder: OcpiRequestHandlerBuil
                 interfaceRole = InterfaceRole.SENDER,
                 method = HttpMethod.POST,
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
-                urlPathVariables = "$tokenUID/authorize",
-                urlEncodedParams = mapOf("type" to type),
+                urlPath = "$tokenUID/authorize",
+                queryParams = mapOf("type" to type),
                 body = body)
 
         return requestHandlerBuilder
@@ -150,8 +150,8 @@ class TokensController(private val requestHandlerBuilder: OcpiRequestHandlerBuil
                 interfaceRole = InterfaceRole.RECEIVER,
                 method = HttpMethod.GET,
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
-                urlPathVariables = "/$countryCode/$partyID/$tokenUID",
-                urlEncodedParams = mapOf("type" to type))
+                urlPath = "/$countryCode/$partyID/$tokenUID",
+                queryParams = mapOf("type" to type))
 
         return requestHandlerBuilder
                 .build<Token>(requestVariables)
@@ -182,8 +182,8 @@ class TokensController(private val requestHandlerBuilder: OcpiRequestHandlerBuil
                 interfaceRole = InterfaceRole.RECEIVER,
                 method = HttpMethod.PUT,
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
-                urlPathVariables = "/$countryCode/$partyID/$tokenUID",
-                urlEncodedParams = mapOf("type" to type),
+                urlPath = "/$countryCode/$partyID/$tokenUID",
+                queryParams = mapOf("type" to type),
                 body = body)
 
         return requestHandlerBuilder
@@ -215,8 +215,8 @@ class TokensController(private val requestHandlerBuilder: OcpiRequestHandlerBuil
                 interfaceRole = InterfaceRole.RECEIVER,
                 method = HttpMethod.PATCH,
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
-                urlPathVariables = "/$countryCode/$partyID/$tokenUID",
-                urlEncodedParams = mapOf("type" to type),
+                urlPath = "/$countryCode/$partyID/$tokenUID",
+                queryParams = mapOf("type" to type),
                 body = body)
 
         return requestHandlerBuilder

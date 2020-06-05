@@ -55,8 +55,8 @@ data class OcpiRequestVariables(@JsonProperty("module") val module: ModuleID,
                                 @JsonProperty("interface_role") val interfaceRole: InterfaceRole,
                                 @JsonProperty("method") val method: HttpMethod,
                                 @JsonProperty("headers") val headers: OcnHeaders,
-                                @JsonProperty("url_path_variables") val urlPathVariables: String? = null,
-                                @JsonProperty("url_encoded_params") val urlEncodedParams: Map<String, Any?>? = null,
+                                @JsonProperty("url_path") val urlPath: String? = null,
+                                @JsonProperty("query_params") val queryParams: Map<String, Any?>? = null,
                                 @JsonProperty("proxy_uid") val proxyUID: String? = null,
                                 @JsonProperty("proxy_resource") val proxyResource: String? = null,
                                 @JsonProperty("custom_module_id") val customModuleId: String? = null,
@@ -74,9 +74,18 @@ data class OcpiRequestVariables(@JsonProperty("module") val module: ModuleID,
     fun toSignedValues(): ValuesToSign<*> {
         return ValuesToSign(
                 headers = headers.toSignedHeaders(),
-                params = urlEncodedParams,
+                params = queryParams,
                 body = body)
+    }
+
+    fun resolveModuleId(): String {
+        return if (module != ModuleID.CUSTOM) {
+            module.id
+        } else {
+            customModuleId!!
         }
+    }
+
 }
 
 

@@ -57,7 +57,7 @@ class CdrsController(private val requestHandlerBuilder: OcpiRequestHandlerBuilde
                 interfaceRole = InterfaceRole.SENDER,
                 method = HttpMethod.GET,
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
-                urlEncodedParams = params)
+                queryParams = params)
 
         // TODO: all pagination response header links should contain original url-encoded parameters
         return requestHandlerBuilder
@@ -85,7 +85,7 @@ class CdrsController(private val requestHandlerBuilder: OcpiRequestHandlerBuilde
                 interfaceRole = InterfaceRole.SENDER,
                 method = HttpMethod.GET,
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
-                urlPathVariables = uid)
+                urlPath = uid)
 
         return requestHandlerBuilder
                 .build<Array<CDR>>(requestVariables)
@@ -117,7 +117,7 @@ class CdrsController(private val requestHandlerBuilder: OcpiRequestHandlerBuilde
                 interfaceRole = InterfaceRole.RECEIVER,
                 method = HttpMethod.GET,
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
-                urlPathVariables = cdrID)
+                urlPath = cdrID)
 
         return requestHandlerBuilder
                 .build<CDR>(requestVariables)

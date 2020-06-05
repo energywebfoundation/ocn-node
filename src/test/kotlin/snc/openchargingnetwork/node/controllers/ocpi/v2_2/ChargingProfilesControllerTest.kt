@@ -40,7 +40,7 @@ class ChargingProfilesControllerTest(@Autowired val mockMvc: MockMvc) {
                         correlationID = "666",
                         sender = BasicRole("SNC", "CH"),
                         receiver = BasicRole("ABC", "DE")),
-                urlPathVariables = "12345",
+                urlPath = "12345",
                 body = GenericChargingProfileResult(result = ChargingProfileResultType.ACCEPTED))
 
         val requestHandler: OcpiRequestHandler<Unit> = mockk()
@@ -78,7 +78,7 @@ class ChargingProfilesControllerTest(@Autowired val mockMvc: MockMvc) {
                         correlationID = "666",
                         sender = BasicRole("SNC", "CH"),
                         receiver = BasicRole("ABC", "DE")),
-                urlPathVariables = "1234567890",
+                urlPath = "1234567890",
                 body = ActiveChargingProfile(
                         startDateTime = getTimestamp(),
                         chargingProfile = ChargingProfile(
@@ -124,8 +124,8 @@ class ChargingProfilesControllerTest(@Autowired val mockMvc: MockMvc) {
                         correlationID = "666",
                         sender = BasicRole("SNC", "CH"),
                         receiver = BasicRole("ABC", "DE")),
-                urlPathVariables = "0987654321",
-                urlEncodedParams = mapOf("duration" to 30, "response_url" to "https://server.com/profiles/1"))
+                urlPath = "0987654321",
+                queryParams = mapOf("duration" to 30, "response_url" to "https://server.com/profiles/1"))
 
         val requestHandler: OcpiRequestHandler<ChargingProfileResponse> = mockk()
 
@@ -167,7 +167,7 @@ class ChargingProfilesControllerTest(@Autowired val mockMvc: MockMvc) {
                         correlationID = "666",
                         sender = BasicRole("SNC", "CH"),
                         receiver = BasicRole("ABC", "DE")),
-                urlPathVariables = "0102030405",
+                urlPath = "0102030405",
                 body = SetChargingProfile(
                         chargingProfile = ChargingProfile(startDateTime = getTimestamp(), chargingRateUnit = ChargingRateUnit.W),
                         responseUrl = "https://smart.charging.net/profiles/0102030405"
@@ -213,8 +213,8 @@ class ChargingProfilesControllerTest(@Autowired val mockMvc: MockMvc) {
                         correlationID = "666",
                         sender = BasicRole("SNC", "CH"),
                         receiver = BasicRole("ABC", "DE")),
-                urlPathVariables = "333666999",
-                urlEncodedParams = mapOf("response_url" to "https://scsp.io/ocpi/callback/369"))
+                urlPath = "333666999",
+                queryParams = mapOf("response_url" to "https://scsp.io/ocpi/callback/369"))
 
         val requestHandler: OcpiRequestHandler<ChargingProfileResponse> = mockk()
 

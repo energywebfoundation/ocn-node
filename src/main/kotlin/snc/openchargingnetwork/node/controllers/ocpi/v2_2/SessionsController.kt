@@ -57,7 +57,7 @@ class SessionsController(private val requestHandlerBuilder: OcpiRequestHandlerBu
                 interfaceRole = InterfaceRole.SENDER,
                 method = HttpMethod.GET,
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
-                urlEncodedParams = params)
+                queryParams = params)
 
         return requestHandlerBuilder
                 .build<Array<Session>>(requestVariables)
@@ -84,7 +84,7 @@ class SessionsController(private val requestHandlerBuilder: OcpiRequestHandlerBu
                 interfaceRole = InterfaceRole.SENDER,
                 method = HttpMethod.GET,
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
-                urlPathVariables = uid)
+                urlPath = uid)
 
 
         return requestHandlerBuilder
@@ -113,7 +113,7 @@ class SessionsController(private val requestHandlerBuilder: OcpiRequestHandlerBu
                 interfaceRole = InterfaceRole.SENDER,
                 method = HttpMethod.PUT,
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
-                urlPathVariables = "/$sessionID/charging_preferences",
+                urlPath = "/$sessionID/charging_preferences",
                 body = body)
 
         return requestHandlerBuilder
@@ -148,7 +148,7 @@ class SessionsController(private val requestHandlerBuilder: OcpiRequestHandlerBu
                 interfaceRole = InterfaceRole.RECEIVER,
                 method = HttpMethod.GET,
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
-                urlPathVariables = "/$countryCode/$partyID/$sessionID")
+                urlPath = "/$countryCode/$partyID/$sessionID")
 
         return requestHandlerBuilder
                 .build<Session>(requestVariables)
@@ -178,7 +178,7 @@ class SessionsController(private val requestHandlerBuilder: OcpiRequestHandlerBu
                 interfaceRole = InterfaceRole.RECEIVER,
                 method = HttpMethod.PUT,
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
-                urlPathVariables = "/$countryCode/$partyID/$sessionID",
+                urlPath = "/$countryCode/$partyID/$sessionID",
                 body = body)
 
         return requestHandlerBuilder
@@ -209,7 +209,7 @@ class SessionsController(private val requestHandlerBuilder: OcpiRequestHandlerBu
                 interfaceRole = InterfaceRole.RECEIVER,
                 method = HttpMethod.PATCH,
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
-                urlPathVariables = "/$countryCode/$partyID/$sessionID",
+                urlPath = "/$countryCode/$partyID/$sessionID",
                 body = body)
 
         return requestHandlerBuilder

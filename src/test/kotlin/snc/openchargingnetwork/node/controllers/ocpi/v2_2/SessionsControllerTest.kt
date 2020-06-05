@@ -51,7 +51,7 @@ class SessionsControllerTest(@Autowired val mockMvc: MockMvc) {
                         correlationID = generateUUIDv4Token(),
                         sender = sender,
                         receiver = receiver),
-                urlEncodedParams = mapOf("date_from" to dateFrom, "limit" to 20))
+                queryParams = mapOf("date_from" to dateFrom, "limit" to 20))
 
         val mockRequestHandler = mockk<OcpiRequestHandler<Array<Session>>>()
 
@@ -107,7 +107,7 @@ class SessionsControllerTest(@Autowired val mockMvc: MockMvc) {
                         correlationID = generateUUIDv4Token(),
                         sender = sender,
                         receiver = receiver),
-                urlPathVariables = "2247")
+                urlPath = "2247")
 
         val mockRequestHandler = mockk<OcpiRequestHandler<Array<Session>>>()
 
@@ -123,7 +123,7 @@ class SessionsControllerTest(@Autowired val mockMvc: MockMvc) {
                 .headers(responseHeaders)
                 .body(OcpiResponse(statusCode = 1000, data = arrayOf(exampleSession)))
 
-        mockMvc.perform(get("/ocpi/sender/2.2/sessions/page/${requestVariables.urlPathVariables}")
+        mockMvc.perform(get("/ocpi/sender/2.2/sessions/page/${requestVariables.urlPath}")
                 .header("Authorization", "Token token-c")
                 .header("X-Request-ID", requestVariables.headers.requestID)
                 .header("X-Correlation-ID", requestVariables.headers.correlationID)
@@ -163,7 +163,7 @@ class SessionsControllerTest(@Autowired val mockMvc: MockMvc) {
                         correlationID = generateUUIDv4Token(),
                         sender = sender,
                         receiver = receiver),
-                urlPathVariables = "/2247/charging_preferences",
+                urlPath = "/2247/charging_preferences",
                 body = body)
 
         val mockRequestHandler = mockk<OcpiRequestHandler<ChargingPreferencesResponse>>()
@@ -210,7 +210,7 @@ class SessionsControllerTest(@Autowired val mockMvc: MockMvc) {
                         correlationID = generateUUIDv4Token(),
                         sender = sender,
                         receiver = receiver),
-                urlPathVariables = "/${sender.country}/${sender.id}/$sessionID")
+                urlPath = "/${sender.country}/${sender.id}/$sessionID")
 
         val mockRequestHandler = mockk<OcpiRequestHandler<Session>>()
 
@@ -256,7 +256,7 @@ class SessionsControllerTest(@Autowired val mockMvc: MockMvc) {
                         correlationID = generateUUIDv4Token(),
                         sender = sender,
                         receiver = receiver),
-                urlPathVariables = "/${sender.country}/${sender.id}/$sessionID",
+                urlPath = "/${sender.country}/${sender.id}/$sessionID",
                 body = body)
 
         val mockRequestHandler = mockk<OcpiRequestHandler<Unit>>()
@@ -304,7 +304,7 @@ class SessionsControllerTest(@Autowired val mockMvc: MockMvc) {
                         correlationID = generateUUIDv4Token(),
                         sender = sender,
                         receiver = receiver),
-                urlPathVariables = "/${sender.country}/${sender.id}/$sessionID",
+                urlPath = "/${sender.country}/${sender.id}/$sessionID",
                 body = body)
 
         val mockRequestHandler = mockk<OcpiRequestHandler<Unit>>()

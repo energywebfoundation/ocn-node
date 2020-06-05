@@ -52,7 +52,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
                         correlationID = generateUUIDv4Token(),
                         sender = sender,
                         receiver = receiver),
-                urlEncodedParams = mapOf("date_from" to dateFrom))
+                queryParams = mapOf("date_from" to dateFrom))
 
         val mockRequestHandler = mockk<OcpiRequestHandler<Array<Location>>>()
 
@@ -111,7 +111,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
                         correlationID = generateUUIDv4Token(),
                         sender = sender,
                         receiver = receiver),
-                urlPathVariables = "67")
+                urlPath = "67")
 
         val mockRequestHandler = mockk<OcpiRequestHandler<Array<Location>>>()
 
@@ -128,7 +128,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
                         statusCode = 1000,
                         data = arrayOf(exampleLocation2)))
 
-        mockMvc.perform(get("/ocpi/sender/2.2/locations/page/${requestVariables.urlPathVariables}")
+        mockMvc.perform(get("/ocpi/sender/2.2/locations/page/${requestVariables.urlPath}")
                 .header("Authorization", "Token token-c")
                 .header("X-Request-ID", requestVariables.headers.requestID)
                 .header("X-Correlation-ID", requestVariables.headers.correlationID)
@@ -168,7 +168,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
                         correlationID = generateUUIDv4Token(),
                         sender = sender,
                         receiver = receiver),
-                urlPathVariables = locationID)
+                urlPath = locationID)
 
         val mockRequestHandler = mockk<OcpiRequestHandler<Location>>()
 
@@ -216,7 +216,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
                         correlationID = generateUUIDv4Token(),
                         sender = sender,
                         receiver = receiver),
-                urlPathVariables = "/$locationID/$evseUID")
+                urlPath = "/$locationID/$evseUID")
 
         val mockRequestHandler = mockk<OcpiRequestHandler<Evse>>()
 
@@ -265,7 +265,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
                         correlationID = generateUUIDv4Token(),
                         sender = sender,
                         receiver = receiver),
-                urlPathVariables = "/$locationID/$evseUID/$connectorID")
+                urlPath = "/$locationID/$evseUID/$connectorID")
 
         val mockRequestHandler = mockk<OcpiRequestHandler<Connector>>()
 
@@ -312,7 +312,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
                         correlationID = generateUUIDv4Token(),
                         sender = sender,
                         receiver = receiver),
-                urlPathVariables = "/${sender.country}/${sender.id}/$locationID")
+                urlPath = "/${sender.country}/${sender.id}/$locationID")
 
         val mockRequestHandler = mockk<OcpiRequestHandler<Location>>()
 
@@ -360,7 +360,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
                         correlationID = generateUUIDv4Token(),
                         sender = sender,
                         receiver = receiver),
-                urlPathVariables = "/${sender.country}/${sender.id}/$locationID/$evseUID")
+                urlPath = "/${sender.country}/${sender.id}/$locationID/$evseUID")
 
         val mockRequestHandler = mockk<OcpiRequestHandler<Evse>>()
 
@@ -409,7 +409,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
                         correlationID = generateUUIDv4Token(),
                         sender = sender,
                         receiver = receiver),
-                urlPathVariables = "/${sender.country}/${sender.id}/$locationID/$evseUID/$connectorID")
+                urlPath = "/${sender.country}/${sender.id}/$locationID/$evseUID/$connectorID")
 
         val mockRequestHandler = mockk<OcpiRequestHandler<Connector>>()
 
@@ -457,7 +457,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
                         correlationID = generateUUIDv4Token(),
                         sender = sender,
                         receiver = receiver),
-                urlPathVariables = "/${sender.country}/${sender.id}/$locationID",
+                urlPath = "/${sender.country}/${sender.id}/$locationID",
                 body = exampleLocation2)
 
         val mockRequestHandler = mockk<OcpiRequestHandler<Unit>>()
@@ -506,7 +506,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
                         correlationID = generateUUIDv4Token(),
                         sender = sender,
                         receiver = receiver),
-                urlPathVariables = "/${sender.country}/${sender.id}/$locationID/$evseUID",
+                urlPath = "/${sender.country}/${sender.id}/$locationID/$evseUID",
                 body = body)
 
         val mockRequestHandler = mockk<OcpiRequestHandler<Unit>>()
@@ -556,7 +556,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
                         correlationID = generateUUIDv4Token(),
                         sender = sender,
                         receiver = receiver),
-                urlPathVariables = "/${sender.country}/${sender.id}/$locationID/$evseUID/$connectorID",
+                urlPath = "/${sender.country}/${sender.id}/$locationID/$evseUID/$connectorID",
                 body = body)
 
         val mockRequestHandler = mockk<OcpiRequestHandler<Unit>>()
@@ -604,7 +604,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
                         correlationID = generateUUIDv4Token(),
                         sender = sender,
                         receiver = receiver),
-                urlPathVariables = "/${sender.country}/${sender.id}/$locationID",
+                urlPath = "/${sender.country}/${sender.id}/$locationID",
                 body = body)
 
         val mockRequestHandler = mockk<OcpiRequestHandler<Unit>>()
@@ -654,7 +654,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
                         correlationID = generateUUIDv4Token(),
                         sender = sender,
                         receiver = receiver),
-                urlPathVariables = "/${sender.country}/${sender.id}/$locationID/$evseUID",
+                urlPath = "/${sender.country}/${sender.id}/$locationID/$evseUID",
                 body = body)
 
         val mockRequestHandler = mockk<OcpiRequestHandler<Unit>>()
@@ -705,7 +705,7 @@ class LocationsControllerTest(@Autowired val mockMvc: MockMvc) {
                         correlationID = generateUUIDv4Token(),
                         sender = sender,
                         receiver = receiver),
-                urlPathVariables = "/${sender.country}/${sender.id}/$locationID/$evseUID/$connectorID",
+                urlPath = "/${sender.country}/${sender.id}/$locationID/$evseUID/$connectorID",
                 body = body)
 
         val mockRequestHandler = mockk<OcpiRequestHandler<Unit>>()

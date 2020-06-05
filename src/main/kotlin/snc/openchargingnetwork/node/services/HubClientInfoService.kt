@@ -168,7 +168,7 @@ class HubClientInfoService(private val platformRepo: PlatformRepository,
                             sender = sender,
                             receiver = receiver),
                     body = changedClientInfo,
-                    urlPathVariables = "${changedClientInfo.countryCode}/${changedClientInfo.partyID}")
+                    urlPath = "${changedClientInfo.countryCode}/${changedClientInfo.partyID}")
 
             val (url, headers) = routingService.prepareLocalPlatformRequest(requestVariables, proxied = false)
 

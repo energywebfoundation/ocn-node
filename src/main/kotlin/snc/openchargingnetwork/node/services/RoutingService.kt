@@ -77,9 +77,8 @@ class RoutingService(private val platformRepo: PlatformRepository,
     /**
      * get OCPI platform endpoint information using platform ID (from above)
      */
-    fun getPlatformEndpoint(platformID: Long?, module: ModuleID, interfaceRole: InterfaceRole, customModuleId: String? = null): EndpointEntity {
-        val moduleId = if (customModuleId !== null) { customModuleId } else { module.id }
-        return endpointRepo.findByPlatformIDAndIdentifierAndRole(platformID, moduleId, interfaceRole)
+    fun getPlatformEndpoint(platformID: Long?, moduleID: String, interfaceRole: InterfaceRole): EndpointEntity {
+        return endpointRepo.findByPlatformIDAndIdentifierAndRole(platformID, moduleID, interfaceRole)
                 ?: throw OcpiClientInvalidParametersException("Receiver does not support the requested module")
     }
 
@@ -146,7 +145,7 @@ class RoutingService(private val platformRepo: PlatformRepository,
 
             // local sender is requesting a resource/url via a proxy
             // returns the resource behind the proxy
-            proxied -> getProxyResource(request.urlPathVariables, request.headers.sender, request.headers.receiver)
+            proxied -> getProxyResource(request.urlPath, request.headers.sender, request.headers.receiver)
 
             // remote sender is requesting a resource/url via a proxy
             // return the proxied resource as defined by the sender
@@ -160,14 +159,14 @@ class RoutingService(private val platformRepo: PlatformRepository,
                         sender = request.headers.receiver,
                         receiver = request.headers.sender,
                         alternativeUID = request.proxyUID)
-                val endpoint = getPlatformEndpoint(platformID, request.module, request.interfaceRole)
-                urlJoin(endpoint.url, request.urlPathVariables)
+                val endpoint = getPlatformEndpoint(platformID, request.resolveModuleId(), request.interfaceRole)
+                urlJoin(endpoint.url, request.urlPath)
             }
 
             // return standard OCPI module URL of recipient
             else -> {
-                val endpoint = getPlatformEndpoint(platformID, request.module, request.interfaceRole, request.customModuleId) // could replace with request.resolveModuleId()...
-                urlJoin(endpoint.url, request.urlPathVariables)
+                val endpoint = getPlatformEndpoint(platformID, request.resolveModuleId(), request.interfaceRole) // could replace with request.resolveModuleId()...
+                urlJoin(endpoint.url, request.urlPath)
             }
 
         }
@@ -196,7 +195,7 @@ class RoutingService(private val platformRepo: PlatformRepository,
         // if proxied request, add the proxy resource to the body
         if (proxied) {
             modifiedBody = modifiedBody.run {
-                copy(proxyResource = getProxyResource(urlPathVariables, headers.sender, headers.receiver))
+                copy(proxyResource = getProxyResource(urlPath, headers.sender, headers.receiver))
             }
         }
 

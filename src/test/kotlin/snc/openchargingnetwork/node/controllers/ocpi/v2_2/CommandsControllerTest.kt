@@ -48,7 +48,7 @@ class CommandsControllerTest(@Autowired val mockMvc: MockMvc) {
                         correlationID = generateUUIDv4Token(),
                         sender = sender,
                         receiver = receiver),
-                urlPathVariables = uid,
+                urlPath = uid,
                 body = body)
 
         val mockRequestHandler = mockk<OcpiRequestHandler<Unit>>()
@@ -95,7 +95,7 @@ class CommandsControllerTest(@Autowired val mockMvc: MockMvc) {
                         correlationID = generateUUIDv4Token(),
                         sender = sender,
                         receiver = receiver),
-                urlPathVariables = "CANCEL_RESERVATION",
+                urlPath = "CANCEL_RESERVATION",
                 body = body)
 
         val mockRequestHandler = mockk<OcpiRequestHandler<CommandResponse>>()
@@ -150,7 +150,7 @@ class CommandsControllerTest(@Autowired val mockMvc: MockMvc) {
                         correlationID = generateUUIDv4Token(),
                         sender = sender,
                         receiver = receiver),
-                urlPathVariables = "RESERVE_NOW",
+                urlPath = "RESERVE_NOW",
                 body = body)
 
         val mockRequestHandler = mockk<OcpiRequestHandler<CommandResponse>>()
@@ -203,7 +203,7 @@ class CommandsControllerTest(@Autowired val mockMvc: MockMvc) {
                         correlationID = generateUUIDv4Token(),
                         sender = sender,
                         receiver = receiver),
-                urlPathVariables = "START_SESSION",
+                urlPath = "START_SESSION",
                 body = body)
 
         val mockRequestHandler = mockk<OcpiRequestHandler<CommandResponse>>()
@@ -255,7 +255,7 @@ class CommandsControllerTest(@Autowired val mockMvc: MockMvc) {
                         correlationID = generateUUIDv4Token(),
                         sender = sender,
                         receiver = receiver),
-                urlPathVariables = "STOP_SESSION",
+                urlPath = "STOP_SESSION",
                 body = body)
 
         val mockRequestHandler = mockk<OcpiRequestHandler<CommandResponse>>()
@@ -309,7 +309,7 @@ class CommandsControllerTest(@Autowired val mockMvc: MockMvc) {
                         correlationID = generateUUIDv4Token(),
                         sender = sender,
                         receiver = receiver),
-                urlPathVariables = "UNLOCK_CONNECTOR",
+                urlPath = "UNLOCK_CONNECTOR",
                 body = body)
 
         val mockRequestHandler = mockk<OcpiRequestHandler<CommandResponse>>()

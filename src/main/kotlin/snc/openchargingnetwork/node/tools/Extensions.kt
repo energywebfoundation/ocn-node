@@ -40,12 +40,3 @@ fun Map<String, Any?>.filterNull(): Map<String, Any?> {
 fun String.checksum(): String {
     return Keys.toChecksumAddress(this)
 }
-
-fun String.toQueryMap(): Map<String, Any> {
-    val queryMap = mutableMapOf<String, Any>()
-    split("&").forEach {
-        val (key, value) = it.split("=")
-        queryMap[key] = value
-    }
-    return queryMap
-}

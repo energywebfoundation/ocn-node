@@ -48,7 +48,7 @@ class TariffsControllerTest(@Autowired val mockMvc: MockMvc) {
                         correlationID = generateUUIDv4Token(),
                         sender = sender,
                         receiver = receiver),
-                urlEncodedParams = mapOf("limit" to 10))
+                queryParams = mapOf("limit" to 10))
 
         val mockRequestHandler = mockk<OcpiRequestHandler<Array<Tariff>>>()
 
@@ -103,7 +103,7 @@ class TariffsControllerTest(@Autowired val mockMvc: MockMvc) {
                         correlationID = generateUUIDv4Token(),
                         sender = sender,
                         receiver = receiver),
-                urlPathVariables = "39")
+                urlPath = "39")
 
         val mockRequestHandler = mockk<OcpiRequestHandler<Array<Tariff>>>()
 
@@ -118,7 +118,7 @@ class TariffsControllerTest(@Autowired val mockMvc: MockMvc) {
                 .headers(responseHeaders)
                 .body(OcpiResponse(statusCode = 1000, data = arrayOf(exampleTariff)))
 
-        mockMvc.perform(get("/ocpi/sender/2.2/tariffs/page/${requestVariables.urlPathVariables}")
+        mockMvc.perform(get("/ocpi/sender/2.2/tariffs/page/${requestVariables.urlPath}")
                 .header("Authorization", "Token token-c")
                 .header("X-Request-ID", requestVariables.headers.requestID)
                 .header("X-Correlation-ID", requestVariables.headers.correlationID)
@@ -158,7 +158,7 @@ class TariffsControllerTest(@Autowired val mockMvc: MockMvc) {
                         correlationID = generateUUIDv4Token(),
                         sender = sender,
                         receiver = receiver),
-                urlPathVariables = "/${sender.country}/${sender.id}/$tariffID")
+                urlPath = "/${sender.country}/${sender.id}/$tariffID")
 
         val mockRequestHandler = mockk<OcpiRequestHandler<Tariff>>()
 
@@ -203,7 +203,7 @@ class TariffsControllerTest(@Autowired val mockMvc: MockMvc) {
                         correlationID = generateUUIDv4Token(),
                         sender = sender,
                         receiver = receiver),
-                urlPathVariables = "/${sender.country}/${sender.id}/$tariffID",
+                urlPath = "/${sender.country}/${sender.id}/$tariffID",
                 body = exampleTariff)
 
         val mockRequestHandler = mockk<OcpiRequestHandler<Unit>>()
@@ -250,7 +250,7 @@ class TariffsControllerTest(@Autowired val mockMvc: MockMvc) {
                         correlationID = generateUUIDv4Token(),
                         sender = sender,
                         receiver = receiver),
-                urlPathVariables = "/${sender.country}/${sender.id}/$tariffID")
+                urlPath = "/${sender.country}/${sender.id}/$tariffID")
 
         val mockRequestHandler = mockk<OcpiRequestHandler<Unit>>()
 

@@ -101,7 +101,7 @@ class OcpiResponseHandler<T: Any>(request: OcpiRequestVariables,
     fun getResponseWithPaginationHeaders(): ResponseEntity<OcpiResponse<T>> {
         return when (isOcpiSuccess()) {
             true -> {
-                request.urlPathVariables?.let {
+                request.urlPath?.let {
                     routingService.deleteProxyResource(it)
                 }
 

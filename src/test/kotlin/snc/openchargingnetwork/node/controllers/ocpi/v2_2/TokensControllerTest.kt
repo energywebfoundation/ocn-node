@@ -46,7 +46,7 @@ class TokensControllerTest(@Autowired val mockMvc: MockMvc) {
                         correlationID = generateUUIDv4Token(),
                         sender = sender,
                         receiver = receiver),
-                urlEncodedParams = mapOf("limit" to 50))
+                queryParams = mapOf("limit" to 50))
 
         val mockRequestHandler = mockk<OcpiRequestHandler<Array<Token>>>()
 
@@ -104,7 +104,7 @@ class TokensControllerTest(@Autowired val mockMvc: MockMvc) {
                         correlationID = generateUUIDv4Token(),
                         sender = sender,
                         receiver = receiver),
-                urlPathVariables = uid)
+                urlPath = uid)
 
         val mockRequestHandler = mockk<OcpiRequestHandler<Array<Token>>>()
 
@@ -160,8 +160,8 @@ class TokensControllerTest(@Autowired val mockMvc: MockMvc) {
                         correlationID = generateUUIDv4Token(),
                         sender = sender,
                         receiver = receiver),
-                urlPathVariables = "1234567890/authorize",
-                urlEncodedParams = mapOf("type" to TokenType.RFID),
+                urlPath = "1234567890/authorize",
+                queryParams = mapOf("type" to TokenType.RFID),
                 body = body)
 
         val mockRequestHandler = mockk<OcpiRequestHandler<AuthorizationInfo>>()
@@ -212,8 +212,8 @@ class TokensControllerTest(@Autowired val mockMvc: MockMvc) {
                         correlationID = generateUUIDv4Token(),
                         sender = sender,
                         receiver = receiver),
-                urlPathVariables = "/${sender.country}/${sender.id}/$tokenUID",
-                urlEncodedParams = mapOf("type" to TokenType.RFID))
+                urlPath = "/${sender.country}/${sender.id}/$tokenUID",
+                queryParams = mapOf("type" to TokenType.RFID))
 
         val mockRequestHandler = mockk<OcpiRequestHandler<Token>>()
 
@@ -259,8 +259,8 @@ class TokensControllerTest(@Autowired val mockMvc: MockMvc) {
                         correlationID = generateUUIDv4Token(),
                         sender = sender,
                         receiver = receiver),
-                urlPathVariables = "/${sender.country}/${sender.id}/$tokenUID",
-                urlEncodedParams = mapOf("type" to TokenType.APP_USER),
+                urlPath = "/${sender.country}/${sender.id}/$tokenUID",
+                queryParams = mapOf("type" to TokenType.APP_USER),
                 body = exampleToken)
 
         val mockRequestHandler = mockk<OcpiRequestHandler<Unit>>()
@@ -311,8 +311,8 @@ class TokensControllerTest(@Autowired val mockMvc: MockMvc) {
                         correlationID = generateUUIDv4Token(),
                         sender = sender,
                         receiver = receiver),
-                urlPathVariables = "/${sender.country}/${sender.id}/$tokenUID",
-                urlEncodedParams = mapOf("type" to TokenType.APP_USER),
+                urlPath = "/${sender.country}/${sender.id}/$tokenUID",
+                queryParams = mapOf("type" to TokenType.APP_USER),
                 body = body)
 
         val mockRequestHandler = mockk<OcpiRequestHandler<Unit>>()

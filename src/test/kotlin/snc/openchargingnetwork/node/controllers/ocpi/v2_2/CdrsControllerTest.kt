@@ -49,7 +49,7 @@ class CdrsControllerTest(@Autowired val mockMvc: MockMvc) {
                         correlationID = generateUUIDv4Token(),
                         sender = sender,
                         receiver = receiver),
-                urlEncodedParams = mapOf("limit" to 100))
+                queryParams = mapOf("limit" to 100))
 
         val mockRequestHandler = mockk<OcpiRequestHandler<Array<CDR>>>()
 
@@ -102,7 +102,7 @@ class CdrsControllerTest(@Autowired val mockMvc: MockMvc) {
                         correlationID = generateUUIDv4Token(),
                         sender = sender,
                         receiver = receiver),
-                urlPathVariables = "67")
+                urlPath = "67")
 
         val mockRequestHandler = mockk<OcpiRequestHandler<Array<CDR>>>()
 
@@ -117,7 +117,7 @@ class CdrsControllerTest(@Autowired val mockMvc: MockMvc) {
                 .headers(responseHeaders)
                 .body(OcpiResponse(statusCode = 1000, data = arrayOf(exampleCDR)))
 
-        mockMvc.perform(get("/ocpi/sender/2.2/cdrs/page/${requestVariables.urlPathVariables}")
+        mockMvc.perform(get("/ocpi/sender/2.2/cdrs/page/${requestVariables.urlPath}")
                 .header("Authorization", "Token token-c")
                 .header("X-Request-ID", requestVariables.headers.requestID)
                 .header("X-Correlation-ID", requestVariables.headers.correlationID)
@@ -155,7 +155,7 @@ class CdrsControllerTest(@Autowired val mockMvc: MockMvc) {
                         correlationID = generateUUIDv4Token(),
                         sender = sender,
                         receiver = receiver),
-                urlPathVariables = "6534")
+                urlPath = "6534")
 
         val mockRequestHandler = mockk<OcpiRequestHandler<CDR>>()
 
@@ -165,7 +165,7 @@ class CdrsControllerTest(@Autowired val mockMvc: MockMvc) {
                 .status(200)
                 .body(OcpiResponse(statusCode = 1000, data = exampleCDR))
 
-        mockMvc.perform(get("/ocpi/receiver/2.2/cdrs/${requestVariables.urlPathVariables}")
+        mockMvc.perform(get("/ocpi/receiver/2.2/cdrs/${requestVariables.urlPath}")
                 .header("Authorization", "Token token-c")
                 .header("X-Request-ID", requestVariables.headers.requestID)
                 .header("X-Correlation-ID", requestVariables.headers.correlationID)

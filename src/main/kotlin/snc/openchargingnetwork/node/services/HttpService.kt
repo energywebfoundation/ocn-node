@@ -84,7 +84,7 @@ class HttpService {
                 method = requestVariables.method,
                 url = url,
                 headers = headersMap,
-                params = requestVariables.urlEncodedParams,
+                params = requestVariables.queryParams,
                 json = jsonBody)
     }
 

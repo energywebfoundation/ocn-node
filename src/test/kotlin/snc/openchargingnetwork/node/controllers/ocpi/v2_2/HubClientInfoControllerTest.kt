@@ -48,7 +48,7 @@ class HubClientInfoControllerTest(@Autowired val mockMvc: MockMvc) {
                         correlationID = generateUUIDv4Token(),
                         sender = sender,
                         receiver = receiver),
-                urlEncodedParams = mapOf("date_from" to dateFrom))
+                queryParams = mapOf("date_from" to dateFrom))
 
         every { hubClientInfoService.getList(requestVariables.headers.authorization) } returns listOf(exampleClientInfo)
         every { routingService.checkSenderKnown(requestVariables.headers.authorization, sender) } just Runs

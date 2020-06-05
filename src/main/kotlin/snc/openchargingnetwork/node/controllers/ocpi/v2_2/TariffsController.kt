@@ -57,7 +57,7 @@ class TariffsController(private val requestHandlerBuilder: OcpiRequestHandlerBui
                 interfaceRole = InterfaceRole.SENDER,
                 method = HttpMethod.GET,
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
-                urlEncodedParams = params)
+                queryParams = params)
 
         return requestHandlerBuilder
                 .build<Array<Tariff>>(requestVariables)
@@ -84,7 +84,7 @@ class TariffsController(private val requestHandlerBuilder: OcpiRequestHandlerBui
                 interfaceRole = InterfaceRole.SENDER,
                 method = HttpMethod.GET,
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
-                urlPathVariables = uid)
+                urlPath = uid)
 
         return requestHandlerBuilder
                 .build<Array<Tariff>>(requestVariables)
@@ -118,7 +118,7 @@ class TariffsController(private val requestHandlerBuilder: OcpiRequestHandlerBui
                 interfaceRole = InterfaceRole.RECEIVER,
                 method = HttpMethod.GET,
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
-                urlPathVariables = "/$countryCode/$partyID/$tariffID")
+                urlPath = "/$countryCode/$partyID/$tariffID")
 
         return requestHandlerBuilder
                 .build<Tariff>(requestVariables)
@@ -149,7 +149,7 @@ class TariffsController(private val requestHandlerBuilder: OcpiRequestHandlerBui
                 interfaceRole = InterfaceRole.RECEIVER,
                 method = HttpMethod.PUT,
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
-                urlPathVariables = "/$countryCode/$partyID/$tariffID",
+                urlPath = "/$countryCode/$partyID/$tariffID",
                 body = body)
 
         return requestHandlerBuilder
@@ -180,7 +180,7 @@ class TariffsController(private val requestHandlerBuilder: OcpiRequestHandlerBui
                 interfaceRole = InterfaceRole.RECEIVER,
                 method = HttpMethod.DELETE,
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
-                urlPathVariables = "/$countryCode/$partyID/$tariffID")
+                urlPath = "/$countryCode/$partyID/$tariffID")
 
         return requestHandlerBuilder
                 .build<Unit>(requestVariables)

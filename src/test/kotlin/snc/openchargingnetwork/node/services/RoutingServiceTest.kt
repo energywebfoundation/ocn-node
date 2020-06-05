@@ -55,8 +55,8 @@ class RoutingServiceTest {
                         correlationID = generateUUIDv4Token(),
                         sender = BasicRole("SNC", "DE"),
                         receiver = BasicRole("ABC", "CH")),
-                urlPathVariables = "DE/SNC/abc123",
-                urlEncodedParams = mapOf("type" to TokenType.APP_USER))
+                urlPath = "DE/SNC/abc123",
+                queryParams = mapOf("type" to TokenType.APP_USER))
 
         every { roleRepo.findAllByCountryCodeAndPartyIDAllIgnoreCase("CH", "ABC") } returns listOf(
                 RoleEntity(
@@ -67,7 +67,7 @@ class RoutingServiceTest {
                         partyID = "CH"))
         every { routingService.getPlatformEndpoint(
                 platformID = 6L,
-                module = request.module,
+                moduleID = request.module.id,
                 interfaceRole = request.interfaceRole)
         } returns EndpointEntity(
                 platformID = 6L,
@@ -104,7 +104,7 @@ class RoutingServiceTest {
                         correlationID = generateUUIDv4Token(),
                         sender = BasicRole("SNC", "DE"),
                         receiver = BasicRole("ABC", "CH")),
-                urlPathVariables = "67")
+                urlPath = "67")
 
         every { roleRepo.findAllByCountryCodeAndPartyIDAllIgnoreCase("CH", "ABC") } returns listOf(
                 RoleEntity(
@@ -148,8 +148,8 @@ class RoutingServiceTest {
                         correlationID = generateUUIDv4Token(),
                         sender = BasicRole("SNC", "DE"),
                         receiver = BasicRole("ABC", "CH")),
-                urlPathVariables = "DE/SNC/abc123",
-                urlEncodedParams = mapOf("type" to TokenType.APP_USER))
+                urlPath = "DE/SNC/abc123",
+                queryParams = mapOf("type" to TokenType.APP_USER))
 
         val sig = "0x9955af11969a2d2a7f860cb00e6a00cfa7c581f5df2dbe8ea16700b33f4b4b9" +
                 "b69f945012f7ea7d3febf11eb1b78e1adc2d1c14c2cf48b25000938cc1860c83e01"
@@ -183,7 +183,7 @@ class RoutingServiceTest {
                         correlationID = generateUUIDv4Token(),
                         sender = BasicRole("SNC", "DE"),
                         receiver = BasicRole("ABC", "CH")),
-                urlPathVariables = "45")
+                urlPath = "45")
 
         val sig = "0x9955af11969a2d2a7f860cb00e6a00cfa7c581f5df2dbe8ea16700b33f4b4b9" +
                 "b69f945012f7ea7d3febf11eb1b78e1adc2d1c14c2cf48b25000938cc1860c83e01"
@@ -226,7 +226,7 @@ class RoutingServiceTest {
                         correlationID = "456",
                         sender = BasicRole("EMY", "DE"),
                         receiver = BasicRole("ING", "DE")),
-                urlPathVariables = "CANCEL_RESERVATION",
+                urlPath = "CANCEL_RESERVATION",
                 proxyUID = "128",
                 proxyResource = body.responseURL,
                 body = body)
@@ -309,7 +309,7 @@ class RoutingServiceTest {
                 Role = InterfaceRole.SENDER) } returns endpoint
         assertThat(routingService.getPlatformEndpoint(
                 platformID = endpoint.platformID,
-                module = ModuleID.TOKENS,
+                moduleID = ModuleID.TOKENS.id,
                 interfaceRole = InterfaceRole.SENDER).url).isEqualTo(endpoint.url)
     }
 

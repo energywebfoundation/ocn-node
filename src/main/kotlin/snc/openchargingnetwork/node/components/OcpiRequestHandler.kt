@@ -139,7 +139,7 @@ class OcpiRequestHandler<T: Any>(request: OcpiRequestVariables,
     fun forwardAsync(responseUrl: String, modifyRequest: (newResponseUrl: String) -> OcpiRequestVariables): OcpiResponseHandler<T> {
         assertSenderValid()
 
-        val proxyPath = "/ocpi/sender/2.2/${request.module.id}/${request.urlPathVariables}"
+        val proxyPath = "/ocpi/sender/2.2/${request.module.id}/${request.urlPath}"
         val rewriteFields = mapOf("$['body']['response_url']" to responseUrl)
 
         val response: HttpResponse<T> = when (routingService.getReceiverType(request.headers.receiver)) {

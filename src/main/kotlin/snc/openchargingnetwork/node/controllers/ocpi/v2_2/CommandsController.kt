@@ -52,7 +52,7 @@ class CommandsController(private val requestHandlerBuilder: OcpiRequestHandlerBu
                 interfaceRole = InterfaceRole.SENDER,
                 method = HttpMethod.POST,
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
-                urlPathVariables = uid,
+                urlPath = uid,
                 body = body)
 
         return requestHandlerBuilder
@@ -86,7 +86,7 @@ class CommandsController(private val requestHandlerBuilder: OcpiRequestHandlerBu
                 interfaceRole = InterfaceRole.RECEIVER,
                 method = HttpMethod.POST,
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
-                urlPathVariables = "CANCEL_RESERVATION",
+                urlPath = "CANCEL_RESERVATION",
                 body = body)
 
         return requestHandlerBuilder
@@ -117,7 +117,7 @@ class CommandsController(private val requestHandlerBuilder: OcpiRequestHandlerBu
                 interfaceRole = InterfaceRole.RECEIVER,
                 method = HttpMethod.POST,
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
-                urlPathVariables = "RESERVE_NOW",
+                urlPath = "RESERVE_NOW",
                 body = body)
 
         return requestHandlerBuilder
@@ -148,7 +148,7 @@ class CommandsController(private val requestHandlerBuilder: OcpiRequestHandlerBu
                 interfaceRole = InterfaceRole.RECEIVER,
                 method = HttpMethod.POST,
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
-                urlPathVariables = "START_SESSION",
+                urlPath = "START_SESSION",
                 body = body)
 
         return requestHandlerBuilder
@@ -179,7 +179,7 @@ class CommandsController(private val requestHandlerBuilder: OcpiRequestHandlerBu
                 interfaceRole = InterfaceRole.RECEIVER,
                 method = HttpMethod.POST,
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
-                urlPathVariables = "STOP_SESSION",
+                urlPath = "STOP_SESSION",
                 body = body)
 
         return requestHandlerBuilder
@@ -210,7 +210,7 @@ class CommandsController(private val requestHandlerBuilder: OcpiRequestHandlerBu
                 interfaceRole = InterfaceRole.RECEIVER,
                 method = HttpMethod.POST,
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
-                urlPathVariables = "UNLOCK_CONNECTOR",
+                urlPath = "UNLOCK_CONNECTOR",
                 body = body)
 
         return requestHandlerBuilder

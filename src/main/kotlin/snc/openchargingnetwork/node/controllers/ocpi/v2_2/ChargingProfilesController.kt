@@ -51,7 +51,7 @@ class ChargingProfilesController(private val requestHandlerBuilder: OcpiRequestH
                 interfaceRole = InterfaceRole.SENDER,
                 method = HttpMethod.POST,
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
-                urlPathVariables = uid,
+                urlPath = uid,
                 body = body)
 
         return requestHandlerBuilder
@@ -80,7 +80,7 @@ class ChargingProfilesController(private val requestHandlerBuilder: OcpiRequestH
                 interfaceRole = InterfaceRole.SENDER,
                 method = HttpMethod.PUT,
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
-                urlPathVariables = sessionId,
+                urlPath = sessionId,
                 body = body)
 
         return requestHandlerBuilder
@@ -115,13 +115,13 @@ class ChargingProfilesController(private val requestHandlerBuilder: OcpiRequestH
                 interfaceRole = InterfaceRole.RECEIVER,
                 method = HttpMethod.GET,
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
-                urlPathVariables = sessionId,
-                urlEncodedParams = mapOf("duration" to duration, "response_url" to responseUrl))
+                urlPath = sessionId,
+                queryParams = mapOf("duration" to duration, "response_url" to responseUrl))
 
         return requestHandlerBuilder
                 .build<ChargingProfileResponse>(requestVariables)
                 .forwardAsync(responseUrl) {
-                    requestVariables.copy(urlEncodedParams = mapOf("duration" to duration, "response_url" to it))
+                    requestVariables.copy(queryParams = mapOf("duration" to duration, "response_url" to it))
                 }
                 .getResponse()
     }
@@ -146,7 +146,7 @@ class ChargingProfilesController(private val requestHandlerBuilder: OcpiRequestH
                 interfaceRole = InterfaceRole.RECEIVER,
                 method = HttpMethod.PUT,
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
-                urlPathVariables = sessionId,
+                urlPath = sessionId,
                 body = body)
 
         return requestHandlerBuilder
@@ -177,13 +177,13 @@ class ChargingProfilesController(private val requestHandlerBuilder: OcpiRequestH
                 interfaceRole = InterfaceRole.RECEIVER,
                 method = HttpMethod.DELETE,
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
-                urlPathVariables = sessionId,
-                urlEncodedParams = mapOf("response_url" to responseUrl))
+                urlPath = sessionId,
+                queryParams = mapOf("response_url" to responseUrl))
 
         return requestHandlerBuilder
                 .build<ChargingProfileResponse>(requestVariables)
                 .forwardAsync(responseUrl) {
-                    requestVariables.copy(urlEncodedParams = mapOf("response_url" to it))
+                    requestVariables.copy(queryParams = mapOf("response_url" to it))
                 }
                 .getResponse()
     }
