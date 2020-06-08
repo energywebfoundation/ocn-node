@@ -42,7 +42,7 @@ class CustomModulesControllerTest(@Autowired val mockMvc: MockMvc) {
         every { requestHandler.forwardDefault().getResponseWithAllHeaders() } returns ResponseEntity
                 .ok(OcpiResponse(statusCode = 1000))
 
-        mockMvc.perform(post("/ocpi/custom/${request.customModuleId}/${request.interfaceRole.id}${request.urlPath}")
+        mockMvc.perform(post("/ocpi/custom/${request.interfaceRole.id}/${request.customModuleId}/${request.urlPath}")
                 .queryParam("hello", "world")
                 .queryParam("foo", "bar")
                 .header("authorization", request.headers.authorization)

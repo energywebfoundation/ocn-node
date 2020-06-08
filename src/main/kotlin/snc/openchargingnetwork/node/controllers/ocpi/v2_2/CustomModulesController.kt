@@ -12,7 +12,7 @@ import javax.servlet.http.HttpServletRequest
 @RequestMapping("/ocpi/custom")
 class CustomModulesController(private val requestHandlerBuilder: OcpiRequestHandlerBuilder) {
 
-    @RequestMapping("/{module}/{interfaceRole}", "/{module}/{interfaceRole}/**/*")
+    @RequestMapping("/{interfaceRole}/{module}/", "/{interfaceRole}/{module}/**/*")
     fun customModuleMapping(@RequestHeader("authorization") authorization: String,
                             @RequestHeader("OCN-Signature") signature: String? = null,
                             @RequestHeader("X-Request-ID") requestID: String,
@@ -31,7 +31,7 @@ class CustomModulesController(private val requestHandlerBuilder: OcpiRequestHand
         val receiver = BasicRole(toPartyID, toCountryCode)
 
         val urlPath = try {
-            request.pathInfo.replace("/ocpi/custom/${module}/${interfaceRole}", "")
+            request.pathInfo.replace("/ocpi/custom/${interfaceRole}/${module}", "")
         } catch (e: IllegalStateException) { // catch IllegalStateException: request.pathInfo must not be null
             null
         }

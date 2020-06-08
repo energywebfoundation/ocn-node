@@ -69,7 +69,7 @@ class VersionsController(private val repository: PlatformRepository,
     private fun getModuleEndpoints(module: ModuleID): List<Endpoint> {
         return InterfaceRole.values().map {
             val paths = if (module == ModuleID.CUSTOM) {
-                "/ocpi/custom"
+                "/ocpi/custom/${it.id}"
             } else {
                 "/ocpi/${it.id}/2.2/${module.id}"
             }

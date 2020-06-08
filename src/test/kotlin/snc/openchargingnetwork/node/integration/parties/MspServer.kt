@@ -39,9 +39,9 @@ class MspServer(config: PartyDefinition, contracts: OcnContracts): PartyServer(c
                                     role = InterfaceRole.SENDER,
                                     url = urlBuilder("/ocpi/msp/2.2/commands")),
                             Endpoint(
-                                    identifier = "enriched-tariffs",
+                                    identifier = "enriched-locations",
                                     role = InterfaceRole.RECEIVER,
-                                    url = urlBuilder("/ocpi/msp/2.2/enriched-tariffs")
+                                    url = urlBuilder("/ocpi/msp/2.2/enriched-locations")
                             )
                     ))))
         }
@@ -108,7 +108,7 @@ class MspServer(config: PartyDefinition, contracts: OcnContracts): PartyServer(c
     fun sendCustomModuleRequest(to: BasicRole): Response { // TODO: test with different parameters (path, query, json)
         val headers = getSignableHeaders(to)
         val signature = sign(headers = headers)
-        return khttp.get("$node/ocpi/custom/lite-locations/sender", headers = headers.toMap(tokenC, signature))
+        return khttp.get("$node/ocpi/custom/sender/lite-locations", headers = headers.toMap(tokenC, signature))
     }
 
 }
