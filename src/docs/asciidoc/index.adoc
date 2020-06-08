@@ -101,8 +101,8 @@ to get the first 50 locations from a Charge Point Operator, the CPO will respond
 only their OCN Node will be able to access.
 
 Because of this, the OCN Node must proxy this header. The sender will receive from their OCN Node a `Link`
-header such as `https://some.ocn-node.net/ocpi/sender/2.2/locations/page/2` which will correspond to the
-original CPO resource, for example, `https://some.cpo.com/ocpi/cpo/2.2/locations?offset=100&limit=100`.
+header such as https://some.ocn-node.net/ocpi/sender/2.2/locations/page/2 which will correspond to the
+original CPO resource, for example, https://some.cpo.com/ocpi/cpo/2.2/locations?offset=100&limit=100.
 
 Other examples of resources which require proxying include the `Location` header returned from the POST method
 of the cdrs receiver interface, as well as any `response_url` used in the commands and charging profiles
@@ -136,11 +136,11 @@ This acts as a wildcard for _all_ custom OCPI modules. Here's how it works:
 2. CPO sends their custom module request to the OCN Node
     a. requests any HTTP method
     b. places module name as first path variable, followed by any additional variables required by the
-custom module: `https://some.ocn-node.net/ocpi/custom/receiver/enriched-locations/location1`
+custom module: https://some.ocn-node.net/ocpi/custom/receiver/enriched-locations/location1
     c. appends url-encoded queries and json body if necessary
 3. OCN Node routes the message to recipient's OCN Node
     a. recipient's OCN Node looks up `enriched-locations` in recipient's endpoints
-    b. recipient's OCN Node forwards the request to `https://recipient.msp.com/ocpi/emsp/2.2/enriched-locations/location1`
+    b. recipient's OCN Node forwards the request to https://recipient.msp.com/ocpi/emsp/2.2/enriched-locations/location1
 
 == _OcnRules_ module
 

@@ -12,7 +12,7 @@ import javax.servlet.http.HttpServletRequest
 @RequestMapping("/ocpi/custom")
 class CustomModulesController(private val requestHandlerBuilder: OcpiRequestHandlerBuilder) {
 
-    @RequestMapping("/{interfaceRole}/{module}/", "/{interfaceRole}/{module}/**/*")
+    @RequestMapping("/{interfaceRole}/{module}", "/{interfaceRole}/{module}/**/*")
     fun customModuleMapping(@RequestHeader("authorization") authorization: String,
                             @RequestHeader("OCN-Signature") signature: String? = null,
                             @RequestHeader("X-Request-ID") requestID: String,
@@ -21,8 +21,8 @@ class CustomModulesController(private val requestHandlerBuilder: OcpiRequestHand
                             @RequestHeader("OCPI-from-party-id") fromPartyID: String,
                             @RequestHeader("OCPI-to-country-code") toCountryCode: String,
                             @RequestHeader("OCPI-to-party-id") toPartyID: String,
-                            @PathVariable module: String,
                             @PathVariable interfaceRole: String,
+                            @PathVariable module: String,
                             @RequestParam queryParams: Map<String, Any>,
                             @RequestBody body: String?,
                             request: HttpServletRequest): ResponseEntity<OcpiResponse<Any>> {
