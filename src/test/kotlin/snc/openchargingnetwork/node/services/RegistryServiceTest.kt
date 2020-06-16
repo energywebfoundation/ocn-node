@@ -9,8 +9,8 @@ import org.web3j.tuples.generated.Tuple5
 import snc.openchargingnetwork.contracts.Permissions
 import snc.openchargingnetwork.contracts.Registry
 import snc.openchargingnetwork.node.config.NodeProperties
-import snc.openchargingnetwork.node.models.OcnApp
-import snc.openchargingnetwork.node.models.OcnAppPermission
+import snc.openchargingnetwork.node.models.OcnService
+import snc.openchargingnetwork.node.models.OcnServicePermission
 import snc.openchargingnetwork.node.models.RegistryNode
 import snc.openchargingnetwork.node.models.ocpi.BasicRole
 import snc.openchargingnetwork.node.models.ocpi.InterfaceRole
@@ -87,7 +87,7 @@ class RegistryServiceTest {
         } returns listOf("0x059a44557cF9Bd2b446d72fC772254F0E487BACf")
 
         every {
-            permissions.getApp("0x059a44557cF9Bd2b446d72fC772254F0E487BACf").sendAsync().get()
+            permissions.getService("0x059a44557cF9Bd2b446d72fC772254F0E487BACf").sendAsync().get()
         } returns Tuple5(
                 provider.country.toByteArray(),
                 provider.id.toByteArray(),
@@ -100,7 +100,7 @@ class RegistryServiceTest {
 
         assertThat(actual.count()).isEqualTo(1)
         assertThat(actual.iterator().next()).isEqualTo(
-                OcnApp(provider = provider, permissions = listOf(OcnAppPermission.FORWARD_ALL_RECEIVER))
+                OcnService(provider = provider, permissions = listOf(OcnServicePermission.FORWARD_ALL_RECEIVER))
         )
     }
 }

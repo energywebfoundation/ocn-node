@@ -8,7 +8,7 @@ import shareandcharge.openchargingnetwork.notary.ValuesToSign
 import snc.openchargingnetwork.contracts.Permissions
 import snc.openchargingnetwork.contracts.Registry
 import snc.openchargingnetwork.node.integration.utils.*
-import snc.openchargingnetwork.node.models.OcnAppPermission
+import snc.openchargingnetwork.node.models.OcnServicePermission
 import snc.openchargingnetwork.node.models.OcnRulesListType
 import snc.openchargingnetwork.node.models.ocpi.*
 import snc.openchargingnetwork.node.tools.generateUUIDv4Token
@@ -68,14 +68,14 @@ open class PartyServer(val config: PartyDefinition, deployedContracts: OcnContra
         node = contracts.registry.getNode(operator).sendAsync().get()
     }
 
-    fun setAppPermissions(permissions: List<OcnAppPermission>) {
-        val name = "Test App" // optional name
-        val url = "https://test.app"  // optional public url
+    fun setServicePermissions(permissions: List<OcnServicePermission>) {
+        val name = "Test Service" // optional name
+        val url = "https://test.Service"  // optional public url
         val permissionsIntList = permissions.map { it.ordinal.toBigInteger() }
-        contracts.permissions.setApp(name, url, permissionsIntList).sendAsync().get()
+        contracts.permissions.setService(name, url, permissionsIntList).sendAsync().get()
     }
 
-    fun agreeToAppPermissions(provider: String) {
+    fun agreeToServicePermissions(provider: String) {
         contracts.permissions.createAgreement(provider).sendAsync().get()
     }
 

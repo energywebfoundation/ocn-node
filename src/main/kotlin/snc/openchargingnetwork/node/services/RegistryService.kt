@@ -83,22 +83,22 @@ class RegistryService(private val registry: Registry,
     }
 
     /**
-     * Gets an OCN App's details (provider BasicRole) and required permissions by owner's identity (Eth public key)
+     * Gets an OCN Service's details (provider BasicRole) and required permissions by owner's identity (Eth public key)
      */
-    fun getOcnApp(provider: String): OcnApp {
-        val (countryCode, partyId, _, _, needs) = permissions.getApp(provider).sendAsync().get()
+    fun getOcnService(provider: String): OcnService{
+        val (countryCode, partyId, _, _, needs) = permissions.getService(provider).sendAsync().get()
         val role = BasicRole(
                 id = partyId.toString(Charsets.UTF_8),
                 country = countryCode.toString(Charsets.UTF_8))
-        return OcnApp(
+        return OcnService(
                 provider = role,
-                permissions = needs.mapNotNull { need -> OcnAppPermission.getByIndex(need) })
+                permissions = needs.mapNotNull { need -> OcnServicePermission.getByIndex(need) })
     }
 
     /**
      * Gets OCN apps a given role has made agreements with, based on a module interface
      */
-    fun getAgreementsByInterface(role: BasicRole, module: ModuleID, interfaceRole: InterfaceRole): Sequence<OcnApp> {
+    fun getAgreementsByInterface(role: BasicRole, module: ModuleID, interfaceRole: InterfaceRole): Sequence<OcnService> {
         val country = role.country.toByteArray()
         val id = role.id.toByteArray()
 
@@ -106,7 +106,7 @@ class RegistryService(private val registry: Registry,
 
         return agreements
                 .asSequence()
-                .map { getOcnApp(it as String) }
+                .map { getOcnService(it as String) }
                 .filter { it.permissions.any { permission -> permission.matches(module, interfaceRole) } }
     }
 

@@ -30,12 +30,12 @@ class AsyncTaskService(private val registryService: RegistryService) {
     }
 
     /**
-     * Finds all apps, linked to a sender, with permissions that grant them access to a given request type.
-     * Once apps have been found, sends via provided request handler.
+     * Finds all services, linked to a sender, with permissions that grant them access to a given request type.
+     * Once services have been found, sends via provided request handler.
      */
     @Async
-    fun forwardOcpiRequestToLinkedApps(requestHandler: OcpiRequestHandler<*>, fromLocalPlatform: Boolean = true) {
-        // we only want to forward to apps if the module is one of the default OCPI modules,
+    fun forwardOcpiRequestToLinkedServices(requestHandler: OcpiRequestHandler<*>, fromLocalPlatform: Boolean = true) {
+        // we only want to forward to services if the module is one of the default OCPI modules,
         // and only if the sender is a local platform (to avoid repeat forwarding on the recipient node)
         val isDefaultModule = requestHandler.request.module != ModuleID.CUSTOM
 
@@ -47,7 +47,7 @@ class AsyncTaskService(private val registryService: RegistryService) {
                             requestHandler.forwardAgain(it.provider)
                         } catch (e: Exception) {
                             // fire and forget
-                            logger.warn("Error forwarding request to app ${it.provider}: ${e.message}")
+                            logger.warn("Error forwarding request to service ${it.provider}: ${e.message}")
                         }
                     }
         }

@@ -113,7 +113,7 @@ class OcpiRequestHandler<T: Any>(request: OcpiRequestVariables,
                 assertValidSignature()
                 val (url, headers) = routingService.prepareLocalPlatformRequest(request, proxied)
 
-                asyncTaskService.forwardOcpiRequestToLinkedApps(this, fromLocalPlatform)
+                asyncTaskService.forwardOcpiRequestToLinkedServices(this, fromLocalPlatform)
                 httpService.makeOcpiRequest(url, headers, request)
             }
 
@@ -121,7 +121,7 @@ class OcpiRequestHandler<T: Any>(request: OcpiRequestVariables,
                 assertValidSignature(false)
                 val (url, headers, body) = routingService.prepareRemotePlatformRequest(request, proxied)
 
-                asyncTaskService.forwardOcpiRequestToLinkedApps(this, fromLocalPlatform)
+                asyncTaskService.forwardOcpiRequestToLinkedServices(this, fromLocalPlatform)
                 httpService.postOcnMessage(url, headers, body)
             }
         }
@@ -157,7 +157,7 @@ class OcpiRequestHandler<T: Any>(request: OcpiRequestVariables,
                 // send the request with the modified body
                 val (url, headers) = routingService.prepareLocalPlatformRequest(request)
 
-                asyncTaskService.forwardOcpiRequestToLinkedApps(this)
+                asyncTaskService.forwardOcpiRequestToLinkedServices(this)
                 httpService.makeOcpiRequest(url, headers, modifiedRequest)
             }
 
@@ -175,7 +175,7 @@ class OcpiRequestHandler<T: Any>(request: OcpiRequestVariables,
                     modifiedRequest.copy(proxyUID = proxyUID, proxyResource = responseUrl)
                 }
 
-                asyncTaskService.forwardOcpiRequestToLinkedApps(this)
+                asyncTaskService.forwardOcpiRequestToLinkedServices(this)
                 httpService.postOcnMessage(url, headers, body)
             }
 
@@ -194,8 +194,8 @@ class OcpiRequestHandler<T: Any>(request: OcpiRequestVariables,
     }
 
     /**
-     * Forwards a message to another recipient (i.e. an App with the appropriate permissions).
-     * @param newRecipient country_code and party_id of the App
+     * Forwards a message to another recipient (i.e. a Service with the appropriate permissions).
+     * @param newRecipient country_code and party_id of the Service
      */
     fun forwardAgain(newRecipient: BasicRole): OcpiResponseHandler<T> {
         val modifiedRequest = request.copy(headers = request.headers.copy(receiver = newRecipient))

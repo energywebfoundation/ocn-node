@@ -6,12 +6,12 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpMethod
 import snc.openchargingnetwork.node.integration.utils.*
-import snc.openchargingnetwork.node.models.OcnAppPermission
+import snc.openchargingnetwork.node.models.OcnServicePermission
 import snc.openchargingnetwork.node.models.ocpi.InterfaceRole
 import snc.openchargingnetwork.node.models.ocpi.ModuleID
 import java.util.concurrent.TimeUnit
 
-class AppInterfaceTest {
+class ServiceInterfaceTest {
 
     // TODO: integration test setup could be in an inheritable class
     private lateinit var networkComponents: NetworkComponents
@@ -44,22 +44,22 @@ class AppInterfaceTest {
         return cpo1Seen && cpo2Seen
     }
 
-    private fun testForwarding(recipient: TestCpo, app: TestCpo) {
-        app.server.setAppPermissions(listOf(OcnAppPermission.FORWARD_ALL))
-        msp.server.agreeToAppPermissions(app.address)
+    private fun testForwarding(recipient: TestCpo, service: TestCpo) {
+        service.server.setServicePermissions(listOf(OcnServicePermission.FORWARD_ALL))
+        msp.server.agreeToServicePermissions(service.address)
         msp.server.getLocation(recipient.party)
         await.atMost(2L, TimeUnit.SECONDS).until { seenByBothCpos() }
     }
 
     @Test
-    fun fowardsRequestToApp_Local() {
-        testForwarding(recipient = cpo2, app = cpo1)
+    fun fowardsRequestToService_Local() {
+        testForwarding(recipient = cpo2, service = cpo1)
 
     }
 
     @Test
-    fun fowardsRequestToApp_Remote() {
-        testForwarding(recipient = cpo1, app = cpo2)
+    fun fowardsRequestToService_Remote() {
+        testForwarding(recipient = cpo1, service = cpo2)
     }
 
 }

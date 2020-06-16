@@ -3,8 +3,8 @@
 ## 1.1.0-rc1 
 ### Upcoming
 
-Adds the ability for requests to be forwarded to "Ocn Apps" with matching permissions. The
-Ocn App Interface, using the new Permissions contract in the OCN Registry, allows data to be
+Adds the ability for requests to be forwarded to "Ocn Services" with matching permissions. The
+Ocn ServiceInterface, using the new Permissions contract in the OCN Registry, allows data to be
 shared and accessed using a permission system.
 
 ## 1.1.0-rc0 
