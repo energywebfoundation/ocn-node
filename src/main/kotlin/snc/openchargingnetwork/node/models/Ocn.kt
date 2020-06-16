@@ -104,7 +104,22 @@ data class BasicRequestType(val moduleID: ModuleID, val interfaceRole: Interface
 enum class OcnAppPermission(val matches: (request: BasicRequestType) -> Boolean) {
     FORWARD_ALL({true}),
     FORWARD_ALL_SENDER({it.interfaceRole == InterfaceRole.SENDER}),
-    FORWARD_ALL_RECEIVER({it.interfaceRole == InterfaceRole.RECEIVER});
+    FORWARD_ALL_RECEIVER({it.interfaceRole == InterfaceRole.RECEIVER}),
+    FORWARD_MODULE_LOCATIONS_SENDER({it.moduleID == ModuleID.LOCATIONS && it.interfaceRole == InterfaceRole.SENDER}),
+    FORWARD_MODULE_LOCATIONS_RECEIVER({it.moduleID == ModuleID.LOCATIONS && it.interfaceRole == InterfaceRole.RECEIVER}),
+    FORWARD_MODULE_SESSIONS_SENDER({it.moduleID == ModuleID.SESSIONS && it.interfaceRole == InterfaceRole.SENDER}),
+    FORWARD_MODULE_SESSIONS_RECEIVER({it.moduleID == ModuleID.SESSIONS && it.interfaceRole == InterfaceRole.RECEIVER }),
+    FORWARD_MODULE_CDRS_SENDER({it.moduleID == ModuleID.CDRS && it.interfaceRole == InterfaceRole.SENDER}),
+    FORWARD_MODULE_CDRS_RECEIVER({it.moduleID == ModuleID.CDRS && it.interfaceRole == InterfaceRole.RECEIVER}),
+    FORWARD_MODULE_TARIFFS_SENDER({it.moduleID == ModuleID.TARIFFS && it.interfaceRole == InterfaceRole.SENDER}),
+    FORWARD_MODULE_TARIFFS_RECEIVER({it.moduleID == ModuleID.TARIFFS && it.interfaceRole == InterfaceRole.RECEIVER}),
+    FORWARD_MODULE_TOKENS_SENDER({it.moduleID == ModuleID.TOKENS && it.interfaceRole == InterfaceRole.SENDER}),
+    FORWARD_MODULE_TOKENS_RECEIVER({it.moduleID == ModuleID.TOKENS && it.interfaceRole == InterfaceRole.RECEIVER}),
+    FORWARD_MODULE_COMMANDS_SENDER({it.moduleID == ModuleID.COMMANDS && it.interfaceRole == InterfaceRole.SENDER}),
+    FORWARD_MODULE_COMMANDS_RECEIVER({it.moduleID == ModuleID.COMMANDS && it.interfaceRole == InterfaceRole.RECEIVER}),
+    FORWARD_MODULE_CHARGINGPROFILES_SENDER({it.moduleID == ModuleID.CHARGING_PROFILES && it.interfaceRole == InterfaceRole.SENDER}),
+    FORWARD_MODULE_CHARGINGPROFILES_RECEIVER({it.moduleID == ModuleID.CHARGING_PROFILES && it.interfaceRole == InterfaceRole.RECEIVER});
+
 
     companion object {
         fun getByIndex(index: BigInteger): OcnAppPermission? {
