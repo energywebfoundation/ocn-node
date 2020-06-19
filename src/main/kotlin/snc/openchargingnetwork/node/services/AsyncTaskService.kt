@@ -38,11 +38,10 @@ class AsyncTaskService(private val registryService: RegistryService, private val
     fun forwardOcpiRequestToLinkedServices(requestHandler: OcpiRequestHandler<*>, fromLocalPlatform: Boolean = true) {
         // we only want to forward to services if the module is one of the default OCPI modules,
         // and only if the sender is a local platform (to avoid repeat forwarding on the recipient node)
-        // and also forward if message forward option is enabled
+        // and also forward if service interface option is enabled
         val isDefaultModule = requestHandler.request.module != ModuleID.CUSTOM
-        val isEnabledForwarding = properties.messageForwardEnabled
 
-        if (isDefaultModule && fromLocalPlatform && isEnabledForwarding) {
+        if (isDefaultModule && fromLocalPlatform && properties.serviceEnabled) {
             val request = requestHandler.request
             registryService.getAgreementsByInterface(request.headers.sender, request.module, request.interfaceRole)
                     .forEach {
