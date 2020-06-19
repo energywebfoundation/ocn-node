@@ -53,4 +53,6 @@ class NodeProperties {
     var plannedPartySearchRate: String = "3600000" // defaults to 1 hour
 
     var plannedPartySearchEnabled: Boolean = true
+
+    var messageForwardEnabled: Boolean = true
 }
