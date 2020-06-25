@@ -26,6 +26,15 @@ import org.springframework.scheduling.config.ScheduledTaskRegistrar
 class TaskConfig(private val scheduledTasks: List<IntervalTask>): SchedulingConfigurer {
 
     override fun configureTasks(taskRegistrar: ScheduledTaskRegistrar) {
+        // override default thread pool task scheduler as follows:
+        // note: not the same as the thread executor which runs async tasks (methods with with @Async annotations)
+
+        // val threadPoolTaskScheduler = ThreadPoolTaskScheduler()
+        // threadPoolTaskScheduler.poolSize = 10
+        // threadPoolTaskScheduler.setThreadNamePrefix("task-pool-")
+        // threadPoolTaskScheduler.initialize()
+        // taskRegistrar.setTaskScheduler(threadPoolTaskScheduler)
+
         for (task in scheduledTasks) {
             taskRegistrar.addFixedRateTask(task)
         }

@@ -21,19 +21,20 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.scheduling.config.IntervalTask
 import org.web3j.protocol.Web3j
-import org.web3j.protocol.http.HttpService as Web3jHttpService
 import org.web3j.tx.ClientTransactionManager
 import org.web3j.tx.TransactionManager
 import org.web3j.tx.gas.StaticGasProvider
-import snc.openchargingnetwork.node.repositories.*
+import snc.openchargingnetwork.contracts.Permissions
 import snc.openchargingnetwork.contracts.Registry
+import snc.openchargingnetwork.node.repositories.*
 import snc.openchargingnetwork.node.scheduledTasks.HubClientInfoStillAliveCheck
 import snc.openchargingnetwork.node.scheduledTasks.PlannedPartySearch
+import org.web3j.protocol.http.HttpService as Web3jHttpService
 import snc.openchargingnetwork.node.services.HttpService as OcnHttpService
 
 
 @Configuration
-open class NodeConfig(private val properties: NodeProperties) {
+class NodeConfig(private val properties: NodeProperties) {
 
     private val web3: Web3j = Web3j.build(Web3jHttpService(properties.web3.provider))
     private val txManager: TransactionManager = ClientTransactionManager(web3, null)
@@ -51,8 +52,16 @@ open class NodeConfig(private val properties: NodeProperties) {
                 properties.web3.contracts.registry,
                 web3,
                 txManager,
-                gasProvider
-        )
+                gasProvider)
+    }
+
+    @Bean
+    fun permissions(): Permissions {
+        return Permissions.load(
+                properties.web3.contracts.permissions,
+                web3,
+                txManager,
+                gasProvider)
     }
 
     @Bean
@@ -78,5 +87,14 @@ open class NodeConfig(private val properties: NodeProperties) {
 
         return taskList.toList()
     }
+
+//    // modify the default task executor (runs async tasks, not to be confused with scheduled tasks)
+//    @Bean
+//    fun taskExecutor(): TaskExecutor {
+//        val taskExecutor = ThreadPoolTaskExecutor()
+//        taskExecutor.corePoolSize = 100
+//        taskExecutor.setThreadNamePrefix("worker-")
+//        return taskExecutor
+//    }
 
 }

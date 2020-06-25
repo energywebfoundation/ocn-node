@@ -42,6 +42,7 @@ class NodeProperties {
 
         class Contracts {
             lateinit var registry: String
+            lateinit var permissions: String
         }
     }
 
@@ -52,4 +53,6 @@ class NodeProperties {
     var plannedPartySearchRate: String = "3600000" // defaults to 1 hour
 
     var plannedPartySearchEnabled: Boolean = true
+
+    var serviceInterfaceEnabled: Boolean = true
 }

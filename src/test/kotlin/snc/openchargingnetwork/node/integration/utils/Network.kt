@@ -6,13 +6,18 @@ import org.web3j.protocol.Web3j
 import org.web3j.protocol.http.HttpService
 import org.web3j.tx.ClientTransactionManager
 import org.web3j.tx.gas.StaticGasProvider
+import snc.openchargingnetwork.contracts.Permissions
 import snc.openchargingnetwork.contracts.Registry
 import snc.openchargingnetwork.node.Application
 import snc.openchargingnetwork.node.integration.parties.CpoServer
 import snc.openchargingnetwork.node.integration.parties.MspServer
 import snc.openchargingnetwork.node.models.ocpi.BasicRole
+import snc.openchargingnetwork.node.models.ocpi.Role
 
 const val provider = "http://localhost:8544"
+val web3: Web3j = Web3j.build(HttpService(provider))
+val gasProvider = StaticGasProvider(0.toBigInteger(), 10000000.toBigInteger())
+
 
 val cpoDefinitions: List<PartyDefinition> = listOf(
     PartyDefinition(
@@ -53,57 +58,54 @@ fun getNodeDefinitions(hubClientInfoParams: HubClientInfoParams): List<NodeDefin
  * Sets up the registry and test parties for integration tests
  */
 fun setupNetwork(hubClientInfoParams: HubClientInfoParams): NetworkComponents {
-    val registry = deployRegistry()
+    val contracts = deployContracts()
 
     val nodeDefinitions = getNodeDefinitions(hubClientInfoParams)
     val nodes = nodeDefinitions.map {
-        nodeDefinition -> setUpNode(nodeDefinition, registry)
+        nodeDefinition -> setUpNode(nodeDefinition, contracts)
     }
 
     val cpos = cpoDefinitions.map {
-        cpoDefinition -> setUpCpo(cpoDefinition, nodeDefinitions.first { d -> d.nodeNumber == cpoDefinition.nodeNumber }, registry)
+        cpoDefinition -> setUpCpo(cpoDefinition, nodeDefinitions.first { d -> d.nodeNumber == cpoDefinition.nodeNumber }, contracts)
     }
 
     val msps = mspDefinitions.map {
-        mspDefinition -> setUpMsp(mspDefinition, nodeDefinitions.first { d -> d.nodeNumber == mspDefinition.nodeNumber }, registry)
+        mspDefinition -> setUpMsp(mspDefinition, nodeDefinitions.first { d -> d.nodeNumber == mspDefinition.nodeNumber }, contracts)
     }
 
-    return NetworkComponents(cpos, msps, nodes, registry)
+    return NetworkComponents(cpos, msps, nodes, contracts)
 }
 
 /**
  * Adds a CPO to the test OCN Network
  */
-fun setUpCpo(definition: PartyDefinition, nodeDefinition: NodeDefinition, registry: Registry): TestCpo {
-    val cpoServer = CpoServer(definition.credentials, definition.party, definition.port)
-    cpoServer.setPartyInRegistry(registry.contractAddress, nodeDefinition.credentials.address)
+fun setUpCpo(definition: PartyDefinition, nodeDefinition: NodeDefinition, contracts: OcnContracts): TestCpo {
+    val cpoServer = CpoServer(definition, contracts)
+    cpoServer.setPartyInRegistry(nodeDefinition.credentials.address, Role.CPO)
     cpoServer.registerCredentials()
     return TestCpo(
         definition = definition,
         operator = nodeDefinition.credentials.address,
-        server = cpoServer
-    )
+        server = cpoServer)
 }
 
 /**
  * Adds an MSP to the test OCN Network
  */
-fun setUpMsp(definition: PartyDefinition, nodeDefinition: NodeDefinition, registry: Registry): TestMsp {
-    val mspServer = MspServer(definition.credentials, definition.party, definition.port)
-    mspServer.setPartyInRegistry(registry.contractAddress, nodeDefinition.credentials.address)
+fun setUpMsp(definition: PartyDefinition, nodeDefinition: NodeDefinition, contracts: OcnContracts): TestMsp {
+    val mspServer = MspServer(definition, contracts)
+    mspServer.setPartyInRegistry(nodeDefinition.credentials.address, Role.EMSP)
     mspServer.registerCredentials()
     return TestMsp(
             definition = definition,
-            server = mspServer
-    )
+            server = mspServer)
 }
 
 /**
  * Adds a node to the test OCN Network
  */
-fun setUpNode(definition: NodeDefinition, registry: Registry): OcnNode {
+fun setUpNode(definition: NodeDefinition, contracts: OcnContracts): OcnNode {
     val domain = "http://localhost:${definition.port}"
-    val registryAddress = registry.contractAddress
     val appContext = SpringApplicationBuilder(Application::class.java)
             .addCommandLineProperties(true)
             .run("--server.port=${definition.port}",
@@ -111,13 +113,14 @@ fun setUpNode(definition: NodeDefinition, registry: Registry): OcnNode {
                     "--ocn.node.url=$domain",
                     "--ocn.node.privatekey=${definition.credentials.ecKeyPair.privateKey.toString(16)}",
                     "--ocn.node.web3.provider=$provider",
-                    "--ocn.node.web3.contracts.registry=$registryAddress",
+                    "--ocn.node.web3.contracts.registry=${contracts.registry.contractAddress}",
+                    "--ocn.node.web3.contracts.permissions=${contracts.permissions.contractAddress}",
                     "--ocn.node.signatures=${definition.signatures}",
                     "--ocn.node.stillAliveEnabled=${definition.hubClientInfoParams.stillAlive.enabled}",
                     "--ocn.node.stillAliveRate=${definition.hubClientInfoParams.stillAlive.rate}",
                     "--ocn.node.plannedPartySearchEnabled=${definition.hubClientInfoParams.plannedPartySearch.enabled}",
                     "--ocn.node.plannedPartySearchRate=${definition.hubClientInfoParams.plannedPartySearch.rate}")
-    getRegistryInstance(definition.credentials, registryAddress).setNode(domain).sendAsync().get()
+    listNodeInRegistry(contracts.registry.contractAddress, definition.credentials, domain)
     return OcnNode(definition, appContext)
 }
 
@@ -139,19 +142,19 @@ fun stopPartyServers(components: NetworkComponents) {
 /**
  * Deploys and gets instance
  */
-fun deployRegistry(): Registry {
-    val web3 = Web3j.build(HttpService(provider))
+fun deployContracts(): OcnContracts {
     val txManager = ClientTransactionManager(web3, "0x627306090abaB3A6e1400e9345bC60c78a8BEf57")
-    val gasProvider = StaticGasProvider(0.toBigInteger(), 10000000.toBigInteger())
-    return Registry.deploy(web3, txManager, gasProvider).sendAsync().get()
+    val registry = Registry.deploy(web3, txManager, gasProvider).sendAsync().get()
+    val permissions = Permissions.deploy(web3, txManager, gasProvider, registry.contractAddress).sendAsync().get()
+    return OcnContracts(registry, permissions)
 }
 
 /**
- * Gets deployed instance
+ * Registers node operator in Registry smart contract
  */
-fun getRegistryInstance(credentials: Credentials, contractAddress: String): Registry {
-    val web3 = Web3j.build(HttpService(provider))
+fun listNodeInRegistry(registryAddress: String, credentials: Credentials, domain: String) {
     val txManager = ClientTransactionManager(web3, credentials.address)
-    val gasProvider = StaticGasProvider(0.toBigInteger(), 10000000.toBigInteger())
-    return Registry.load(contractAddress, web3, txManager, gasProvider)
+    val registry = Registry.load(registryAddress, web3, txManager, gasProvider)
+    registry.setNode(domain).sendAsync().get()
 }
+

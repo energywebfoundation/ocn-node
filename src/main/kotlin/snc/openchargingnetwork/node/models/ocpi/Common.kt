@@ -29,7 +29,7 @@ import javax.persistence.Embeddable
 import javax.persistence.Embedded
 
 
-// TODO: rename to avoid confusion
+// TODO: rename to avoid confusion?
 // BasicParty may be a better description
 @Embeddable
 data class BasicRole(@JsonProperty("party_id") final val id: String,
@@ -55,18 +55,37 @@ data class OcpiRequestVariables(@JsonProperty("module") val module: ModuleID,
                                 @JsonProperty("interface_role") val interfaceRole: InterfaceRole,
                                 @JsonProperty("method") val method: HttpMethod,
                                 @JsonProperty("headers") val headers: OcnHeaders,
-                                @JsonProperty("url_path_variables") val urlPathVariables: String? = null,
-                                @JsonProperty("url_encoded_params") val urlEncodedParams: Map<String, Any?>? = null,
+                                @JsonProperty("url_path") val urlPath: String? = null,
+                                @JsonProperty("query_params") val queryParams: Map<String, Any?>? = null,
                                 @JsonProperty("proxy_uid") val proxyUID: String? = null,
                                 @JsonProperty("proxy_resource") val proxyResource: String? = null,
+                                @JsonProperty("custom_module_id") val customModuleId: String? = null,
                                 @JsonProperty("body") val body: Any? = null) {
+
+    init {
+        if (module != ModuleID.CUSTOM && customModuleId != null) {
+            throw IllegalStateException("customModuleId defined but module is not CUSTOM")
+        }
+        if (module == ModuleID.CUSTOM && customModuleId == null) {
+            throw IllegalStateException("customModuleId not defined but module is CUSTOM")
+        }
+    }
 
     fun toSignedValues(): ValuesToSign<*> {
         return ValuesToSign(
                 headers = headers.toSignedHeaders(),
-                params = urlEncodedParams,
+                params = queryParams,
                 body = body)
+    }
+
+    fun resolveModuleId(): String {
+        return if (module != ModuleID.CUSTOM) {
+            module.id
+        } else {
+            customModuleId!!
         }
+    }
+
 }
 
 
@@ -138,13 +157,25 @@ enum class ModuleID(val id: String) {
     LOCATIONS("locations"),
     SESSIONS("sessions"),
     TARIFFS("tariffs"),
-    TOKENS("tokens")
+    TOKENS("tokens"),
+    CUSTOM("custom")
 }
 
 
 enum class InterfaceRole(val id: String) {
     SENDER(id = "sender"),
-    RECEIVER(id = "receiver")
+    RECEIVER(id = "receiver");
+
+    companion object {
+        fun values(): List<InterfaceRole> {
+            return listOf(SENDER, RECEIVER)
+        }
+        fun resolve(role: String): InterfaceRole {
+            val values = values()
+            return values.find { it.id.toLowerCase() == role }
+                    ?: throw OcpiClientInvalidParametersException("No interface $role found. Expected one of $values.")
+        }
+    }
 }
 
 

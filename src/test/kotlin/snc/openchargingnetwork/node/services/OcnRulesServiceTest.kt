@@ -61,7 +61,8 @@ class OcnRulesServiceTest {
         every { ocnRulesListRepo.findAllByPlatformID(platform.id) } returns listOf(
                 OcnRulesListEntity(
                         platformID = platform.id!!,
-                        counterparty = case.rulesListCounterParty))
+                        counterparty = case.rulesListCounterParty,
+                        modules = listOf()))
 
         val actual = ocnRulesService.isWhitelisted(platform, case.testCounterParty)
         assertThat(actual).isEqualTo(case.expectedResult)

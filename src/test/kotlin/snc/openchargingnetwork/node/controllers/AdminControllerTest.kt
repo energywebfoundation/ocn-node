@@ -55,7 +55,7 @@ class AdminControllerTest {
         every { properties.apikey } returns "1234567890"
         every { properties.url } returns "https://node.ocn.org"
         every { roleRepo.existsByCountryCodeAndPartyIDAllIgnoreCase(role.country, role.id) } returns false
-        every { platformRepo.save(any<PlatformEntity>()) } returns platform
+        every { platformRepo.save<PlatformEntity>(any()) } returns platform
         mockMvc.perform(post("/admin/generate-registration-token")
                 .header("Authorization", "Token 1234567890")
                 .contentType(MediaType.APPLICATION_JSON)

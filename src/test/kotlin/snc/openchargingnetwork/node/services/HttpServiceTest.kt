@@ -6,7 +6,6 @@ import io.mockk.mockkStatic
 import khttp.responses.Response
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import snc.openchargingnetwork.node.models.*
 
 class HttpServiceTest {
 
@@ -34,7 +33,7 @@ class HttpServiceTest {
         every { mockResponse.statusCode } returns 200
 
         mockkStatic("khttp.KHttp")
-        every { khttp.get(any<String>(), any<Map<String, String?>>()) } returns mockResponse
+        every { khttp.get(any(), any()) } returns mockResponse
 
         val versions = httpService.getVersions("https://www.example.com/ocpi/cpo/versions", "authToken")
         assertThat(versions.count()).isEqualTo(1)

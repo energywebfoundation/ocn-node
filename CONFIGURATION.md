@@ -116,6 +116,12 @@ In the scenario of load balancing nodes, only one of the nodes should have this 
 ### `ocn.node.plannedPartySearchRate`
 Sets rate in milliseconds at which the HubClientInfo module runs the planned party search task, outlined above. 
 [Default: 3600000 (1 hour)]
+
+### `ocn.node.serviceInterfaceEnabled`
+If turned on, permissions listed in the Registry will be honoured. For example, if a CPO has
+agreed to forwarding permissions from a particular service, the node will honour the 
+permission by forwarding the request to the service. Set to false in order to ignore these 
+permissions. [Default: true]
  
 ### `ocn.node.web3.provider`
 Sets the JSON RPC provider URL for the OCN environment. This is the Ethereum blockchain node which provides

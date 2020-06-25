@@ -18,10 +18,6 @@ package snc.openchargingnetwork.node.services
 
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
-import org.web3j.crypto.Credentials
-import org.web3j.crypto.Keys
-import snc.openchargingnetwork.contracts.Registry
-import snc.openchargingnetwork.node.config.NodeProperties
 import snc.openchargingnetwork.node.models.*
 import snc.openchargingnetwork.node.models.entities.*
 import snc.openchargingnetwork.node.models.entities.OcnRules
@@ -31,7 +27,6 @@ import snc.openchargingnetwork.node.models.ocpi.InterfaceRole
 import snc.openchargingnetwork.node.models.ocpi.ModuleID
 import snc.openchargingnetwork.node.models.ocpi.OcpiRequestVariables
 import snc.openchargingnetwork.node.repositories.*
-import snc.openchargingnetwork.node.tools.checksum
 import snc.openchargingnetwork.node.tools.extractToken
 import snc.openchargingnetwork.node.tools.generateUUIDv4Token
 import snc.openchargingnetwork.node.tools.urlJoin
@@ -41,62 +36,19 @@ class RoutingService(private val platformRepo: PlatformRepository,
                      private val roleRepo: RoleRepository,
                      private val endpointRepo: EndpointRepository,
                      private val proxyResourceRepo: ProxyResourceRepository,
-                     private val registry: Registry,
+                     private val registryService: RegistryService,
                      private val httpService: HttpService,
                      private val walletService: WalletService,
-                     private val ocnRulesService: OcnRulesService,
-                     private val properties: NodeProperties) {
-
-
-    /**
-     * serialize a data class (with @JsonProperty annotations) as a JSON string
-     */
-    private fun stringify(body: Any): String {
-        return httpService.mapper.writeValueAsString(body)
-    }
-
-    /**
-     * Get nodes listed in registry
-     */
-    fun getNodesListedInRegistry(omitMine: Boolean = false): List<RegistryNode> {
-        val nodes = registry.nodeOperators.sendAsync().get()
-                .map {
-                    val url = registry.getNode(it as String).sendAsync().get()
-                    RegistryNode(operator = it.checksum(), url = url)
-                }
-
-        return if (omitMine) {
-            val myAddress = Credentials.create(properties.privateKey).address.checksum()
-            nodes.filter { it.operator != myAddress }
-        } else {
-            nodes
-        }
-    }
+                     private val ocnRulesService: OcnRulesService) {
 
     /**
      * check database to see if basic role is connected to the node
      */
     fun isRoleKnown(role: BasicRole) = roleRepo.existsByCountryCodeAndPartyIDAllIgnoreCase(role.country, role.id)
 
-
-    /**
-     * check OCN registry to see if basic role is registered
-     */
-    fun isRoleKnownOnNetwork(role: BasicRole, belongsToMe: Boolean = true): Boolean {
-        val country = role.country.toByteArray()
-        val id = role.id.toByteArray()
-
-        val (operator, domain) = registry.getOperatorByOcpi(country, id).sendAsync().get()
-        if (belongsToMe) {
-            val myKey = Credentials.create(properties.privateKey).address
-            return domain == properties.url && Keys.toChecksumAddress(operator) == Keys.toChecksumAddress(myKey)
-        }
-
-        return domain != ""
-    }
-
     /**
      * get platform by role
+     * TODO: review getPlatform* methods below
      */
     fun getPlatform(role: BasicRole): PlatformEntity {
         val platformID = getPlatformID(role)
@@ -125,37 +77,16 @@ class RoutingService(private val platformRepo: PlatformRepository,
     /**
      * get OCPI platform endpoint information using platform ID (from above)
      */
-    fun getPlatformEndpoint(platformID: Long?, module: ModuleID, interfaceRole: InterfaceRole): EndpointEntity {
-        return endpointRepo.findByPlatformIDAndIdentifierAndRole(platformID, module.id, interfaceRole)
+    fun getPlatformEndpoint(platformID: Long?, moduleID: String, interfaceRole: InterfaceRole): EndpointEntity {
+        return endpointRepo.findByPlatformIDAndIdentifierAndRole(platformID, moduleID, interfaceRole)
                 ?: throw OcpiClientInvalidParametersException("Receiver does not support the requested module")
-    }
-
-
-    /**
-     * get the OCN Node URL as registered by the basic role in the OCN Registry
-     */
-    fun getRemoteNodeUrl(receiver: BasicRole): String {
-        val (_, domain) = registry.getOperatorByOcpi(receiver.country.toByteArray(), receiver.id.toByteArray()).sendAsync().get()
-        if (domain == "") {
-            throw OcpiHubUnknownReceiverException("Recipient not registered on OCN")
-        }
-        return domain
-    }
-
-
-    /**
-     * Only returns party and operator addresses so far; add as needed
-     */
-    fun getPartyDetails(party: BasicRole): RegistryPartyDetailsBasic {
-        val result = registry.getPartyDetailsByOcpi(party.country.toByteArray(), party.id.toByteArray()).sendAsync().get()
-        return RegistryPartyDetailsBasic(address = result.component1(), operator = result.component5())
     }
 
 
     /**
      * Check sender is known to this node using only the authorization header token
      */
-    fun validateSender(authorization: String) {
+    fun checkSenderKnown(authorization: String) {
         if (!platformRepo.existsByAuth_TokenC(authorization.extractToken())) {
             throw OcpiClientInvalidParametersException("Invalid CREDENTIALS_TOKEN_C")
         }
@@ -165,7 +96,7 @@ class RoutingService(private val platformRepo: PlatformRepository,
     /**
      * Check sender is known to this node using the authorization header token and role provided as sender
      */
-    fun validateSender(authorization: String, sender: BasicRole) {
+    fun checkSenderKnown(authorization: String, sender: BasicRole) {
 
         // sender platform exists by auth token
         val senderPlatform = platformRepo.findByAuth_TokenC(authorization.extractToken())
@@ -182,10 +113,10 @@ class RoutingService(private val platformRepo: PlatformRepository,
      * Check receiver is registered on the Open Charging Network / known locally via database
      * @return Receiver - defines the whether receiver is LOCAL (on this node) or REMOTE (on different node)
      */
-    fun validateReceiver(receiver: BasicRole): Receiver {
+    fun getReceiverType(receiver: BasicRole): Receiver {
         return when {
             isRoleKnown(receiver) -> Receiver.LOCAL
-            isRoleKnownOnNetwork(receiver, belongsToMe = false) -> Receiver.REMOTE
+            registryService.isRoleKnown(receiver, belongsToMe = false) -> Receiver.REMOTE
             else -> throw OcpiHubUnknownReceiverException("Receiver not registered on Open Charging Network")
         }
     }
@@ -193,9 +124,9 @@ class RoutingService(private val platformRepo: PlatformRepository,
     /**
      * Check receiver has allowed sender to send them messages
      */
-    fun validateWhitelisted(sender: BasicRole, receiver: BasicRole, module: ModuleID) {
+    fun checkSenderWhitelisted(sender: BasicRole, receiver: BasicRole, moduleID: String) {
         val platform = getPlatform(receiver)
-        val whitelisted = ocnRulesService.isWhitelisted(platform, sender, module)
+        val whitelisted = ocnRulesService.isWhitelisted(platform, sender, moduleID)
         if (!whitelisted) {
             throw OcpiClientGenericException("Message receiver not in sender's whitelist.")
         }
@@ -214,7 +145,7 @@ class RoutingService(private val platformRepo: PlatformRepository,
 
             // local sender is requesting a resource/url via a proxy
             // returns the resource behind the proxy
-            proxied -> getProxyResource(request.urlPathVariables, request.headers.sender, request.headers.receiver)
+            proxied -> getProxyResource(request.urlPath, request.headers.sender, request.headers.receiver)
 
             // remote sender is requesting a resource/url via a proxy
             // return the proxied resource as defined by the sender
@@ -228,14 +159,14 @@ class RoutingService(private val platformRepo: PlatformRepository,
                         sender = request.headers.receiver,
                         receiver = request.headers.sender,
                         alternativeUID = request.proxyUID)
-                val endpoint = getPlatformEndpoint(platformID, request.module, request.interfaceRole)
-                urlJoin(endpoint.url, request.urlPathVariables)
+                val endpoint = getPlatformEndpoint(platformID, request.resolveModuleId(), request.interfaceRole)
+                urlJoin(endpoint.url, request.urlPath)
             }
 
             // return standard OCPI module URL of recipient
             else -> {
-                val endpoint = getPlatformEndpoint(platformID, request.module, request.interfaceRole)
-                urlJoin(endpoint.url, request.urlPathVariables)
+                val endpoint = getPlatformEndpoint(platformID, request.resolveModuleId(), request.interfaceRole) // could replace with request.resolveModuleId()...
+                urlJoin(endpoint.url, request.urlPath)
             }
 
         }
@@ -254,7 +185,7 @@ class RoutingService(private val platformRepo: PlatformRepository,
      */
     fun prepareRemotePlatformRequest(request: OcpiRequestVariables, proxied: Boolean = false, alterBody: ((url: String) -> OcpiRequestVariables)? = null): Triple<String, OcnMessageHeaders, String> {
 
-        val url = getRemoteNodeUrl(request.headers.receiver)
+        val url = registryService.getRemoteNodeUrlOf(request.headers.receiver)
 
         var modifiedBody = request.copy()
 
@@ -264,14 +195,14 @@ class RoutingService(private val platformRepo: PlatformRepository,
         // if proxied request, add the proxy resource to the body
         if (proxied) {
             modifiedBody = modifiedBody.run {
-                copy(proxyResource = getProxyResource(urlPathVariables, headers.sender, headers.receiver))
+                copy(proxyResource = getProxyResource(urlPath, headers.sender, headers.receiver))
             }
         }
 
         // strip authorization
         modifiedBody = modifiedBody.copy(headers = modifiedBody.headers.copy(authorization = ""))
 
-        val bodyString = stringify(modifiedBody)
+        val bodyString = httpService.mapper.writeValueAsString(modifiedBody)
 
         val headers = OcnMessageHeaders(
                 requestID = generateUUIDv4Token(),

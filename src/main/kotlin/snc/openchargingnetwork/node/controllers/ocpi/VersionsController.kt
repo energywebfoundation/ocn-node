@@ -54,7 +54,7 @@ class VersionsController(private val repository: PlatformRepository,
     fun getVersionsDetail(@RequestHeader("Authorization") authorization: String): OcpiResponse<VersionDetail> {
 
         val token = authorization.extractToken()
-        val endpoints = this.getEndpoints()
+        val endpoints = this.getAllEndpoints()
         val response = OcpiResponse(
                     OcpiStatus.SUCCESS.code,
                     data = VersionDetail("2.2", endpoints))
@@ -66,37 +66,39 @@ class VersionsController(private val repository: PlatformRepository,
         }
     }
 
+    private fun getModuleEndpoints(module: ModuleID): List<Endpoint> {
+        return InterfaceRole.values().map {
+            val paths = if (module == ModuleID.CUSTOM) {
+                "/ocpi/custom/${it.id}"
+            } else {
+                "/ocpi/${it.id}/2.2/${module.id}"
+            }
+            Endpoint(
+                    identifier = module.id,
+                    role = it,
+                    url = urlJoin(properties.url, paths)
+            )
+        }
+    }
 
-    private fun getEndpoints(): List<Endpoint> {
+    private fun getAllEndpoints(): List<Endpoint> {
         val endpoints = mutableListOf<Endpoint>()
+        val senderOnlyInterfaces = listOf(ModuleID.CREDENTIALS, ModuleID.HUB_CLIENT_INFO)
 
         for (module in ModuleID.values()) {
 
-            if (module.id == "hubclientinfo") {
-                continue
-            }
-
-            if (module.id == "credentials" /*|| /module.id == "hubclientinfo"*/) {
-                // these modules have only SENDER endpoint (the broker/hub)
-                endpoints.add(Endpoint(
+            if (senderOnlyInterfaces.contains(module)) {
+                // these modules have only SENDER endpoint (the node/hub)
+                 endpoints.add(Endpoint(
                         identifier = module.id,
                         role = InterfaceRole.SENDER,
                         url = urlJoin(properties.url, "/ocpi/2.2/${module.id}")))
             } else {
-                // remaining modules have both interfaces implemented
-                endpoints.addAll(listOf(
-                        Endpoint(
-                                identifier = module.id,
-                                role = InterfaceRole.SENDER,
-                                url = urlJoin(properties.url, "/ocpi/sender/2.2/${module.id}")),
-                        Endpoint(
-                                identifier = module.id,
-                                role = InterfaceRole.RECEIVER,
-                                url = urlJoin(properties.url, "/ocpi/receiver/2.2/${module.id}"))))
+                endpoints.addAll(getModuleEndpoints(module))
             }
         }
 
-        // custom module
+        // add custom OcnRules module endpoint
         endpoints.add(Endpoint(
                 identifier = "ocnrules",
                 role = InterfaceRole.RECEIVER,

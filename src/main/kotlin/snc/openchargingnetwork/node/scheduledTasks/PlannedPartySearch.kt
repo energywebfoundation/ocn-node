@@ -39,6 +39,7 @@ class PlannedPartySearch(private val registry: Registry,
 
         // registry.getParties() returns list of party ethereum addresses which can be used to get full party details
         val plannedParties = registry.parties.sendAsync().get()
+                .asSequence()
                 .map {
                     val (country, id, _, _, roles, operator, _) = registry.getPartyDetailsByAddress(it as String).sendAsync().get()
                     RegistryPartyDetails(

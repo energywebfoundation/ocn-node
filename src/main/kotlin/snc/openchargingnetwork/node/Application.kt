@@ -19,12 +19,14 @@ package snc.openchargingnetwork.node
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.runApplication
+import org.springframework.scheduling.annotation.EnableAsync
 import org.springframework.scheduling.annotation.EnableScheduling
 import snc.openchargingnetwork.node.config.NodeProperties
 
 @SpringBootApplication
 @EnableConfigurationProperties(NodeProperties::class)
 @EnableScheduling
+@EnableAsync
 class Application
 
 fun main(args: Array<String>) {

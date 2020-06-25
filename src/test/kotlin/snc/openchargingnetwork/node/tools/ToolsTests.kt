@@ -2,7 +2,6 @@ package snc.openchargingnetwork.node.tools
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import org.web3j.crypto.Keys
 
 class ToolsTests {
 

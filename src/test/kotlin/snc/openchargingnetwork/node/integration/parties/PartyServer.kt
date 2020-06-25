@@ -1,23 +1,34 @@
 package snc.openchargingnetwork.node.integration.parties
 
 import io.javalin.Javalin
+import org.web3j.tx.ClientTransactionManager
 import shareandcharge.openchargingnetwork.notary.Notary
-import org.web3j.crypto.Credentials as KeyPair
 import shareandcharge.openchargingnetwork.notary.SignableHeaders
 import shareandcharge.openchargingnetwork.notary.ValuesToSign
+import snc.openchargingnetwork.contracts.Permissions
+import snc.openchargingnetwork.contracts.Registry
 import snc.openchargingnetwork.node.integration.utils.*
+import snc.openchargingnetwork.node.models.OcnServicePermission
 import snc.openchargingnetwork.node.models.OcnRulesListType
 import snc.openchargingnetwork.node.models.ocpi.*
 import snc.openchargingnetwork.node.tools.generateUUIDv4Token
 
-open class PartyServer(private val credentials: KeyPair, private val party: BasicRole, private val port: Int) {
+open class PartyServer(val config: PartyDefinition, deployedContracts: OcnContracts) {
 
-    val app: Javalin = Javalin.create().start(port)
+    val app: Javalin = Javalin.create().start(config.port)
     private val tokenB: String = generateUUIDv4Token()
     lateinit var tokenC: String
     lateinit var node: String
 
-    val hubClientInfoStatuses = mutableMapOf<BasicRole, ConnectionStatus>()
+    val hubClientInfoStatuses = mutableMapOf<BasicRole, ConnectionStatus>() // store received hubclientinfo updates
+
+    val messageStore = mutableListOf<ReceivedMessage>() // store any received messages
+
+    // replace deployed contract instances with own party's transaction manager
+    private val txManager = ClientTransactionManager(web3, config.credentials.address)
+    val contracts = deployedContracts.copy(
+            registry = Registry.load(deployedContracts.registry.contractAddress, web3, txManager, gasProvider),
+            permissions = Permissions.load(deployedContracts.permissions.contractAddress, web3, txManager, gasProvider))
 
     init {
         app.exception(JavalinException::class.java) { e, ctx ->
@@ -37,22 +48,40 @@ open class PartyServer(private val credentials: KeyPair, private val party: Basi
             ))
         }
 
-        app.put("ocpi/cpo/2.2/clientinfo/:countryCode/:partyID") {
+        app.put("ocpi/2.2/clientinfo/:countryCode/:partyID") {
             this.hubClientInfoStatuses[BasicRole(id = it.pathParam("partyID"), country = it.pathParam("countryCode"))] = it.body<ClientInfo>().status
             val body = OcpiResponse(statusCode = 1000, data = "")
-            body.signature = Notary().sign(ValuesToSign(body = body), credentials.privateKey()).serialize()
+            body.signature = sign(body = body)
             it.json(body)
         }
     }
 
-    fun setPartyInRegistry(registryAddress: String, operator: String) {
-        val registry = getRegistryInstance(credentials, registryAddress)
-        registry.setParty(party.country.toByteArray(), party.id.toByteArray(), listOf(0.toBigInteger()), operator).sendAsync().get()
-        node = registry.getNode(operator).sendAsync().get()
+    fun sign(headers: SignableHeaders? = null, params: Map<String, Any?>? = null, body: Any? = null): String {
+        val valuesToSign = ValuesToSign(headers, params, body)
+        return Notary().sign(valuesToSign, config.credentials.privateKey()).serialize()
+    }
+
+    fun setPartyInRegistry(operator: String, role: Role) {
+        val (id, country) = config.party
+        val rolesList = listOf(role.ordinal.toBigInteger())
+        contracts.registry.setParty(country.toByteArray(), id.toByteArray(), rolesList, operator).sendAsync().get()
+        node = contracts.registry.getNode(operator).sendAsync().get()
+    }
+
+    fun setServicePermissions(permissions: List<OcnServicePermission>) {
+        val name = "Test Service" // optional name
+        val url = "https://test.Service"  // optional public url
+        val permissionsIntList = permissions.map { it.ordinal.toBigInteger() }
+        contracts.permissions.setService(name, url, permissionsIntList).sendAsync().get()
+    }
+
+    fun agreeToServicePermissions(provider: String) {
+        contracts.permissions.createAgreement(provider).sendAsync().get()
     }
 
     fun registerCredentials() {
-        val tokenA = getTokenA(node, listOf(party))
+        // TODO: could also request versions and store endpoints in memory
+        val tokenA = getTokenA(node, listOf(config.party))
         val response = khttp.post("$node/ocpi/2.2/credentials",
                 headers = mapOf("Authorization" to "Token $tokenA"),
                 json = coerceToJson(Credentials(
@@ -61,8 +90,8 @@ open class PartyServer(private val credentials: KeyPair, private val party: Basi
                         roles = listOf(CredentialsRole(
                                 role = Role.CPO,
                                 businessDetails = BusinessDetails(name = "Some CPO"),
-                                countryCode = party.country,
-                                partyID = party.id)))))
+                                countryCode = config.party.country,
+                                partyID = config.party.id)))))
         tokenC = response.jsonObject.getJSONObject("data").getString("token")
     }
 
@@ -72,26 +101,22 @@ open class PartyServer(private val credentials: KeyPair, private val party: Basi
     }
 
     fun urlBuilder(path: String): String {
-        return "http://localhost:$port$path"
+        return "http://localhost:${config.port}$path"
     }
 
     fun getSignableHeaders(to: BasicRole): SignableHeaders {
         return SignableHeaders(
                 correlationId = generateUUIDv4Token(),
-                fromCountryCode = party.country,
-                fromPartyId = party.id,
+                fromCountryCode = config.party.country,
+                fromPartyId = config.party.id,
                 toCountryCode = to.country,
                 toPartyId = to.id)
     }
 
-    fun addToList(type: OcnRulesListType, party: BasicRole) {
-        val typeString = when (type) {
-            OcnRulesListType.WHITELIST -> "whitelist"
-            OcnRulesListType.BLACKLIST -> "blacklist"
-        }
-        khttp.post("$node/ocpi/receiver/2.2/ocnrules/$typeString",
+    fun addToList(type: OcnRulesListType, party: BasicRole, modules: List<String>? = listOf()) {
+        khttp.post("$node/ocpi/receiver/2.2/ocnrules/${type.toString().toLowerCase()}",
                 headers = mapOf("Authorization" to "Token $tokenC"),
-                json = mapOf("country_code" to party.country, "party_id" to party.id, "modules" to listOf<String>()))
+                json = mapOf("country_code" to party.country, "party_id" to party.id, "modules" to modules))
     }
 
     fun stopServer() {

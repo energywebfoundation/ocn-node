@@ -87,12 +87,60 @@ uses this as it's primary means of connecting such parties. It is important to h
 API beforehand, in order to connect to and use an OCN Node. This comprises, as a bare minimum, the credentials module.
 Documentation for version 2.2 can be found on https://github.com/ocpi/ocpi[OCPI @ *GitHub*].
 
-The node strives to provide all the functionality of OCPI. As this software is in alpha stage, there are currently
-some features of OCPI missing:
+The node strives to provide all the functionality of OCPI, though there are currently some features missing:
 
-- `hubclientinfo` module is only partly implemented.
-- Hub-specific features such as broadcast push and intelligent routing are missing.
+- The `hubclientinfo` module is still work in progress.
+- Hub-specific features such as broadcast push and intelligent routing are not included.
 
+See the https://bitbucket.org/shareandcharge/ocn-node/issues[issues page] on Bitbucket for more.
+
+== Pagination and Proxying Resources
+
+The OCN handles OCPI pagination requests in a special way. When sending a paginated request, for example,
+to get the first 50 locations from a Charge Point Operator, the CPO will respond with a `Link` header which
+only their OCN Node will be able to access.
+
+Because of this, the OCN Node must proxy this header. The sender will receive from their OCN Node a `Link`
+header such as https://some.ocn-node.net/ocpi/sender/2.2/locations/page/2 which will correspond to the
+original CPO resource, for example, https://some.cpo.com/ocpi/cpo/2.2/locations?offset=100&limit=100.
+
+Other examples of resources which require proxying include the `Location` header returned from the POST method
+of the cdrs receiver interface, as well as any `response_url` used in the commands and charging profiles
+modules.
+
+== Custom OCPI modules
+
+The OCN supports the use of custom OCPI modules. Such modules can be registered with an OCN Node during
+the credentials handshake.
+
+When requesting version details from the node, the response will contain the following endpoints:
+
+....
+{
+  "identifier": "custom",
+  "role": "sender",
+  "endpoint": "https://some.ocn-node.net/ocpi/custom/sender"
+},
+{
+  "identifier": "custom",
+  "role": "receiver",
+  "endpoint": "https://some.ocn-node.net/ocpi/custom/receiver"
+}
+....
+
+This acts as a wildcard for _all_ custom OCPI modules. Here's how it works:
+
+1. CPO completes credentials handshake with OCN Node
+    a. CPO fetches OCN Node versions, saves endpoint details for wildcard custom module
+    b. OCN Node fetches CPO versions, saves endpoint details for `enriched-locations` custom module
+2. CPO sends their custom module request to the OCN Node
+    a. requests any HTTP method
+    b. places module name as first path variable, followed by any additional variables required by the
+custom module: https://some.ocn-node.net/ocpi/custom/receiver/enriched-locations/location1
+    c. appends url-encoded queries and json body if necessary
+3. OCN Node routes the message to recipient's OCN Node
+    a. recipient's OCN Node looks up `enriched-locations` in recipient's endpoints
+    b. recipient's OCN Node forwards the request to https://recipient.msp.com/ocpi/emsp/2.2/enriched-locations/location1
 
 == _OcnRules_ module
 
