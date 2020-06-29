@@ -399,3 +399,14 @@ now this should be enough to get started on creating an OCPI 2.2 platform that i
 
 See the [OCN Node HTTP API documentation](https://shareandcharge.bitbucket.io) for more requests, including a link to
 the full OCPI API. 
+
+Also provided is an OpenAPI v3 specification file in this directory (`openapi-spec.json`).
+This allows you to generate a client based on the API of the OCN Node. For example, using the 
+OpenAPI Generator CLI:
+
+```
+npm install -g @openapitools/openapi-generator-cli
+openapi-generator -g typescript-node -i openapi-spec.json -o ./ocn-client
+```
+
+This will create a new TypeScript client in the `ocn-client` directory.
