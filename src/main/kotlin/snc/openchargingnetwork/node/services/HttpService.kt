@@ -41,13 +41,13 @@ class HttpService {
     /**
      * Generic HTTP request expecting a response of type OcpiResponse<T> as defined by the caller
      */
-    fun <T : Any> makeOcpiRequest(method: HttpMethod, url: String, headers: Map<String, String?>, params: Map<String, Any?>? = null, json: Map<String, Any>? = null): HttpResponse<T> {
+    fun <T : Any> makeOcpiRequest(method: HttpMethod, url: String, headers: Map<String, String?>, params: Map<String, Any?>? = null, data: String? = null): HttpResponse<T> {
         val paramsWithStringValues = params?.mapValues { (_, value) -> value.toString() } ?: mapOf()
         val response = when (method) {
             HttpMethod.GET -> khttp.get(url, headers, paramsWithStringValues)
-            HttpMethod.POST -> khttp.post(url, headers, paramsWithStringValues, json = json)
-            HttpMethod.PUT -> khttp.put(url, headers, paramsWithStringValues, json = json)
-            HttpMethod.PATCH -> khttp.patch(url, headers, paramsWithStringValues, json = json)
+            HttpMethod.POST -> khttp.post(url, headers, paramsWithStringValues, data = data)
+            HttpMethod.PUT -> khttp.put(url, headers, paramsWithStringValues, data = data)
+            HttpMethod.PATCH -> khttp.patch(url, headers, paramsWithStringValues, data = data)
             HttpMethod.DELETE -> khttp.delete(url, headers)
             else -> throw IllegalStateException("Invalid method: $method")
         }
@@ -67,17 +67,19 @@ class HttpService {
      * Generic HTTP request expecting a response of type OcpiResponse<T> as defined by the caller
      */
     final fun <T: Any> makeOcpiRequest(url: String,
-                                       headers: OcnHeaders,
+                                       ocnHeaders: OcnHeaders,
                                        requestVariables: OcpiRequestVariables): HttpResponse<T> {
 
         // includes or excludes routing headers based on module type (functional or configuration)
         // TODO: credentials and versions must also include X-Request-ID/X-Correlation-ID
-        val headersMap = headers.toMap(routingHeaders = !configurationModules.contains(requestVariables.module))
+        val headersMap = ocnHeaders.toMap(routingHeaders = !configurationModules.contains(requestVariables.module))
 
-        var jsonBody: Map<String,Any>? = null
+        var jsonBody: String? = null
         if (requestVariables.body != null) {
-            val jsonString = mapper.writeValueAsString(requestVariables.body)
-            jsonBody = mapper.readValue(jsonString)
+            // Setting content-type to json as this is the expected format for standard and custom OCPI modules
+            headersMap["content-type"] = "application/json"
+            // If the request body is a String, we assume that it is already JSON
+            jsonBody = if (requestVariables.body is String) requestVariables.body else mapper.writeValueAsString(requestVariables.body)
         }
 
         return makeOcpiRequest(
@@ -85,7 +87,7 @@ class HttpService {
                 url = url,
                 headers = headersMap,
                 params = requestVariables.queryParams,
-                json = jsonBody)
+                data = jsonBody)
     }
 
 

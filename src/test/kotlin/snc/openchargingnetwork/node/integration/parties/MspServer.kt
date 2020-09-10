@@ -111,4 +111,23 @@ class MspServer(config: PartyDefinition, contracts: OcnContracts): PartyServer(c
         return khttp.get("$node/ocpi/custom/sender/lite-locations", headers = headers.toMap(tokenC, signature))
     }
 
+    fun postCustomModuleRequestWithBody(to: BasicRole, requestBody: String): Response {
+        val headers = getSignableHeaders(to)
+        val signature = sign(headers = headers, body = requestBody)
+        val headersMap = headers.toMap(tokenC, signature)
+        headersMap["content-type"] = "application/json"
+        return khttp.post(
+                url = "$node/ocpi/custom/sender/lite-locations",
+                headers = headersMap,
+                data = requestBody)
+    }
+
+    fun postCustomModuleRequestWithoutBody(to: BasicRole): Response {
+        val headers = getSignableHeaders(to)
+        val signature = sign(headers = headers)
+        return khttp.post(
+                url = "$node/ocpi/custom/sender/lite-locations",
+                headers = headers.toMap(tokenC, signature))
+    }
+
 }

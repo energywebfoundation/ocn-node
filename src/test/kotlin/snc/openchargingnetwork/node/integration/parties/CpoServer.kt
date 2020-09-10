@@ -100,6 +100,12 @@ class CpoServer(config: PartyDefinition, contracts: OcnContracts): PartyServer(c
             it.json(body)
         }
 
+        app.post("/ocpi/cpo/2.2/lite-locations") {
+            val body = OcpiResponse(statusCode = 1000, data = it.body())
+            body.signature = sign(body = body)
+            it.json(body)
+        }
+
     }
 
     fun sendCdr(to: BasicRole): Response {

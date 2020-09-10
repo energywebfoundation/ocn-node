@@ -54,7 +54,7 @@ include::{snippets}/registry/node-of/http-response.adoc[]
 
 == Admin
 
-The admin API allows administrators to manage their OCN Node. Currently, the only admin functionality is the generatoion
+The admin API allows administrators to manage their OCN Node. Currently, the only admin functionality is the generation
 of new Open Charge Point Interface registration tokens (so-called `CREDENTIALS_TOKEN_A`) for interested platforms.
 
 === Request
@@ -134,7 +134,7 @@ This acts as a wildcard for _all_ custom OCPI modules. Here's how it works:
     a. CPO fetches OCN Node versions, saves endpoint details for wildcard custom module
     b. OCN Node fetches CPO versions, saves endpoint details for `enriched-locations` custom module
 2. CPO sends their custom module request to the OCN Node
-    a. requests any HTTP method
+    a. requests any HTTP method. If making a POST, PUT or PATCH request, the content-type should be application/json
     b. places module name as first path variable, followed by any additional variables required by the
 custom module: https://some.ocn-node.net/ocpi/custom/receiver/enriched-locations/location1
     c. appends url-encoded queries and json body if necessary
