@@ -49,10 +49,9 @@ operating systems.
 ## Tutorial: Running your own Local Open Charging Network
 
 Before running a node and connecting it to a local, test or prod environment, it is recommended to first become 
-acquainted with how the network operates. The provided `docker-compose` file spins up a local environment with the OCN
-Registry and two OCN Nodes pre-configured. A [tutorial](./examples) has been provided to guide administrators and users 
-of an OCN Node alike through various use case examples.  To complete this tutorial it is necessary to install
-[Docker Compose](https://docs.docker.com/compose/install/) in addition to the above dependencies.
+acquainted with how the network operates. 
+A [tutorial](https://bitbucket.org/shareandcharge/ocn-demo) has been provided to guide administrators and users 
+of an OCN Node alike through various use case examples.
 
 ## Running a Node
 
