@@ -1,5 +1,10 @@
 # OCN Node Changelog
 
+## 1.1.0-rc2
+### Upcoming
+
+Fixes bug with handling request body when forwarding custom OCPI module requests.
+
 ## 1.1.0-rc1 
 ### Upcoming
 

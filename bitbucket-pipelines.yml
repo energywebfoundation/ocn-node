@@ -1,20 +1,32 @@
-# This is a sample build configuration for Java (Gradle).
-# Check our guides at https://confluence.atlassian.com/x/zd-5Mw for more examples.
-# Only use spaces to indent your .yml configuration.
-# -----
-# You can specify a custom docker image from Docker Hub as your build environment.
 image: alpine:latest
 
-pipelines:
-  default:
-    - step:
+definitions:
+  steps:
+    - step: &build-and-test
+        name: Build and run tests
         caches:
           - gradle
           - node
-        script: # Modify the commands below to build your repository.
-          # You must commit the Gradle wrapper to your repository
-          # https://docs.gradle.org/current/userguide/gradle_wrapper.html
+        script:
           - apk add gradle npm
           - npm install -g ganache-cli
           - ganache-cli -m "candy maple cake sugar pudding cream honey rich smooth crumble sweet treat" --port 8544 --accounts 20 --networkId=9 --gasLimit=10000000 > /dev/null &
           - ./gradlew build
+pipelines:
+  default:
+    - step: *build-and-test
+  custom:
+    docker-image-deploy:
+      - step:
+          <<: *build-and-test
+          artifacts:
+            - build/**
+            - src/main/resources/**
+      - step:
+          name: Push to Docker Hub
+          script:
+            - docker login --username $DOCKER_USERNAME --password $DOCKER_PASSWORD
+            - docker build -t openchargingnetwork/ocn-node:1.1.0-rc2 .
+            - docker push openchargingnetwork/ocn-node:1.1.0-rc2
+          services:
+            - docker
