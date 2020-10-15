@@ -1,12 +1,20 @@
 # OCN Node Changelog
 
+## 1.1.0
+### Oct 16, 2020
+
+1.1.0 release of Open Charging Network Node. Includes:
+
+- Forwarding of requests to "Ocn Services" as specified by the OCN Service Interface
+- Initial HubClientInfo module implementation
+
 ## 1.1.0-rc2
-### Upcoming
+### Sep 25, 2020
 
 Fixes bug with handling request body when forwarding custom OCPI module requests.
 
 ## 1.1.0-rc1 
-### Upcoming
+### Jun 30, 2020
 
 Adds the ability for requests to be forwarded to "Ocn Services" with matching permissions. The
 Ocn ServiceInterface, using the new Permissions contract in the OCN Registry, allows data to be

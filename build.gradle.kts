@@ -15,7 +15,7 @@ plugins {
 }
 
 group = "snc.openchargingnetwork.node"
-version = "1.1.0-rc2"
+version = "1.1.0"
 java.sourceCompatibility = JavaVersion.VERSION_1_8
 
 val snippetsDir = "build/generated-snippets"
@@ -32,7 +32,7 @@ repositories {
 }
 
 dependencies {
-    implementation("shareandcharge.openchargingnetwork:notary:1.0.1-beta1")
+    implementation("shareandcharge.openchargingnetwork:notary:1.0.1")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")

@@ -17,6 +17,8 @@ pipelines:
     - step: *build-and-test
   custom:
     docker-image-deploy:
+      - variables:
+        - name: version
       - step:
           <<: *build-and-test
           artifacts:
@@ -26,7 +28,8 @@ pipelines:
           name: Push to Docker Hub
           script:
             - docker login --username $DOCKER_USERNAME --password $DOCKER_PASSWORD
-            - docker build -t openchargingnetwork/ocn-node:1.1.0-rc2 .
-            - docker push openchargingnetwork/ocn-node:1.1.0-rc2
+            - docker build -t openchargingnetwork/ocn-node:${version} -t openchargingnetwork/ocn-node:latest .
+            - docker push openchargingnetwork/ocn-node:${version}
+            - docker push openchargingnetwork/ocn-node:latest
           services:
             - docker
