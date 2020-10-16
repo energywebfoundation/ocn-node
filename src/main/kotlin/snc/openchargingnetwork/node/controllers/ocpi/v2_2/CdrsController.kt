@@ -19,15 +19,14 @@ package snc.openchargingnetwork.node.controllers.ocpi.v2_2
 import org.springframework.http.HttpMethod
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
-import snc.openchargingnetwork.node.models.*
+import snc.openchargingnetwork.node.components.OcpiRequestHandlerBuilder
+import snc.openchargingnetwork.node.models.OcnHeaders
 import snc.openchargingnetwork.node.models.ocpi.*
-import snc.openchargingnetwork.node.services.RequestHandler
-import snc.openchargingnetwork.node.services.RequestHandlerBuilder
 import snc.openchargingnetwork.node.tools.filterNull
 
 
 @RestController
-class CdrsController(private val requestHandlerBuilder: RequestHandlerBuilder) {
+class CdrsController(private val requestHandlerBuilder: OcpiRequestHandlerBuilder) {
 
 
     /**
@@ -58,14 +57,13 @@ class CdrsController(private val requestHandlerBuilder: RequestHandlerBuilder) {
                 interfaceRole = InterfaceRole.SENDER,
                 method = HttpMethod.GET,
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
-                urlEncodedParams = params)
+                queryParams = params)
 
-        val request: RequestHandler<Array<CDR>> = requestHandlerBuilder.build(requestVariables)
-        return request
-                .validateSender()
-                .forwardRequest()
-                .getResponseWithPaginationHeaders()
-
+        // TODO: all pagination response header links should contain original url-encoded parameters
+        return requestHandlerBuilder
+               .build<Array<CDR>>(requestVariables)
+               .forwardDefault()
+               .getResponseWithPaginationHeaders() // proxies the Link response header
     }
 
     @GetMapping("/ocpi/sender/2.2/cdrs/page/{uid}")
@@ -87,12 +85,11 @@ class CdrsController(private val requestHandlerBuilder: RequestHandlerBuilder) {
                 interfaceRole = InterfaceRole.SENDER,
                 method = HttpMethod.GET,
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
-                urlPathVariables = uid)
+                urlPath = uid)
 
-        val request: RequestHandler<Array<CDR>> = requestHandlerBuilder.build(requestVariables)
-        return request
-                .validateSender()
-                .forwardRequest(proxied = true)
+        return requestHandlerBuilder
+                .build<Array<CDR>>(requestVariables)
+                .forwardDefault(proxied = true) // retrieves proxied Link response header
                 .getResponseWithPaginationHeaders()
     }
 
@@ -120,12 +117,11 @@ class CdrsController(private val requestHandlerBuilder: RequestHandlerBuilder) {
                 interfaceRole = InterfaceRole.RECEIVER,
                 method = HttpMethod.GET,
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
-                urlPathVariables = cdrID)
+                urlPath = cdrID)
 
-        val request: RequestHandler<CDR> = requestHandlerBuilder.build(requestVariables)
-        return request
-                .validateSender()
-                .forwardRequest(proxied = true)
+        return requestHandlerBuilder
+                .build<CDR>(requestVariables)
+                .forwardDefault(proxied = true) // retrieves proxied Location response header
                 .getResponse()
     }
 
@@ -151,10 +147,9 @@ class CdrsController(private val requestHandlerBuilder: RequestHandlerBuilder) {
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
                 body = body)
 
-        val request: RequestHandler<Unit> = requestHandlerBuilder.build(requestVariables)
-        return request
-                .validateSender()
-                .forwardRequest()
+        return requestHandlerBuilder
+                .build<Unit>(requestVariables)
+                .forwardDefault()
                 .getResponseWithLocationHeader("/ocpi/receiver/2.2/cdrs")
     }
 

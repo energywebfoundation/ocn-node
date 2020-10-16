@@ -19,15 +19,12 @@ package snc.openchargingnetwork.node.controllers.ocpi.v2_2
 import org.springframework.http.HttpMethod
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
-import snc.openchargingnetwork.node.config.NodeProperties
 import snc.openchargingnetwork.node.models.*
 import snc.openchargingnetwork.node.models.ocpi.*
-import snc.openchargingnetwork.node.services.RequestHandler
-import snc.openchargingnetwork.node.services.RequestHandlerBuilder
+import snc.openchargingnetwork.node.components.OcpiRequestHandlerBuilder
 
 @RestController
-class CommandsController(private val requestHandlerBuilder: RequestHandlerBuilder,
-                         private val properties: NodeProperties) {
+class CommandsController(private val requestHandlerBuilder: OcpiRequestHandlerBuilder) {
 
 
     /**
@@ -55,13 +52,12 @@ class CommandsController(private val requestHandlerBuilder: RequestHandlerBuilde
                 interfaceRole = InterfaceRole.SENDER,
                 method = HttpMethod.POST,
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
-                urlPathVariables = uid,
+                urlPath = uid,
                 body = body)
 
-        val request: RequestHandler<Unit> = requestHandlerBuilder.build(requestVariables)
-        return request
-                .validateSender()
-                .forwardRequest(proxied = true)
+        return requestHandlerBuilder
+                .build<Unit>(requestVariables)
+                .forwardDefault(proxied = true) // retrieves proxied response_url
                 .getResponse()
     }
 
@@ -90,13 +86,14 @@ class CommandsController(private val requestHandlerBuilder: RequestHandlerBuilde
                 interfaceRole = InterfaceRole.RECEIVER,
                 method = HttpMethod.POST,
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
-                urlPathVariables = "CANCEL_RESERVATION",
+                urlPath = "CANCEL_RESERVATION",
                 body = body)
 
-        val request: RequestHandler<CommandResponse> = requestHandlerBuilder.build(requestVariables)
-        return request
-                .validateSender()
-                .forwardModifiableRequest(body.responseURL) { requestVariables.copy(body = body.copy(responseURL = it)) }
+        return requestHandlerBuilder
+                .build<CommandResponse>(requestVariables)
+                .forwardAsync(body.responseURL) {
+                    requestVariables.copy(body = body.copy(responseURL = it))
+                }
                 .getResponse()
     }
 
@@ -120,13 +117,14 @@ class CommandsController(private val requestHandlerBuilder: RequestHandlerBuilde
                 interfaceRole = InterfaceRole.RECEIVER,
                 method = HttpMethod.POST,
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
-                urlPathVariables = "RESERVE_NOW",
+                urlPath = "RESERVE_NOW",
                 body = body)
 
-        val request: RequestHandler<CommandResponse> = requestHandlerBuilder.build(requestVariables)
-        return request
-                .validateSender()
-                .forwardModifiableRequest(body.responseURL) { requestVariables.copy(body = body.copy(responseURL = it)) }
+        return requestHandlerBuilder
+                .build<CommandResponse>(requestVariables)
+                .forwardAsync(body.responseURL) {
+                    requestVariables.copy(body = body.copy(responseURL = it))
+                }
                 .getResponse()
     }
 
@@ -150,13 +148,14 @@ class CommandsController(private val requestHandlerBuilder: RequestHandlerBuilde
                 interfaceRole = InterfaceRole.RECEIVER,
                 method = HttpMethod.POST,
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
-                urlPathVariables = "START_SESSION",
+                urlPath = "START_SESSION",
                 body = body)
 
-        val request: RequestHandler<CommandResponse> = requestHandlerBuilder.build(requestVariables)
-        return request
-                .validateSender()
-                .forwardModifiableRequest(body.responseURL) { requestVariables.copy(body = body.copy(responseURL = it)) }
+        return requestHandlerBuilder
+                .build<CommandResponse>(requestVariables)
+                .forwardAsync(body.responseURL) {
+                    requestVariables.copy(body = body.copy(responseURL = it))
+                }
                 .getResponse()
     }
 
@@ -180,13 +179,14 @@ class CommandsController(private val requestHandlerBuilder: RequestHandlerBuilde
                 interfaceRole = InterfaceRole.RECEIVER,
                 method = HttpMethod.POST,
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
-                urlPathVariables = "STOP_SESSION",
+                urlPath = "STOP_SESSION",
                 body = body)
 
-        val request: RequestHandler<CommandResponse> = requestHandlerBuilder.build(requestVariables)
-        return request
-                .validateSender()
-                .forwardModifiableRequest(body.responseURL) { requestVariables.copy(body = body.copy(responseURL = it)) }
+        return requestHandlerBuilder
+                .build<CommandResponse>(requestVariables)
+                .forwardAsync(body.responseURL) {
+                    requestVariables.copy(body = body.copy(responseURL = it))
+                }
                 .getResponse()
     }
 
@@ -210,13 +210,14 @@ class CommandsController(private val requestHandlerBuilder: RequestHandlerBuilde
                 interfaceRole = InterfaceRole.RECEIVER,
                 method = HttpMethod.POST,
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
-                urlPathVariables = "UNLOCK_CONNECTOR",
+                urlPath = "UNLOCK_CONNECTOR",
                 body = body)
 
-        val request: RequestHandler<CommandResponse> = requestHandlerBuilder.build(requestVariables)
-        return request
-                .validateSender()
-                .forwardModifiableRequest(body.responseURL) { requestVariables.copy(body = body.copy(responseURL = it)) }
+        return requestHandlerBuilder
+                .build<CommandResponse>(requestVariables)
+                .forwardAsync(body.responseURL) {
+                    requestVariables.copy(body = body.copy(responseURL = it))
+                }
                 .getResponse()
     }
 

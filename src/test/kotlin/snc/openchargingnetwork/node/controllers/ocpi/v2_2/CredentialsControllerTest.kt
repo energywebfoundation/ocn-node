@@ -14,15 +14,13 @@ import org.springframework.http.MediaType
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
-import snc.openchargingnetwork.node.repositories.*
 import snc.openchargingnetwork.node.config.NodeProperties
 import snc.openchargingnetwork.node.models.entities.*
-import snc.openchargingnetwork.node.models.ocpi.InterfaceRole
-import snc.openchargingnetwork.node.models.ocpi.Role
-import snc.openchargingnetwork.node.models.ocpi.OcpiStatus
 import snc.openchargingnetwork.node.models.ocpi.*
+import snc.openchargingnetwork.node.models.ocpi.Role
+import snc.openchargingnetwork.node.repositories.*
 import snc.openchargingnetwork.node.services.HttpService
-import snc.openchargingnetwork.node.services.RoutingService
+import snc.openchargingnetwork.node.services.RegistryService
 
 @WebMvcTest(CredentialsController::class)
 class CredentialsControllerTest(@Autowired val mockMvc: MockMvc) {
@@ -35,6 +33,9 @@ class CredentialsControllerTest(@Autowired val mockMvc: MockMvc) {
 
     @MockkBean
     lateinit var endpointRepo: EndpointRepository
+
+    @MockkBean
+    lateinit var networkClientInfoRepo: NetworkClientInfoRepository
     
     @MockkBean
     lateinit var ocnRulesListRepo: OcnRulesListRepository
@@ -43,7 +44,7 @@ class CredentialsControllerTest(@Autowired val mockMvc: MockMvc) {
     lateinit var properties: NodeProperties
 
     @MockkBean
-    lateinit var routingService: RoutingService
+    lateinit var registryService: RegistryService
 
     @MockkBean
     lateinit var httpService: HttpService
@@ -102,12 +103,17 @@ class CredentialsControllerTest(@Autowired val mockMvc: MockMvc) {
                         Endpoint("commands", InterfaceRole.RECEIVER, "https://org.charging.net/commands")))
         every { properties.url } returns "http://my.broker.com"
         every { properties.signatures } returns true
-        every { routingService.isRoleKnownOnNetwork(BasicRole(role1.partyID, role1.countryCode)) } returns true
+
+        every { registryService.isRoleKnown(BasicRole(role1.partyID, role1.countryCode)) } returns true
+        every { networkClientInfoRepo.existsByPartyAndRole(BasicRole(role1.partyID, role1.countryCode), role1.role) } returns false
         every { roleRepo.existsByCountryCodeAndPartyIDAllIgnoreCase(role1.countryCode, role1.partyID) } returns false
-        every { routingService.isRoleKnownOnNetwork(BasicRole(role2.partyID, role2.countryCode)) } returns true
+
+        every { registryService.isRoleKnown(BasicRole(role2.partyID, role2.countryCode)) } returns true
         every { roleRepo.existsByCountryCodeAndPartyIDAllIgnoreCase(role2.countryCode, role2.partyID) } returns false
-        every { platformRepo.save(any<PlatformEntity>()) } returns platform
-        every { endpointRepo.save(any<EndpointEntity>()) } returns mockk()
+        every { networkClientInfoRepo.existsByPartyAndRole(BasicRole(role2.partyID, role2.countryCode), role2.role) } returns false
+
+        every { platformRepo.save<PlatformEntity>(any()) } returns platform
+        every { endpointRepo.save<EndpointEntity>(any()) } returns mockk()
         every { roleRepo.saveAll(any<List<RoleEntity>>())} returns mockk()
 
         mockMvc.perform(post("/ocpi/2.2/credentials")
@@ -163,10 +169,10 @@ class CredentialsControllerTest(@Autowired val mockMvc: MockMvc) {
                         Endpoint("commands", InterfaceRole.RECEIVER, "https://org.charging.net/commands")))
         every { properties.url } returns "http://my.broker.com"
         every { properties.signatures } returns false
-        every { platformRepo.save(any<PlatformEntity>()) } returns platform
+        every { platformRepo.save<PlatformEntity>(any()) } returns platform
         every { endpointRepo.deleteByPlatformID(platform.id) } returns mockk()
-        every { endpointRepo.save(any<EndpointEntity>()) } returns mockk()
-        every { roleRepo.findAllByPlatformID(platform.id) } returns listOf<RoleEntity>()
+        every { endpointRepo.save<EndpointEntity>(any()) } returns mockk()
+        every { roleRepo.findAllByPlatformID(platform.id) } returns listOf()
         every { roleRepo.deleteByPlatformID(platform.id) } returns mockk()
         every { roleRepo.saveAll(any<List<RoleEntity>>())} returns mockk()
 
@@ -197,7 +203,8 @@ class CredentialsControllerTest(@Autowired val mockMvc: MockMvc) {
         val platform = PlatformEntity(id = 3L, auth = Auth(tokenA = null, tokenB = "123", tokenC = "456"))
         every { platformRepo.findByAuth_TokenC(platform.auth.tokenC) } returns platform
         every { platformRepo.deleteById(platform.id!!) } just Runs
-        every { roleRepo.findAllByPlatformID(platform.id) } returns listOf<RoleEntity>()
+        every { platformRepo.save(platform) } returns platform
+        every { roleRepo.findAllByPlatformID(platform.id) } returns listOf()
         every { roleRepo.deleteByPlatformID(platform.id) } just Runs
         every { endpointRepo.deleteByPlatformID(platform.id) } just Runs
         every { ocnRulesListRepo.deleteByPlatformID(platform.id) } just Runs

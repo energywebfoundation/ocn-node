@@ -21,6 +21,10 @@ import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
 import shareandcharge.openchargingnetwork.notary.SignableHeaders
 import snc.openchargingnetwork.node.models.ocpi.BasicRole
+import snc.openchargingnetwork.node.models.ocpi.InterfaceRole
+import snc.openchargingnetwork.node.models.ocpi.ModuleID
+import snc.openchargingnetwork.node.models.ocpi.Role
+import java.math.BigInteger
 
 data class OcnMessageHeaders(val requestID: String,
                              val signature: String) {
@@ -33,6 +37,7 @@ data class OcnMessageHeaders(val requestID: String,
 
 }
 
+// TODO: could differentiate between Function Module headers and Configuration Module headers
 @JsonInclude(JsonInclude.Include.NON_NULL)
 data class OcnHeaders(@JsonProperty("Authorization") val authorization: String,
                       @JsonProperty("OCN-Signature") var signature: String? = null,
@@ -41,16 +46,18 @@ data class OcnHeaders(@JsonProperty("Authorization") val authorization: String,
                       val sender: BasicRole,
                       val receiver: BasicRole) {
 
-    fun toMap(): Map<String, String?> {
+    fun toMap(routingHeaders: Boolean = true): MutableMap<String, String?> {
         val map = mutableMapOf<String, String?>()
         map["Authorization"] = authorization
         map["OCN-Signature"] = signature
         map["X-Request-ID"] = requestID
         map["X-Correlation-ID"] = correlationID
-        map["OCPI-from-country-code"] = sender.country
-        map["OCPI-from-party-id"] = sender.id
-        map["OCPI-to-country-code"] = receiver.country
-        map["OCPI-to-party-id"] = receiver.id
+        if (routingHeaders) {
+            map["OCPI-from-country-code"] = sender.country
+            map["OCPI-from-party-id"] = sender.id
+            map["OCPI-to-country-code"] = receiver.country
+            map["OCPI-to-party-id"] = receiver.id
+        }
         return map
     }
 
@@ -83,4 +90,48 @@ data class OcnRulesListParty(@JsonProperty("party_id") val id: String,
                              @JsonProperty("country_code") val country: String,
                              @JsonProperty("modules") val modules: List<String>)
 
-data class RegistryPartyDetails(val address: String, val operator: String)
+data class RegistryPartyDetailsBasic(val address: String, val operator: String)
+
+data class RegistryPartyDetails(val party: BasicRole, val roles: List<Role>, val nodeOperator: String)
+
+data class RegistryNode(val operator: String, val url: String)
+
+data class OcnService(val provider: BasicRole, val permissions: List<OcnServicePermission>)
+
+data class BasicRequestType(val moduleID: ModuleID, val interfaceRole: InterfaceRole)
+
+// each enum value takes a "matcher" which tests a given module/interface
+enum class OcnServicePermission(val matches: (request: BasicRequestType) -> Boolean) {
+    FORWARD_ALL({true}),
+    FORWARD_ALL_SENDER({it.interfaceRole == InterfaceRole.SENDER}),
+    FORWARD_ALL_RECEIVER({it.interfaceRole == InterfaceRole.RECEIVER}),
+    FORWARD_MODULE_LOCATIONS_SENDER({it.moduleID == ModuleID.LOCATIONS && it.interfaceRole == InterfaceRole.SENDER}),
+    FORWARD_MODULE_LOCATIONS_RECEIVER({it.moduleID == ModuleID.LOCATIONS && it.interfaceRole == InterfaceRole.RECEIVER}),
+    FORWARD_MODULE_SESSIONS_SENDER({it.moduleID == ModuleID.SESSIONS && it.interfaceRole == InterfaceRole.SENDER}),
+    FORWARD_MODULE_SESSIONS_RECEIVER({it.moduleID == ModuleID.SESSIONS && it.interfaceRole == InterfaceRole.RECEIVER }),
+    FORWARD_MODULE_CDRS_SENDER({it.moduleID == ModuleID.CDRS && it.interfaceRole == InterfaceRole.SENDER}),
+    FORWARD_MODULE_CDRS_RECEIVER({it.moduleID == ModuleID.CDRS && it.interfaceRole == InterfaceRole.RECEIVER}),
+    FORWARD_MODULE_TARIFFS_SENDER({it.moduleID == ModuleID.TARIFFS && it.interfaceRole == InterfaceRole.SENDER}),
+    FORWARD_MODULE_TARIFFS_RECEIVER({it.moduleID == ModuleID.TARIFFS && it.interfaceRole == InterfaceRole.RECEIVER}),
+    FORWARD_MODULE_TOKENS_SENDER({it.moduleID == ModuleID.TOKENS && it.interfaceRole == InterfaceRole.SENDER}),
+    FORWARD_MODULE_TOKENS_RECEIVER({it.moduleID == ModuleID.TOKENS && it.interfaceRole == InterfaceRole.RECEIVER}),
+    FORWARD_MODULE_COMMANDS_SENDER({it.moduleID == ModuleID.COMMANDS && it.interfaceRole == InterfaceRole.SENDER}),
+    FORWARD_MODULE_COMMANDS_RECEIVER({it.moduleID == ModuleID.COMMANDS && it.interfaceRole == InterfaceRole.RECEIVER}),
+    FORWARD_MODULE_CHARGINGPROFILES_SENDER({it.moduleID == ModuleID.CHARGING_PROFILES && it.interfaceRole == InterfaceRole.SENDER}),
+    FORWARD_MODULE_CHARGINGPROFILES_RECEIVER({it.moduleID == ModuleID.CHARGING_PROFILES && it.interfaceRole == InterfaceRole.RECEIVER});
+
+
+    companion object {
+        fun getByIndex(index: BigInteger): OcnServicePermission? {
+            return try {
+                values()[index.intValueExact()]
+            } catch (e: ArrayIndexOutOfBoundsException) {
+                null
+            }
+        }
+    }
+}
+
+fun OcnServicePermission.matches(moduleID: ModuleID, interfaceRole: InterfaceRole): Boolean {
+    return matches(BasicRequestType(moduleID, interfaceRole))
+}

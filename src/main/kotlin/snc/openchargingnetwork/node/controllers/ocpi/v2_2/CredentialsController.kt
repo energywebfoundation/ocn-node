@@ -18,20 +18,21 @@ package snc.openchargingnetwork.node.controllers.ocpi.v2_2
 
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.bind.annotation.*
-import snc.openchargingnetwork.node.repositories.*
 import snc.openchargingnetwork.node.config.NodeProperties
-import snc.openchargingnetwork.node.models.ocpi.ConnectionStatus
-import snc.openchargingnetwork.node.models.ocpi.Role
-import snc.openchargingnetwork.node.models.ocpi.OcpiStatus
 import snc.openchargingnetwork.node.models.entities.Auth
 import snc.openchargingnetwork.node.models.entities.EndpointEntity
 import snc.openchargingnetwork.node.models.entities.RoleEntity
 import snc.openchargingnetwork.node.models.exceptions.OcpiClientInvalidParametersException
 import snc.openchargingnetwork.node.models.exceptions.OcpiServerNoMatchingEndpointsException
 import snc.openchargingnetwork.node.models.ocpi.*
+import snc.openchargingnetwork.node.models.ocpi.Role
+import snc.openchargingnetwork.node.repositories.*
 import snc.openchargingnetwork.node.services.HttpService
-import snc.openchargingnetwork.node.services.RoutingService
-import snc.openchargingnetwork.node.tools.*
+import snc.openchargingnetwork.node.services.RegistryService
+import snc.openchargingnetwork.node.tools.extractToken
+import snc.openchargingnetwork.node.tools.generateUUIDv4Token
+import snc.openchargingnetwork.node.tools.getTimestamp
+import snc.openchargingnetwork.node.tools.urlJoin
 
 
 @RestController
@@ -39,9 +40,10 @@ import snc.openchargingnetwork.node.tools.*
 class CredentialsController(private val platformRepo: PlatformRepository,
                             private val roleRepo: RoleRepository,
                             private val endpointRepo: EndpointRepository,
+                            private val networkClientInfoRepository: NetworkClientInfoRepository,
                             private val ocnRulesListRepo: OcnRulesListRepository,
                             private val properties: NodeProperties,
-                            private val routingService: RoutingService,
+                            private val registryService: RegistryService,
                             private val httpService: HttpService) {
 
     private fun myCredentials(token: String): Credentials {
@@ -58,8 +60,6 @@ class CredentialsController(private val platformRepo: PlatformRepository,
     @GetMapping
     fun getCredentials(@RequestHeader("Authorization") authorization: String): OcpiResponse<Credentials> {
 
-        // TODO: allow token A authorization
-
         return platformRepo.findByAuth_TokenC(authorization.extractToken())?.let {
 
             OcpiResponse(
@@ -73,6 +73,9 @@ class CredentialsController(private val platformRepo: PlatformRepository,
     @Transactional
     fun postCredentials(@RequestHeader("Authorization") authorization: String,
                         @RequestBody body: Credentials): OcpiResponse<Credentials> {
+
+        // TODO: create credentials service
+        // TODO: detect changes to public URL to automatically update credentials on connected platforms
 
         // check platform previously registered by admin
         val platform = platformRepo.findByAuth_TokenA(authorization.extractToken())
@@ -88,14 +91,17 @@ class CredentialsController(private val platformRepo: PlatformRepository,
         // GET 2.2 version details
         val versionDetail = httpService.getVersionDetail(correctVersion.url, body.token)
 
-        // ensure each role does not already exist
+        // ensure each role does not already exist; delete if planned
         for (role in body.roles) {
             val basicRole = BasicRole(role.partyID, role.countryCode)
-            if (!routingService.isRoleKnownOnNetwork(basicRole)) {
+            if (!registryService.isRoleKnown(basicRole)) {
                 throw OcpiClientInvalidParametersException("Role with party_id=${basicRole.id} and country_code=${basicRole.country} not listed in OCN Registry with my node info!")
             }
             if (roleRepo.existsByCountryCodeAndPartyIDAllIgnoreCase(basicRole.country, basicRole.id)) {
                 throw OcpiClientInvalidParametersException("Role with party_id=${basicRole.id} and country_code=${basicRole.country} already connected to this node!")
+            }
+            if (networkClientInfoRepository.existsByPartyAndRole(basicRole.toUpperCase(), role.role)) {
+                networkClientInfoRepository.deleteByPartyAndRole(basicRole.toUpperCase(), role.role)
             }
         }
 
@@ -121,6 +127,7 @@ class CredentialsController(private val platformRepo: PlatformRepository,
                     countryCode = role.countryCode))
         }
 
+        platform.register(roles)
         platformRepo.save(platform)
         roleRepo.saveAll(roles)
 
@@ -207,6 +214,10 @@ class CredentialsController(private val platformRepo: PlatformRepository,
 
         val platform = platformRepo.findByAuth_TokenC(authorization.extractToken())
                 ?: throw OcpiClientInvalidParametersException("Invalid CREDENTIALS_TOKEN_C")
+
+        val roles = roleRepo.findAllByPlatformID(platform.id)
+        platform.unregister(roles)
+        platformRepo.save(platform)
 
         platformRepo.deleteById(platform.id!!)
         roleRepo.deleteByPlatformID(platform.id)

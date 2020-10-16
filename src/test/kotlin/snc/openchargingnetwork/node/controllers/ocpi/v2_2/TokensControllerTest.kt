@@ -18,8 +18,8 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
 import snc.openchargingnetwork.node.data.exampleToken
 import snc.openchargingnetwork.node.models.*
 import snc.openchargingnetwork.node.models.ocpi.*
-import snc.openchargingnetwork.node.services.RequestHandler
-import snc.openchargingnetwork.node.services.RequestHandlerBuilder
+import snc.openchargingnetwork.node.components.OcpiRequestHandler
+import snc.openchargingnetwork.node.components.OcpiRequestHandlerBuilder
 import snc.openchargingnetwork.node.tools.generateUUIDv4Token
 
 
@@ -27,7 +27,7 @@ import snc.openchargingnetwork.node.tools.generateUUIDv4Token
 class TokensControllerTest(@Autowired val mockMvc: MockMvc) {
 
     @MockkBean
-    lateinit var requestHandlerBuilder: RequestHandlerBuilder
+    lateinit var requestHandlerBuilder: OcpiRequestHandlerBuilder
 
 
     @Test
@@ -46,9 +46,9 @@ class TokensControllerTest(@Autowired val mockMvc: MockMvc) {
                         correlationID = generateUUIDv4Token(),
                         sender = sender,
                         receiver = receiver),
-                urlEncodedParams = mapOf("limit" to 50))
+                queryParams = mapOf("limit" to 50))
 
-        val mockRequestHandler = mockk<RequestHandler<Array<Token>>>()
+        val mockRequestHandler = mockk<OcpiRequestHandler<Array<Token>>>()
 
         val responseHeaders = HttpHeaders()
         responseHeaders["Link"] = "https://node.ocn.co/ocpi/sender/2.2/tariffs/page/935432; rel=\"next\""
@@ -57,7 +57,7 @@ class TokensControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every { requestHandlerBuilder.build<Array<Token>>(requestVariables) } returns mockRequestHandler
 
-        every { mockRequestHandler.validateSender().forwardRequest().getResponseWithPaginationHeaders() } returns ResponseEntity
+        every { mockRequestHandler.forwardDefault().getResponseWithPaginationHeaders() } returns ResponseEntity
                 .status(200)
                 .headers(responseHeaders)
                 .body(OcpiResponse(statusCode = 1000, data = arrayOf(exampleToken)))
@@ -104,9 +104,9 @@ class TokensControllerTest(@Autowired val mockMvc: MockMvc) {
                         correlationID = generateUUIDv4Token(),
                         sender = sender,
                         receiver = receiver),
-                urlPathVariables = uid)
+                urlPath = uid)
 
-        val mockRequestHandler = mockk<RequestHandler<Array<Token>>>()
+        val mockRequestHandler = mockk<OcpiRequestHandler<Array<Token>>>()
 
         val responseHeaders = HttpHeaders()
         responseHeaders["Link"] = "https://client.ocn.co/ocpi/sender/2.2/tokens/page/935433; rel=\"next\""
@@ -114,7 +114,7 @@ class TokensControllerTest(@Autowired val mockMvc: MockMvc) {
 
         every { requestHandlerBuilder.build<Array<Token>>(requestVariables) } returns mockRequestHandler
 
-        every { mockRequestHandler.validateSender().forwardRequest().getResponseWithPaginationHeaders() } returns ResponseEntity
+        every { mockRequestHandler.forwardDefault(true).getResponseWithPaginationHeaders() } returns ResponseEntity
                 .status(200)
                 .headers(responseHeaders)
                 .body(OcpiResponse(statusCode = 1000, data = arrayOf(exampleToken)))
@@ -160,15 +160,15 @@ class TokensControllerTest(@Autowired val mockMvc: MockMvc) {
                         correlationID = generateUUIDv4Token(),
                         sender = sender,
                         receiver = receiver),
-                urlPathVariables = "1234567890/authorize",
-                urlEncodedParams = mapOf("type" to TokenType.RFID),
+                urlPath = "1234567890/authorize",
+                queryParams = mapOf("type" to TokenType.RFID),
                 body = body)
 
-        val mockRequestHandler = mockk<RequestHandler<AuthorizationInfo>>()
+        val mockRequestHandler = mockk<OcpiRequestHandler<AuthorizationInfo>>()
 
         every { requestHandlerBuilder.build<AuthorizationInfo>(requestVariables) } returns mockRequestHandler
 
-        every { mockRequestHandler.validateSender().forwardRequest().getResponse() } returns ResponseEntity
+        every { mockRequestHandler.forwardDefault().getResponse() } returns ResponseEntity
                 .status(200)
                 .body(OcpiResponse(statusCode = 1000, data = AuthorizationInfo(
                         allowed = Allowed.ALLOWED,
@@ -212,14 +212,14 @@ class TokensControllerTest(@Autowired val mockMvc: MockMvc) {
                         correlationID = generateUUIDv4Token(),
                         sender = sender,
                         receiver = receiver),
-                urlPathVariables = "/${sender.country}/${sender.id}/$tokenUID",
-                urlEncodedParams = mapOf("type" to TokenType.RFID))
+                urlPath = "/${sender.country}/${sender.id}/$tokenUID",
+                queryParams = mapOf("type" to TokenType.RFID))
 
-        val mockRequestHandler = mockk<RequestHandler<Token>>()
+        val mockRequestHandler = mockk<OcpiRequestHandler<Token>>()
 
         every { requestHandlerBuilder.build<Token>(requestVariables) } returns mockRequestHandler
 
-        every { mockRequestHandler.validateSender().forwardRequest().getResponse() } returns ResponseEntity
+        every { mockRequestHandler.forwardDefault().getResponse() } returns ResponseEntity
                 .status(200)
                 .body(OcpiResponse(statusCode = 1000, data = exampleToken))
 
@@ -259,15 +259,15 @@ class TokensControllerTest(@Autowired val mockMvc: MockMvc) {
                         correlationID = generateUUIDv4Token(),
                         sender = sender,
                         receiver = receiver),
-                urlPathVariables = "/${sender.country}/${sender.id}/$tokenUID",
-                urlEncodedParams = mapOf("type" to TokenType.APP_USER),
+                urlPath = "/${sender.country}/${sender.id}/$tokenUID",
+                queryParams = mapOf("type" to TokenType.APP_USER),
                 body = exampleToken)
 
-        val mockRequestHandler = mockk<RequestHandler<Unit>>()
+        val mockRequestHandler = mockk<OcpiRequestHandler<Unit>>()
 
         every { requestHandlerBuilder.build<Unit>(requestVariables) } returns mockRequestHandler
 
-        every { mockRequestHandler.validateSender().forwardRequest().getResponse() } returns ResponseEntity
+        every { mockRequestHandler.forwardDefault().getResponse() } returns ResponseEntity
                 .status(200)
                 .body(OcpiResponse(statusCode = 1000))
 
@@ -311,15 +311,15 @@ class TokensControllerTest(@Autowired val mockMvc: MockMvc) {
                         correlationID = generateUUIDv4Token(),
                         sender = sender,
                         receiver = receiver),
-                urlPathVariables = "/${sender.country}/${sender.id}/$tokenUID",
-                urlEncodedParams = mapOf("type" to TokenType.APP_USER),
+                urlPath = "/${sender.country}/${sender.id}/$tokenUID",
+                queryParams = mapOf("type" to TokenType.APP_USER),
                 body = body)
 
-        val mockRequestHandler = mockk<RequestHandler<Unit>>()
+        val mockRequestHandler = mockk<OcpiRequestHandler<Unit>>()
 
         every { requestHandlerBuilder.build<Unit>(requestVariables) } returns mockRequestHandler
 
-        every { mockRequestHandler.validateSender().forwardRequest().getResponse() } returns ResponseEntity
+        every { mockRequestHandler.forwardDefault().getResponse() } returns ResponseEntity
                 .status(200)
                 .body(OcpiResponse(statusCode = 1000))
 

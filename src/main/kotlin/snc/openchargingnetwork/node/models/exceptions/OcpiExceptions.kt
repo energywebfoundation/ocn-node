@@ -65,3 +65,7 @@ class OcpiHubTimeoutOnRequestException(message: String = "Timeout on forwarded r
 class OcpiHubConnectionProblemException(message: String = "Connection problem",
                                         val httpStatus: HttpStatus = HttpStatus.OK,
                                         val ocpiStatus: OcpiStatus = OcpiStatus.HUB_CONNECTION_PROBLEM): Exception(message)
+
+// OCN errors (between nodes)
+
+class InvalidOcnSignatureException(message: String): Exception(message)
