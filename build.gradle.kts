@@ -18,7 +18,7 @@ group = "snc.openchargingnetwork.node"
 version = "1.1.0"
 java.sourceCompatibility = JavaVersion.VERSION_1_8
 
-val snippetsDir = "build/generated-snippets"
+val snippetsDir = "../../../build/generated-snippets"
 
 val developmentOnly: Configuration by configurations.creating
 configurations {
