@@ -6,7 +6,7 @@ This is a community project, aimed at incorporating and building on the open OCP
 are welcome in the form of comments, pull requests and raised issues. Visit our 
 [issue tracker](https://bitbucket.org/shareandcharge/ocn-node/issues) for an overview of current and past issues. 
 Questions may also be asked on [Stack Overflow](https://stackoverflow.com/questions/tagged/shareandcharge), or in the 
-[Gitter community](https://gitter.im/shareandcharge/community). 
+[Slack community](https://app.slack.com/client/T0BNK39NX/CRP0VKEMD). 
 
 Before contributing to the source code, please take the time to read over the 
 [Developer Certificate of Origin](https://developercertificate.org/). For more information, see our 
@@ -28,7 +28,7 @@ the OCN Node can be initiated, providing access to all OCPI modules and interfac
 communication. When a counter-party is found (either offline or via the registry), requests are sent to 
 them via the sender's OCN Node.
 
-For more information about the OCN, check out the [wiki](https://bitbucket.org/shareandcharge/ocn-node/wiki/).
+For more information about the OCN, check out the [wiki](https://shareandcharge.atlassian.net/wiki/spaces/OCN/pages/409731085/Getting+started).
 
 ## HTTP API Documentation
 
@@ -68,13 +68,13 @@ see the subsequent section that follows.
 
 Once downloaded, extract the contents of the archive and change directory: 
 ```
-tar zxvf ocn-node-1.1.0-rc0.tar.gz
-cd ocn-node-1.1-0-rc0
+tar zxvf ocn-node-1.1.0.tar.gz
+cd ocn-node-1.1-0
 ```
 
 Now we can run our node:
 ```
-java -jar ocn-node-1.1.0-rc0.jar
+java -jar ocn-node-1.1.0.jar
 ```
 
 ### Configuration
@@ -156,8 +156,8 @@ Edit the service file to match your environment, replacing the user and properti
 ```
 [Service]
 User=ubuntu
-WorkingDirectory=/home/ubuntu/ocn-node-1.1.0-rc0
-ExecStart=/usr/bin/java -jar -Dspring.config.location=application.custom-prod-env.properties ocn-node-1.1.0-rc0.jar
+WorkingDirectory=/home/ubuntu/ocn-node-1.1.0
+ExecStart=/usr/bin/java -jar -Dspring.config.location=application.custom-prod-env.properties ocn-node-1.1.0.jar
 ```
  
 Then, copy the service file to the `/etc/systemd/system` directory:
@@ -214,6 +214,7 @@ This is helpful for developing without having to worry about funding and managin
 ```
 ocn.node.web3.provider = http://localhost:8544
 ocn.node.web3.contracts.registry = 0x345ca3e014aaf5dca488057592ee47305d9b3e10
+ocn.node.web3.contracts.permissions = 0xf25186B5081Ff5cE73482AD761DB0eB0d25abfBF
 ```
 
 ### Generating new build archives
