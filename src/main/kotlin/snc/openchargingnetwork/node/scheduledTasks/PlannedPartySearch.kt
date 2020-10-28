@@ -51,8 +51,17 @@ class PlannedPartySearch(private val registry: Registry,
                 }
                 .filter {
                     val isMyParty = it.nodeOperator == myAddress
+                    isMyParty
+                }
+                .filter {
+                    val partyHasBeenDeleted = it.nodeOperator == "0x0000000000000000000000000000000000000000"
+                    !partyHasBeenDeleted
+                }
+                .filter {
+                    // Doing completed registration check after deleted party check as null countryCode and partyId
+                    // from deleted parties may cause an issue with query for postgresql
                     val hasCompletedRegistration = roleRepo.existsByCountryCodeAndPartyIDAllIgnoreCase(it.party.country, it.party.id)
-                    isMyParty && !hasCompletedRegistration
+                    !hasCompletedRegistration
                 }
 
         for (party in plannedParties) {
