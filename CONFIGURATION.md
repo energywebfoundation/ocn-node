@@ -130,9 +130,15 @@ environment and the production environment. The former runs on the
 [Volta test network](https://energyweb.atlassian.net/wiki/spaces/EWF/pages/702677023/Chain+Volta+Test+Network), whilst
 the latter runs on the [Energy Web Chain](https://energyweb.atlassian.net/wiki/spaces/EWF/pages/718078071/Chain+Energy+Web+Chain+Production+Network).
 
+[Default: https://volta-rpc.energyweb.org]
+[volta: https://volta-rpc.energyweb.org]
+[ewc: https://rpc.energyweb.org]
+
 More information about the environments can be found here: 
 [test](https://shareandcharge.atlassian.net/wiki/spaces/OCN/pages/409206816/Public+Test+Network) and
 [production](https://shareandcharge.atlassian.net/wiki/spaces/OCN/pages/409305103/Production+Network).
+
+
 
 ### `ocn.node.web3.contracts.registry`
 Sets the OCN Registry smart contract address. For the public test environment, this is
