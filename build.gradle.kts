@@ -15,7 +15,7 @@ plugins {
 }
 
 group = "snc.openchargingnetwork.node"
-version = "1.1.0"
+version = "1.1.1"
 java.sourceCompatibility = JavaVersion.VERSION_1_8
 
 val snippetsDir = "build/generated-snippets"

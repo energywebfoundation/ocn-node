@@ -5,8 +5,8 @@ After=network-online.target
 [Service]
 Type=simple
 User=<USER>
-WorkingDirectory=/home/<USER>/ocn-node-1.1.0-rc0
-ExecStart=/usr/bin/java -jar -Dspring.config.location=application.dev.properties ocn-node-1.1.0-rc0.jar
+WorkingDirectory=/home/<USER>/ocn-node-1.1.1
+ExecStart=/usr/bin/java -jar -Dspring.config.location=application.dev.properties ocn-node-1.1.1
 Restart=on-failure
 
 [Install]
