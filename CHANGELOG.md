@@ -1,5 +1,10 @@
 # OCN Node Changelog
 
+## 1.1.1
+### Nov 07, 2020
+
+Fixes bug with deleted parties being communicated as having a "planned" status (ocn-node issue #22)
+
 ## 1.1.0
 ### Oct 16, 2020
 

@@ -68,13 +68,13 @@ see the subsequent section that follows.
 
 Once downloaded, extract the contents of the archive and change directory: 
 ```
-tar zxvf ocn-node-1.1.0.tar.gz
-cd ocn-node-1.1-0
+tar zxvf ocn-node-1.1.1.tar.gz
+cd ocn-node-1.1-1
 ```
 
 Now we can run our node:
 ```
-java -jar ocn-node-1.1.0.jar
+java -jar ocn-node-1.1.1.jar
 ```
 
 ### Configuration
@@ -156,7 +156,7 @@ Edit the service file to match your environment, replacing the user and properti
 ```
 [Service]
 User=ubuntu
-WorkingDirectory=/home/ubuntu/ocn-node-1.1.0
+WorkingDirectory=/home/ubuntu/ocn-node-1.1.1
 ExecStart=/usr/bin/java -jar -Dspring.config.location=application.custom-prod-env.properties ocn-node-1.1.0.jar
 ```
  
