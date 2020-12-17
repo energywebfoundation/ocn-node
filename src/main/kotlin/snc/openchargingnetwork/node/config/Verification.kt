@@ -33,7 +33,7 @@ class Verification(private val properties: NodeProperties) {
 	companion object {
 		private val logger = LoggerFactory.getLogger(Verification::class.java)
     }
-	
+
     @EventListener(ApplicationReadyEvent::class)
     fun testRegistry() {
         if (properties.privateKey == null) {
