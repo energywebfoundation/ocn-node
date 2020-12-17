@@ -1,5 +1,10 @@
 # OCN Node Changelog
 
+## 1.1.2
+### Dec 17, 2020
+
+Fixes issue where ocn-node startup could fail if behind a load balancer or gateway (ocn-node issue #25)
+
 ## 1.1.1
 ### Nov 07, 2020
 
