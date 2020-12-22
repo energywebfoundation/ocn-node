@@ -25,10 +25,15 @@ import java.net.InetAddress
 import java.net.URL
 import java.net.UnknownHostException
 import javax.net.ssl.SSLException
+import org.slf4j.LoggerFactory
 
 @Component
 class Verification(private val properties: NodeProperties) {
 
+	companion object {
+		private val logger = LoggerFactory.getLogger(Verification::class.java)
+    }
+	
     @EventListener(ApplicationReadyEvent::class)
     fun testRegistry() {
         if (properties.privateKey == null) {
@@ -68,7 +73,7 @@ class Verification(private val properties: NodeProperties) {
         try {
             val response = khttp.get(healthURL)
             if (response.statusCode != 200) {
-                throw ConnectException("${response.statusCode} ${response.text}")
+				logger.warn("Received status code ${response.statusCode} from $healthURL application may not be healthy.")
             }
         } catch (e: ConnectException) {
             throw IllegalArgumentException("Unable to connect. Ensure $healthURL is reachable.")
