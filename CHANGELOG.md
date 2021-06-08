@@ -1,5 +1,14 @@
 # OCN Node Changelog
 
+## 1.2.0-rc1
+### May 3, 2021
+
+Changes auth tokes to conform to OCPI 2.2 d2 update. With this new version,
+all new OCPI Parties will need to encode Authorization header tokens with base64.
+The OCN Node will also send base64-encoded auth tokens to the OCPI Party.
+Note that existing OCPI parties can continue using non-encoded tokens
+without change.
+
 ## 1.1.2
 ### Dec 17, 2020
 

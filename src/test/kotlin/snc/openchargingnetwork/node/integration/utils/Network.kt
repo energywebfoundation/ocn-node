@@ -18,7 +18,6 @@ const val provider = "http://localhost:8544"
 val web3: Web3j = Web3j.build(HttpService(provider))
 val gasProvider = StaticGasProvider(0.toBigInteger(), 10000000.toBigInteger())
 
-
 val cpoDefinitions: List<PartyDefinition> = listOf(
     PartyDefinition(
         nodeNumber = 1,
