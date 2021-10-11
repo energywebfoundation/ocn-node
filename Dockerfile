@@ -4,4 +4,4 @@ COPY build /ocn-node
 COPY src/main/resources/* /ocn-node/
 WORKDIR /ocn-node
 
-CMD ["java", "-jar", "./libs/ocn-node-1.1.2.jar"]
+CMD ["java", "-jar", "./libs/ocn-node-1.2.0-rc2.jar"]
