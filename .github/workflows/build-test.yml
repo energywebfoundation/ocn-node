@@ -1,0 +1,28 @@
+name: Build and Test Node
+
+on:
+  push:
+    branches:
+      - develop
+      - master
+
+jobs:
+  runs-on: ubuntu-20.04
+
+
+
+  steps:
+    - run: apt-get update && apt-get upgrade
+    - run: apt-get install npm
+    - run: npm i -g ganache-cli
+    - run: ganache-cli -m "candy maple cake sugar pudding cream honey rich smooth crumble sweet treat" --port 8544 --accounts 20 --networkId=9 --gasLimit=10000000 > /dev/null &
+
+    - uses: actions/checkout@v3
+
+    - uses: actions/setup-java@v3
+      with:
+        distribution: 'temurin'
+        java-version: '14'
+        cache: 'gradle'
+
+    - run: ./gradlew build --no-daemon
