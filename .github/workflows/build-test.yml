@@ -9,8 +9,6 @@ on:
 jobs:
   runs-on: ubuntu-20.04
 
-
-
   steps:
     - run: apt-get update && apt-get upgrade
     - run: apt-get install npm
