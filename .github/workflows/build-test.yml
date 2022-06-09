@@ -1,7 +1,7 @@
 name: Build and Test Node
 
 on:
-  push:
+  pull-request:
     branches:
       - develop
       - master
