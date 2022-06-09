@@ -15,8 +15,8 @@ jobs:
 
       - name: Install ganache
         run: |
-          sudo apt-get update && apt-get upgrade
-          sudo apt-get install npm
+          sudo apt-get update
+          sudo apt-get install -y npm
           sudo npm i -g ganache-cli
           ganache-cli -m "candy maple cake sugar pudding cream honey rich smooth crumble sweet treat" --port 8544 --accounts 20 --networkId=9 --gasLimit=10000000 > /dev/null &
 
