@@ -4,13 +4,13 @@ The Open Charging Network (OCN) node with Open Charge Point Interface (OCPI) v2.
 
 This is a community project, aimed at incorporating and building on the open OCPI standard. As with OCPI, contributions 
 are welcome in the form of comments, pull requests and raised issues. Visit our 
-[issue tracker](https://bitbucket.org/shareandcharge/ocn-node/issues) for an overview of current and past issues. 
-Questions may also be asked on [Stack Overflow](https://stackoverflow.com/questions/tagged/shareandcharge), or in the 
+[issue tracker](https://github.com/energywebfoundation/ocn-node/issues) for an overview of current and past issues. 
+Questions may also be asked in the 
 [Slack community](https://app.slack.com/client/T0BNK39NX/CRP0VKEMD). 
 
 Before contributing to the source code, please take the time to read over the 
 [Developer Certificate of Origin](https://developercertificate.org/). For more information, see our 
-[contributing guidelines](https://shareandcharge.atlassian.net/wiki/spaces/OCN/pages/360611849/Contributing+to+the+Open+Charging+Network).
+[contributing guidelines](https://energy-web-foundation.gitbook.io/energy-web/technology/application-layer/open-charging-network/open-source-development).
 
 ## The Open Charging Network
 
@@ -20,7 +20,7 @@ to connect to a node, two steps are needed:
 
 1. A registration token (so-called Token A in OCPI terminology) must be generated for the prospective platform by the 
 node administrator.
-2. The platform must register themselves in the [OCN Registry](https://bitbucket.org/shareandcharge/ocn-registry), 
+2. The platform must register themselves in the [OCN Registry](https://github.com/energywebfoundation/ocn-registry), 
 stating that they are using that particular node.
 
 Once a registration token is obtained and the platform is listed in the registry, the OCPI credentials handshake with 
@@ -28,7 +28,7 @@ the OCN Node can be initiated, providing access to all OCPI modules and interfac
 communication. When a counter-party is found (either offline or via the registry), requests are sent to 
 them via the sender's OCN Node.
 
-For more information about the OCN, check out the [wiki](https://shareandcharge.atlassian.net/wiki/spaces/OCN/pages/409731085/Getting+started).
+For more information about the OCN, check out the [wiki](https://energy-web-foundation.gitbook.io/energy-web/technology/application-layer/open-charging-network).
 
 ## HTTP API Documentation
 
@@ -62,7 +62,7 @@ sudo apt install openjdk-8-jre
 ```
 
 Pre-built OCN Node packages can be found on the repository's 
-[downloads page](https://bitbucket.org/shareandcharge/ocn-node/downloads/). For the rest of this section
+[releases page](https://github.com/energywebfoundation/ocn-node/releases). For the rest of this section
 it will be assumed that this was the method chosen by the user. For information about building the node,
 see the subsequent section that follows.
 
@@ -108,7 +108,7 @@ For details on all available configuration values, please visit our comprehensiv
 ### Listing the Node in the OCN Registry
 
 A Node must be listed in the registry for it to be usable on the network. This can be achieved by installing
-the OCN Registry CLI. Either clone the [OCN-Registry](https://bitbucket.org/shareandcharge/ocn-registry) repository
+the OCN Registry CLI. Either clone the [OCN-Registry](https://github.com/energywebfoundation/ocn-registry) repository
 and follow the instructions in the README, or install the NPM package:
 
 ```
