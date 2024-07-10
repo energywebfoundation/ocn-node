@@ -18,7 +18,15 @@ package snc.openchargingnetwork.node.tools
 
 import org.web3j.crypto.Keys
 
-fun String.extractToken() = split(" ").last()
+fun String.extractToken(): String {
+    val token = split(" ").last()
+
+    try {
+        return String(java.util.Base64.getDecoder().decode(token))
+    } catch (e: Exception) {
+        return token
+    }
+}
 
 fun String.extractNextLink(): String? {
     val next = split(", ").find { it.contains("; rel=\"next\"") }

@@ -25,6 +25,7 @@ import snc.openchargingnetwork.node.models.*
 import snc.openchargingnetwork.node.models.exceptions.OcpiServerGenericException
 import snc.openchargingnetwork.node.models.exceptions.OcpiServerUnusableApiException
 import snc.openchargingnetwork.node.models.ocpi.*
+import snc.openchargingnetwork.node.tools.generateUUIDv4Token
 import snc.openchargingnetwork.node.tools.urlJoin
 
 
@@ -54,9 +55,9 @@ class HttpService {
 
         try {
             return HttpResponse(
-                    statusCode = response.statusCode,
-                    headers = response.headers,
-                    body = mapper.readValue(response.text))
+                statusCode = response.statusCode,
+                headers = response.headers,
+                body = mapper.readValue(response.text))
         } catch (e: JsonParseException) {
             throw OcpiServerGenericException("Could not parse JSON response of forwarded OCPI request: ${e.message}")
         }
@@ -83,11 +84,11 @@ class HttpService {
         }
 
         return makeOcpiRequest(
-                method = requestVariables.method,
-                url = url,
-                headers = headersMap,
-                params = requestVariables.queryParams,
-                data = jsonBody)
+            method = requestVariables.method,
+            url = url,
+            headers = headersMap,
+            params = requestVariables.queryParams,
+            data = jsonBody)
     }
 
 
@@ -96,7 +97,12 @@ class HttpService {
      */
     fun getVersions(url: String, authorization: String): List<Version> {
         try {
-            val response = khttp.get(url = url, headers = mapOf("Authorization" to "Token $authorization"))
+            val headers = mapOf(
+                "Authorization" to "Token $authorization",
+                "X-Correlation-ID" to generateUUIDv4Token(),
+                "X-Request-ID" to generateUUIDv4Token()
+            )
+            val response = khttp.get(url = url, headers = headers)
             val body: OcpiResponse<List<Version>> = mapper.readValue(response.text)
 
             return if (response.statusCode == 200 && body.statusCode == 1000) {
@@ -117,7 +123,12 @@ class HttpService {
      */
     fun getVersionDetail(url: String, authorization: String): VersionDetail {
         try {
-            val response = khttp.get(url = url, headers = mapOf("Authorization" to "Token $authorization"))
+            val headers = mapOf(
+                "Authorization" to "Token $authorization",
+                "X-Correlation-ID" to generateUUIDv4Token(),
+                "X-Request-ID" to generateUUIDv4Token()
+            )
+            val response = khttp.get(url = url, headers = headers)
             val body: OcpiResponse<VersionDetail> = mapper.readValue(response.text)
 
             return if (response.statusCode == 200 && body.statusCode == 1000) {
@@ -147,9 +158,9 @@ class HttpService {
         val response = khttp.post(fullURL, headersMap, data = body)
 
         return HttpResponse(
-                statusCode = response.statusCode,
-                headers = response.headers,
-                body = mapper.readValue(response.text))
+            statusCode = response.statusCode,
+            headers = response.headers,
+            body = mapper.readValue(response.text))
     }
 
     fun putOcnClientInfo(url: String, signature: String, body: ClientInfo) {
