@@ -1,4 +1,5 @@
 /*
+    val token = split(" ").last()
     Copyright 2019-2020 eMobilify GmbH
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,12 +20,11 @@ package snc.openchargingnetwork.node.tools
 import org.web3j.crypto.Keys
 
 fun String.extractToken(): String {
-    val token = split(" ").last()
-
     try {
+        val token = split(" ").last()
         return String(java.util.Base64.getDecoder().decode(token))
     } catch (e: Exception) {
-        return token
+        return ""
     }
 }
 
