@@ -28,6 +28,10 @@ fun String.extractToken(): String {
     }
 }
 
+fun String.encodeAsBase64(): String {
+   return java.util.Base64.getEncoder().encodeToString(this.toByteArray())
+}
+
 fun String.extractNextLink(): String? {
     val next = split(", ").find { it.contains("; rel=\"next\"") }
     return next?.let {

@@ -30,6 +30,7 @@ import snc.openchargingnetwork.node.repositories.*
 import snc.openchargingnetwork.node.tools.extractToken
 import snc.openchargingnetwork.node.tools.generateUUIDv4Token
 import snc.openchargingnetwork.node.tools.urlJoin
+import java.util.Base64
 
 @Service
 class RoutingService(private val platformRepo: PlatformRepository,
@@ -171,9 +172,9 @@ class RoutingService(private val platformRepo: PlatformRepository,
 
         }
 
-        val tokenB = platformRepo.findById(platformID).get().auth.tokenB
-
-        val headers = request.headers.copy(authorization = "Token $tokenB", requestID = generateUUIDv4Token())
+        val tokenB = platformRepo.findById(platformID).get().auth.tokenB ?:""
+        val encodedTokenB = Base64.getEncoder().encodeToString(tokenB.toByteArray())
+        val headers = request.headers.copy(authorization = "Token $encodedTokenB", requestID = generateUUIDv4Token())
 
         return Pair(url, headers)
     }
