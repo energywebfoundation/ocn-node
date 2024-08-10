@@ -14,6 +14,7 @@ import snc.openchargingnetwork.node.repositories.EndpointRepository
 import snc.openchargingnetwork.node.repositories.PlatformRepository
 import snc.openchargingnetwork.node.repositories.ProxyResourceRepository
 import snc.openchargingnetwork.node.repositories.RoleRepository
+import snc.openchargingnetwork.node.tools.encodeAsBase64
 import snc.openchargingnetwork.node.tools.generateUUIDv4Token
 import snc.openchargingnetwork.node.tools.urlJoin
 
@@ -82,7 +83,7 @@ class RoutingServiceTest {
         val (url, headers) = routingService.prepareLocalPlatformRequest(request)
 
         assertThat(url).isEqualTo("https://ocpi.cpo.com/2.2/tokens/DE/SNC/abc123")
-        assertThat(headers.authorization).isEqualTo("Token 1234567890")
+        assertThat(headers.authorization).isEqualTo("Token ${"1234567890".encodeAsBase64()}")
         assertThat(headers.requestID.length).isEqualTo(36)
         assertThat(headers.correlationID).isEqualTo(request.headers.correlationID)
         assertThat(headers.sender.country).isEqualTo(request.headers.sender.country)
@@ -126,7 +127,7 @@ class RoutingServiceTest {
         val (url, headers) = routingService.prepareLocalPlatformRequest(request, proxied = true)
 
         assertThat(url).isEqualTo("https://cpo.com/cdrs?limit=20")
-        assertThat(headers.authorization).isEqualTo("Token 0102030405")
+        assertThat(headers.authorization).isEqualTo("Token ${"0102030405".encodeAsBase64()}")
         assertThat(headers.requestID.length).isEqualTo(36)
         assertThat(headers.correlationID).isEqualTo(request.headers.correlationID)
         assertThat(headers.sender.country).isEqualTo(request.headers.sender.country)
@@ -317,7 +318,7 @@ class RoutingServiceTest {
     @Test
     fun `checkSenderKnown with auth only`() {
         every { platformRepo.existsByAuth_TokenC("0102030405") } returns true
-        routingService.checkSenderKnown("Token 0102030405")
+        routingService.checkSenderKnown("Token ${"0102030405"}")
     }
 
 
@@ -327,7 +328,7 @@ class RoutingServiceTest {
         val platform = PlatformEntity(id = 3L)
         every { platformRepo.findByAuth_TokenC("0102030405") } returns platform
         every { roleRepo.existsByPlatformIDAndCountryCodeAndPartyIDAllIgnoreCase(3L, role.country, role.id) } returns true
-        routingService.checkSenderKnown("Token 0102030405", role)
+        routingService.checkSenderKnown("Token ${"0102030405"}", role)
     }
 
 

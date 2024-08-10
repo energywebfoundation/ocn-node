@@ -22,6 +22,7 @@ import snc.openchargingnetwork.node.models.exceptions.OcpiServerUnusableApiExcep
 import snc.openchargingnetwork.node.models.ocpi.ConnectionStatus
 import snc.openchargingnetwork.node.repositories.PlatformRepository
 import snc.openchargingnetwork.node.services.HttpService
+import snc.openchargingnetwork.node.tools.encodeAsBase64
 import snc.openchargingnetwork.node.tools.getInstant
 import java.time.Instant
 

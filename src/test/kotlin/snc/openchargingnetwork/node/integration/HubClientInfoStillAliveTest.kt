@@ -73,8 +73,8 @@ class HubClientInfoStillAliveTest {
 
         cpo1.server.addToList(OcnRulesListType.WHITELIST, emsp.party)
 
-        cpo2.server.stopServer()
         emsp.server.stopServer()
+        cpo2.server.stopServer()
 
         // see test above for timeout reasoning
         await().atMost(rate * 4, TimeUnit.SECONDS).until {

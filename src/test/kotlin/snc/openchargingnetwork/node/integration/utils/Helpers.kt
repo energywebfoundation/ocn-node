@@ -5,13 +5,14 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import org.web3j.crypto.Credentials
 import shareandcharge.openchargingnetwork.notary.SignableHeaders
 import snc.openchargingnetwork.node.models.ocpi.BasicRole
+import snc.openchargingnetwork.node.tools.encodeAsBase64
 import snc.openchargingnetwork.node.tools.generateUUIDv4Token
 
 val objectMapper = jacksonObjectMapper()
 
 fun getTokenA(node: String, parties: List<BasicRole>): String {
     val response = khttp.post("$node/admin/generate-registration-token",
-            headers = mapOf("Authorization" to "Token randomkey"),
+            headers = mapOf("Authorization" to "Token ${"randomkey".encodeAsBase64()}"),
             json = coerceToJson(parties))
     return response.jsonObject.getString("token")
 }

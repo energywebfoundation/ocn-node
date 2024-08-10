@@ -45,6 +45,7 @@ data class StartSession(@JsonProperty("response_url") var responseURL: String,
                         @JsonProperty("token") val token: Token,
                         @JsonProperty("location_id") val locationID: String,
                         @JsonProperty("evse_uid") val evseUID: String? = null,
+                        @JsonProperty("connector_id") val connectorID: String? = null,
                         @JsonProperty("authorization_reference") val authorizationReference: String? = null)
 
 data class StopSession(@JsonProperty("response_url") var responseURL: String,

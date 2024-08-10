@@ -15,6 +15,7 @@ import snc.openchargingnetwork.node.config.NodeProperties
 import snc.openchargingnetwork.node.models.ocpi.OcpiStatus
 import snc.openchargingnetwork.node.models.entities.PlatformEntity
 import snc.openchargingnetwork.node.models.ocpi.Endpoint
+import snc.openchargingnetwork.node.tools.encodeAsBase64
 
 @WebMvcTest(VersionsController::class)
 class VersionsControllerTest(@Autowired val mockMvc: MockMvc) {
@@ -31,7 +32,7 @@ class VersionsControllerTest(@Autowired val mockMvc: MockMvc) {
         every { repository.existsByAuth_TokenA(platform.auth.tokenA) } returns true
         every { properties.url } returns "http://localhost:8070"
         mockMvc.perform(get("/ocpi/versions")
-                .header("Authorization", "Token ${platform.auth.tokenA}"))
+                .header("Authorization", "Token ${platform.auth.tokenA!!}"))
                 .andExpect(status().isOk)
                 .andExpect(jsonPath("\$.status_code").value(OcpiStatus.SUCCESS.code))
                 .andExpect(jsonPath("\$.status_message").doesNotExist())
@@ -48,7 +49,7 @@ class VersionsControllerTest(@Autowired val mockMvc: MockMvc) {
         every { repository.existsByAuth_TokenA(platform.auth.tokenA) } returns true
         every { properties.url } returns "https://broker.provider.com"
         mockMvc.perform(get("/ocpi/2.2")
-                .header("Authorization", "Token ${platform.auth.tokenA}"))
+                .header("Authorization", "Token ${platform.auth.tokenA!!}"))
                 .andExpect(status().isOk)
                 .andExpect(jsonPath("\$.status_code").value(OcpiStatus.SUCCESS.code))
                 .andExpect(jsonPath("\$.status_message").doesNotExist())

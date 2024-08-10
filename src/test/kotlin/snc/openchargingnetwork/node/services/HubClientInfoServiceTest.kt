@@ -13,6 +13,7 @@ import snc.openchargingnetwork.node.repositories.EndpointRepository
 import snc.openchargingnetwork.node.repositories.NetworkClientInfoRepository
 import snc.openchargingnetwork.node.repositories.PlatformRepository
 import snc.openchargingnetwork.node.repositories.RoleRepository
+import snc.openchargingnetwork.node.tools.encodeAsBase64
 import snc.openchargingnetwork.node.tools.getTimestamp
 
 class HubClientInfoServiceTest {
@@ -58,7 +59,8 @@ class HubClientInfoServiceTest {
         }
 
         every { networkClientInfoRepo.findAll() } returns listOf()
-        val localList = hubClientInfoService.getList("Token 123123")
+        val encodedToken = "123123"
+        val localList = hubClientInfoService.getList("Token $encodedToken")
         assertThat(localList.size).isEqualTo(exampleRoles.size)
         assertThat(localList.filter { it.status == ConnectionStatus.CONNECTED }.size).isEqualTo(3)
     }

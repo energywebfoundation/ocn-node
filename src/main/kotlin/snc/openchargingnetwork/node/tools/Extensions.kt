@@ -20,12 +20,7 @@ package snc.openchargingnetwork.node.tools
 import org.web3j.crypto.Keys
 
 fun String.extractToken(): String {
-    try {
-        val token = split(" ").last()
-        return String(java.util.Base64.getDecoder().decode(token))
-    } catch (e: Exception) {
-        return ""
-    }
+    return split(" ").last()
 }
 
 fun String.encodeAsBase64(): String {

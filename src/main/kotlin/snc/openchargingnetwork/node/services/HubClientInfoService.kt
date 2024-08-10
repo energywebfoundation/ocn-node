@@ -174,6 +174,7 @@ class HubClientInfoService(private val platformRepo: PlatformRepository,
 
             try {
                 httpService.makeOcpiRequest<Unit>(url, headers, requestVariables)
+                logger.warn("Notified $receiver of client info change")
             } catch (e: Exception) { // fire and forget; catch any error and log
                 logger.warn("Error notifying $receiver of client info change: ${e.message}")
             }

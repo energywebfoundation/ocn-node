@@ -173,8 +173,7 @@ class RoutingService(private val platformRepo: PlatformRepository,
         }
 
         val tokenB = platformRepo.findById(platformID).get().auth.tokenB ?:""
-        val encodedTokenB = Base64.getEncoder().encodeToString(tokenB.toByteArray())
-        val headers = request.headers.copy(authorization = "Token $encodedTokenB", requestID = generateUUIDv4Token())
+        val headers = request.headers.copy(authorization = "Token $tokenB", requestID = generateUUIDv4Token())
 
         return Pair(url, headers)
     }

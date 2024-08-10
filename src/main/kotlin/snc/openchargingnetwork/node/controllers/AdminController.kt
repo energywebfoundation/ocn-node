@@ -28,6 +28,7 @@ import snc.openchargingnetwork.node.config.NodeProperties
 import snc.openchargingnetwork.node.models.entities.Auth
 import snc.openchargingnetwork.node.models.entities.PlatformEntity
 import snc.openchargingnetwork.node.models.ocpi.RegistrationInfo
+import snc.openchargingnetwork.node.tools.encodeAsBase64
 import snc.openchargingnetwork.node.tools.generateUUIDv4Token
 import snc.openchargingnetwork.node.tools.urlJoin
 
@@ -83,7 +84,7 @@ class AdminController(private val platformRepo: PlatformRepository,
         // generate and store new platform with authorization token
         //TODO: schedule deletion after 30 days if status still PLANNED (?)
         val tokenA = generateUUIDv4Token()
-        val platform = PlatformEntity(auth = Auth(tokenA = tokenA))
+        val platform = PlatformEntity(auth = Auth(tokenA = tokenA.encodeAsBase64()))
         platformRepo.save(platform)
 
         val responseBody = RegistrationInfo(tokenA, urlJoin(properties.url, "/ocpi/versions"))

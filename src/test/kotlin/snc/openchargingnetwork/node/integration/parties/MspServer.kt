@@ -11,6 +11,7 @@ import snc.openchargingnetwork.node.integration.utils.PartyDefinition
 import snc.openchargingnetwork.node.integration.utils.objectMapper
 import snc.openchargingnetwork.node.integration.utils.toMap
 import snc.openchargingnetwork.node.models.ocpi.*
+import snc.openchargingnetwork.node.tools.encodeAsBase64
 
 class MspServer(config: PartyDefinition, contracts: OcnContracts): PartyServer(config, contracts) {
 

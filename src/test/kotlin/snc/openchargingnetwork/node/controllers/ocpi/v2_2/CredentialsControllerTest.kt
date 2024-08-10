@@ -21,6 +21,7 @@ import snc.openchargingnetwork.node.models.ocpi.Role
 import snc.openchargingnetwork.node.repositories.*
 import snc.openchargingnetwork.node.services.HttpService
 import snc.openchargingnetwork.node.services.RegistryService
+import snc.openchargingnetwork.node.tools.encodeAsBase64
 
 @WebMvcTest(CredentialsController::class)
 class CredentialsControllerTest(@Autowired val mockMvc: MockMvc) {
@@ -55,7 +56,7 @@ class CredentialsControllerTest(@Autowired val mockMvc: MockMvc) {
         every { platformRepo.findByAuth_TokenC(platform.auth.tokenC) } returns platform
         every { properties.url } returns "http://localhost:8001"
         mockMvc.perform(get("/ocpi/2.2/credentials")
-                .header("Authorization", "Token ${platform.auth.tokenC}"))
+                .header("Authorization", "Token ${platform.auth.tokenC!!}"))
                 .andExpect(status().isOk)
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("\$.status_code").value(OcpiStatus.SUCCESS.code))
@@ -93,10 +94,10 @@ class CredentialsControllerTest(@Autowired val mockMvc: MockMvc) {
         val tokenB = "67890"
 
         every { platformRepo.findByAuth_TokenA(platform.auth.tokenA) } returns platform
-        every { httpService.getVersions(versionsUrl, tokenB) } returns listOf(Version(
+        every { httpService.getVersions(versionsUrl, tokenB.encodeAsBase64()) } returns listOf(Version(
                         version = "2.2",
                         url = versionDetailUrl))
-        every { httpService.getVersionDetail(versionDetailUrl, tokenB) } returns VersionDetail(
+        every { httpService.getVersionDetail(versionDetailUrl, tokenB.encodeAsBase64()) } returns VersionDetail(
                 version = "2.2",
                 endpoints = listOf(
                         Endpoint("credentials", InterfaceRole.SENDER, "https://org.charging.net/credentials"),
@@ -117,7 +118,7 @@ class CredentialsControllerTest(@Autowired val mockMvc: MockMvc) {
         every { roleRepo.saveAll(any<List<RoleEntity>>())} returns mockk()
 
         mockMvc.perform(post("/ocpi/2.2/credentials")
-                .header("Authorization", "Token ${platform.auth.tokenA}")
+                .header("Authorization", "Token ${platform.auth.tokenA!!}")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(jacksonObjectMapper().writeValueAsString(Credentials(
                         token = tokenB,
@@ -157,12 +158,13 @@ class CredentialsControllerTest(@Autowired val mockMvc: MockMvc) {
 
         val versionsUrl = "https://org.charging.net/versions"
         val versionDetailUrl = "https://org.charging.net/2.2"
+        val b64TokenB = platform.auth.tokenB!!
 
         every { platformRepo.findByAuth_TokenC(platform.auth.tokenC) } returns platform
-        every { httpService.getVersions(versionsUrl, platform.auth.tokenB!!) } returns listOf(Version(
+        every { httpService.getVersions(versionsUrl, b64TokenB) } returns listOf(Version(
                         version = "2.2",
                         url = versionDetailUrl))
-        every { httpService.getVersionDetail(versionDetailUrl, platform.auth.tokenB!!) } returns VersionDetail(
+        every { httpService.getVersionDetail(versionDetailUrl, b64TokenB) } returns VersionDetail(
                 version = "2.2",
                 endpoints = listOf(
                         Endpoint("credentials", InterfaceRole.SENDER, "https://org.charging.net/credentials"),
@@ -176,8 +178,11 @@ class CredentialsControllerTest(@Autowired val mockMvc: MockMvc) {
         every { roleRepo.deleteByPlatformID(platform.id) } returns mockk()
         every { roleRepo.saveAll(any<List<RoleEntity>>())} returns mockk()
 
+
+        val b64TokenC = platform.auth.tokenC.orEmpty()
+
         mockMvc.perform(put("/ocpi/2.2/credentials")
-                .header("Authorization", "Token ${platform.auth.tokenC}")
+                .header("Authorization", "Token ${b64TokenC}")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(jacksonObjectMapper().writeValueAsString(Credentials(
                         token = platform.auth.tokenB!!,
@@ -210,7 +215,7 @@ class CredentialsControllerTest(@Autowired val mockMvc: MockMvc) {
         every { ocnRulesListRepo.deleteByPlatformID(platform.id) } just Runs
         
         mockMvc.perform(delete("/ocpi/2.2/credentials")
-                .header("Authorization", "Token ${platform.auth.tokenC}"))
+                .header("Authorization", "Token ${platform.auth.tokenC!!}"))
                 .andExpect(status().isOk)
                 .andExpect(jsonPath("\$.status_code").value(OcpiStatus.SUCCESS.code))
                 .andExpect(jsonPath("\$.status_message").doesNotExist())

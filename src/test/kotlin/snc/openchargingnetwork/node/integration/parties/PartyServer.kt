@@ -11,6 +11,7 @@ import snc.openchargingnetwork.node.integration.utils.*
 import snc.openchargingnetwork.node.models.OcnServicePermission
 import snc.openchargingnetwork.node.models.OcnRulesListType
 import snc.openchargingnetwork.node.models.ocpi.*
+import snc.openchargingnetwork.node.tools.encodeAsBase64
 import snc.openchargingnetwork.node.tools.generateUUIDv4Token
 
 open class PartyServer(val config: PartyDefinition, deployedContracts: OcnContracts) {
@@ -36,7 +37,7 @@ open class PartyServer(val config: PartyDefinition, deployedContracts: OcnContra
         }
 
         app.before {
-            if (it.header("Authorization") != "Token $tokenB") {
+            if (it.header("Authorization") != "Token ${tokenB.encodeAsBase64()}") {
                 throw JavalinException(message = "Unauthorized")
             }
         }
@@ -83,7 +84,7 @@ open class PartyServer(val config: PartyDefinition, deployedContracts: OcnContra
         // TODO: could also request versions and store endpoints in memory
         val tokenA = getTokenA(node, listOf(config.party))
         val response = khttp.post("$node/ocpi/2.2/credentials",
-                headers = mapOf("Authorization" to "Token $tokenA"),
+                headers = mapOf("Authorization" to "Token ${tokenA.encodeAsBase64()}"),
                 json = coerceToJson(Credentials(
                         token = tokenB,
                         url = urlBuilder("/ocpi/versions"),
@@ -92,12 +93,12 @@ open class PartyServer(val config: PartyDefinition, deployedContracts: OcnContra
                                 businessDetails = BusinessDetails(name = "Some CPO"),
                                 countryCode = config.party.country,
                                 partyID = config.party.id)))))
-        tokenC = response.jsonObject.getJSONObject("data").getString("token")
+        tokenC = response.jsonObject.getJSONObject("data").getString("token").encodeAsBase64()
     }
 
     fun deleteCredentials() {
         khttp.delete("$node/ocpi/2.2/credentials",
-                headers = mapOf("Authorization" to "Token $tokenC"))
+                headers = mapOf("Authorization" to "Token ${tokenC}"))
     }
 
     fun urlBuilder(path: String): String {
@@ -115,7 +116,7 @@ open class PartyServer(val config: PartyDefinition, deployedContracts: OcnContra
 
     fun addToList(type: OcnRulesListType, party: BasicRole, modules: List<String>? = listOf()) {
         khttp.post("$node/ocpi/receiver/2.2/ocnrules/${type.toString().toLowerCase()}",
-                headers = mapOf("Authorization" to "Token $tokenC"),
+                headers = mapOf("Authorization" to "Token ${tokenC}"),
                 json = mapOf("country_code" to party.country, "party_id" to party.id, "modules" to modules))
     }
 

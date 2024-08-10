@@ -23,6 +23,7 @@ import snc.openchargingnetwork.node.repositories.PlatformRepository
 import snc.openchargingnetwork.node.config.NodeProperties
 import snc.openchargingnetwork.node.models.entities.PlatformEntity
 import snc.openchargingnetwork.node.models.ocpi.BasicRole
+import snc.openchargingnetwork.node.tools.encodeAsBase64
 
 @WebMvcTest(AdminController::class)
 @ExtendWith(RestDocumentationExtension::class)
@@ -52,12 +53,14 @@ class AdminControllerTest {
     fun `When POST generate-registration-token then return TOKEN_A and versions endpoint`() {
         val platform = PlatformEntity()
         val role = BasicRole(country = "DE", id = "SNC")
+        var b64AdminKey = "1234567890".encodeAsBase64()
         every { properties.apikey } returns "1234567890"
+        every { properties.base64apiKey } returns b64AdminKey
         every { properties.url } returns "https://node.ocn.org"
         every { roleRepo.existsByCountryCodeAndPartyIDAllIgnoreCase(role.country, role.id) } returns false
         every { platformRepo.save<PlatformEntity>(any()) } returns platform
         mockMvc.perform(post("/admin/generate-registration-token")
-                .header("Authorization", "Token 1234567890")
+                .header("Authorization", "Token $b64AdminKey")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(jacksonObjectMapper().writeValueAsString(arrayOf(role))))
                 .andExpect(status().isOk)
