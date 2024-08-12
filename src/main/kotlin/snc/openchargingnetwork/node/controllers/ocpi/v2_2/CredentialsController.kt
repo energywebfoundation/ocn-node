@@ -155,7 +155,7 @@ class CredentialsController(private val platformRepo: PlatformRepository,
         val platform = platformRepo.findByAuth_TokenC(authorization.extractToken())
                 ?: throw OcpiClientInvalidParametersException("Invalid CREDENTIALS_TOKEN_C")
 
-        val b64Token = body.token
+        val b64Token = body.token.encodeAsBase64()
 
         // GET versions information endpoint with TOKEN_B (both provided in request body)
         val versionsInfo: List<Version> = httpService.getVersions(body.url, b64Token)
@@ -171,7 +171,7 @@ class CredentialsController(private val platformRepo: PlatformRepository,
         val tokenC = generateUUIDv4Token()
 
         // set platform connection information
-        platform.auth = Auth(tokenA = null, tokenB = body.token, tokenC = tokenC)
+        platform.auth = Auth(tokenA = null, tokenB = b64Token, tokenC = tokenC.encodeAsBase64())
         platform.versionsUrl = body.url
         platform.status = ConnectionStatus.CONNECTED
         platform.lastUpdated = getTimestamp()
