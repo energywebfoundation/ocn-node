@@ -116,6 +116,12 @@ In the scenario of load balancing nodes, only one of the nodes should have this 
 ### `ocn.node.plannedPartySearchRate`
 Sets rate in milliseconds at which the HubClientInfo module runs the planned party search task, outlined above. 
 [Default: 3600000 (1 hour)]
+
+### `ocn.node.serviceInterfaceEnabled`
+If turned on, permissions listed in the Registry will be honoured. For example, if a CPO has
+agreed to forwarding permissions from a particular service, the node will honour the 
+permission by forwarding the request to the service. Set to false in order to ignore these 
+permissions. [Default: true]
  
 ### `ocn.node.web3.provider`
 Sets the JSON RPC provider URL for the OCN environment. This is the Ethereum blockchain node which provides
@@ -124,9 +130,15 @@ environment and the production environment. The former runs on the
 [Volta test network](https://energyweb.atlassian.net/wiki/spaces/EWF/pages/702677023/Chain+Volta+Test+Network), whilst
 the latter runs on the [Energy Web Chain](https://energyweb.atlassian.net/wiki/spaces/EWF/pages/718078071/Chain+Energy+Web+Chain+Production+Network).
 
+[Default: https://volta-rpc.energyweb.org]
+[volta: https://volta-rpc.energyweb.org]
+[ewc: https://rpc.energyweb.org]
+
 More information about the environments can be found here: 
 [test](https://shareandcharge.atlassian.net/wiki/spaces/OCN/pages/409206816/Public+Test+Network) and
 [production](https://shareandcharge.atlassian.net/wiki/spaces/OCN/pages/409305103/Production+Network).
+
+
 
 ### `ocn.node.web3.contracts.registry`
 Sets the OCN Registry smart contract address. For the public test environment, this is

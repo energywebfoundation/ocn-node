@@ -84,9 +84,9 @@ data class AdditionalGeoLocation(@JsonProperty("latitude") val latitude: String,
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 data class Hours(@JsonProperty("twentyfourseven") val twentyfourseven: Boolean,
-                 @JsonProperty("regular_hours") val regularHours: RegularHours? = null,
-                 @JsonProperty("exceptional_openings") val exceptionalOpenings: ExceptionalPeriod? = null,
-                 @JsonProperty("exceptional_closings") val exceptionalClosings: ExceptionalPeriod? = null)
+                 @JsonProperty("regular_hours") val regularHours: List<RegularHours>? = null,
+                 @JsonProperty("exceptional_openings") val exceptionalOpenings: List<ExceptionalPeriod>? = null,
+                 @JsonProperty("exceptional_closings") val exceptionalClosings: List<ExceptionalPeriod>? = null)
 
 data class RegularHours(@JsonProperty("weekday") val weekday: Int,
                         @JsonProperty("period_begin") val periodBegin: String,

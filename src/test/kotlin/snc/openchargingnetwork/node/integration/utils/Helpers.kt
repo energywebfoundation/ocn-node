@@ -24,7 +24,7 @@ fun Credentials.privateKey(): String {
     return ecKeyPair.privateKey.toString(16)
 }
 
-fun SignableHeaders.toMap(tokenC: String, signature: String): Map<String, String> {
+fun SignableHeaders.toMap(tokenC: String, signature: String): MutableMap<String, String> {
     val map = mutableMapOf<String, String>()
     map["Authorization"] = "Token $tokenC"
     map["OCN-Signature"] = signature
@@ -36,3 +36,5 @@ fun SignableHeaders.toMap(tokenC: String, signature: String): Map<String, String
     toPartyId?.let { map["OCPI-To-Party-Id"] = it }
     return map
 }
+
+

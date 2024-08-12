@@ -54,5 +54,5 @@ class NodeProperties {
 
     var plannedPartySearchEnabled: Boolean = true
 
-    var serviceEnabled: Boolean = true
+    var serviceInterfaceEnabled: Boolean = true
 }

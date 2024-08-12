@@ -46,7 +46,7 @@ data class OcnHeaders(@JsonProperty("Authorization") val authorization: String,
                       val sender: BasicRole,
                       val receiver: BasicRole) {
 
-    fun toMap(routingHeaders: Boolean = true): Map<String, String?> {
+    fun toMap(routingHeaders: Boolean = true): MutableMap<String, String?> {
         val map = mutableMapOf<String, String?>()
         map["Authorization"] = authorization
         map["OCN-Signature"] = signature

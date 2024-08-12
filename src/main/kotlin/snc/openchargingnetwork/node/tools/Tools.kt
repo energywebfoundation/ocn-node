@@ -19,7 +19,10 @@ package snc.openchargingnetwork.node.tools
 import org.web3j.crypto.Keys
 import java.time.Instant
 import java.time.format.DateTimeFormatter
-import java.util.UUID
+import java.util.*
+
+val bs64Encoder: Base64.Encoder = Base64.getEncoder()
+val bs64Decoder: Base64.Decoder = Base64.getDecoder()
 
 fun generateUUIDv4Token(): String {
     return UUID.randomUUID().toString()

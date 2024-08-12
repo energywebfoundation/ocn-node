@@ -41,7 +41,7 @@ class AsyncTaskService(private val registryService: RegistryService, private val
         // and also forward if service interface option is enabled
         val isDefaultModule = requestHandler.request.module != ModuleID.CUSTOM
 
-        if (isDefaultModule && fromLocalPlatform && properties.serviceEnabled) {
+        if (isDefaultModule && fromLocalPlatform && properties.serviceInterfaceEnabled) {
             val request = requestHandler.request
             registryService.getAgreementsByInterface(request.headers.sender, request.module, request.interfaceRole)
                     .forEach {

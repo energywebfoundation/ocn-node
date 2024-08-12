@@ -2,8 +2,11 @@ package snc.openchargingnetwork.node.integration
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.*
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 import snc.openchargingnetwork.node.integration.utils.*
 import snc.openchargingnetwork.node.models.OcnRulesListType
+import java.util.stream.Stream
 
 class CustomModulesIntegrationTest {
 
@@ -23,6 +26,23 @@ class CustomModulesIntegrationTest {
     @AfterEach
     fun stopTestParties() {
         stopPartyServers(networkComponents)
+    }
+
+    private fun testMessagePostWithBody(cpo: TestCpo, requestBody: String) {
+        val response = msp.server.postCustomModuleRequestWithBody(cpo.party, requestBody)
+        val json = response.jsonObject
+        assertThat(response.statusCode).isEqualTo(200)
+        assertThat(json.get("status_code")).isEqualTo(1000)
+
+        // Expecting that request body is echoed back
+        assertThat(json.get("data")).isEqualTo(requestBody)
+    }
+
+    private fun testMessagePostWithoutBody(cpo: TestCpo) {
+        val response = msp.server.postCustomModuleRequestWithoutBody(cpo.party)
+        val json = response.jsonObject
+        assertThat(response.statusCode).isEqualTo(200)
+        assertThat(json.get("status_code")).isEqualTo(1000)
     }
 
     private fun testMessageReceived(cpo: TestCpo) {
@@ -51,6 +71,14 @@ class CustomModulesIntegrationTest {
         assertThat(json.get("status_message")).isEqualTo("Sender not whitelisted to request lite-locations from receiver.")
     }
 
+    private fun requestBodies(): Stream<String> {
+        return Stream.of(
+                "simple string",
+                """[{"hello":"world"},{"beautiful":"day"}]""",
+                """{"key1":"value1"}""",
+                """{"key1":["value1","value2"]}""")
+    }
+
     @Test
     fun `can send and receive custom module messages locally`() {
         testMessageReceived(cpo1)
@@ -59,6 +87,20 @@ class CustomModulesIntegrationTest {
     @Test
     fun `can send and receive custom module messages remotely`() {
         testMessageReceived(cpo2)
+    }
+
+    @ParameterizedTest
+    @MethodSource("requestBodies")
+    fun `can post custom module messages locally`(body: String) {
+        testMessagePostWithBody(cpo1, body)
+        testMessagePostWithoutBody(cpo1)
+    }
+
+    @ParameterizedTest
+    @MethodSource("requestBodies")
+    fun `can post custom module messages remotely`(body: String) {
+        testMessagePostWithBody(cpo2, body)
+        testMessagePostWithoutBody(cpo2)
     }
 
     @Test

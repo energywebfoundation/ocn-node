@@ -30,6 +30,7 @@ import snc.openchargingnetwork.node.repositories.*
 import snc.openchargingnetwork.node.tools.extractToken
 import snc.openchargingnetwork.node.tools.generateUUIDv4Token
 import snc.openchargingnetwork.node.tools.urlJoin
+import java.lang.IllegalArgumentException
 
 @Service
 class RoutingService(private val platformRepo: PlatformRepository,
