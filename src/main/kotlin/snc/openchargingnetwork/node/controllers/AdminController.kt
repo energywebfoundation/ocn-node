@@ -41,7 +41,7 @@ class AdminController(private val platformRepo: PlatformRepository,
                       private val properties: NodeProperties) {
 
     fun isAuthorized(authorization: String): Boolean {
-        return authorization == "Token ${properties.apikey}"
+        return authorization == "Token ${properties.apikey}" || authorization == "Bearer ${properties.base64apiKey}"
     }
 
     @GetMapping("/connection-status/{countryCode}/{partyID}")

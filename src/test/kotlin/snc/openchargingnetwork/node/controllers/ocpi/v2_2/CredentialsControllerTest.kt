@@ -185,7 +185,7 @@ class CredentialsControllerTest(@Autowired val mockMvc: MockMvc) {
                 .header("Authorization", "Token ${platform.auth.tokenC}")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(jacksonObjectMapper().writeValueAsString(Credentials(
-                        token = tokenB!!,
+                        token = tokenB,
                         url = versionsUrl,
                         roles = listOf(role1, role2)))))
                 .andExpect(status().isOk)

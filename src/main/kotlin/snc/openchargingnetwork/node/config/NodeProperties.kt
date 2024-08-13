@@ -18,11 +18,14 @@ package snc.openchargingnetwork.node.config
 
 import org.springframework.boot.context.properties.ConfigurationProperties
 import snc.openchargingnetwork.node.tools.generateUUIDv4Token
+import javax.annotation.PostConstruct
 
 @ConfigurationProperties("ocn.node")
 class NodeProperties {
 
     var apikey: String = generateUUIDv4Token()
+
+    var base64apiKey: String = "";
 
     var dev: Boolean = false
 
@@ -55,4 +58,9 @@ class NodeProperties {
     var plannedPartySearchEnabled: Boolean = true
 
     var serviceInterfaceEnabled: Boolean = true
+
+    @PostConstruct
+    fun init() {
+        base64apiKey = java.util.Base64.getEncoder().encodeToString(apikey.toByteArray());
+    }
 }
