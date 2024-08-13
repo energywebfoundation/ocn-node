@@ -4,7 +4,7 @@ import org.springframework.boot.gradle.tasks.bundling.BootJar
 
 plugins {
     kotlin("plugin.jpa") version "1.3.72"
-    kotlin("jvm") version "1.3.72"
+    kotlin("jvm") version "1.6.21"
     kotlin("plugin.spring") version "1.3.72"
     kotlin("plugin.allopen") version "1.3.72"
     kotlin("kapt") version "1.3.72"
@@ -28,11 +28,12 @@ configurations {
 }
 
 repositories {
+    mavenLocal()
     jcenter()
 }
 
 dependencies {
-    implementation("shareandcharge.openchargingnetwork:notary:1.0.1")
+    implementation("shareandcharge.openchargingnetwork:notary:1.0.1-temp")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
