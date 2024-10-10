@@ -18,6 +18,7 @@ group = "snc.openchargingnetwork.node"
 version = "1.2.0-rc2"
 java.sourceCompatibility = JavaVersion.VERSION_1_8
 
+
 val snippetsDir = "build/generated-snippets"
 
 val developmentOnly: Configuration by configurations.creating
@@ -33,7 +34,7 @@ repositories {
 }
 
 dependencies {
-    implementation("shareandcharge.openchargingnetwork:notary:1.0.1")
+    implementation("com.my-oli:ocn-notary:1.0.2-1")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
@@ -146,5 +147,4 @@ tasks.register<Tar>("archive") {
                 "CONFIGURATION.md",
                 "CHANGELOG.md")
     }
-
 }
