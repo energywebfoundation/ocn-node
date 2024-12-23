@@ -9,7 +9,7 @@ import snc.openchargingnetwork.node.models.ocpi.*
 import javax.servlet.http.HttpServletRequest
 
 @RestController
-@RequestMapping("/ocpi/custom")
+@RequestMapping("\${ocn.node.apiPrefix}/ocpi/custom")
 class CustomModulesController(private val requestHandlerBuilder: OcpiRequestHandlerBuilder) {
 
     @RequestMapping("/{interfaceRole}/{module}", "/{interfaceRole}/{module}/**/*")

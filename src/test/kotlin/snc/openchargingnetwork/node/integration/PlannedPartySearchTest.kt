@@ -48,7 +48,7 @@ class PlannedPartySearchTest {
                 deployedContracts = networkComponents.contracts)
 
         val operator = networkComponents.nodes[newParty.config.nodeNumber].definition.credentials.address
-        newParty.setPartyInRegistry(operator, role = Role.EMSP)
+        newParty.setPartyInRegistry(operator, role = Role.EMSP, name = "SEV", url = "http://localhost:8300")
 
         await().atMost(hubClientInfoParams.plannedPartySearch.rate * 2, TimeUnit.MILLISECONDS).until {
             val expectedRole = BasicRole("SEV", "GB")

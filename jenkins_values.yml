@@ -1,0 +1,7 @@
+chartName: "banula"
+projectName: "ocn-node-v2"
+helm_chart_repo: "github.com/olisystems/oli_banula_helm_charts"
+helm_chart_dir: "oli_banula_helm_charts"
+helm_release_name: "oli-banula"
+deploy_image_key: "ocnnodev2"
+job_namespace: "oli-banula, banula-int"

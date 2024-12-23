@@ -1,10 +1,9 @@
 package snc.openchargingnetwork.node.integration.utils
 
+import com.olisystems.ocnregistryv2_0.OcnRegistry
 import org.springframework.context.ConfigurableApplicationContext
 import org.springframework.http.HttpMethod
 import org.web3j.crypto.Credentials
-import snc.openchargingnetwork.contracts.Permissions
-import snc.openchargingnetwork.contracts.Registry
 import snc.openchargingnetwork.node.integration.parties.CpoServer
 import snc.openchargingnetwork.node.integration.parties.MspServer
 import snc.openchargingnetwork.node.models.ocpi.BasicRole
@@ -29,7 +28,7 @@ data class TestMsp(private val definition: PartyDefinition, val server: MspServe
     val address: String = this.definition.credentials.address
 }
 
-data class OcnContracts(var registry: Registry, var permissions: Permissions)
+data class OcnContracts(var registry: OcnRegistry)
 
 data class NetworkComponents(val cpos: List<TestCpo>, val msps: List<TestMsp>, val nodes: List<OcnNode>, val contracts: OcnContracts)
 

@@ -16,10 +16,10 @@
 
 package snc.openchargingnetwork.node.scheduledTasks
 
+import com.olisystems.ocnregistryv2_0.OcnRegistry
 import org.web3j.crypto.Credentials
-import snc.openchargingnetwork.contracts.Registry
 import snc.openchargingnetwork.node.config.NodeProperties
-import snc.openchargingnetwork.node.models.RegistryPartyDetails
+import snc.openchargingnetwork.node.models.NewRegistryPartyDetails
 import snc.openchargingnetwork.node.models.entities.NetworkClientInfoEntity
 import snc.openchargingnetwork.node.models.ocpi.BasicRole
 import snc.openchargingnetwork.node.models.ocpi.ConnectionStatus
@@ -29,7 +29,7 @@ import snc.openchargingnetwork.node.repositories.RoleRepository
 import snc.openchargingnetwork.node.tools.checksum
 
 
-class PlannedPartySearch(private val registry: Registry,
+class PlannedPartySearch(private val registry: OcnRegistry,
                          private val roleRepo: RoleRepository,
                          private val networkClientInfoRepo: NetworkClientInfoRepository,
                          private val properties: NodeProperties): Runnable {
@@ -41,13 +41,15 @@ class PlannedPartySearch(private val registry: Registry,
         val plannedParties = registry.parties.sendAsync().get()
                 .asSequence()
                 .map {
-                    val (country, id, _, _, roles, operator, _) = registry.getPartyDetailsByAddress(it as String).sendAsync().get()
-                    RegistryPartyDetails(
-                            BasicRole(
-                                    country = country.toString(Charsets.UTF_8),
-                                    id = id.toString(Charsets.UTF_8)),
-                            roles = roles.map { index -> Role.getByIndex(index) },
-                            nodeOperator = operator.checksum())
+                    val details = registry.getPartyDetailsByAddress(it as String).sendAsync().get()
+                    val (address, country, id, roles, roleIndex, operator, name, url, active) = details
+                    NewRegistryPartyDetails(
+                        nodeOperator = operator.checksum(),
+                        BasicRole(
+                            country = country.toString(Charsets.UTF_8),
+                            id = id.toString(Charsets.UTF_8)),
+                        roles = roles.map { index -> Role.getByIndex(index) }
+                        )
                 }
                 .filter {
                     val isMyParty = it.nodeOperator == myAddress

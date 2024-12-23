@@ -23,7 +23,7 @@ import snc.openchargingnetwork.node.models.ocpi.OcpiResponse
 
 
 @RestController
-@RequestMapping("/ocn/message")
+@RequestMapping("\${ocn.node.apiPrefix}/ocn/message")
 class MessageController(private val requestHandlerBuilder: OcpiRequestHandlerBuilder) {
 
     @PostMapping

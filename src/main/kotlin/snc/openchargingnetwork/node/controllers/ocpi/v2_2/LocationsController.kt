@@ -26,6 +26,7 @@ import snc.openchargingnetwork.node.tools.filterNull
 
 
 @RestController
+@RequestMapping("\${ocn.node.apiPrefix}")
 class LocationsController(private val requestHandlerBuilder: OcpiRequestHandlerBuilder) {
 
 

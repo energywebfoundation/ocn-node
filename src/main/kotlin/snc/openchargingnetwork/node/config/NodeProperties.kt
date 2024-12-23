@@ -16,6 +16,7 @@
 
 package snc.openchargingnetwork.node.config
 
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.context.properties.ConfigurationProperties
 import snc.openchargingnetwork.node.tools.generateUUIDv4Token
 import javax.annotation.PostConstruct
@@ -24,6 +25,8 @@ import javax.annotation.PostConstruct
 class NodeProperties {
 
     var apikey: String = generateUUIDv4Token()
+
+    var apiPrefix: String? = null
 
     var base64apiKey: String = "";
 
@@ -44,8 +47,7 @@ class NodeProperties {
         var contracts = Contracts()
 
         class Contracts {
-            lateinit var registry: String
-            lateinit var permissions: String
+            lateinit var ocnRegistry: String
         }
     }
 
@@ -62,5 +64,10 @@ class NodeProperties {
     @PostConstruct
     fun init() {
         base64apiKey = java.util.Base64.getEncoder().encodeToString(apikey.toByteArray());
+
+        // TODO remove it
+        println("############################### OCN Node URL: $url ################################")
+        // Sleep for 10 minutes (600,000 milliseconds)
+        //Thread.sleep(600000)
     }
 }

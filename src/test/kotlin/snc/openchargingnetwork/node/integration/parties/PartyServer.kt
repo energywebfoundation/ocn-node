@@ -1,12 +1,11 @@
 package snc.openchargingnetwork.node.integration.parties
 
+import com.olisystems.ocnregistryv2_0.OcnRegistry
 import io.javalin.Javalin
 import org.web3j.tx.ClientTransactionManager
 import shareandcharge.openchargingnetwork.notary.Notary
 import shareandcharge.openchargingnetwork.notary.SignableHeaders
 import shareandcharge.openchargingnetwork.notary.ValuesToSign
-import snc.openchargingnetwork.contracts.Permissions
-import snc.openchargingnetwork.contracts.Registry
 import snc.openchargingnetwork.node.integration.utils.*
 import snc.openchargingnetwork.node.models.OcnServicePermission
 import snc.openchargingnetwork.node.models.OcnRulesListType
@@ -28,8 +27,7 @@ open class PartyServer(val config: PartyDefinition, deployedContracts: OcnContra
     // replace deployed contract instances with own party's transaction manager
     private val txManager = ClientTransactionManager(web3, config.credentials.address)
     val contracts = deployedContracts.copy(
-            registry = Registry.load(deployedContracts.registry.contractAddress, web3, txManager, gasProvider),
-            permissions = Permissions.load(deployedContracts.permissions.contractAddress, web3, txManager, gasProvider))
+            registry = OcnRegistry.load(deployedContracts.registry.contractAddress, web3, txManager, gasProvider))
 
     init {
         app.exception(JavalinException::class.java) { e, ctx ->
@@ -62,23 +60,13 @@ open class PartyServer(val config: PartyDefinition, deployedContracts: OcnContra
         return Notary().sign(valuesToSign, config.credentials.privateKey()).serialize()
     }
 
-    fun setPartyInRegistry(operator: String, role: Role) {
+    fun setPartyInRegistry(operator: String, role: Role, name: String, url: String) {
         val (id, country) = config.party
         val rolesList = listOf(role.ordinal.toBigInteger())
-        contracts.registry.setParty(country.toByteArray(), id.toByteArray(), rolesList, operator).sendAsync().get()
+        contracts.registry.setParty(country.toByteArray(), id.toByteArray(), rolesList, operator, name, url).sendAsync().get()
         node = contracts.registry.getNode(operator).sendAsync().get()
     }
 
-    fun setServicePermissions(permissions: List<OcnServicePermission>) {
-        val name = "Test Service" // optional name
-        val url = "https://test.Service"  // optional public url
-        val permissionsIntList = permissions.map { it.ordinal.toBigInteger() }
-        contracts.permissions.setService(name, url, permissionsIntList).sendAsync().get()
-    }
-
-    fun agreeToServicePermissions(provider: String) {
-        contracts.permissions.createAgreement(provider).sendAsync().get()
-    }
 
     fun registerCredentials() {
         // TODO: could also request versions and store endpoints in memory

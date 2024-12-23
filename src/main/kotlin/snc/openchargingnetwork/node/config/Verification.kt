@@ -67,7 +67,7 @@ class Verification(private val properties: NodeProperties) {
     }
 
     private fun testHealth() {
-        val healthURL = urlJoin(this.properties.url, "/health")
+        val healthURL = urlJoin(this.properties.url, this.properties.apiPrefix, "/health")
 
         try {
             val response = khttp.get(healthURL)

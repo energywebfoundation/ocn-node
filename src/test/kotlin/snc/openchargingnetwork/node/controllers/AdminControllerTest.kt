@@ -23,6 +23,7 @@ import snc.openchargingnetwork.node.repositories.PlatformRepository
 import snc.openchargingnetwork.node.config.NodeProperties
 import snc.openchargingnetwork.node.models.entities.PlatformEntity
 import snc.openchargingnetwork.node.models.ocpi.BasicRole
+import snc.openchargingnetwork.node.repositories.EndpointRepository
 
 @WebMvcTest(AdminController::class)
 @ExtendWith(RestDocumentationExtension::class)
@@ -37,6 +38,9 @@ class AdminControllerTest {
     lateinit var roleRepo: RoleRepository
 
     @MockkBean
+    lateinit var endpointRepo: EndpointRepository // Mock the missing dependency
+
+    @MockkBean
     lateinit var properties: NodeProperties
 
     @BeforeEach
@@ -44,8 +48,8 @@ class AdminControllerTest {
               restDocumentation: RestDocumentationContextProvider) {
 
         this.mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext)
-                .apply<DefaultMockMvcBuilder>(MockMvcRestDocumentation.documentationConfiguration(restDocumentation))
-                .build()
+            .apply<DefaultMockMvcBuilder>(MockMvcRestDocumentation.documentationConfiguration(restDocumentation))
+            .build()
     }
 
     @Test
@@ -56,15 +60,17 @@ class AdminControllerTest {
         every { properties.url } returns "https://node.ocn.org"
         every { roleRepo.existsByCountryCodeAndPartyIDAllIgnoreCase(role.country, role.id) } returns false
         every { platformRepo.save<PlatformEntity>(any()) } returns platform
+        every { endpointRepo.findByPlatformID(any()) } returns emptyList() // Mock endpointRepo behavior as needed
+
         mockMvc.perform(post("/admin/generate-registration-token")
-                .header("Authorization", "Token 1234567890")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(jacksonObjectMapper().writeValueAsString(arrayOf(role))))
-                .andExpect(status().isOk)
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("\$.token").isString)
-                .andExpect(jsonPath("\$.versions").value("https://node.ocn.org/ocpi/versions"))
-                .andDo(document("admin/generate-registration-token"))
+            .header("Authorization", "Token 1234567890")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(jacksonObjectMapper().writeValueAsString(arrayOf(role))))
+            .andExpect(status().isOk)
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+            .andExpect(jsonPath("\$.token").isString)
+            .andExpect(jsonPath("\$.versions").value("https://node.ocn.org/ocpi/versions"))
+            .andDo(document("admin/generate-registration-token"))
     }
 
 }

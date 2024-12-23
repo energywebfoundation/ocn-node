@@ -25,7 +25,7 @@ import snc.openchargingnetwork.node.models.ocpi.BasicRole
 import snc.openchargingnetwork.node.models.ocpi.OcpiResponse
 import snc.openchargingnetwork.node.services.OcnRulesService
 
-
+@RequestMapping("\${ocn.node.apiPrefix}")
 @RestController
 class OcnRulesController(private val ocnRulesService: OcnRulesService) {
 

@@ -17,16 +17,16 @@
 package snc.openchargingnetwork.node.services
 
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.olisystems.ocnregistryv2_0.OcnRegistry
 import org.springframework.stereotype.Service
 import org.web3j.crypto.Credentials
 import org.web3j.crypto.Keys
 import org.web3j.crypto.Sign
 import org.web3j.utils.Numeric
-import snc.openchargingnetwork.node.models.exceptions.OcpiHubConnectionProblemException
-import snc.openchargingnetwork.node.models.ocpi.BasicRole
-import snc.openchargingnetwork.contracts.Registry
 import snc.openchargingnetwork.node.config.NodeProperties
 import snc.openchargingnetwork.node.models.exceptions.InvalidOcnSignatureException
+import snc.openchargingnetwork.node.models.exceptions.OcpiHubConnectionProblemException
+import snc.openchargingnetwork.node.models.ocpi.BasicRole
 import snc.openchargingnetwork.node.models.ocpi.ClientInfo
 import snc.openchargingnetwork.node.tools.checksum
 import java.nio.charset.StandardCharsets
@@ -36,7 +36,7 @@ import java.nio.charset.StandardCharsets
  */
 @Service
 class WalletService(private val properties: NodeProperties,
-                    private val registry: Registry,
+                    private val registry: OcnRegistry,
                     private val httpService: HttpService) {
 
     /**
@@ -103,7 +103,7 @@ class WalletService(private val properties: NodeProperties,
         val countryCode = clientInfo.countryCode.toByteArray()
         val partyID = clientInfo.partyID.toByteArray()
 
-        val operator = registry.getPartyDetailsByOcpi(countryCode, partyID).sendAsync().get().component5()
+        val operator = registry.getPartyDetailsByOcpi(countryCode, partyID).sendAsync().get().component6()
 
         if (operator.checksum() != signingAddress.checksum()) {
             throw InvalidOcnSignatureException("Invalid OCN-Signature header. Client registered with operator $operator but update signed by $signingAddress.")

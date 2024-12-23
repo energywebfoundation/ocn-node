@@ -1,6 +1,7 @@
 package snc.openchargingnetwork.node.controllers.ocn
 
 import com.ninjasquad.springmockk.MockkBean
+import com.olisystems.ocnregistryv2_0.OcnRegistry
 import io.mockk.every
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -17,7 +18,6 @@ import org.springframework.test.web.servlet.setup.DefaultMockMvcBuilder
 import org.springframework.test.web.servlet.setup.MockMvcBuilders
 import org.springframework.web.context.WebApplicationContext
 import org.web3j.tuples.generated.Tuple2
-import snc.openchargingnetwork.contracts.Registry
 import snc.openchargingnetwork.node.config.NodeProperties
 
 
@@ -31,7 +31,7 @@ class RegistryControllerTest {
     lateinit var properties: NodeProperties
 
     @MockkBean
-    lateinit var registry: Registry
+    lateinit var registry: OcnRegistry
 
     @BeforeEach
     fun setUp(webApplicationContext: WebApplicationContext,

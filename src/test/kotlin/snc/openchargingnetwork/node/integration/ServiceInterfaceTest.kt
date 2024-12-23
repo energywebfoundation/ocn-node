@@ -44,22 +44,6 @@ class ServiceInterfaceTest {
         return cpo1Seen && cpo2Seen
     }
 
-    private fun testForwarding(recipient: TestCpo, service: TestCpo) {
-        service.server.setServicePermissions(listOf(OcnServicePermission.FORWARD_ALL))
-        msp.server.agreeToServicePermissions(service.address)
-        msp.server.getLocation(recipient.party)
-        await.atMost(2L, TimeUnit.SECONDS).until { seenByBothCpos() }
-    }
 
-    @Test
-    fun fowardsRequestToService_Local() {
-        testForwarding(recipient = cpo2, service = cpo1)
-
-    }
-
-    @Test
-    fun fowardsRequestToService_Remote() {
-        testForwarding(recipient = cpo1, service = cpo2)
-    }
 
 }

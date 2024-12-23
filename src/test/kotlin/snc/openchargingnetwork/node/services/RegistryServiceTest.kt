@@ -1,33 +1,25 @@
 package snc.openchargingnetwork.node.services
 
+import com.olisystems.ocnregistryv2_0.OcnRegistry
 import io.mockk.every
 import io.mockk.mockk
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.web3j.tuples.generated.Tuple2
-import org.web3j.tuples.generated.Tuple5
-import snc.openchargingnetwork.contracts.Permissions
-import snc.openchargingnetwork.contracts.Registry
 import snc.openchargingnetwork.node.config.NodeProperties
-import snc.openchargingnetwork.node.models.OcnService
-import snc.openchargingnetwork.node.models.OcnServicePermission
 import snc.openchargingnetwork.node.models.RegistryNode
 import snc.openchargingnetwork.node.models.ocpi.BasicRole
-import snc.openchargingnetwork.node.models.ocpi.InterfaceRole
-import snc.openchargingnetwork.node.models.ocpi.ModuleID
-import java.math.BigInteger
 
 
 class RegistryServiceTest {
 
-    private val registry: Registry = mockk()
-    private val permissions: Permissions = mockk()
+    private val registry: OcnRegistry = mockk()
     private val properties: NodeProperties = mockk()
 
     private val registryService: RegistryService
 
     init {
-        registryService = RegistryService(registry, permissions, properties)
+        registryService = RegistryService(registry, properties)
     }
 
     @Test
@@ -77,30 +69,4 @@ class RegistryServiceTest {
         assertThat(registryService.getRemoteNodeUrlOf(role)).isEqualTo("https://some.node.com")
     }
 
-    @Test
-    fun getAgreementsByInterface() {
-        val user = BasicRole(id = "HEY", country = "YA")
-        val provider = BasicRole(id = "OOO", country = "AH")
-
-        every {
-            permissions.getUserAgreementsByOcpi(user.country.toByteArray(), user.id.toByteArray()).sendAsync().get()
-        } returns listOf("0x059a44557cF9Bd2b446d72fC772254F0E487BACf")
-
-        every {
-            permissions.getService("0x059a44557cF9Bd2b446d72fC772254F0E487BACf").sendAsync().get()
-        } returns Tuple5(
-                provider.country.toByteArray(),
-                provider.id.toByteArray(),
-                "Hungry Hippo Charging",
-                "https://hungry-hip.pos.io",
-                listOf(BigInteger("2"))
-        )
-
-        val actual = registryService.getAgreementsByInterface(user, ModuleID.TARIFFS, InterfaceRole.RECEIVER)
-
-        assertThat(actual.count()).isEqualTo(1)
-        assertThat(actual.iterator().next()).isEqualTo(
-                OcnService(provider = provider, permissions = listOf(OcnServicePermission.FORWARD_ALL_RECEIVER))
-        )
-    }
 }

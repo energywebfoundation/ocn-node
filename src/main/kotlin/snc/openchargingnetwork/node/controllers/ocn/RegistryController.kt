@@ -16,18 +16,18 @@
 
 package snc.openchargingnetwork.node.controllers.ocn
 
+import com.olisystems.ocnregistryv2_0.OcnRegistry
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import org.web3j.crypto.Credentials
 import snc.openchargingnetwork.node.config.NodeProperties
-import snc.openchargingnetwork.contracts.Registry
 
 @RestController
-@RequestMapping("/ocn/registry")
+@RequestMapping("\${ocn.node.apiPrefix}/ocn/registry")
 class RegistryController(private val properties: NodeProperties,
-                         private val registry: Registry) {
+                         private val registry: OcnRegistry) {
 
     @GetMapping("/node-info")
     fun getMyNodeInfo() = mapOf(
@@ -37,8 +37,8 @@ class RegistryController(private val properties: NodeProperties,
     @GetMapping("/node/{countryCode}/{partyID}")
     fun getNodeOf(@PathVariable countryCode: String,
                     @PathVariable partyID: String): Any {
-        val countryBytes = countryCode.toUpperCase().toByteArray()
-        val idBytes = partyID.toUpperCase().toByteArray()
+        val countryBytes = countryCode.uppercase().toByteArray()
+        val idBytes = partyID.uppercase().toByteArray()
 
         val (address, url) = registry.getOperatorByOcpi(countryBytes, idBytes).sendAsync().get()
 

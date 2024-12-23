@@ -22,9 +22,15 @@ import org.springframework.stereotype.Component
 import org.web3j.crypto.Credentials
 
 @Component
-class NodeInfoLogger(private val properties: NodeProperties) {
+class NodeInfoLogger(private val properties: NodeProperties, private val dataSourceProperties: DataSourceProperties) {
 
     val hasPrivateKey = properties.privateKey != null
+
+    fun maskPassword(password: String): String {
+        if (password.length <= 4) return password
+        val middle = "*".repeat(password.length - 4)
+        return "${password.take(2)}$middle${password.takeLast(2)}"
+    }
 
     @EventListener(ApplicationReadyEvent::class)
     fun log() {
@@ -37,20 +43,24 @@ class NodeInfoLogger(private val properties: NodeProperties) {
         val plannedPartyText = getPlannedPartyText()
 
         println("\n${border.substring(0, 3)} NODE INFO ${border.substring(17)}\n" +
-                " URL     | ${properties.url}\n" +
+                " URL     | ${properties.url}/${properties.apiPrefix}\n" +
                 " ADDRESS | $addressText\n" +
                 " API KEY | ${properties.apikey}")
 
         println("${border.substring(0, 3)} NETWORK ${border.substring(15)}\n" +
                 " ETHEREUM RPC | ${properties.web3.provider}\n" +
-                " REGISTRY     | ${properties.web3.contracts.registry} [$registryStage]\n" +
-                " PERMISSIONS  | ${properties.web3.contracts.permissions} [$registryStage]")
+                " OCN_REGISTRY     | ${properties.web3.contracts.ocnRegistry} [$registryStage]\n")
 
         println("${border.substring(0, 3)} FEATURES ${border.substring(16)}\n" +
                 " DEV MODE             | ${properties.dev}\n" +
                 " SIGNATURES           | ${properties.signatures}\n" +
                 " STILL ALIVE CHECK    | $stillAliveText\n" +
                 " PLANNED PARTY SEARCH | $plannedPartyText\n")
+
+        println("${border.substring(0, 3)} DATABASE ${border.substring(16)}\n" +
+                " URL      | ${dataSourceProperties.url}\n" +
+                " USERNAME | ${dataSourceProperties.username}\n" +
+                " PASSWORD | ${maskPassword(dataSourceProperties.password)}\n")
     }
 
     private fun calculateBorderLength(url: Int, apikey: Int): Int {
@@ -74,7 +84,8 @@ class NodeInfoLogger(private val properties: NodeProperties) {
         }
     }
 
-    private fun getRegistryStage(): String = when (properties.web3.contracts.registry) {
+    // TODO update this when redeploying the ocn registry smart contract
+    private fun getRegistryStage(): String = when (properties.web3.contracts.ocnRegistry) {
         "0xd57595D5FA1F94725C426739C449b15D92758D55" -> "test"
         "0x184aeD70F2aaB0Cd1FC62261C1170560cBfd0776" -> "prod"
         else -> "custom"

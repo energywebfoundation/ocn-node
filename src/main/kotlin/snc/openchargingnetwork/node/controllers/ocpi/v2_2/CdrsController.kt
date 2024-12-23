@@ -24,7 +24,7 @@ import snc.openchargingnetwork.node.models.OcnHeaders
 import snc.openchargingnetwork.node.models.ocpi.*
 import snc.openchargingnetwork.node.tools.filterNull
 
-
+@RequestMapping("\${ocn.node.apiPrefix}")
 @RestController
 class CdrsController(private val requestHandlerBuilder: OcpiRequestHandlerBuilder) {
 

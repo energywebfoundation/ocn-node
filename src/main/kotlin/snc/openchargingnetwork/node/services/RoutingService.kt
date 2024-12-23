@@ -18,19 +18,27 @@ package snc.openchargingnetwork.node.services
 
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
-import snc.openchargingnetwork.node.models.*
-import snc.openchargingnetwork.node.models.entities.*
+import snc.openchargingnetwork.node.models.OcnHeaders
+import snc.openchargingnetwork.node.models.OcnMessageHeaders
+import snc.openchargingnetwork.node.models.Receiver
+import snc.openchargingnetwork.node.models.entities.EndpointEntity
 import snc.openchargingnetwork.node.models.entities.OcnRules
-import snc.openchargingnetwork.node.models.exceptions.*
+import snc.openchargingnetwork.node.models.entities.PlatformEntity
+import snc.openchargingnetwork.node.models.entities.ProxyResourceEntity
+import snc.openchargingnetwork.node.models.exceptions.OcpiClientGenericException
+import snc.openchargingnetwork.node.models.exceptions.OcpiClientInvalidParametersException
+import snc.openchargingnetwork.node.models.exceptions.OcpiClientUnknownLocationException
+import snc.openchargingnetwork.node.models.exceptions.OcpiHubUnknownReceiverException
 import snc.openchargingnetwork.node.models.ocpi.BasicRole
 import snc.openchargingnetwork.node.models.ocpi.InterfaceRole
-import snc.openchargingnetwork.node.models.ocpi.ModuleID
 import snc.openchargingnetwork.node.models.ocpi.OcpiRequestVariables
-import snc.openchargingnetwork.node.repositories.*
+import snc.openchargingnetwork.node.repositories.EndpointRepository
+import snc.openchargingnetwork.node.repositories.PlatformRepository
+import snc.openchargingnetwork.node.repositories.ProxyResourceRepository
+import snc.openchargingnetwork.node.repositories.RoleRepository
 import snc.openchargingnetwork.node.tools.extractToken
 import snc.openchargingnetwork.node.tools.generateUUIDv4Token
 import snc.openchargingnetwork.node.tools.urlJoin
-import java.lang.IllegalArgumentException
 
 @Service
 class RoutingService(private val platformRepo: PlatformRepository,

@@ -5,7 +5,7 @@ import snc.openchargingnetwork.node.services.HubClientInfoService
 import snc.openchargingnetwork.node.services.WalletService
 
 @RestController
-@RequestMapping("/ocn/client-info")
+@RequestMapping("\${ocn.node.apiPrefix}/ocn/message/ocn/client-info")
 class ClientInfoController(private val hubClientInfoService: HubClientInfoService,
                            private val walletService: WalletService) {
 

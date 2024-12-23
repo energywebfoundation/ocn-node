@@ -1,6 +1,7 @@
 package snc.openchargingnetwork.node.services
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.olisystems.ocnregistryv2_0.OcnRegistry
 import io.mockk.every
 import io.mockk.mockk
 import org.assertj.core.api.Assertions.assertThat
@@ -12,10 +13,10 @@ import org.web3j.tuples.generated.Tuple2
 import snc.openchargingnetwork.node.models.exceptions.OcpiHubConnectionProblemException
 import snc.openchargingnetwork.node.models.ocpi.*
 import snc.openchargingnetwork.node.tools.generatePrivateKey
-import snc.openchargingnetwork.contracts.Registry
 import snc.openchargingnetwork.node.config.NodeProperties
 import snc.openchargingnetwork.node.models.OcnHeaders
 import snc.openchargingnetwork.node.tools.getTimestamp
+import java.math.BigInteger
 
 class WalletServiceTest {
 
@@ -34,7 +35,7 @@ class WalletServiceTest {
                     receiver = BasicRole("AAA", "DE")))
 
     private val properties: NodeProperties = mockk()
-    private val registry: Registry = mockk()
+    private val registry: OcnRegistry = mockk()
     private val httpService: HttpService = mockk()
 
     private val walletService: WalletService
@@ -94,7 +95,7 @@ class WalletServiceTest {
         val signature = walletService.sign(clientInfoString)
 
         every { httpService.mapper } returns objectMapper
-        every { registry.getPartyDetailsByOcpi(clientInfo.countryCode.toByteArray(), clientInfo.partyID.toByteArray()).sendAsync().get().component5() } returns address
+        every { registry.getPartyDetailsByOcpi(clientInfo.countryCode.toByteArray(), clientInfo.partyID.toByteArray()).sendAsync().get().component6() } returns address
 
         val actual = walletService.verifyClientInfo(clientInfoString, signature)
         assertThat(actual).isEqualTo(clientInfo)

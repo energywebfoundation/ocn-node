@@ -1,5 +1,6 @@
 package snc.openchargingnetwork.node.integration
 
+import com.olisystems.ocnregistryv2_0.OcnRegistry
 import io.javalin.Javalin
 import khttp.responses.Response
 import org.assertj.core.api.Assertions.assertThat
@@ -11,7 +12,6 @@ import org.web3j.tx.ClientTransactionManager
 import shareandcharge.openchargingnetwork.notary.Notary
 import shareandcharge.openchargingnetwork.notary.SignableHeaders
 import shareandcharge.openchargingnetwork.notary.ValuesToSign
-import snc.openchargingnetwork.contracts.Registry
 import snc.openchargingnetwork.node.integration.parties.CpoServer
 import snc.openchargingnetwork.node.integration.utils.*
 import snc.openchargingnetwork.node.models.entities.*
@@ -89,7 +89,7 @@ class TokenEncodingIntegrationTest {
 
         fun register(contracts: OcnContracts, node: NodeDefinition) {
             // register in smart contract; already "registered" on ocn node
-            val registry = Registry.load(
+            val registry = OcnRegistry.load(
                 contracts.registry.contractAddress,
                 web3,
                 ClientTransactionManager(web3, credentials.address),
@@ -99,7 +99,8 @@ class TokenEncodingIntegrationTest {
                 role.countryCode.toByteArray(),
                 role.partyID.toByteArray(),
                 listOf(BigInteger.ZERO),
-                node.credentials.address
+                node.credentials.address,
+                "name", "url"
             )
             call.sendAsync().get()
         }

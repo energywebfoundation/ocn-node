@@ -117,7 +117,7 @@ class HubClientInfoIntegrationTest {
                         credentials = Credentials.create("0x49b2e2b48cfc25fda1d1cbdb2197b83902142c6da502dcf1871c628ea524f11b")),
                 deployedContracts = networkComponents.contracts)
         val nodeAddress = networkComponents.nodes[newParty.config.nodeNumber].definition.credentials.address
-        newParty.setPartyInRegistry(nodeAddress, Role.EMSP)
+        newParty.setPartyInRegistry(nodeAddress, Role.EMSP, "name", "url")
 
         sleep(hubClientInfoParams.plannedPartySearch.rate * 2)
 

@@ -25,6 +25,7 @@ import snc.openchargingnetwork.node.models.ocpi.*
 import snc.openchargingnetwork.node.tools.filterNull
 
 @RestController
+@RequestMapping("\${ocn.node.apiPrefix}")
 class TokensController(private val requestHandlerBuilder: OcpiRequestHandlerBuilder) {
 
 

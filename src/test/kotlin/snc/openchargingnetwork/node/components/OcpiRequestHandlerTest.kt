@@ -74,7 +74,6 @@ class OcpiRequestHandlerTest {
         every { hubClientInfoService.renewClientConnection(variables.headers.sender) } just Runs
         every { hubClientInfoService.renewClientConnection(variables.headers.receiver) } just Runs
         every { asyncTaskService.forwardOcpiRequestToLinkedServices(requestHandler) } just Runs
-        every { registryService.getAgreementsByInterface(variables.headers.sender, variables.module, variables.interfaceRole) } returns sequenceOf()
         every { responseHandlerBuilder.build(variables, expectedResponse) } returns responseHandler
         every { responseHandler.getResponse() } returns ResponseEntity.ok(expectedResponse.body)
 

@@ -1,16 +1,14 @@
 package snc.openchargingnetwork.node.services
 
+import com.olisystems.ocnregistryv2_0.OcnRegistry
 import org.springframework.stereotype.Service
 import org.web3j.crypto.Credentials
 import org.web3j.crypto.Keys
-import snc.openchargingnetwork.contracts.Permissions
-import snc.openchargingnetwork.contracts.Registry
 import snc.openchargingnetwork.node.config.NodeProperties
-import snc.openchargingnetwork.node.models.*
+import snc.openchargingnetwork.node.models.RegistryNode
+import snc.openchargingnetwork.node.models.RegistryPartyDetailsBasic
 import snc.openchargingnetwork.node.models.exceptions.OcpiHubUnknownReceiverException
 import snc.openchargingnetwork.node.models.ocpi.BasicRole
-import snc.openchargingnetwork.node.models.ocpi.InterfaceRole
-import snc.openchargingnetwork.node.models.ocpi.ModuleID
 import snc.openchargingnetwork.node.tools.checksum
 
 /**
@@ -18,8 +16,7 @@ import snc.openchargingnetwork.node.tools.checksum
  * TODO: review tests
  */
 @Service
-class RegistryService(private val registry: Registry,
-                      private val permissions: Permissions,
+class RegistryService(private val registry: OcnRegistry,
                       private val properties: NodeProperties) {
 
     /**
@@ -79,35 +76,8 @@ class RegistryService(private val registry: Registry,
         val id = role.id.toByteArray()
 
         val result = registry.getPartyDetailsByOcpi(country, id).sendAsync().get()
-        return RegistryPartyDetailsBasic(address = result.component1(), operator = result.component5())
+        return RegistryPartyDetailsBasic(address = result.component1(), operator = result.component7())
     }
 
-    /**
-     * Gets an OCN Service's details (provider BasicRole) and required permissions by owner's identity (Eth public key)
-     */
-    fun getOcnService(provider: String): OcnService{
-        val (countryCode, partyId, _, _, needs) = permissions.getService(provider).sendAsync().get()
-        val role = BasicRole(
-                id = partyId.toString(Charsets.UTF_8),
-                country = countryCode.toString(Charsets.UTF_8))
-        return OcnService(
-                provider = role,
-                permissions = needs.mapNotNull { need -> OcnServicePermission.getByIndex(need) })
-    }
-
-    /**
-     * Gets OCN apps a given role has made agreements with, based on a module interface
-     */
-    fun getAgreementsByInterface(role: BasicRole, module: ModuleID, interfaceRole: InterfaceRole): Sequence<OcnService> {
-        val country = role.country.toByteArray()
-        val id = role.id.toByteArray()
-
-        val agreements = permissions.getUserAgreementsByOcpi(country, id).sendAsync().get()
-
-        return agreements
-                .asSequence()
-                .map { getOcnService(it as String) }
-                .filter { it.permissions.any { permission -> permission.matches(module, interfaceRole) } }
-    }
 
 }

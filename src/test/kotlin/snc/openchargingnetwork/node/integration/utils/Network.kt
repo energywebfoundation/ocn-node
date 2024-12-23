@@ -1,20 +1,19 @@
 package snc.openchargingnetwork.node.integration.utils
 
+import com.olisystems.ocnregistryv2_0.OcnRegistry
 import org.springframework.boot.builder.SpringApplicationBuilder
 import org.web3j.crypto.Credentials
 import org.web3j.protocol.Web3j
 import org.web3j.protocol.http.HttpService
 import org.web3j.tx.ClientTransactionManager
 import org.web3j.tx.gas.StaticGasProvider
-import snc.openchargingnetwork.contracts.Permissions
-import snc.openchargingnetwork.contracts.Registry
 import snc.openchargingnetwork.node.Application
 import snc.openchargingnetwork.node.integration.parties.CpoServer
 import snc.openchargingnetwork.node.integration.parties.MspServer
 import snc.openchargingnetwork.node.models.ocpi.BasicRole
 import snc.openchargingnetwork.node.models.ocpi.Role
 
-const val provider = "http://localhost:8544"
+const val provider = "http://localhost:8545"
 val web3: Web3j = Web3j.build(HttpService(provider))
 val gasProvider = StaticGasProvider(0.toBigInteger(), 10000000.toBigInteger())
 
@@ -80,7 +79,7 @@ fun setupNetwork(hubClientInfoParams: HubClientInfoParams): NetworkComponents {
  */
 fun setUpCpo(definition: PartyDefinition, nodeDefinition: NodeDefinition, contracts: OcnContracts): TestCpo {
     val cpoServer = CpoServer(definition, contracts)
-    cpoServer.setPartyInRegistry(nodeDefinition.credentials.address, Role.CPO)
+    cpoServer.setPartyInRegistry(nodeDefinition.credentials.address, Role.CPO, "name", " url")
     cpoServer.registerCredentials()
     return TestCpo(
         definition = definition,
@@ -93,7 +92,7 @@ fun setUpCpo(definition: PartyDefinition, nodeDefinition: NodeDefinition, contra
  */
 fun setUpMsp(definition: PartyDefinition, nodeDefinition: NodeDefinition, contracts: OcnContracts): TestMsp {
     val mspServer = MspServer(definition, contracts)
-    mspServer.setPartyInRegistry(nodeDefinition.credentials.address, Role.EMSP)
+    mspServer.setPartyInRegistry(nodeDefinition.credentials.address, Role.EMSP, "name", " url")
     mspServer.registerCredentials()
     return TestMsp(
             definition = definition,
@@ -113,7 +112,6 @@ fun setUpNode(definition: NodeDefinition, contracts: OcnContracts): OcnNode {
                     "--ocn.node.privatekey=${definition.credentials.ecKeyPair.privateKey.toString(16)}",
                     "--ocn.node.web3.provider=$provider",
                     "--ocn.node.web3.contracts.registry=${contracts.registry.contractAddress}",
-                    "--ocn.node.web3.contracts.permissions=${contracts.permissions.contractAddress}",
                     "--ocn.node.signatures=${definition.signatures}",
                     "--ocn.node.stillAliveEnabled=${definition.hubClientInfoParams.stillAlive.enabled}",
                     "--ocn.node.stillAliveRate=${definition.hubClientInfoParams.stillAlive.rate}",
@@ -143,9 +141,8 @@ fun stopPartyServers(components: NetworkComponents) {
  */
 fun deployContracts(): OcnContracts {
     val txManager = ClientTransactionManager(web3, "0x627306090abaB3A6e1400e9345bC60c78a8BEf57")
-    val registry = Registry.deploy(web3, txManager, gasProvider).sendAsync().get()
-    val permissions = Permissions.deploy(web3, txManager, gasProvider, registry.contractAddress).sendAsync().get()
-    return OcnContracts(registry, permissions)
+    val registry = OcnRegistry.deploy(web3, txManager, gasProvider, "0x627306090abaB3A6e1400e9345bC60c78a8BEf57",).sendAsync().get()
+    return OcnContracts(registry)
 }
 
 /**
@@ -153,7 +150,7 @@ fun deployContracts(): OcnContracts {
  */
 fun listNodeInRegistry(registryAddress: String, credentials: Credentials, domain: String) {
     val txManager = ClientTransactionManager(web3, credentials.address)
-    val registry = Registry.load(registryAddress, web3, txManager, gasProvider)
+    val registry = OcnRegistry.load(registryAddress, web3, txManager, gasProvider)
     registry.setNode(domain).sendAsync().get()
 }
 

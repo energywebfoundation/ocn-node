@@ -23,7 +23,7 @@ import snc.openchargingnetwork.node.components.OcpiRequestHandlerBuilder
 import snc.openchargingnetwork.node.models.OcnHeaders
 import snc.openchargingnetwork.node.models.ocpi.*
 
-
+@RequestMapping("\${ocn.node.apiPrefix}")
 @RestController
 class ChargingProfilesController(private val requestHandlerBuilder: OcpiRequestHandlerBuilder) {
 

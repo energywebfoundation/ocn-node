@@ -46,7 +46,7 @@ class CredentialsControllerTest(@Autowired val mockMvc: MockMvc) {
 
     @MockkBean
     lateinit var registryService: RegistryService
-
+    
     @MockkBean
     lateinit var httpService: HttpService
 
