@@ -17,6 +17,9 @@
 package snc.openchargingnetwork.node.config
 
 import com.olisystems.ocnregistryv2_0.OcnRegistry
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import org.springframework.boot.ApplicationRunner
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -58,6 +61,11 @@ class NodeConfig(private val properties: NodeProperties) {
     }
 
     @Bean
+    fun coroutineScope(): CoroutineScope {
+        return CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    }
+
+    @Bean
     fun newScheduledTasks(registry: OcnRegistry,
                           httpService: OcnHttpService,
                           platformRepo: PlatformRepository,
@@ -79,6 +87,8 @@ class NodeConfig(private val properties: NodeProperties) {
         }
         return taskList.toList()
     }
+
+
 
 //    // modify the default task executor (runs async tasks, not to be confused with scheduled tasks)
 //    @Bean

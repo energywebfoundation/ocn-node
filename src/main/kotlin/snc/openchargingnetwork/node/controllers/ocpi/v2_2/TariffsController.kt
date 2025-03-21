@@ -16,11 +16,15 @@
 
 package snc.openchargingnetwork.node.controllers.ocpi.v2_2
 
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
+import org.slf4j.LoggerFactory
 import org.springframework.http.HttpMethod
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.client.RestTemplate
 import snc.openchargingnetwork.node.components.OcpiRequestHandlerBuilder
+import snc.openchargingnetwork.node.config.Verification
 import snc.openchargingnetwork.node.models.OcnHeaders
 import snc.openchargingnetwork.node.models.ocpi.*
 import snc.openchargingnetwork.node.tools.filterNull
@@ -28,7 +32,7 @@ import snc.openchargingnetwork.node.tools.filterNull
 
 @RestController
 @RequestMapping("\${ocn.node.apiPrefix}")
-class TariffsController(private val requestHandlerBuilder: OcpiRequestHandlerBuilder) {
+class TariffsController(private val requestHandlerBuilder: OcpiRequestHandlerBuilder, private val coroutineScope: CoroutineScope) {
 
 
     /**
@@ -154,10 +158,16 @@ class TariffsController(private val requestHandlerBuilder: OcpiRequestHandlerBui
                 urlPath = "/$countryCode/$partyID/$tariffID",
                 body = body)
 
-        // Forward request to the Hash as a Service api
-        requestHandlerBuilder
-            .build<Unit>(requestVariables)
-            .forwardHaas()
+        coroutineScope.launch {
+            try {
+                requestHandlerBuilder
+                    .build<Unit>(requestVariables)
+                    .forwardHaas()
+            } catch (e: Exception) {
+                // Use a proper logger
+                //logger.error("Error in async HaaS call: ${e.message}", e)
+            }
+        }
 
         // Forward the request to the original destination
         val response = requestHandlerBuilder

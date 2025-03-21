@@ -81,8 +81,8 @@ class CredentialsController(private val platformRepo: PlatformRepository,
         val versionsInfo = httpService.getVersions(body.url, body.token.toBs64String())
 
         // try to match version 2.2
-        val correctVersion = versionsInfo.firstOrNull { it.version == "2.2" }
-                ?: throw OcpiServerNoMatchingEndpointsException("Expected version 2.2 from $versionsInfo")
+        val correctVersion = versionsInfo.firstOrNull { it.version == "2.2" || it.version == "2.2.1" }
+                ?: throw OcpiServerNoMatchingEndpointsException("Expected version 2.2 or 2.2.1 from $versionsInfo")
 
         // GET 2.2 version details
         val versionDetail = httpService.getVersionDetail(correctVersion.url, body.token.toBs64String())

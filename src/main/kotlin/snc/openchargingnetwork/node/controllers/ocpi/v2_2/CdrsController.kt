@@ -16,6 +16,8 @@
 
 package snc.openchargingnetwork.node.controllers.ocpi.v2_2
 
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import org.springframework.http.HttpMethod
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -146,10 +148,6 @@ class CdrsController(private val requestHandlerBuilder: OcpiRequestHandlerBuilde
                 method = HttpMethod.POST,
                 headers = OcnHeaders(authorization, signature, requestID, correlationID, sender, receiver),
                 body = body)
-
-        requestHandlerBuilder
-            .build<Unit>(requestVariables)
-            .forwardHaas()
 
         return requestHandlerBuilder
                 .build<Unit>(requestVariables)
