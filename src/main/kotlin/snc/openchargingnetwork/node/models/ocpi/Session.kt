@@ -39,8 +39,8 @@ data class Session(@JsonProperty("country_code") val countryCode: String,
                    @JsonProperty("status") val status: SessionStatus,
                    @JsonProperty("last_updated") val lastUpdated: String)
 
-data class CdrToken(@JsonProperty("country_code") val countryCode: String,
-                    @JsonProperty("party_id") val partyID: String,
+data class CdrToken(@JsonProperty("country_code") val countryCode: String? = null,
+                    @JsonProperty("party_id") val partyID: String? = null,
                     @JsonProperty("uid") val uid: String,
                     @JsonProperty("type") val tokenType: TokenType,
                     @JsonProperty("contract_id") val contractID: String)
