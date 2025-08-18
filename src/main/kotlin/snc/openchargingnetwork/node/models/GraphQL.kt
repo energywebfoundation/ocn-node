@@ -2,6 +2,7 @@ package snc.openchargingnetwork.node.models
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import okhttp3.Address
 import snc.openchargingnetwork.node.models.ocpi.Role
 
 enum class PaymentStatus {
@@ -64,6 +65,11 @@ data class EmpCertificate (
     val bilanzkreis: String,
     val lieferant: String,
     val vatid: String,
+    val billingAddress: String,
+    val billingCity: String,
+    val billingPostalCode: String,
+    val billingCountry: String,
+    val billingEmail: String,
     val owner: String,
     val blockNumber: Int
 )
