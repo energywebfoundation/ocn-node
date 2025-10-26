@@ -53,8 +53,7 @@ class HubClientInfoService(
         private val routingService: RoutingService,
         private val walletService: WalletService,
         private val ocnRulesService: OcnRulesService,
-        private val registryService: RegistryService,
-        private val registryIndexerProperties: RegistryIndexerProperties
+        private val registryService: RegistryService
 ) {
 
     companion object {
