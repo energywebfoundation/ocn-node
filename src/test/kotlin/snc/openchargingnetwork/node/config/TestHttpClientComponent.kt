@@ -24,7 +24,7 @@ class TestHttpClientComponent {
                                 return listOf(
                                         Version(
                                                 version = "2.2",
-                                                url = "$url/2.2"
+                                                url = "$url/2.2.1"
                                         ),
                                         Version(
                                                 version = "2.1.1",
@@ -57,7 +57,7 @@ class TestHttpClientComponent {
                                 return listOf(
                                         Version(
                                                 version = "2.2",
-                                                url = "$url/2.2"
+                                                url = "$url/2.2.1"
                                         )
                                 )
                         }
@@ -84,7 +84,7 @@ class TestHttpClientComponent {
                         "data": [
                             {
                                 "version": "2.2",
-                                "url": "$endpoint/2.2"
+                                "url": "$endpoint/2.2.1"
                             },
                             {
                                 "version": "2.1.1",

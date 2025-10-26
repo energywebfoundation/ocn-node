@@ -34,7 +34,7 @@ class LocationsController(private val requestHandlerBuilder: OcpiRequestHandlerB
      * SENDER INTERFACES
      */
 
-    @GetMapping("/ocpi/sender/2.2/locations")
+    @GetMapping("/ocpi/sender/2.2.1/locations")
     fun getLocationListFromDataOwner(
         @RequestHeader("authorization") authorization: String,
         @RequestHeader("OCN-Signature") signature: String? = null,
@@ -70,7 +70,7 @@ class LocationsController(private val requestHandlerBuilder: OcpiRequestHandlerB
             .getResponseWithPaginationHeaders() // proxies Link response header
     }
 
-    @GetMapping("/ocpi/sender/2.2/locations/page/{uid}")
+    @GetMapping("/ocpi/sender/2.2.1/locations/page/{uid}")
     fun getLocationPageFromDataOwner(
         @RequestHeader("authorization") authorization: String,
         @RequestHeader("OCN-Signature") signature: String? = null,
@@ -100,7 +100,7 @@ class LocationsController(private val requestHandlerBuilder: OcpiRequestHandlerB
             .getResponseWithPaginationHeaders()
     }
 
-    @GetMapping("/ocpi/sender/2.2/locations/{locationID}")
+    @GetMapping("/ocpi/sender/2.2.1/locations/{locationID}")
     fun getLocationObjectFromDataOwner(
         @RequestHeader("authorization") authorization: String,
         @RequestHeader("X-Request-ID") requestID: String,
@@ -130,7 +130,7 @@ class LocationsController(private val requestHandlerBuilder: OcpiRequestHandlerB
             .getResponse()
     }
 
-    @GetMapping("/ocpi/sender/2.2/locations/{locationID}/{evseUID}")
+    @GetMapping("/ocpi/sender/2.2.1/locations/{locationID}/{evseUID}")
     fun getEvseObjectFromDataOwner(
         @RequestHeader("authorization") authorization: String,
         @RequestHeader("OCN-Signature") signature: String? = null,
@@ -161,7 +161,7 @@ class LocationsController(private val requestHandlerBuilder: OcpiRequestHandlerB
             .getResponse()
     }
 
-    @GetMapping("/ocpi/sender/2.2/locations/{locationID}/{evseUID}/{connectorID}")
+    @GetMapping("/ocpi/sender/2.2.1/locations/{locationID}/{evseUID}/{connectorID}")
     fun getConnectorObjectFromDataOwner(
         @RequestHeader("authorization") authorization: String,
         @RequestHeader("OCN-Signature") signature: String? = null,
@@ -198,7 +198,7 @@ class LocationsController(private val requestHandlerBuilder: OcpiRequestHandlerB
      * RECEIVER INTERFACES
      */
 
-    @GetMapping("/ocpi/receiver/2.2/locations/{countryCode}/{partyID}/{locationID}")
+    @GetMapping("/ocpi/receiver/2.2.1/locations/{countryCode}/{partyID}/{locationID}")
     fun getClientOwnedLocation(
         @RequestHeader("authorization") authorization: String,
         @RequestHeader("OCN-Signature") signature: String? = null,
@@ -230,7 +230,7 @@ class LocationsController(private val requestHandlerBuilder: OcpiRequestHandlerB
             .getResponse()
     }
 
-    @GetMapping("/ocpi/receiver/2.2/locations/{countryCode}/{partyID}/{locationID}/{evseUID}")
+    @GetMapping("/ocpi/receiver/2.2.1/locations/{countryCode}/{partyID}/{locationID}/{evseUID}")
     fun getClientOwnedEvse(
         @RequestHeader("authorization") authorization: String,
         @RequestHeader("OCN-Signature") signature: String? = null,
@@ -263,7 +263,7 @@ class LocationsController(private val requestHandlerBuilder: OcpiRequestHandlerB
             .getResponse()
     }
 
-    @GetMapping("/ocpi/receiver/2.2/locations/{countryCode}/{partyID}/{locationID}/{evseUID}/{connectorID}")
+    @GetMapping("/ocpi/receiver/2.2.1/locations/{countryCode}/{partyID}/{locationID}/{evseUID}/{connectorID}")
     fun getClientOwnedConnector(
         @RequestHeader("authorization") authorization: String,
         @RequestHeader("OCN-Signature") signature: String? = null,
@@ -297,7 +297,7 @@ class LocationsController(private val requestHandlerBuilder: OcpiRequestHandlerB
             .getResponse()
     }
 
-    @PutMapping("/ocpi/receiver/2.2/locations/{countryCode}/{partyID}/{locationID}")
+    @PutMapping("/ocpi/receiver/2.2.1/locations/{countryCode}/{partyID}/{locationID}")
     fun putClientOwnedLocation(
         @RequestHeader("authorization") authorization: String,
         @RequestHeader("OCN-Signature") signature: String? = null,
@@ -331,7 +331,7 @@ class LocationsController(private val requestHandlerBuilder: OcpiRequestHandlerB
             .getResponse()
     }
 
-    @PutMapping("/ocpi/receiver/2.2/locations/{countryCode}/{partyID}/{locationID}/{evseUID}")
+    @PutMapping("/ocpi/receiver/2.2.1/locations/{countryCode}/{partyID}/{locationID}/{evseUID}")
     fun putClientOwnedEvse(
         @RequestHeader("authorization") authorization: String,
         @RequestHeader("OCN-Signature") signature: String? = null,
@@ -366,7 +366,7 @@ class LocationsController(private val requestHandlerBuilder: OcpiRequestHandlerB
             .getResponse()
     }
 
-    @PutMapping("/ocpi/receiver/2.2/locations/{countryCode}/{partyID}/{locationID}/{evseUID}/{connectorID}")
+    @PutMapping("/ocpi/receiver/2.2.1/locations/{countryCode}/{partyID}/{locationID}/{evseUID}/{connectorID}")
     fun putClientOwnedConnector(
         @RequestHeader("authorization") authorization: String,
         @RequestHeader("OCN-Signature") signature: String? = null,
@@ -402,7 +402,7 @@ class LocationsController(private val requestHandlerBuilder: OcpiRequestHandlerB
             .getResponse()
     }
 
-    @PatchMapping("/ocpi/receiver/2.2/locations/{countryCode}/{partyID}/{locationID}")
+    @PatchMapping("/ocpi/receiver/2.2.1/locations/{countryCode}/{partyID}/{locationID}")
     fun patchClientOwnedLocation(
         @RequestHeader("authorization") authorization: String,
         @RequestHeader("OCN-Signature") signature: String? = null,
@@ -436,7 +436,7 @@ class LocationsController(private val requestHandlerBuilder: OcpiRequestHandlerB
             .getResponse()
     }
 
-    @PatchMapping("/ocpi/receiver/2.2/locations/{countryCode}/{partyID}/{locationID}/{evseUID}")
+    @PatchMapping("/ocpi/receiver/2.2.1/locations/{countryCode}/{partyID}/{locationID}/{evseUID}")
     fun patchClientOwnedEvse(
         @RequestHeader("authorization") authorization: String,
         @RequestHeader("OCN-Signature") signature: String? = null,
@@ -471,7 +471,7 @@ class LocationsController(private val requestHandlerBuilder: OcpiRequestHandlerB
             .getResponse()
     }
 
-    @PatchMapping("/ocpi/receiver/2.2/locations/{countryCode}/{partyID}/{locationID}/{evseUID}/{connectorID}")
+    @PatchMapping("/ocpi/receiver/2.2.1/locations/{countryCode}/{partyID}/{locationID}/{evseUID}/{connectorID}")
     fun patchClientOwnedConnector(
         @RequestHeader("authorization") authorization: String,
         @RequestHeader("OCN-Signature") signature: String? = null,

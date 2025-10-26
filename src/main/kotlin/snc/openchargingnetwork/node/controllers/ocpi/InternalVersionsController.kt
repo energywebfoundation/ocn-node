@@ -43,7 +43,7 @@ class InternalVersionsController(
     ): OcpiResponse<List<Version>> {
 
         val token = authorization.extractToken()
-        val endpoint2_2 = urlJoin(properties.url, properties.apiPrefix, "/ocpi/2.2")
+        val endpoint2_2 = urlJoin(properties.url, properties.apiPrefix, "/ocpi/2.2.1")
         val endpoint2_2_1 = urlJoin(properties.url, properties.apiPrefix, "/ocpi/2.2.1")
         val versions = listOf(
             Version("2.2", endpoint2_2),
@@ -102,7 +102,7 @@ class InternalVersionsController(
                 if (module == ModuleID.CUSTOM) {
                     "/ocpi/custom/${it.id}"
                 } else {
-                    "/ocpi/${it.id}/2.2/${module.id}"
+                    "/ocpi/${it.id}/2.2.1/${module.id}"
                 }
             Endpoint(
                 identifier = module.id,
@@ -130,7 +130,7 @@ class InternalVersionsController(
                             urlJoin(
                                 properties.url,
                                 properties.apiPrefix,
-                                "/ocpi/2.2/${module.id}"
+                                "/ocpi/2.2.1/${module.id}"
                             )
                     )
                 )
@@ -143,7 +143,7 @@ class InternalVersionsController(
          endpoints.add(Endpoint(
                 identifier = "ocnrules",
                 role = InterfaceRole.RECEIVER,
-                url = urlJoin(properties.url, properties.apiPrefix, "/ocpi/2.2/receiver/ocnrules")
+                url = urlJoin(properties.url, properties.apiPrefix, "/ocpi/2.2.1/receiver/ocnrules")
          ))
 
         return endpoints

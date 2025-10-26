@@ -85,7 +85,7 @@ class HubClientInfoServiceTest(
                 platformID = testPlatform.id!!,
                 identifier = "hubclientinfo",
                 role = InterfaceRole.RECEIVER,
-                url = "https://test-platform.com/ocpi/2.2/hubclientinfo"
+                url = "https://test-platform.com/ocpi/2.2.1/hubclientinfo"
             )
         testEndpoint = endpointRepository.save(testEndpoint)
 

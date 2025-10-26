@@ -110,7 +110,7 @@ class RoutingServiceTest(
                         platformID = testPlatform.id!!,
                         identifier = "locations",
                         role = InterfaceRole.RECEIVER,
-                        url = "https://test-platform.com/ocpi/2.2/locations"
+                        url = "https://test-platform.com/ocpi/2.2.1/locations"
                 )
         testEndpoint = endpointRepository.save(testEndpoint)
 
@@ -183,7 +183,7 @@ class RoutingServiceTest(
                 )
 
         assertThat(endpoint).isNotNull()
-        assertThat(endpoint.url).isEqualTo("https://test-platform.com/ocpi/2.2/locations")
+        assertThat(endpoint.url).isEqualTo("https://test-platform.com/ocpi/2.2.1/locations")
         assertThat(endpoint.identifier).isEqualTo("locations")
         assertThat(endpoint.role).isEqualTo(InterfaceRole.RECEIVER)
     }

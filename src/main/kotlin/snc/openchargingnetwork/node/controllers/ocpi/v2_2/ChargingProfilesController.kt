@@ -31,7 +31,7 @@ class ChargingProfilesController(private val requestHandlerBuilder: OcpiRequestH
      * SENDER INTERFACE
      */
 
-    @PostMapping("/ocpi/2.2/sender/chargingprofiles/result/{uid}")
+    @PostMapping("/ocpi/2.2.1/sender/chargingprofiles/result/{uid}")
     fun postGenericChargingProfileResult(
         @RequestHeader("Authorization") authorization: String,
         @RequestHeader("OCN-Signature") signature: String? = null,
@@ -63,7 +63,7 @@ class ChargingProfilesController(private val requestHandlerBuilder: OcpiRequestH
             .getResponse()
     }
 
-    @PutMapping("/ocpi/2.2/sender/chargingprofiles/{sessionId}")
+    @PutMapping("/ocpi/2.2.1/sender/chargingprofiles/{sessionId}")
     fun putSenderChargingProfile(
         @RequestHeader("Authorization") authorization: String,
         @RequestHeader("OCN-Signature") signature: String? = null,
@@ -100,7 +100,7 @@ class ChargingProfilesController(private val requestHandlerBuilder: OcpiRequestH
      * RECEIVER INTERFACE
      */
 
-    @GetMapping("/ocpi/2.2/receiver/chargingprofiles/{sessionId}")
+    @GetMapping("/ocpi/2.2.1/receiver/chargingprofiles/{sessionId}")
     fun getReceiverChargingProfile(
         @RequestHeader("Authorization") authorization: String,
         @RequestHeader("OCN-Signature") signature: String? = null,
@@ -135,7 +135,7 @@ class ChargingProfilesController(private val requestHandlerBuilder: OcpiRequestH
             .getResponse()
     }
 
-    @PutMapping("/ocpi/2.2/receiver/chargingprofiles/{sessionId}")
+    @PutMapping("/ocpi/2.2.1/receiver/chargingprofiles/{sessionId}")
     fun putReceiverChargingProfile(
         @RequestHeader("Authorization") authorization: String,
         @RequestHeader("OCN-Signature") signature: String? = null,
@@ -169,7 +169,7 @@ class ChargingProfilesController(private val requestHandlerBuilder: OcpiRequestH
             .getResponse()
     }
 
-    @DeleteMapping("/ocpi/2.2/receiver/chargingprofiles/{sessionId}")
+    @DeleteMapping("/ocpi/2.2.1/receiver/chargingprofiles/{sessionId}")
     fun deleteReceiverChargingProfile(
         @RequestHeader("Authorization") authorization: String,
         @RequestHeader("OCN-Signature") signature: String? = null,

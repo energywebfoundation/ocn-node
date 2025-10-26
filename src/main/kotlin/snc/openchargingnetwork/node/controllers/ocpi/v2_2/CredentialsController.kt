@@ -30,7 +30,7 @@ import snc.openchargingnetwork.node.repositories.*
 import snc.openchargingnetwork.node.services.RegistryService
 import snc.openchargingnetwork.node.tools.*
 
-@RequestMapping("\${ocn.node.apiPrefix}/ocpi/2.2/credentials")
+@RequestMapping("\${ocn.node.apiPrefix}/ocpi/2.2.1/credentials")
 @RestController
 class CredentialsController(
     private val platformRepo: PlatformRepository,

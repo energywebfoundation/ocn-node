@@ -32,7 +32,7 @@ class CommandsController(private val requestHandlerBuilder: OcpiRequestHandlerBu
      * SENDER INTERFACE
      */
 
-    @PostMapping("/ocpi/sender/2.2/commands/{command}/{uid}")
+    @PostMapping("/ocpi/sender/2.2.1/commands/{command}/{uid}")
     fun postAsyncResponse(
         @RequestHeader("authorization") authorization: String,
         @RequestHeader("OCN-Signature") signature: String? = null,
@@ -71,7 +71,7 @@ class CommandsController(private val requestHandlerBuilder: OcpiRequestHandlerBu
      */
 
 //    @Transactional
-    @PostMapping("/ocpi/receiver/2.2/commands/CANCEL_RESERVATION")
+    @PostMapping("/ocpi/receiver/2.2.1/commands/CANCEL_RESERVATION")
     fun postCancelReservation(
         @RequestHeader("authorization") authorization: String,
         @RequestHeader("OCN-Signature") signature: String? = null,
@@ -107,7 +107,7 @@ class CommandsController(private val requestHandlerBuilder: OcpiRequestHandlerBu
     }
 
 
-    @PostMapping("/ocpi/receiver/2.2/commands/RESERVE_NOW")
+    @PostMapping("/ocpi/receiver/2.2.1/commands/RESERVE_NOW")
     fun postReserveNow(
         @RequestHeader("authorization") authorization: String,
         @RequestHeader("OCN-Signature") signature: String? = null,
@@ -142,7 +142,7 @@ class CommandsController(private val requestHandlerBuilder: OcpiRequestHandlerBu
     }
 
 
-    @PostMapping("/ocpi/receiver/2.2/commands/START_SESSION")
+    @PostMapping("/ocpi/receiver/2.2.1/commands/START_SESSION")
     fun postStartSession(
         @RequestHeader("authorization") authorization: String,
         @RequestHeader("OCN-Signature") signature: String? = null,
@@ -177,7 +177,7 @@ class CommandsController(private val requestHandlerBuilder: OcpiRequestHandlerBu
     }
 
 
-    @PostMapping("/ocpi/receiver/2.2/commands/STOP_SESSION")
+    @PostMapping("/ocpi/receiver/2.2.1/commands/STOP_SESSION")
     fun postStopSession(
         @RequestHeader("authorization") authorization: String,
         @RequestHeader("OCN-Signature") signature: String? = null,
@@ -212,7 +212,7 @@ class CommandsController(private val requestHandlerBuilder: OcpiRequestHandlerBu
     }
 
 
-    @PostMapping("/ocpi/receiver/2.2/commands/UNLOCK_CONNECTOR")
+    @PostMapping("/ocpi/receiver/2.2.1/commands/UNLOCK_CONNECTOR")
     fun postUnlockConnector(
         @RequestHeader("authorization") authorization: String,
         @RequestHeader("OCN-Signature") signature: String? = null,

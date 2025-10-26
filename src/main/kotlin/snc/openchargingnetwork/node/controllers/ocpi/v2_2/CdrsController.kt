@@ -33,7 +33,7 @@ class CdrsController(private val requestHandlerBuilder: OcpiRequestHandlerBuilde
      * SENDER INTERFACE
      */
 
-    @GetMapping("/ocpi/sender/2.2/cdrs")
+    @GetMapping("/ocpi/sender/2.2.1/cdrs")
     fun getCdrsFromDataOwner(
         @RequestHeader("authorization") authorization: String,
         @RequestHeader("OCN-Signature") signature: String? = null,
@@ -70,7 +70,7 @@ class CdrsController(private val requestHandlerBuilder: OcpiRequestHandlerBuilde
             .getResponseWithPaginationHeaders() // proxies the Link response header
     }
 
-    @GetMapping("/ocpi/sender/2.2/cdrs/page/{uid}")
+    @GetMapping("/ocpi/sender/2.2.1/cdrs/page/{uid}")
     fun getCdrPageFromDataOwner(
         @RequestHeader("authorization") authorization: String,
         @RequestHeader("OCN-Signature") signature: String? = null,
@@ -105,7 +105,7 @@ class CdrsController(private val requestHandlerBuilder: OcpiRequestHandlerBuilde
      * RECEIVER INTERFACE
      */
 
-    @GetMapping("/ocpi/receiver/2.2/cdrs/{cdrID}")
+    @GetMapping("/ocpi/receiver/2.2.1/cdrs/{cdrID}")
     fun getClientOwnedCdr(
         @RequestHeader("authorization") authorization: String,
         @RequestHeader("OCN-Signature") signature: String? = null,
@@ -136,7 +136,7 @@ class CdrsController(private val requestHandlerBuilder: OcpiRequestHandlerBuilde
     }
 
     //    @Transactional
-    @PostMapping("/ocpi/receiver/2.2/cdrs")
+    @PostMapping("/ocpi/receiver/2.2.1/cdrs")
     fun postClientOwnedCdr(
         @RequestHeader("authorization") authorization: String,
         @RequestHeader("OCN-Signature") signature: String? = null,
@@ -165,7 +165,7 @@ class CdrsController(private val requestHandlerBuilder: OcpiRequestHandlerBuilde
             .forwardHaasAsync()
             .forwardIntegrationsAsync(ModuleID.CDRS)
             .forwardDefault()
-            .getResponseWithLocationHeader("/ocpi/receiver/2.2/cdrs")
+            .getResponseWithLocationHeader("/ocpi/receiver/2.2.1/cdrs")
     }
 
 }

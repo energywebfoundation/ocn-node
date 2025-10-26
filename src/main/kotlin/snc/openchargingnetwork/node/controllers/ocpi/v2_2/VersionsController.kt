@@ -27,7 +27,7 @@ import snc.openchargingnetwork.node.tools.filterNull
 
 
 @RestController
-@RequestMapping("\${ocn.node.apiPrefix}/ocpi/2.2")
+@RequestMapping("\${ocn.node.apiPrefix}/ocpi/2.2.1")
 class VersionsController(
     private val requestHandlerBuilder: OcpiRequestHandlerBuilder,
     private val versionsService: VersionsService

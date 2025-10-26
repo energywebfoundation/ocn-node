@@ -29,7 +29,7 @@ import snc.openchargingnetwork.node.services.OcnRulesService
 @RestController
 class OcnRulesController(private val ocnRulesService: OcnRulesService) {
 
-    @GetMapping("/ocpi/receiver/2.2/ocnrules")
+    @GetMapping("/ocpi/receiver/2.2.1/ocnrules")
     fun getRules(@RequestHeader("authorization") authorization: String): ResponseEntity<OcpiResponse<OcnRules>> {
         return ResponseEntity.ok(
             OcpiResponse(
@@ -40,7 +40,7 @@ class OcnRulesController(private val ocnRulesService: OcnRulesService) {
     }
 
     @Transactional
-    @PostMapping("/ocpi/receiver/2.2/ocnrules/whitelist")
+    @PostMapping("/ocpi/receiver/2.2.1/ocnrules/whitelist")
     fun appendToWhitelist(
         @RequestHeader("authorization") authorization: String,
         @RequestBody body: OcnRulesListParty
@@ -51,7 +51,7 @@ class OcnRulesController(private val ocnRulesService: OcnRulesService) {
     }
 
     @Transactional
-    @PostMapping("/ocpi/receiver/2.2/ocnrules/blacklist")
+    @PostMapping("/ocpi/receiver/2.2.1/ocnrules/blacklist")
     fun appendToBlacklist(
         @RequestHeader("authorization") authorization: String,
         @RequestBody body: OcnRulesListParty
@@ -62,7 +62,7 @@ class OcnRulesController(private val ocnRulesService: OcnRulesService) {
     }
 
     @Transactional
-    @PutMapping("/ocpi/receiver/2.2/ocnrules/signatures")
+    @PutMapping("/ocpi/receiver/2.2.1/ocnrules/signatures")
     fun updateSignatures(@RequestHeader("authorization") authorization: String): ResponseEntity<OcpiResponse<Unit>> {
 
         ocnRulesService.updateSignatures(authorization)
@@ -70,7 +70,7 @@ class OcnRulesController(private val ocnRulesService: OcnRulesService) {
     }
 
     @Transactional
-    @PutMapping("/ocpi/receiver/2.2/ocnrules/whitelist")
+    @PutMapping("/ocpi/receiver/2.2.1/ocnrules/whitelist")
     fun updateWhitelist(
         @RequestHeader("authorization") authorization: String,
         @RequestBody body: List<OcnRulesListParty>
@@ -81,7 +81,7 @@ class OcnRulesController(private val ocnRulesService: OcnRulesService) {
     }
 
     @Transactional
-    @PutMapping("/ocpi/receiver/2.2/ocnrules/blacklist")
+    @PutMapping("/ocpi/receiver/2.2.1/ocnrules/blacklist")
     fun updateBlacklist(
         @RequestHeader("authorization") authorization: String,
         @RequestBody body: List<OcnRulesListParty>
@@ -92,7 +92,7 @@ class OcnRulesController(private val ocnRulesService: OcnRulesService) {
     }
 
     @Transactional
-    @PutMapping("/ocpi/receiver/2.2/ocnrules/block-all")
+    @PutMapping("/ocpi/receiver/2.2.1/ocnrules/block-all")
     fun blockAll(@RequestHeader("authorization") authorization: String): ResponseEntity<OcpiResponse<Unit>> {
 
         ocnRulesService.blockAll(authorization)
@@ -100,7 +100,7 @@ class OcnRulesController(private val ocnRulesService: OcnRulesService) {
     }
 
     @Transactional
-    @DeleteMapping("ocpi/receiver/2.2/ocnrules/whitelist/{countryCode}/{partyID}")
+    @DeleteMapping("ocpi/receiver/2.2.1/ocnrules/whitelist/{countryCode}/{partyID}")
     fun deleteFromWhitelist(
         @RequestHeader("authorization") authorization: String,
         @PathVariable countryCode: String,
@@ -113,7 +113,7 @@ class OcnRulesController(private val ocnRulesService: OcnRulesService) {
     }
 
     @Transactional
-    @DeleteMapping("ocpi/receiver/2.2/ocnrules/blacklist/{countryCode}/{partyID}")
+    @DeleteMapping("ocpi/receiver/2.2.1/ocnrules/blacklist/{countryCode}/{partyID}")
     fun deleteFromBlacklist(
         @RequestHeader("authorization") authorization: String,
         @PathVariable countryCode: String,

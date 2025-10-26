@@ -33,7 +33,7 @@ class TokensController(private val requestHandlerBuilder: OcpiRequestHandlerBuil
      * SENDER INTERFACE
      */
 
-    @GetMapping("/ocpi/sender/2.2/tokens")
+    @GetMapping("/ocpi/sender/2.2.1/tokens")
     fun getTokensFromDataOwner(
         @RequestHeader("authorization") authorization: String,
         @RequestHeader("OCN-Signature") signature: String? = null,
@@ -69,7 +69,7 @@ class TokensController(private val requestHandlerBuilder: OcpiRequestHandlerBuil
             .getResponseWithPaginationHeaders() // proxies Link response header
     }
 
-    @GetMapping("/ocpi/sender/2.2/tokens/page/{uid}")
+    @GetMapping("/ocpi/sender/2.2.1/tokens/page/{uid}")
     fun getTokensPageFromDataOwner(
         @RequestHeader("authorization") authorization: String,
         @RequestHeader("OCN-Signature") signature: String? = null,
@@ -99,7 +99,7 @@ class TokensController(private val requestHandlerBuilder: OcpiRequestHandlerBuil
             .getResponseWithPaginationHeaders()
     }
 
-    @PostMapping("/ocpi/sender/2.2/tokens/{tokenUID}/authorize")
+    @PostMapping("/ocpi/sender/2.2.1/tokens/{tokenUID}/authorize")
     fun postRealTimeTokenAuthorization(
         @RequestHeader("authorization") authorization: String,
         @RequestHeader("OCN-Signature") signature: String? = null,
@@ -139,7 +139,7 @@ class TokensController(private val requestHandlerBuilder: OcpiRequestHandlerBuil
      * RECEIVER INTERFACE
      */
 
-    @GetMapping("/ocpi/receiver/2.2/tokens/{countryCode}/{partyID}/{tokenUID}")
+    @GetMapping("/ocpi/receiver/2.2.1/tokens/{countryCode}/{partyID}/{tokenUID}")
     fun getClientOwnedToken(
         @RequestHeader("authorization") authorization: String,
         @RequestHeader("OCN-Signature") signature: String? = null,
@@ -173,7 +173,7 @@ class TokensController(private val requestHandlerBuilder: OcpiRequestHandlerBuil
             .getResponse()
     }
 
-    @PutMapping("/ocpi/receiver/2.2/tokens/{countryCode}/{partyID}/{tokenUID}")
+    @PutMapping("/ocpi/receiver/2.2.1/tokens/{countryCode}/{partyID}/{tokenUID}")
     fun putClientOwnedToken(
         @RequestHeader("authorization") authorization: String,
         @RequestHeader("OCN-Signature") signature: String? = null,
@@ -209,7 +209,7 @@ class TokensController(private val requestHandlerBuilder: OcpiRequestHandlerBuil
             .getResponse()
     }
 
-    @PatchMapping("/ocpi/receiver/2.2/tokens/{countryCode}/{partyID}/{tokenUID}")
+    @PatchMapping("/ocpi/receiver/2.2.1/tokens/{countryCode}/{partyID}/{tokenUID}")
     fun patchClientOwnedToken(
         @RequestHeader("authorization") authorization: String,
         @RequestHeader("OCN-Signature") signature: String? = null,

@@ -34,7 +34,7 @@ class SessionsController(private val requestHandlerBuilder: OcpiRequestHandlerBu
      * SENDER INTERFACE
      */
 
-    @GetMapping("/ocpi/sender/2.2/sessions")
+    @GetMapping("/ocpi/sender/2.2.1/sessions")
     fun getSessionsFromDataOwner(
         @RequestHeader("authorization") authorization: String,
         @RequestHeader("OCN-Signature") signature: String? = null,
@@ -70,7 +70,7 @@ class SessionsController(private val requestHandlerBuilder: OcpiRequestHandlerBu
             .getResponseWithPaginationHeaders() // proxies Link response header
     }
 
-    @GetMapping("/ocpi/sender/2.2/sessions/page/{uid}")
+    @GetMapping("/ocpi/sender/2.2.1/sessions/page/{uid}")
     fun getSessionsPageFromDataOwner(
         @RequestHeader("authorization") authorization: String,
         @RequestHeader("OCN-Signature") signature: String? = null,
@@ -101,7 +101,7 @@ class SessionsController(private val requestHandlerBuilder: OcpiRequestHandlerBu
             .getResponseWithPaginationHeaders()
     }
 
-    @PutMapping("/ocpi/sender/2.2/sessions/{sessionID}/charging_preferences")
+    @PutMapping("/ocpi/sender/2.2.1/sessions/{sessionID}/charging_preferences")
     fun putChargingPreferences(
         @RequestHeader("authorization") authorization: String,
         @RequestHeader("OCN-Signature") signature: String? = null,
@@ -138,7 +138,7 @@ class SessionsController(private val requestHandlerBuilder: OcpiRequestHandlerBu
      * RECEIVER INTERFACE
      */
 
-    @GetMapping("/ocpi/receiver/2.2/sessions/{countryCode}/{partyID}/{sessionID}")
+    @GetMapping("/ocpi/receiver/2.2.1/sessions/{countryCode}/{partyID}/{sessionID}")
     fun getClientOwnedSession(
         @RequestHeader("authorization") authorization: String,
         @RequestHeader("OCN-Signature") signature: String? = null,
@@ -170,7 +170,7 @@ class SessionsController(private val requestHandlerBuilder: OcpiRequestHandlerBu
             .getResponse()
     }
 
-    @PutMapping("/ocpi/receiver/2.2/sessions/{countryCode}/{partyID}/{sessionID}")
+    @PutMapping("/ocpi/receiver/2.2.1/sessions/{countryCode}/{partyID}/{sessionID}")
     fun putClientOwnedSession(
         @RequestHeader("authorization") authorization: String,
         @RequestHeader("OCN-Signature") signature: String? = null,
@@ -204,7 +204,7 @@ class SessionsController(private val requestHandlerBuilder: OcpiRequestHandlerBu
             .getResponse()
     }
 
-    @PatchMapping("/ocpi/receiver/2.2/sessions/{countryCode}/{partyID}/{sessionID}")
+    @PatchMapping("/ocpi/receiver/2.2.1/sessions/{countryCode}/{partyID}/{sessionID}")
     fun patchClientOwnedSession(
         @RequestHeader("authorization") authorization: String,
         @RequestHeader("OCN-Signature") signature: String? = null,

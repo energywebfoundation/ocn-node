@@ -29,7 +29,7 @@ import snc.openchargingnetwork.node.tools.filterNull
 class TariffsController(private val requestHandlerBuilder: OcpiRequestHandlerBuilder) {
 
     /** SENDER INTERFACE */
-    @GetMapping("/ocpi/sender/2.2/tariffs")
+    @GetMapping("/ocpi/sender/2.2.1/tariffs")
     fun getTariffsFromDataOwner(
         @RequestHeader("authorization") authorization: String,
         @RequestHeader("OCN-Signature") signature: String? = null,
@@ -80,7 +80,7 @@ class TariffsController(private val requestHandlerBuilder: OcpiRequestHandlerBui
             .getResponseWithPaginationHeaders() // proxies Link response header
     }
 
-    @GetMapping("/ocpi/sender/2.2/tariffs/page/{uid}")
+    @GetMapping("/ocpi/sender/2.2.1/tariffs/page/{uid}")
     fun getTariffsPageFromDataOwner(
         @RequestHeader("authorization") authorization: String,
         @RequestHeader("OCN-Signature") signature: String? = null,
@@ -120,7 +120,7 @@ class TariffsController(private val requestHandlerBuilder: OcpiRequestHandlerBui
     }
 
     /** RECEIVER INTERFACE */
-    @GetMapping("/ocpi/receiver/2.2/tariffs/{countryCode}/{partyID}/{tariffID}")
+    @GetMapping("/ocpi/receiver/2.2.1/tariffs/{countryCode}/{partyID}/{tariffID}")
     fun getClientOwnedTariff(
         @RequestHeader("authorization") authorization: String,
         @RequestHeader("OCN-Signature") signature: String? = null,
@@ -161,7 +161,7 @@ class TariffsController(private val requestHandlerBuilder: OcpiRequestHandlerBui
             .getResponse()
     }
 
-    @PutMapping("/ocpi/receiver/2.2/tariffs/{countryCode}/{partyID}/{tariffID}")
+    @PutMapping("/ocpi/receiver/2.2.1/tariffs/{countryCode}/{partyID}/{tariffID}")
     fun putClientOwnedTariff(
         @RequestHeader("authorization") authorization: String,
         @RequestHeader("OCN-Signature") signature: String? = null,
@@ -208,7 +208,7 @@ class TariffsController(private val requestHandlerBuilder: OcpiRequestHandlerBui
         return response
     }
 
-    @DeleteMapping("/ocpi/receiver/2.2/tariffs/{countryCode}/{partyID}/{tariffID}")
+    @DeleteMapping("/ocpi/receiver/2.2.1/tariffs/{countryCode}/{partyID}/{tariffID}")
     fun deleteClientOwnedTariff(
         @RequestHeader("authorization") authorization: String,
         @RequestHeader("OCN-Signature") signature: String? = null,
